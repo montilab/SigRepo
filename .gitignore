@@ -20,19 +20,4 @@
 
 # Ignore folders
 .Rproj.user
-archive
-schemas
-OmicSignature
 
-# Ignore extdata
-inst/extdata/signatures/omic_signature_MDA_AhR_revised.RDS
-inst/extdata/signatures/ahr_cyp1b1_brca_diffanal.RDS
-inst/extdata/signatures/omic_signature_MDA_CYP_revised.RDS
-inst/extdata/signatures/omic_signature_SUM_AhR_revised.RDS
-inst/extdata/signatures/omic_signature_SUM_CYP_revised.RDS
-inst/shiny/ui/login_ui.R
-inst/extdata/signatures/OmSC_example.RDS
-inst/extdata/signatures/omic_signature_1_revised.RDS
-inst/extdata/signatures/omic_signature_2_revised.RDS
-inst/extdata/signatures/omic_signature_3_revised.RDS
-inst/extdata/signatures/omic_signature_4_revised.RDS
