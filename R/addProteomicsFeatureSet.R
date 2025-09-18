@@ -30,7 +30,7 @@ addProteomicsFeatureSet <- function(
   )
   
   # Create a list of variables to check database ####
-  required_column_fields <- c("feature_name", "organism", "is_current", "version")
+  required_column_fields <- c("feature_name", "organism", "is_current")
   db_table_name <- "proteomics_features"
   table <- feature_set
   
@@ -101,7 +101,7 @@ addProteomicsFeatureSet <- function(
     conn = conn,
     db_table_name = db_table_name,
     table = table, 
-    exclude_coln_names = "feature_id",
+    exclude_coln_names = c("feature_id", "version"),
     check_db_table = FALSE
   )
   

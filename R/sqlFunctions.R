@@ -195,6 +195,14 @@ lookup_table_sql <- function(
     base::stop("\n'return_var' cannot be empty.\n")
   }
   
+  # Check column fields
+  if(base::any(!filter_coln_var %in% db_col_names)){
+    # Disconnect from database ####
+    base::suppressWarnings(DBI::dbDisconnect(conn))  
+    # Return error message
+    base::stop(base::sprintf("\n'%s' table does not have the following column names: %s.\n", db_table_name, base::paste0(filter_coln_var[base::which(!filter_coln_var %in% db_col_names)], collapse = ", ")))
+  }
+  
   # Check filter_coln_var and filter_coln_val
   if(base::length(filter_coln_var) == 0 && base::length(filter_coln_val) == 0){
     
