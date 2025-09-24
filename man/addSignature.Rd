@@ -8,10 +8,10 @@ addSignature(
   conn_handler,
   omic_signature,
   visibility = FALSE,
+  add_users = NULL,
   return_signature_id = FALSE,
   return_missing_features = FALSE,
-  verbose = TRUE,
-  add_users = NULL
+  verbose = TRUE
 )
 }
 \arguments{
@@ -23,6 +23,11 @@ obtained from SigRepo::newConnhandler() (required)}
 \item{visibility}{A logical value indicates whether or not to allow others
 to view and access one's uploaded signature. Default is \code{FALSE}.}
 
+\item{add_users}{If visibility is set to FALSE (e.g. private), then the user 
+can add a list of users to allow them to view and access the signature privately. 
+Provide a data frame with a list of users and their corresponding 
+access types (owner/editor/viewer) to the signature.}
+
 \item{return_signature_id}{A logical value indicates whether or not to return
 the ID of the uploaded signature. Default is \code{FALSE}.}
 
@@ -31,8 +36,6 @@ a list of features that does not exist in the database. Default is \code{FALSE}.
 
 \item{verbose}{A logical value indicates whether or not to print the
 diagnostic messages. Default is \code{TRUE}.}
-
-\item{add_users}{if visibility is set to FALSE, then the user can use this parameter to add a dataframe of users and their corresponding access types to the signature.}
 }
 \description{
 Add signature to database

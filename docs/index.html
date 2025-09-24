@@ -214,10 +214,10 @@
 <span><span class="co">#&gt; Uploading signature metadata to the database...</span></span>
 <span><span class="co">#&gt; Saving difexp to the database...</span></span>
 <span><span class="co">#&gt; now dyn.load("/Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/library/curl/libs/curl.so") ...</span></span>
-<span><span class="co">#&gt; Adding user to the signature access table of the database...</span></span>
+<span><span class="co">#&gt; Adding signature owner to the signature access table of the database...</span></span>
 <span><span class="co">#&gt; Adding signature feature set to the database...</span></span>
 <span><span class="co">#&gt; Finished uploading.</span></span>
-<span><span class="co">#&gt; ID of the uploaded signature: 104</span></span></code></pre></div>
+<span><span class="co">#&gt; ID of the uploaded signature: 11</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="example-2-upload-llfs_aging_gene_2023-signature">
@@ -230,10 +230,10 @@
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Uploading signature metadata to the database...</span></span>
 <span><span class="co">#&gt; Saving difexp to the database...</span></span>
-<span><span class="co">#&gt; Adding user to the signature access table of the database...</span></span>
+<span><span class="co">#&gt; Adding signature owner to the signature access table of the database...</span></span>
 <span><span class="co">#&gt; Adding signature feature set to the database...</span></span>
 <span><span class="co">#&gt; Finished uploading.</span></span>
-<span><span class="co">#&gt; ID of the uploaded signature: 105</span></span></code></pre></div>
+<span><span class="co">#&gt; ID of the uploaded signature: 12</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="example-3-upload-myc_reduce_mice_liver_24m-signature">
@@ -247,7 +247,7 @@
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Uploading signature metadata to the database...</span></span>
 <span><span class="co">#&gt; Saving difexp to the database...</span></span>
-<span><span class="co">#&gt; Adding user to the signature access table of the database...</span></span>
+<span><span class="co">#&gt; Adding signature owner to the signature access table of the database...</span></span>
 <span><span class="co">#&gt; Adding signature feature set to the database...</span></span>
 <span><span class="co">#&gt; Warning in SigRepo::showTranscriptomicsErrorMessage(db_table_name = ref_table, : </span></span>
 <span><span class="co">#&gt; The following features do not existed in the 'transcriptomics_features' table of the database:</span></span>
@@ -384,32 +384,32 @@
 <table style="width:100%;" class="table">
 <colgroup>
 <col width="2%">
-<col width="5%">
-<col width="2%">
-<col width="2%">
+<col width="6%">
 <col width="2%">
 <col width="3%">
-<col width="4%">
+<col width="3%">
 <col width="2%">
+<col width="5%">
+<col width="2%">
+<col width="9%">
 <col width="7%">
-<col width="15%">
-<col width="2%">
-<col width="2%">
 <col width="2%">
 <col width="2%">
 <col width="3%">
+<col width="2%">
+<col width="3%">
+<col width="3%">
+<col width="1%">
+<col width="1%">
 <col width="5%">
-<col width="1%">
-<col width="1%">
+<col width="2%">
+<col width="2%">
+<col width="3%">
+<col width="3%">
+<col width="2%">
 <col width="4%">
 <col width="2%">
-<col width="2%">
-<col width="3%">
-<col width="3%">
-<col width="1%">
-<col width="3%">
-<col width="2%">
-<col width="5%">
+<col width="6%">
 </colgroup>
 <thead><tr class="header">
 <th align="right">signature_id</th>
@@ -442,36 +442,7 @@
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="right">35</td>
-<td align="left">test_sig_1</td>
-<td align="left">Homo sapiens</td>
-<td align="left">bi-directional</td>
-<td align="left">transcriptomics</td>
-<td align="left">CYP181 knockdown</td>
-<td align="left">DNA assay by ChIP-seq</td>
-<td align="left">MDA-MB-231 cell</td>
-<td align="left">none</td>
-<td align="left">Profiles of the transcriptional response of CYP181 knockdown in breast cancer cell ines</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">0.01</td>
-<td align="left">NA</td>
-<td align="left">breast cancer,CYP181 knockdown</td>
-<td align="right">NA</td>
-<td align="right">2016</td>
-<td align="left">NA</td>
-<td align="right">1</td>
-<td align="right">7938</td>
-<td align="right">2255</td>
-<td align="right">2787</td>
-<td align="left">root</td>
-<td align="left">2025-09-03 13:06:26</td>
-<td align="right">0</td>
-<td align="left">261931589b3b53249405f635812c501a</td>
-</tr>
-<tr class="even">
-<td align="right">69</td>
+<td align="right">7</td>
 <td align="left">Myc_reduce_mice_liver_24m_v1</td>
 <td align="left">Mus musculus</td>
 <td align="left">bi-directional</td>
@@ -494,13 +465,13 @@
 <td align="right">884</td>
 <td align="right">5</td>
 <td align="right">10</td>
-<td align="left">montilab</td>
-<td align="left">2025-09-04 02:37:36</td>
+<td align="left">root</td>
+<td align="left">2025-09-19 19:50:04</td>
 <td align="right">0</td>
-<td align="left">d6f0247a37eec0e3a6b6285dc7394d88</td>
+<td align="left">eacd0935d97847d56cb717455b0e48a3</td>
 </tr>
-<tr class="odd">
-<td align="right">70</td>
+<tr class="even">
+<td align="right">8</td>
 <td align="left">Myc_reduce_mice_liver_24m_v2</td>
 <td align="left">Mus musculus</td>
 <td align="left">bi-directional</td>
@@ -523,13 +494,13 @@
 <td align="right">884</td>
 <td align="right">5</td>
 <td align="right">10</td>
-<td align="left">montilab</td>
-<td align="left">2025-09-04 02:37:39</td>
+<td align="left">root</td>
+<td align="left">2025-09-19 19:50:04</td>
 <td align="right">0</td>
-<td align="left">e67a6b45899dc0f8d7eaa2cedec4d622</td>
+<td align="left">ec356cabc33fcc22f8a0b77b24db91ab</td>
 </tr>
-<tr class="even">
-<td align="right">71</td>
+<tr class="odd">
+<td align="right">9</td>
 <td align="left">Myc_reduce_mice_liver_24m_v3</td>
 <td align="left">Mus musculus</td>
 <td align="left">bi-directional</td>
@@ -552,13 +523,13 @@
 <td align="right">884</td>
 <td align="right">5</td>
 <td align="right">10</td>
-<td align="left">montilab</td>
-<td align="left">2025-09-04 02:41:49</td>
+<td align="left">root</td>
+<td align="left">2025-09-19 19:50:07</td>
 <td align="right">0</td>
-<td align="left">3a6d590d99bdf0ab38c742b1d6dc5ac9</td>
+<td align="left">fa416468cc91f872f073e15efdaf1ece</td>
 </tr>
-<tr class="odd">
-<td align="right">72</td>
+<tr class="even">
+<td align="right">10</td>
 <td align="left">Myc_reduce_mice_liver_24m_v4</td>
 <td align="left">Mus musculus</td>
 <td align="left">bi-directional</td>
@@ -581,13 +552,13 @@
 <td align="right">884</td>
 <td align="right">5</td>
 <td align="right">10</td>
-<td align="left">montilab</td>
-<td align="left">2025-09-04 02:41:52</td>
+<td align="left">root</td>
+<td align="left">2025-09-19 19:50:07</td>
 <td align="right">0</td>
-<td align="left">f08919100db811a8b117ce6602dd31e4</td>
+<td align="left">5bc419a0fbd2c012e669a19c67f2b434</td>
 </tr>
-<tr class="even">
-<td align="right">104</td>
+<tr class="odd">
+<td align="right">11</td>
 <td align="left">Myc_reduce_mice_liver_24m_readme</td>
 <td align="left">Mus musculus</td>
 <td align="left">bi-directional</td>
@@ -610,13 +581,13 @@
 <td align="right">884</td>
 <td align="right">5</td>
 <td align="right">10</td>
-<td align="left">montilab</td>
-<td align="left">2025-09-04 12:42:21</td>
+<td align="left">root</td>
+<td align="left">2025-09-24 13:06:55</td>
 <td align="right">0</td>
-<td align="left">a10176ce6e727366cf740e2bfb56e2bc</td>
+<td align="left">7e24a413c1287f840d492b2963c263a5</td>
 </tr>
-<tr class="odd">
-<td align="right">105</td>
+<tr class="even">
+<td align="right">12</td>
 <td align="left">LLFS_Aging_Gene_2023</td>
 <td align="left">Homo sapiens</td>
 <td align="left">bi-directional</td>
@@ -639,10 +610,10 @@
 <td align="right">1000</td>
 <td align="right">82</td>
 <td align="right">87</td>
-<td align="left">montilab</td>
-<td align="left">2025-09-04 12:42:24</td>
+<td align="left">root</td>
+<td align="left">2025-09-24 13:06:56</td>
 <td align="right">0</td>
-<td align="left">b35b7c1d387440d474bfcb3cb162c9a6</td>
+<td align="left">7fdecac66691beed1703efc25487768c</td>
 </tr>
 </tbody>
 </table>
@@ -723,7 +694,7 @@
 <th align="left">signature_hashkey</th>
 </tr></thead>
 <tbody><tr class="odd">
-<td align="right">105</td>
+<td align="right">12</td>
 <td align="left">LLFS_Aging_Gene_2023</td>
 <td align="left">Homo sapiens</td>
 <td align="left">bi-directional</td>
@@ -746,10 +717,10 @@
 <td align="right">1000</td>
 <td align="right">82</td>
 <td align="right">87</td>
-<td align="left">montilab</td>
-<td align="left">2025-09-04 12:42:24</td>
+<td align="left">root</td>
+<td align="left">2025-09-24 13:06:56</td>
 <td align="right">0</td>
-<td align="left">b35b7c1d387440d474bfcb3cb162c9a6</td>
+<td align="left">7fdecac66691beed1703efc25487768c</td>
 </tr></tbody>
 </table>
 </div>
@@ -812,11 +783,12 @@
 <span>    signature_id <span class="op">=</span> <span class="va">signature_tbl</span><span class="op">$</span><span class="va">signature_id</span>  </span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Remove signature_id = '105' from 'signatures' table of the database.</span></span>
-<span><span class="co">#&gt; Remove features belongs to signature_id = '105' from 'signature_feature_set' table of the database.</span></span>
-<span><span class="co">#&gt; Remove user access to signature_id = '105' from 'signature_access' table of the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '105' from 'signature_collection_access' table of the database.</span></span>
-<span><span class="co">#&gt; signature_id = '105' has been removed.</span></span></code></pre></div>
+<span><span class="co">#&gt; Remove difexp belongs to signature_id = '12' from the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '12' from 'signatures' table of the database.</span></span>
+<span><span class="co">#&gt; Remove features belongs to signature_id = '12' from 'signature_feature_set' table of the database.</span></span>
+<span><span class="co">#&gt; Remove user access to signature_id = '12' from 'signature_access' table of the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '12' from 'signature_collection_access' table of the database.</span></span>
+<span><span class="co">#&gt; signature_id = '12' has been removed.</span></span></code></pre></div>
 </div>
 <div class="section level1">
 <h1 id="update-a-signature">Update a signature<a class="anchor" aria-label="anchor" href="#update-a-signature"></a>
@@ -905,7 +877,7 @@
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_readme created.</span></span>
-<span><span class="co">#&gt;  signature_id = '104' has been updated.</span></span></code></pre></div>
+<span><span class="co">#&gt;  signature_id = '11' has been updated.</span></span></code></pre></div>
 <p>Let’s look up <strong>signature_name = “Myc_reduce_mice_liver_24m_readme”</strong> and see if the value of <code>platform</code> has been changed.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">signature_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/searchSignature.html">searchSignature</a></span><span class="op">(</span></span>
@@ -979,7 +951,7 @@
 <th align="left">signature_hashkey</th>
 </tr></thead>
 <tbody><tr class="odd">
-<td align="right">104</td>
+<td align="right">11</td>
 <td align="left">Myc_reduce_mice_liver_24m_readme</td>
 <td align="left">Mus musculus</td>
 <td align="left">bi-directional</td>
@@ -1002,10 +974,10 @@
 <td align="right">884</td>
 <td align="right">5</td>
 <td align="right">10</td>
-<td align="left">montilab</td>
-<td align="left">2025-09-04 12:42:42</td>
+<td align="left">root</td>
+<td align="left">2025-09-24 13:07:00</td>
 <td align="right">0</td>
-<td align="left">a10176ce6e727366cf740e2bfb56e2bc</td>
+<td align="left">7e24a413c1287f840d492b2963c263a5</td>
 </tr></tbody>
 </table>
 <p>Finally, remove <strong>signature_name = “Myc_reduce_mice_liver_24m_readme”</strong> from the database</p>
@@ -1023,11 +995,12 @@
 <span>    signature_id <span class="op">=</span> <span class="va">signature_tbl</span><span class="op">$</span><span class="va">signature_id</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Remove signature_id = '104' from 'signatures' table of the database.</span></span>
-<span><span class="co">#&gt; Remove features belongs to signature_id = '104' from 'signature_feature_set' table of the database.</span></span>
-<span><span class="co">#&gt; Remove user access to signature_id = '104' from 'signature_access' table of the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '104' from 'signature_collection_access' table of the database.</span></span>
-<span><span class="co">#&gt; signature_id = '104' has been removed.</span></span></code></pre></div>
+<span><span class="co">#&gt; Remove difexp belongs to signature_id = '11' from the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '11' from 'signatures' table of the database.</span></span>
+<span><span class="co">#&gt; Remove features belongs to signature_id = '11' from 'signature_feature_set' table of the database.</span></span>
+<span><span class="co">#&gt; Remove user access to signature_id = '11' from 'signature_access' table of the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '11' from 'signature_collection_access' table of the database.</span></span>
+<span><span class="co">#&gt; signature_id = '11' has been removed.</span></span></code></pre></div>
 </div>
 <div class="section level1">
 <h1 id="additional-guides">Additional Guides<a class="anchor" aria-label="anchor" href="#additional-guides"></a>

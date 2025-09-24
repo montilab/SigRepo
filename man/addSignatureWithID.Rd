@@ -10,6 +10,7 @@ addSignatureWithID(
   assign_signature_id,
   assign_user_name,
   visibility = FALSE,
+  check_difexp = TRUE,
   verbose = FALSE
 )
 }
@@ -25,6 +26,9 @@ obtained from SigRepo::newConnhandler() (required)}
 
 \item{visibility}{A logical value indicates whether or not to allow others
 to view and access one's uploaded signature. Default is \code{FALSE}.}
+
+\item{check_difexp}{A logical value indicates whether or not to check difexp
+table in the database. Default is \code{TRUE}.}
 
 \item{verbose}{A logical value indicates whether or not to print the
 diagnostic messages. Default is \code{FALSE}.}

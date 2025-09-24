@@ -29,7 +29,7 @@ searchProteomicsFeatureSet <- function(
   )
   
   # Get reference table
-  ref_table <- "transcriptomics_features"
+  ref_table <- "proteomics_features"
  
   # Look up features by organism
   if(base::length(feature_name) == 0 || base::all(feature_name %in% c("", NA))){

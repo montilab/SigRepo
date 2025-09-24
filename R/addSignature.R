@@ -52,8 +52,8 @@ addSignature <- function(
   # Get visibility ####
   visibility <- base::ifelse(visibility == TRUE, 1, 0)
     
-  # visibility is public (1) so add_users will be ignored
-  if (visibility == 1){ 
+  # If visibility is public (==1), add_users will be ignored
+  if(visibility == 1){ 
     
     if (!base::is.null(add_users))
       base::warning("By setting visibility = 1, the signature will be set as public and visible to all users, thus 'add_users' will be ignored.")
@@ -62,9 +62,9 @@ addSignature <- function(
     
   }else if (visibility == 0){
     
-    if (base::is.null(add_users)) {
+    if(base::is.null(add_users)){
       add_users <- base::data.frame(NULL)
-    }else if (!base::is.data.frame(add_users) || !base::all(c("user_name", "access") %in% base::colnames(add_users))) {
+    }else if(!base::is.data.frame(add_users) || !base::all(c("user_name", "access") %in% base::colnames(add_users))){
       base::stop("<add_users> must be a data frame with the required column names: 'user_name' and 'access'")
     }else{
       # Validate user_name exists in the database
@@ -75,7 +75,7 @@ addSignature <- function(
       # Get list of user names not found
       missing_users <- base::setdiff(add_users$user_name, valid_users$user_name)
       # Check for any missing users
-      if (length(missing_users) > 0)
+      if(base::length(missing_users) > 0)
         base::stop(base::sprintf("The following users do not exist in the database: %s", base::paste(missing_users, collapse = ", ")))
     }
     
@@ -129,9 +129,8 @@ addSignature <- function(
     )
     
     # Return signature id
-    if(return_signature_id == TRUE){
+    if(return_signature_id == TRUE)
       return(signature_tbl$signature_id[1])
-    }
     
   }else{
     
@@ -174,11 +173,7 @@ addSignature <- function(
       # Extract difexp from omic_signature ####
       difexp <- omic_signature$difexp
       # Save difexp to local storage ####
-      data_path <- base::tempfile()
-      # Create the directory
-      if(!base::dir.exists(data_path)){
-        base::dir.create(path = data_path, showWarnings = FALSE, recursive = TRUE, mode = "0777")
-      }
+      data_path <- base::tempdir()
       base::saveRDS(difexp, file = base::file.path(data_path, base::paste0(metadata_tbl$signature_hashkey[1], ".RDS")))
       # Get API URL
       api_url <- base::sprintf("http://%s:%s/store_difexp?api_key=%s&signature_hashkey=%s", conn_handler$host[1], conn_handler$api_port[1], conn_info$api_key[1], metadata_tbl$signature_hashkey[1])
@@ -221,14 +216,14 @@ addSignature <- function(
       
       if(base::nrow(add_users) > 0){
         
-        SigRepo::verbose(base::sprintf("Adding additional users: %s to the signature.", paste(add_users$user_name, collapse = ", ")))
+        SigRepo::verbose(base::sprintf("Adding additional users: %s to the signature access table of the database.", base::paste(add_users$user_name, collapse = ", ")))
         
         SigRepo::addUserToSignature(
           conn_handler = conn_handler,
           signature_id = signature_tbl$signature_id[1],
           user_name = add_users$user_name,
           access_type = add_users$access,
-          verbose = TRUE
+          verbose = FALSE
         )
         
       }        
@@ -455,10 +450,9 @@ addSignature <- function(
     SigRepo::verbose(base::sprintf("ID of the uploaded signature: %s\n", signature_tbl$signature_id[1]))
     
     # Return signature id
-    if(return_signature_id == TRUE){
+    if(return_signature_id == TRUE)
       return(signature_tbl$signature_id[1])
-    }
-    
+
   } 
 }  
 

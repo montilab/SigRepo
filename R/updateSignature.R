@@ -177,7 +177,7 @@ updateSignature <- function(
     
     # If the signature exists, throw an error message ####
     if(base::nrow(check_signature_tbl) > 0 && check_signature_tbl$signature_hashkey[1] != signature_tbl$signature_hashkey[1]){
-    
+      
       # Disconnect from database ####
       base::suppressWarnings(DBI::dbDisconnect(conn))
       
@@ -189,7 +189,7 @@ updateSignature <- function(
       
     }else{
       
-      # 1. Delete signature from signatures table in the database ####
+      # 1. Delete signature from signatures table of the database ####
       SigRepo::delete_table_sql(
         conn = conn,
         db_table_name = db_table_name,
@@ -198,7 +198,7 @@ updateSignature <- function(
         check_db_table = FALSE
       )
       
-      # 2. Delete signature from signature_feature_set table in the database ####
+      # 2. Delete signature feature set from signature_feature_set table of the database ####
       SigRepo::delete_table_sql(
         conn = conn,
         db_table_name = "signature_feature_set",
@@ -215,14 +215,23 @@ updateSignature <- function(
         res <- httr::DELETE(url = api_url)
         # Check status code
         if(res$status_code != 200){
+          # Put signature back to its original form
+          SigRepo::addSignatureWithID(
+            conn_handler = conn_handler, 
+            omic_signature = orig_omic_signature, 
+            assign_signature_id = signature_tbl$signature_id[1], 
+            assign_user_name = signature_tbl$user_name, 
+            visibility = signature_tbl$visibility[1], 
+            check_difexp = FALSE
+          )
           # Disconnect from database ####
           base::suppressWarnings(DBI::dbDisconnect(conn))
           # Show message
-          base::stop("\nSomething went wrong with API. Cannot upload the difexp table into the SigRepo database. Please contact admin for support.\n")
+          base::stop("\nSomething went wrong with API. Cannot remove difexp table from the database. Please contact admin for support.\n")
         }
       }
       
-      # Insert table into database ####
+      # Insert metadata into the database ####
       SigRepo::insert_table_sql(
         conn = conn,
         db_table_name = db_table_name, 
@@ -247,9 +256,19 @@ updateSignature <- function(
           )
         }, error = function(e){
           # Delete signature
-          SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = signature_tbl$signature_id[1], verbose = FALSE)
+          SigRepo::deleteSignature(
+            conn_handler = conn_handler, 
+            signature_id = signature_tbl$signature_id[1], 
+            verbose = FALSE
+          )
           # Put signature back to its original form
-          SigRepo::addSignatureWithID(conn_handler = conn_handler, omic_signature = orig_omic_signature, assign_signature_id = signature_tbl$signature_id[1], assign_user_name = signature_tbl$user_name, visibility = signature_tbl$visibility[1])
+          SigRepo::addSignatureWithID(
+            conn_handler = conn_handler, 
+            omic_signature = orig_omic_signature, 
+            assign_signature_id = signature_tbl$signature_id[1], 
+            assign_user_name = signature_tbl$user_name, 
+            visibility = signature_tbl$visibility[1]
+          )
           # Disconnect from database ####
           base::suppressWarnings(DBI::dbDisconnect(conn))  
           # Return error message
@@ -259,9 +278,19 @@ updateSignature <- function(
         # Check if warning table is returned
         if(methods::is(warn_tbl, "data.frame") && base::nrow(warn_tbl) > 0){
           # Delete signature
-          SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = signature_tbl$signature_id[1], verbose = FALSE)
+          SigRepo::deleteSignature(
+            conn_handler = conn_handler, 
+            signature_id = signature_tbl$signature_id[1], 
+            verbose = FALSE
+          )
           # Put signature back to its original form
-          SigRepo::addSignatureWithID(conn_handler = conn_handler, omic_signature = orig_omic_signature, assign_signature_id = signature_tbl$signature_id[1], assign_user_name = signature_tbl$user_name, visibility = signature_tbl$visibility[1])
+          SigRepo::addSignatureWithID(
+            conn_handler = conn_handler, 
+            omic_signature = orig_omic_signature, 
+            assign_signature_id = signature_tbl$signature_id[1], 
+            assign_user_name = signature_tbl$user_name, 
+            visibility = signature_tbl$visibility[1]
+          )
           # Disconnect from database ####
           base::suppressWarnings(DBI::dbDisconnect(conn))  
           # Return warning table
@@ -281,9 +310,19 @@ updateSignature <- function(
           )
         }, error = function(e){
           # Delete signature
-          SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = signature_tbl$signature_id[1], verbose = FALSE)
+          SigRepo::deleteSignature(
+            conn_handler = conn_handler, 
+            signature_id = signature_tbl$signature_id[1], 
+            verbose = FALSE
+          )
           # Put signature back to its original form
-          SigRepo::addSignatureWithID(conn_handler = conn_handler, omic_signature = orig_omic_signature, assign_signature_id = signature_tbl$signature_id[1], assign_user_name = signature_tbl$user_name, visibility = signature_tbl$visibility[1])
+          SigRepo::addSignatureWithID(
+            conn_handler = conn_handler, 
+            omic_signature = orig_omic_signature, 
+            assign_signature_id = signature_tbl$signature_id[1], 
+            assign_user_name = signature_tbl$user_name, 
+            visibility = signature_tbl$visibility[1]
+          )
           # Disconnect from database ####
           base::suppressWarnings(DBI::dbDisconnect(conn))  
           # Return error message
@@ -293,9 +332,19 @@ updateSignature <- function(
         # Check if warning table is returned
         if(methods::is(warn_tbl, "data.frame") && base::nrow(warn_tbl) > 0){
           # Delete signature
-          SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = signature_tbl$signature_id[1], verbose = FALSE)
+          SigRepo::deleteSignature(
+            conn_handler = conn_handler, 
+            signature_id = signature_tbl$signature_id[1], 
+            verbose = FALSE
+          )
           # Put signature back to its original form
-          SigRepo::addSignatureWithID(conn_handler = conn_handler, omic_signature = orig_omic_signature, assign_signature_id = signature_tbl$signature_id[1], assign_user_name = signature_tbl$user_name, visibility = signature_tbl$visibility[1])
+          SigRepo::addSignatureWithID(
+            conn_handler = conn_handler, 
+            omic_signature = orig_omic_signature, 
+            assign_signature_id = signature_tbl$signature_id[1], 
+            assign_user_name = signature_tbl$user_name, 
+            visibility = signature_tbl$visibility[1]
+          )
           # Disconnect from database ####
           base::suppressWarnings(DBI::dbDisconnect(conn))  
           # Return warning table
@@ -330,10 +379,7 @@ updateSignature <- function(
         # Extract difexp from omic_signature ####
         difexp <- omic_signature$difexp
         # Save difexp to local storage ####
-        data_path <- base::tempfile()
-        if(!base::dir.exists(data_path)){
-          base::dir.create(path = data_path, showWarnings = FALSE, recursive = TRUE, mode = "0777")
-        }
+        data_path <- base::tempdir()
         base::saveRDS(difexp, file = base::file.path(data_path, base::paste0(metadata_tbl$signature_hashkey[1], ".RDS")))
         # Get API URL
         api_url <- base::sprintf("http://%s:%s/store_difexp?api_key=%s&signature_hashkey=%s", conn_handler$host[1], conn_handler$api_port[1], conn_info$api_key[1], metadata_tbl$signature_hashkey[1])
@@ -348,13 +394,23 @@ updateSignature <- function(
         # Check status code
         if(res$status_code != 200){
           # Delete signature
-          SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = signature_tbl$signature_id[1], verbose = FALSE)
+          SigRepo::deleteSignature(
+            conn_handler = conn_handler, 
+            signature_id = signature_tbl$signature_id[1], 
+            verbose = FALSE
+          )
           # Put signature back to its original form
-          SigRepo::addSignatureWithID(conn_handler = conn_handler, omic_signature = orig_omic_signature, assign_signature_id = signature_tbl$signature_id[1], assign_user_name = signature_tbl$user_name, visibility = signature_tbl$visibility[1])
+          SigRepo::addSignatureWithID(
+            conn_handler = conn_handler, 
+            omic_signature = orig_omic_signature, 
+            assign_signature_id = signature_tbl$signature_id[1], 
+            assign_user_name = signature_tbl$user_name, 
+            visibility = signature_tbl$visibility[1]
+          )
           # Disconnect from database ####
           base::suppressWarnings(DBI::dbDisconnect(conn))        
           # Show message
-          base::stop("Something went wrong with API. Cannot upload the difexp table to the SigRepo database. Please contact admin for support.\n")
+          base::stop("Something went wrong with API. Cannot upload the difexp table to the database. Please contact admin for support.\n")
         }else{
           # Remove files from file system 
           base::unlink(base::file.path(data_path, base::paste0(metadata_tbl$signature_hashkey[1], ".RDS")))

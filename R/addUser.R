@@ -1,5 +1,5 @@
 #' @title addUser
-#' @description Add a list of users to database
+#' @description Add a list of users to the database
 #' @param conn_handler A handler uses to establish connection to the database 
 #' obtained from SigRepo::newConnhandler() (required)
 #' @param user_tbl A data frame containing the appropriate column names: 
@@ -120,9 +120,7 @@ addUser <- function(
   
   # Get db user table 
   # Note inactive users do not have an account in DB
-  db_user_tbl <- base::suppressWarnings(
-    DBI::dbGetQuery(conn = conn, statement = base::sprintf("SELECT host, user FROM mysql.user"))
-  ) 
+  db_user_tbl <- base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("SELECT host, user FROM mysql.user"))) 
   
   # Extract inactive users and re-activate them
   inactive_user_tbl <- table |> dplyr::filter(!.data$user_name %in% db_user_tbl$user)

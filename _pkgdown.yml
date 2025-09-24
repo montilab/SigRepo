@@ -24,77 +24,68 @@ news:
   one_page: false
   
 reference:
-  - title: Connect to database
+  - title: Connect to Database
     desc: ~
     contents:
-    - '`newConnHandler`'
+      - '`newConnHandler`'
   
-  - title: Search data in the database
+  - title: Search Data in Database
     desc: ~
     contents:
-    - '`searchSignature`'
-    - '`searchCollection`'
-    - '`searchTranscriptomicsFeatureSet`'
-    - '`searchProteomicsFeatureSet`'
-    - '`searchOrganisms`'
-    - '`searchPhenotypes`'
-    - '`searchPlatforms`'
-    - '`searchSampleTypes`'
-    - '`searchUser`'
+      - '`searchSignature`'
+      - '`searchCollection`'
+      - '`searchTranscriptomicsFeatureSet`'
+      - '`searchProteomicsFeatureSet`'
+      - '`searchSampleTypes`'
+      - '`searchOrganisms`'
+      - '`searchPhenotypes`'
+      - '`searchPlatforms`'
+      - '`searchUser`'
     
-  - title: Retrieve data from the database
+  - title: Retrieve Data from Database
     desc: ~
     contents:
-    - '`getSignature`'
-    - '`getCollection`'
-    - '`getAPIKey`'
-  
-  - title: Add data to the database
+      - '`getSignature`'
+      - '`getCollection`'
+
+  - title: Import Data to Database
     desc: ~
     contents:
-    - '`addSignature`'
-    - '`addUserToSignature`'
-    - '`addCollection`'
-    - '`addUserToCollection`'
-    - '`addSignatureToCollection`'
-    - '`addRefFeatureSet`'
-    - '`addKeyword`'
-    - '`addOrganism`'
-    - '`addPhenotype`'
-    - '`addPlatform`'
-    - '`addSampleType`'
-    - '`addUser`'
-    - '`addProteomicsFeatureSet`'
-    - '`addProteomicsSignatureSet`'
-    - '`addTranscriptomicsFeatureSet`'
-    - '`addTranscriptomicsSignatureSet`'
+      - '`addSignature`'
+      - '`addUserToSignature`'
+      - '`addCollection`'
+      - '`addUserToCollection`'
+      - '`addSignatureToCollection`'
+      - '`addProteomicsFeatureSet`'
+      - '`addProteomicsSignatureSet`'
+      - '`addTranscriptomicsFeatureSet`'
+      - '`addTranscriptomicsSignatureSet`'
+      - '`addSampleType`'
+      - '`addOrganism`'
+      - '`addPhenotype`'
+      - '`addPlatform`'
+      - '`addKeyword`'
+      - '`addUser`'
   
-  - title: Update data in the database
+  - title: Update Data in Database
     desc: ~
     contents:
-    - '`updateSignature`'
-    - '`updateCollectionMetadata`'
-    - '`updateUser`'
+      - '`updateSignature`'
+      - '`updateCollectionMetadata`'
+      - '`updateUser`'
   
-  - title: Delete data from the database
+  - title: Delete Data from Database
     desc: ~
     contents:
-    - '`deleteSignature`'
-    - '`deleteCollection`'
-    - '`deleteOrganism`'
-    - '`deletePhenotype`'
-    - '`deletePlatform`'
-    - '`deleteSampleType`'
-    - '`deleteUser`'
-  
-  - title: Miscellaneous functions
-    desc: 
-    contents:
-    - '`validateUser`'
-    - '`inactivateUser`'
-    - '`protTransform`'
-    - '`removeSignatureFromCollection`'
-      
+      - '`deleteSignature`'
+      - '`deleteCollection`'
+      - '`removeSignatureFromCollection`'
+      - '`deleteSampleType`'
+      - '`deleteOrganism`'
+      - '`deletePhenotype`'
+      - '`deletePlatform`'
+      - '`deleteUser`'
+
 navbar:
   title: SigRepo
   structure:

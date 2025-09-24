@@ -43,7 +43,7 @@ getSignature <- function(
   ) 
   
   # Get a list of filtered variables
-  filter_var_list <- list(
+  filter_var_list <- base::list(
     "signature_id" = base::unique(signature_id),
     "signature_name" = base::unique(signature_name)
   )
@@ -51,10 +51,10 @@ getSignature <- function(
   # Filter table with given search variables
   for(r in base::seq_along(filter_var_list)){
     #r=1;
-    filter_status <- ifelse(length(filter_var_list[[r]]) == 0 || all(filter_var_list[[r]] %in% c("", NA)), FALSE, TRUE)
+    filter_status <- base::ifelse(base::length(filter_var_list[[r]]) == 0 || base::all(filter_var_list[[r]] %in% c("", NA)), FALSE, TRUE)
     if(filter_status == TRUE){
       filter_var <- base::names(filter_var_list)[r]
-      filter_val <- filter_var_list[[r]][which(!filter_var_list[[r]] %in% c(NA, ""))]
+      filter_val <- filter_var_list[[r]][base::which(!filter_var_list[[r]] %in% c(NA, ""))]
       signature_tbl <- signature_tbl |> dplyr::filter(base::trimws(base::tolower(!!!rlang::syms(filter_var))) %in% base::trimws(base::tolower(filter_val)))
     }
   }

@@ -104,8 +104,10 @@ deleteSignature <- function(
       }
     }
     
-    # Check if signature has difexp, remove it
+    # If signature has difexp, remove it
     if(signature_tbl$has_difexp[1] == 1){
+      # Return message
+      SigRepo::verbose(base::sprintf("Remove difexp belongs to signature_id = '%s' from the database.", signature_id))
       # Get API URL
       api_url <- base::sprintf("http://%s:%s/delete_difexp?api_key=%s&signature_hashkey=%s", conn_handler$host[1], conn_handler$api_port[1], conn_info$api_key[1], signature_tbl$signature_hashkey[1])
       # Delete difexp from database
@@ -115,7 +117,7 @@ deleteSignature <- function(
         # Disconnect from database ####
         base::suppressWarnings(DBI::dbDisconnect(conn))
         # Show message
-        base::stop("\nSomething went wrong with API. Cannot upload the difexp table to the SigRepo database. Please contact admin for support.\n")
+        base::stop("\nSomething went wrong with API. Cannot delete difexp table from the database. Please contact admin for support.\n")
       }
     }
     

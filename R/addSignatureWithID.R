@@ -7,6 +7,8 @@
 #' @param assign_user_name Assign an unique user name to the uploaded signature (required) 
 #' @param visibility A logical value indicates whether or not to allow others  
 #' to view and access one's uploaded signature. Default is \code{FALSE}.
+#' @param check_difexp A logical value indicates whether or not to check difexp
+#' table in the database. Default is \code{TRUE}.
 #' @param verbose A logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{FALSE}.
 #'
@@ -19,6 +21,7 @@ addSignatureWithID <- function(
     assign_signature_id,
     assign_user_name,
     visibility = FALSE,
+    check_difexp = TRUE,
     verbose = FALSE
 ){
   
@@ -39,7 +42,7 @@ addSignatureWithID <- function(
   db_table_name <- "signatures"
   
   # Get visibility ####
-  visibility <- ifelse(visibility == TRUE, 1, 0)
+  visibility <- base::ifelse(visibility == TRUE, 1, 0)
   
   # Check assign_signature_id
   if(!base::length(assign_signature_id) == 1 || base::all(assign_signature_id %in% c(NA, ""))){
@@ -102,14 +105,11 @@ addSignatureWithID <- function(
   ) 
   
   # Put difexp back to its original form
-  if(metadata_tbl$has_difexp[1] == TRUE){
+  if(metadata_tbl$has_difexp[1] == TRUE && check_difexp == TRUE){
     # Extract difexp from omic_signature ####
     difexp <- omic_signature$difexp
     # Save difexp to local storage ####
-    data_path <- base::tempfile()
-    if(!base::dir.exists(data_path)){
-      base::dir.create(path = data_path, showWarnings = FALSE, recursive = TRUE, mode = "0777")
-    }
+    data_path <- base::tempdir()
     base::saveRDS(difexp, file = base::file.path(data_path, base::paste0(metadata_tbl$signature_hashkey[1], ".RDS")))
     # Get API URL
     api_url <- base::sprintf("http://%s:%s/store_difexp?api_key=%s&signature_hashkey=%s", conn_handler$host[1], conn_handler$api_port[1], conn_info$api_key[1], metadata_tbl$signature_hashkey[1])
@@ -126,7 +126,7 @@ addSignatureWithID <- function(
       # Disconnect from database ####
       base::suppressWarnings(DBI::dbDisconnect(conn))
       # Show message
-      base::stop("Something went wrong with API. Cannot upload the difexp table to the SigRepo database. Please contact admin for support.\n")
+      base::stop("Something went wrong with API. Cannot re-upload difexp table to the database. Please contact admin for support.\n")
     }else{
       # Remove files from file system 
       base::unlink(base::file.path(data_path, base::paste0(metadata_tbl$signature_hashkey[1], ".RDS")))

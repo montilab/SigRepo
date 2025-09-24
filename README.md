@@ -174,10 +174,10 @@ SigRepo::addSignature(
 #> Uploading signature metadata to the database...
 #> Saving difexp to the database...
 #> now dyn.load("/Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/library/curl/libs/curl.so") ...
-#> Adding user to the signature access table of the database...
+#> Adding signature owner to the signature access table of the database...
 #> Adding signature feature set to the database...
 #> Finished uploading.
-#> ID of the uploaded signature: 104
+#> ID of the uploaded signature: 11
 ```
 
 ## **Example 2**: Upload `LLFS_Aging_Gene_2023` signature
@@ -189,10 +189,10 @@ SigRepo::addSignature(
 )
 #> Uploading signature metadata to the database...
 #> Saving difexp to the database...
-#> Adding user to the signature access table of the database...
+#> Adding signature owner to the signature access table of the database...
 #> Adding signature feature set to the database...
 #> Finished uploading.
-#> ID of the uploaded signature: 105
+#> ID of the uploaded signature: 12
 ```
 
 ## **Example 3**: Upload `Myc_reduce_mice_liver_24m` signature
@@ -205,7 +205,7 @@ missing_features <- SigRepo::addSignature(
 )
 #> Uploading signature metadata to the database...
 #> Saving difexp to the database...
-#> Adding user to the signature access table of the database...
+#> Adding signature owner to the signature access table of the database...
 #> Adding signature feature set to the database...
 #> Warning in SigRepo::showTranscriptomicsErrorMessage(db_table_name = ref_table, : 
 #> The following features do not existed in the 'transcriptomics_features' table of the database:
@@ -341,15 +341,14 @@ if(nrow(signature_tbl) > 0){
 }
 ```
 
-| signature_id | signature_name                   | organism     | direction_type | assay_type      | phenotype        | platform_name            | sample_type     | covariates                                    | description                                                                             | score_cutoff | logfc_cutoff | p_value_cutoff | adj_p_cutoff | cutoff_description | keywords                       |     PMID | year | others                     | has_difexp | num_of_difexp | num_up_regulated | num_down_regulated | user_name | date_created        | visibility | signature_hashkey                |
-|-------------:|:---------------------------------|:-------------|:---------------|:----------------|:-----------------|:-------------------------|:----------------|:----------------------------------------------|:----------------------------------------------------------------------------------------|-------------:|-------------:|---------------:|-------------:|:-------------------|:-------------------------------|---------:|-----:|:---------------------------|-----------:|--------------:|-----------------:|-------------------:|:----------|:--------------------|-----------:|:---------------------------------|
-|           35 | test_sig_1                       | Homo sapiens | bi-directional | transcriptomics | CYP181 knockdown | DNA assay by ChIP-seq    | MDA-MB-231 cell | none                                          | Profiles of the transcriptional response of CYP181 knockdown in breast cancer cell ines |           NA |           NA |             NA |         0.01 | NA                 | breast cancer,CYP181 knockdown |       NA | 2016 | NA                         |          1 |          7938 |             2255 |               2787 | root      | 2025-09-03 13:06:26 |          0 | 261931589b3b53249405f635812c501a |
-|           69 | Myc_reduce_mice_liver_24m_v1     | Mus musculus | bi-directional | transcriptomics | Myc_reduce       | transcriptomics by array | liver           | none                                          | mice Myc haploinsufficient (Myc(+/-))                                                   |            5 |           NA |             NA |         0.05 | NA                 | Myc,KO,longevity               | 25619689 | 2015 | animal_strain: \<C57BL/6\> |          1 |           884 |                5 |                 10 | montilab  | 2025-09-04 02:37:36 |          0 | d6f0247a37eec0e3a6b6285dc7394d88 |
-|           70 | Myc_reduce_mice_liver_24m_v2     | Mus musculus | bi-directional | transcriptomics | Myc_reduce       | transcriptomics by array | liver           | none                                          | mice Myc haploinsufficient (Myc(+/-))                                                   |            5 |           NA |             NA |         0.05 | NA                 | Myc,KO,longevity               | 25619689 | 2015 | animal_strain: \<C57BL/6\> |          1 |           884 |                5 |                 10 | montilab  | 2025-09-04 02:37:39 |          0 | e67a6b45899dc0f8d7eaa2cedec4d622 |
-|           71 | Myc_reduce_mice_liver_24m_v3     | Mus musculus | bi-directional | transcriptomics | Myc_reduce       | transcriptomics by array | liver           | none                                          | mice Myc haploinsufficient (Myc(+/-))                                                   |            5 |           NA |             NA |         0.05 | NA                 | Myc,KO,longevity               | 25619689 | 2015 | animal_strain: \<C57BL/6\> |          1 |           884 |                5 |                 10 | montilab  | 2025-09-04 02:41:49 |          0 | 3a6d590d99bdf0ab38c742b1d6dc5ac9 |
-|           72 | Myc_reduce_mice_liver_24m_v4     | Mus musculus | bi-directional | transcriptomics | Myc_reduce       | transcriptomics by array | liver           | none                                          | mice Myc haploinsufficient (Myc(+/-))                                                   |            5 |           NA |             NA |         0.05 | NA                 | Myc,KO,longevity               | 25619689 | 2015 | animal_strain: \<C57BL/6\> |          1 |           884 |                5 |                 10 | montilab  | 2025-09-04 02:41:52 |          0 | f08919100db811a8b117ce6602dd31e4 |
-|          104 | Myc_reduce_mice_liver_24m_readme | Mus musculus | bi-directional | transcriptomics | Myc_reduce       | transcriptomics by array | liver           | none                                          | mice Myc haploinsufficient (Myc(+/-))                                                   |            5 |           NA |             NA |         0.05 | NA                 | Myc,KO,longevity               | 25619689 | 2015 | animal_strain: \<C57BL/6\> |          1 |           884 |                5 |                 10 | montilab  | 2025-09-04 12:42:21 |          0 | a10176ce6e727366cf740e2bfb56e2bc |
-|          105 | LLFS_Aging_Gene_2023             | Homo sapiens | bi-directional | transcriptomics | Aging            | transcriptomics by array | blood           | sex,fc,education,percent_intergenic,PC1-4,GRM | NA                                                                                      |            6 |           NA |             NA |         0.01 | NA                 | human,aging,LLFS               |       NA | 2023 | NA                         |          1 |          1000 |               82 |                 87 | montilab  | 2025-09-04 12:42:24 |          0 | b35b7c1d387440d474bfcb3cb162c9a6 |
+| signature_id | signature_name                   | organism     | direction_type | assay_type      | phenotype  | platform_name            | sample_type | covariates                                    | description                           | score_cutoff | logfc_cutoff | p_value_cutoff | adj_p_cutoff | cutoff_description | keywords         |     PMID | year | others                     | has_difexp | num_of_difexp | num_up_regulated | num_down_regulated | user_name | date_created        | visibility | signature_hashkey                |
+|-------------:|:---------------------------------|:-------------|:---------------|:----------------|:-----------|:-------------------------|:------------|:----------------------------------------------|:--------------------------------------|-------------:|-------------:|---------------:|-------------:|:-------------------|:-----------------|---------:|-----:|:---------------------------|-----------:|--------------:|-----------------:|-------------------:|:----------|:--------------------|-----------:|:---------------------------------|
+|            7 | Myc_reduce_mice_liver_24m_v1     | Mus musculus | bi-directional | transcriptomics | Myc_reduce | transcriptomics by array | liver       | none                                          | mice Myc haploinsufficient (Myc(+/-)) |            5 |           NA |             NA |         0.05 | NA                 | Myc,KO,longevity | 25619689 | 2015 | animal_strain: \<C57BL/6\> |          1 |           884 |                5 |                 10 | root      | 2025-09-19 19:50:04 |          0 | eacd0935d97847d56cb717455b0e48a3 |
+|            8 | Myc_reduce_mice_liver_24m_v2     | Mus musculus | bi-directional | transcriptomics | Myc_reduce | transcriptomics by array | liver       | none                                          | mice Myc haploinsufficient (Myc(+/-)) |            5 |           NA |             NA |         0.05 | NA                 | Myc,KO,longevity | 25619689 | 2015 | animal_strain: \<C57BL/6\> |          1 |           884 |                5 |                 10 | root      | 2025-09-19 19:50:04 |          0 | ec356cabc33fcc22f8a0b77b24db91ab |
+|            9 | Myc_reduce_mice_liver_24m_v3     | Mus musculus | bi-directional | transcriptomics | Myc_reduce | transcriptomics by array | liver       | none                                          | mice Myc haploinsufficient (Myc(+/-)) |            5 |           NA |             NA |         0.05 | NA                 | Myc,KO,longevity | 25619689 | 2015 | animal_strain: \<C57BL/6\> |          1 |           884 |                5 |                 10 | root      | 2025-09-19 19:50:07 |          0 | fa416468cc91f872f073e15efdaf1ece |
+|           10 | Myc_reduce_mice_liver_24m_v4     | Mus musculus | bi-directional | transcriptomics | Myc_reduce | transcriptomics by array | liver       | none                                          | mice Myc haploinsufficient (Myc(+/-)) |            5 |           NA |             NA |         0.05 | NA                 | Myc,KO,longevity | 25619689 | 2015 | animal_strain: \<C57BL/6\> |          1 |           884 |                5 |                 10 | root      | 2025-09-19 19:50:07 |          0 | 5bc419a0fbd2c012e669a19c67f2b434 |
+|           11 | Myc_reduce_mice_liver_24m_readme | Mus musculus | bi-directional | transcriptomics | Myc_reduce | transcriptomics by array | liver       | none                                          | mice Myc haploinsufficient (Myc(+/-)) |            5 |           NA |             NA |         0.05 | NA                 | Myc,KO,longevity | 25619689 | 2015 | animal_strain: \<C57BL/6\> |          1 |           884 |                5 |                 10 | root      | 2025-09-24 13:06:55 |          0 | 7e24a413c1287f840d492b2963c263a5 |
+|           12 | LLFS_Aging_Gene_2023             | Homo sapiens | bi-directional | transcriptomics | Aging      | transcriptomics by array | blood       | sex,fc,education,percent_intergenic,PC1-4,GRM | NA                                    |            6 |           NA |             NA |         0.01 | NA                 | human,aging,LLFS |       NA | 2023 | NA                         |          1 |          1000 |               82 |                 87 | root      | 2025-09-24 13:06:56 |          0 | 7fdecac66691beed1703efc25487768c |
 
 ## Example 2: Search for a specific signature, e.g., **signature_name = “LLFS_Aging_Gene_2023”**
 
@@ -369,7 +368,7 @@ if(nrow(signature_tbl) > 0){
 
 | signature_id | signature_name       | organism     | direction_type | assay_type      | phenotype | platform_name            | sample_type | covariates                                    | description | score_cutoff | logfc_cutoff | p_value_cutoff | adj_p_cutoff | cutoff_description | keywords         | PMID | year | others | has_difexp | num_of_difexp | num_up_regulated | num_down_regulated | user_name | date_created        | visibility | signature_hashkey                |
 |-------------:|:---------------------|:-------------|:---------------|:----------------|:----------|:-------------------------|:------------|:----------------------------------------------|:------------|-------------:|-------------:|---------------:|-------------:|:-------------------|:-----------------|-----:|-----:|:-------|-----------:|--------------:|-----------------:|-------------------:|:----------|:--------------------|-----------:|:---------------------------------|
-|          105 | LLFS_Aging_Gene_2023 | Homo sapiens | bi-directional | transcriptomics | Aging     | transcriptomics by array | blood       | sex,fc,education,percent_intergenic,PC1-4,GRM | NA          |            6 |           NA |             NA |         0.01 | NA                 | human,aging,LLFS |   NA | 2023 | NA     |          1 |          1000 |               82 |                 87 | montilab  | 2025-09-04 12:42:24 |          0 | b35b7c1d387440d474bfcb3cb162c9a6 |
+|           12 | LLFS_Aging_Gene_2023 | Homo sapiens | bi-directional | transcriptomics | Aging     | transcriptomics by array | blood       | sex,fc,education,percent_intergenic,PC1-4,GRM | NA          |            6 |           NA |             NA |         0.01 | NA                 | human,aging,LLFS |   NA | 2023 | NA     |          1 |          1000 |               82 |                 87 | root      | 2025-09-24 13:06:56 |          0 | 7fdecac66691beed1703efc25487768c |
 
 # Retrieve a list of omic signatures
 
@@ -437,11 +436,12 @@ if(nrow(signature_tbl) > 0){
     signature_id = signature_tbl$signature_id  
   )
 }
-#> Remove signature_id = '105' from 'signatures' table of the database.
-#> Remove features belongs to signature_id = '105' from 'signature_feature_set' table of the database.
-#> Remove user access to signature_id = '105' from 'signature_access' table of the database.
-#> Remove signature_id = '105' from 'signature_collection_access' table of the database.
-#> signature_id = '105' has been removed.
+#> Remove difexp belongs to signature_id = '12' from the database.
+#> Remove signature_id = '12' from 'signatures' table of the database.
+#> Remove features belongs to signature_id = '12' from 'signature_feature_set' table of the database.
+#> Remove user access to signature_id = '12' from 'signature_access' table of the database.
+#> Remove signature_id = '12' from 'signature_collection_access' table of the database.
+#> signature_id = '12' has been removed.
 ```
 
 # Update a signature
@@ -542,7 +542,7 @@ if(base::nrow(signature_tbl) > 0){
   )
 }
 #>   [Success] OmicSignature object Myc_reduce_mice_liver_24m_readme created.
-#>  signature_id = '104' has been updated.
+#>  signature_id = '11' has been updated.
 ```
 
 Let’s look up **signature_name = “Myc_reduce_mice_liver_24m_readme”**
@@ -564,7 +564,7 @@ if(base::nrow(signature_tbl) > 0){
 
 | signature_id | signature_name                   | organism     | direction_type | assay_type      | phenotype  | platform_name                          | sample_type | covariates | description                           | score_cutoff | logfc_cutoff | p_value_cutoff | adj_p_cutoff | cutoff_description | keywords         |     PMID | year | others                     | has_difexp | num_of_difexp | num_up_regulated | num_down_regulated | user_name | date_created        | visibility | signature_hashkey                |
 |-------------:|:---------------------------------|:-------------|:---------------|:----------------|:-----------|:---------------------------------------|:------------|:-----------|:--------------------------------------|-------------:|-------------:|---------------:|-------------:|:-------------------|:-----------------|---------:|-----:|:---------------------------|-----------:|--------------:|-----------------:|-------------------:|:----------|:--------------------|-----------:|:---------------------------------|
-|          104 | Myc_reduce_mice_liver_24m_readme | Mus musculus | bi-directional | transcriptomics | Myc_reduce | transcriptomics by single-cell RNA-seq | liver       | none       | mice Myc haploinsufficient (Myc(+/-)) |            5 |           NA |             NA |         0.05 | NA                 | Myc,KO,longevity | 25619689 | 2015 | animal_strain: \<C57BL/6\> |          1 |           884 |                5 |                 10 | montilab  | 2025-09-04 12:42:42 |          0 | a10176ce6e727366cf740e2bfb56e2bc |
+|           11 | Myc_reduce_mice_liver_24m_readme | Mus musculus | bi-directional | transcriptomics | Myc_reduce | transcriptomics by single-cell RNA-seq | liver       | none       | mice Myc haploinsufficient (Myc(+/-)) |            5 |           NA |             NA |         0.05 | NA                 | Myc,KO,longevity | 25619689 | 2015 | animal_strain: \<C57BL/6\> |          1 |           884 |                5 |                 10 | root      | 2025-09-24 13:07:00 |          0 | 7e24a413c1287f840d492b2963c263a5 |
 
 Finally, remove **signature_name = “Myc_reduce_mice_liver_24m_readme”**
 from the database
@@ -583,11 +583,12 @@ if(nrow(signature_tbl) > 0){
     signature_id = signature_tbl$signature_id
   )
 }
-#> Remove signature_id = '104' from 'signatures' table of the database.
-#> Remove features belongs to signature_id = '104' from 'signature_feature_set' table of the database.
-#> Remove user access to signature_id = '104' from 'signature_access' table of the database.
-#> Remove signature_id = '104' from 'signature_collection_access' table of the database.
-#> signature_id = '104' has been removed.
+#> Remove difexp belongs to signature_id = '11' from the database.
+#> Remove signature_id = '11' from 'signatures' table of the database.
+#> Remove features belongs to signature_id = '11' from 'signature_feature_set' table of the database.
+#> Remove user access to signature_id = '11' from 'signature_access' table of the database.
+#> Remove signature_id = '11' from 'signature_collection_access' table of the database.
+#> signature_id = '11' has been removed.
 ```
 
 # Additional Guides

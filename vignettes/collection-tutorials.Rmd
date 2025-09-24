@@ -68,11 +68,11 @@ library(OmicSignature)
 ```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 # Create a connection handler
 conn_handler <- SigRepo::newConnHandler(
-  dbname = Sys.getenv("DBNAME"), 
-  host = Sys.getenv("HOST"), 
-  port = as.integer(Sys.getenv("PORT")), 
-  user = Sys.getenv("USER"), 
-  password = Sys.getenv("PASSWORD")
+  dbname = base::Sys.getenv("DB_NAME"), 
+  host = base::Sys.getenv("DB_HOST"), 
+  port = base::as.integer(base::Sys.getenv("DB_PORT")), 
+  user = base::Sys.getenv("DB_USER"), 
+  password = base::Sys.getenv("DB_PASSWORD")
 )
 ```
 

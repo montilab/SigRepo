@@ -28,11 +28,9 @@ Imports:
   methods,
   OmicSignature,
   purrr,
-  readr,
   rlang,
   RMySQL,
-  tidyr,
-  utils
+  tidyr
 Remotes:
   montilab/OmicSignature
 Suggests:

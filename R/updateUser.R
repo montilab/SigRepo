@@ -61,7 +61,7 @@ updateUser <- function(
     db_table_name = db_table_name,
     return_var = "*",
     filter_coln_var = "user_name", 
-    filter_coln_val = list("user_name" = user_name),
+    filter_coln_val = base::list("user_name" = user_name),
     check_db_table = FALSE
   )
   
@@ -72,7 +72,7 @@ updateUser <- function(
     base::suppressWarnings(DBI::dbDisconnect(conn)) 
     
     # Show message
-    base::stop(base::sprintf("\nCannot update user = '%s' as user does not exist in the 'users' table of the SigRepo database.\n", user_name))
+    base::stop(base::sprintf("\nCannot update user = '%s' as user does not exist in the 'users' table of the database.\n", user_name))
     
   }
   
@@ -81,7 +81,7 @@ updateUser <- function(
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn))     
     # Show message
-    base::stop("\n'role' must have a length of 1 and can have one of the three roles: admin/editor/viewer.\n")
+    base::stop("\n'role' must have a length of 1 and be one of the three roles: admin/editor/viewer.\n")
   }
   
   # Check active status ####

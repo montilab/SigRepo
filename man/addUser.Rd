@@ -18,5 +18,5 @@ user_role, active (required)}
 diagnostic messages. Default is \code{TRUE}.}
 }
 \description{
-Add a list of users to database
+Add a list of users to the database
 }
