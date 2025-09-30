@@ -52,15 +52,16 @@ deleteUser <- function(
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn)) 
     # Show message
-    base::stop(base::sprintf("\nThere is no user = '%s' existed in the 'users' table of the SigRepo database.\n", user_name))
+    base::stop(base::sprintf("\nThere is no user = '%s' existed in the 'users' table of the database.\n", user_name))
   }
   
   # Update user to be inactive in the users table ####
-  SigRepo::updateUser(
-    conn_handler = conn_handler,
-    user_name = user_name,
-    active = FALSE,
-    verbose = FALSE
+  SigRepo::delete_table_sql(
+    conn = conn,
+    db_table_name = "users",
+    delete_coln_var = "user_name",
+    delete_coln_val = user_name,
+    check_db_table = TRUE
   )
   
   # Reset message options
@@ -77,7 +78,7 @@ deleteUser <- function(
   base::suppressWarnings(DBI::dbDisconnect(conn)) 
   
   # Return message
-  SigRepo::verbose(base::sprintf("user_name = '%s' has been inactivated and removed.", user_name))
+  SigRepo::verbose(base::sprintf("user_name = '%s' has been removed.", user_name))
   
 }
 
