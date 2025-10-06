@@ -3,20 +3,13 @@
 
 # <img src="man/figures/logo.png" align="left" width="190" /> SigRepo: An R package for storing and processing omic signatures
 
-The `SigRepo` package includes a suite of functions for easily storing
-and managing biological signatures and its constituents. Currently,
-`Sigrepo` is capable of storing, searching, and retrieving signatures
-and its signature collections from a MySQL database of choice. Interest
-in setting-up your own `SigRepo` database? See <a href="https://github.com/montilab/SigRepo_Server">here</a> for
-how to install a MySQL-based SigRepo server.
+The `SigRepo` package provides a comprehensive set of functions for easy storage and management of biological signatures and their components. SigRepo (the __client__) works alongside `SigRepo_Server`, its __server__ counterpart. While SigRepo enables you to store, search, and retrieve signatures and signature collections, these operations rely on a running SigRepo_Server instance.
 
-In order to interact with a suite of functions in `SigRepo` package, the
-input data must represent an R6 object for the representation of
-signatures and signature collections, and they can be created using our
-proprietary package,
-<a href="https://github.com/montilab/OmicSignature">OmicSignature</a>.
+Interested in setting up your own SigRepo_Server? Check out the installation instructions <a href="https://github.com/montilab/SigRepo_Server">here</a>.
 
-Click on each link below for more information:
+To upload and download signatures — and to fully utilize the functionalities offered by the SigRepo package — signatures and signature collections must be represented as specific R6 objects. You can create these objects using our proprietary package, <a href="https://github.com/montilab/OmicSignature">OmicSignature</a>.
+
+Click on the links below for more information:
 
 - [Overview of the object
   structure](https://montilab.github.io/OmicSignature/articles/ObjectStructure.html)
@@ -25,9 +18,8 @@ Click on each link below for more information:
 - [Create an OmicSignatureCollection
   (OmSC)](https://montilab.github.io/OmicSignature/articles/CreateOmSC.html)
 
-For demonstrations, we will walk through the steps of how to use
-`SigRepo` package to store, retrieve, and interact with a list of
-signatures stored in our MySQL SigRepo Database.
+Below, we walk you through few essential steps to install the `SigRepo` package, and to store, retrieve, and interact with a list of
+signatures stored in an <a href="https://sigrepo.org">already deployed SigRepo server</a>.
 
 # Installation
 
@@ -38,11 +30,11 @@ signatures stored in our MySQL SigRepo Database.
     # Load devtools package
     library(devtools)
 
-    # Install SigRepo
-    devtools::install_github(repo = 'montilab/SigRepo')
-
     # Install OmicSignature
     devtools::install_github(repo = 'montilab/OmicSignature')
+
+    # Install SigRepo
+    devtools::install_github(repo = 'montilab/SigRepo')
 
     # Load tidyverse package
     library(tidyverse)
