@@ -427,7 +427,6 @@ if(nrow(signature_tbl) > 0){
     signature_id = signature_tbl$signature_id
   )
 }
-
 ```
 
 # Additional Guides
