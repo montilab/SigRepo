@@ -1,22 +1,22 @@
-#' @title searchPhenotypes
-#' @description Search for a list of phenotypes in the database
+#' @title searchOrganism
+#' @description Search for an organism in the database, can handle a singular organism or list 
 #' @param conn_handler A handler uses to establish connection to the database 
 #' obtained from SigRepo::newConnhandler() (required)
-#' @param phenotype A list of phenotypes to search by. Default is NULL which
-#' will return all of the phenotypes in the database
-#' @param verbose A logical value indicates whether or not to print the
+#' @param organism an organism, or  list of organisms to search by. Default is NULL which
+#' will return all of the organisms in the database.
+#' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
-#' 
+#'
 #' @export
-searchPhenotypes <- function(
+searchOrganism <- function(
     conn_handler,
-    phenotype = NULL,
+    organism = NULL,
     verbose = TRUE
 ){
   
   # Whether to print the diagnostic messages
   SigRepo::print_messages(verbose = verbose)
-  
+
   # Establish user connection ###
   conn <- SigRepo::conn_init(conn_handler = conn_handler)
   
@@ -28,23 +28,23 @@ searchPhenotypes <- function(
   )
   
   # Look up signatures
-  if(base::length(phenotype) == 0 || base::all(phenotype %in% c("", NA))){
+  if(base::length(organism) == 0 || base::all(organism %in% c("", NA))){
     
-    phenotype_tbl <- SigRepo::lookup_table_sql(
+    organism_tbl <- SigRepo::lookup_table_sql(
       conn = conn, 
-      db_table_name = "phenotypes", 
+      db_table_name = "organisms", 
       return_var = "*", 
       check_db_table = TRUE
     )  
     
   }else{
     
-    phenotype_tbl <- SigRepo::lookup_table_sql(
+    organism_tbl <- SigRepo::lookup_table_sql(
       conn = conn, 
-      db_table_name = "phenotypes", 
-      return_var = "*", 
-      filter_coln_var = "phenotype", 
-      filter_coln_val = base::list("phenotype" = base::unique(phenotype)),
+      db_table_name = "organisms", 
+      return_var = "organism", 
+      filter_coln_var = "organism", 
+      filter_coln_val = base::list("organism" = base::unique(organism)),
       check_db_table = TRUE
     ) 
     
@@ -53,8 +53,8 @@ searchPhenotypes <- function(
   # Disconnect from database ####
   base::suppressWarnings(DBI::dbDisconnect(conn))
   
-  # Return tabl
-  return(phenotype_tbl)
+  # Return table
+  return(organism_tbl)
 
 }
 

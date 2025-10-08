@@ -40,7 +40,7 @@ test_that("addPhenotype correctly adds the phenotype into the database",{
 
 test_that("searchPhenotypes correcty searches for the desired phenotype",{
   
-  phenotype_search <- SigRepo::searchPhenotypes(
+  phenotype_search <- SigRepo::searchPhenotype(
     conn_handler = test_conn,
     phenotype = 'test_phenotype',
     verbose = TRUE

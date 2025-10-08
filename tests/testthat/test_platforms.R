@@ -44,7 +44,7 @@ test_that("addPlatform correctly adds the desired platform into the database",{
 
 test_that("searchPlatforms correctly searches for the desired platform",{
   
-  platforms_search <- SigRepo::searchPlatforms(
+  platforms_search <- SigRepo::searchPlatform(
     conn_handler = test_conn,
     platform_name = "test_platform",
     verbose = TRUE
