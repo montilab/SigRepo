@@ -69,6 +69,10 @@ library(SigRepo)
 library(OmicSignature)
 ```
 
+## Before you begin 
+
+Please navigate to our sigrepo.org portal to create your account. On the login page you can click register user. Please click on this and fill out the form. You will recieve an email when your account has been activated. Due to SQL contstraints, having multiple users on the same testing account, like running the tutorial in the readme, will fail to connect. Each user using their own account is ideal.
+
 # Connect to SigRepo Database
 
 We adopt a MySQL database structure for efficiently storing, searching, and retrieving the biological signatures and its constituents. To access the signatures stored in our database, <a href="https://sigrepo.org/">VISIT OUR WEBSITE</a> to create an account or <a href="mailto:sigrepo@bu.edu">CONTACT US</a> to be added.
