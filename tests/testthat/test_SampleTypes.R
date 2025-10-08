@@ -23,7 +23,7 @@ test_that("newConnHandler creates a connection handler correctly",{
 
 test_that("searchSampleTypes correctly searches for the desired sample type", {
   
-  sample_type_table <- SigRepo::searchSampleTypes(
+  sample_type_table <- SigRepo::searchSampleType(
     conn_handler = test_conn
   )
   

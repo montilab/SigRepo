@@ -24,7 +24,7 @@ test_that("newConnHandler creates a connection handler correctly",{
 
 test_that("searchOrganisms correctly searches for the desired sample type", {
   
-  organism_table <- SigRepo::searchOrganisms(
+  organism_table <- SigRepo::searchOrganism(
     conn_handler = test_conn
   )
   

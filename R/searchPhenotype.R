@@ -1,16 +1,16 @@
-#' @title searchPlatforms
-#' @description Search for a list of platforms in the database
+#' @title searchPhenotype
+#' @description Search for a phenotype in the database
 #' @param conn_handler A handler uses to establish connection to the database 
 #' obtained from SigRepo::newConnhandler() (required)
-#' @param platform_name A list of platform names to be looked up. Default is 
-#' NULL which will return all of the platforms in the database.
+#' @param phenotype A phenotype, or a  list of phenotypes to search by. Default is NULL which
+#' will return all of the phenotypes in the database
 #' @param verbose A logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
 #' 
 #' @export
-searchPlatforms <- function(
+searchPhenotype <- function(
     conn_handler,
-    platform_name = NULL,
+    phenotype = NULL,
     verbose = TRUE
 ){
   
@@ -19,7 +19,7 @@ searchPlatforms <- function(
   
   # Establish user connection ###
   conn <- SigRepo::conn_init(conn_handler = conn_handler)
- 
+  
   # Check user connection and permissions ####
   conn_info <- SigRepo::checkPermissions(
     conn = conn, 
@@ -28,23 +28,23 @@ searchPlatforms <- function(
   )
   
   # Look up signatures
-  if(base::length(platform_name) == 0 || base::all(platform_name %in% c("", NA))){
+  if(base::length(phenotype) == 0 || base::all(phenotype %in% c("", NA))){
     
-    platform_tbl <- SigRepo::lookup_table_sql(
+    phenotype_tbl <- SigRepo::lookup_table_sql(
       conn = conn, 
-      db_table_name = "platforms", 
+      db_table_name = "phenotypes", 
       return_var = "*", 
       check_db_table = TRUE
     )  
     
   }else{
     
-    platform_tbl <- SigRepo::lookup_table_sql(
+    phenotype_tbl <- SigRepo::lookup_table_sql(
       conn = conn, 
-      db_table_name = "platforms", 
+      db_table_name = "phenotypes", 
       return_var = "*", 
-      filter_coln_var = "platform_name", 
-      filter_coln_val = list("platform_name" = base::unique(platform_name)),
+      filter_coln_var = "phenotype", 
+      filter_coln_val = base::list("phenotype" = base::unique(phenotype)),
       check_db_table = TRUE
     ) 
     
@@ -53,8 +53,8 @@ searchPlatforms <- function(
   # Disconnect from database ####
   base::suppressWarnings(DBI::dbDisconnect(conn))
   
-  # Return table
-  return(platform_tbl)
+  # Return tabl
+  return(phenotype_tbl)
 
 }
 
