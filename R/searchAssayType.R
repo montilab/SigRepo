@@ -39,7 +39,7 @@ searchAssayType <- function(type = "All") {
   
   # Filter based on status
   if (type != "all") {
-    tbl <- subset(tbl, tolower(Status) == type)
+    tbl <- tbl[tolower(tbl$Status) == type, ]
   }
   
   return(tbl)
