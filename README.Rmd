@@ -33,9 +33,11 @@ library(OmicSignature)
 
 # <img src="man/figures/logo.png" align="left" width="190" /> SigRepo: An R package for storing and processing omic signatures
 
-The `SigRepo` package includes a suite of functions for easily storing and managing biological signatures and its constituents. Currently, `Sigrepo` is capable of storing, searching, and retrieving signatures and its signature collections from a MySQL database of choice. Interest in setting-up your own `SigRepo` database? See <a href="">here</a> on how to initiate a MySQL database with the appropriate schema.
+The `SigRepo` package provides a comprehensive set of functions for easy storage and management of biological signatures and their components. SigRepo (the __client__) works alongside `SigRepo_Server`, its __server__ counterpart. While SigRepo enables you to store, search, and retrieve signatures and signature collections, these operations rely on a running SigRepo_Server instance.
 
-In order to interact with a suite of functions in `SigRepo` package, the input data must represent an R6 object for the representation of signatures and signature collections, and they can be created using our proprietary package, <a href="https://github.com/montilab/OmicSignature">OmicSignature</a>. 
+Interested in setting up your own SigRepo_Server? Check out the installation instructions <a href="https://github.com/montilab/SigRepo_Server">here</a>.
+
+To upload and download signatures — and to fully utilize the functionalities offered by the SigRepo package — signatures and signature collections must be represented as specific R6 objects. You can create these objects using our proprietary package, <a href="https://github.com/montilab/OmicSignature">OmicSignature</a>.
 
 Click on each link below for more information: 
 
@@ -43,7 +45,7 @@ Click on each link below for more information:
 - [Create an OmicSignature (OmS)](https://montilab.github.io/OmicSignature/articles/CreateOmS.html)
 - [Create an OmicSignatureCollection (OmSC)](https://montilab.github.io/OmicSignature/articles/CreateOmSC.html)
 
-For demonstrations, we will walk through the steps of how to use `SigRepo` package to store, retrieve, and interact with a list of signatures stored in our MySQL SigRepo Database. 
+Below, we walk you through few essential steps to install the `SigRepo` package, and to store, retrieve, and interact with a list of signatures stored in an <a href="https://sigrepo.org">already deployed SigRepo server</a>.
 
 # Installation
 
@@ -113,12 +115,13 @@ Here, we provide two signature objects that comes with the package for demonstra
 2. Myc_reduce_mice_liver_24m
 
 ```{r, warning=FALSE, echo=FALSE, message=FALSE}
-# Read in the signature object
-LLFS_Aging_Gene_2023 <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "LLFS_Aging_Gene_2023.rds"))
-
-
-Myc_reduce_mice_liver_24m <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "Myc_reduce_mice_liver_24m.rds"))
-
+# Read in the signature objects
+LLFS_Aging_Gene_2023 <- base::readRDS(base::file.path(base::system.file(
+  "inst/extdata", package = "SigRepo"), "LLFS_Aging_Gene_2023.rds")
+) 
+Myc_reduce_mice_liver_24m <- base::readRDS(base::file.path(base::system.file(
+  "inst/extdata", package = "SigRepo"), "Myc_reduce_mice_liver_24m.rds")
+) 
 ```
 
 # Upload a signature
@@ -130,9 +133,35 @@ __IMPORTANT NOTE:__
 - User **MUST HAVE** an `editor` or `admin` account to use this function. 
 - A signature **MUST BE** an R6 object obtained from **OmicSignature::OmicSignature()**
 
-## **Example 1**: Create an omic signature using **OmicSignature** package and upload to the database 
+## **Example 1**: Upload `LLFS_Aging_Gene_2023` signature
 
 ```{r Example 1}
+## Show the OmicSignature summary
+print(LLFS_Aging_Gene_2023)
+
+## Add the signature to the repository
+SigRepo::addSignature(
+  conn_handler = conn_handler, 
+  omic_signature = LLFS_Aging_Gene_2023
+)
+```
+
+## **Example 2**: Upload `Myc_reduce_mice_liver_24m` signature
+In this example, we show what happens when the OmicSignature contains `feature_name`'s that are not part of "dictionary" for the corresponding omics layer.
+
+```{r Example 2}
+## Show the OmicSignature summary
+print(Myc_reduce_mice_liver_24m)
+
+missing_features <- SigRepo::addSignature(
+  conn_handler = conn_handler, 
+  omic_signature = Myc_reduce_mice_liver_24m,
+  return_missing_features = TRUE       # Whether to return a list of missing features during upload.
+)
+```
+
+```{r Example 3, eval=FALSE, echo=FALSE}
+## **Example 3**: Create an omic signature using **OmicSignature** package and upload to the database 
 # Create an OmicSignature metadata
 metadata <- OmicSignature::createMetadata(
   # required attributes:
@@ -195,25 +224,6 @@ SigRepo::addSignature(
   visibility = FALSE,                 # Whether to make signature public or private. Default is FALSE.
   return_signature_id = FALSE,        # Whether to return the uploaded signature id. Default is FALSE.
   verbose = TRUE                      # Whether to print diagnostic messages. Default is TRUE.
-)
-```
-
-## **Example 2**: Upload `LLFS_Aging_Gene_2023` signature
-
-```{r Example 2}
-SigRepo::addSignature(
-  conn_handler = conn_handler, 
-  omic_signature = LLFS_Aging_Gene_2023
-)
-```
-
-## **Example 3**: Upload `Myc_reduce_mice_liver_24m` signature
-
-```{r Example 3}
-missing_features <- SigRepo::addSignature(
-  conn_handler = conn_handler, 
-  omic_signature = Myc_reduce_mice_liver_24m,
-  return_missing_features = TRUE       # Whether to return a list of missing features during upload.
 )
 ```
 
@@ -421,7 +431,6 @@ if(nrow(signature_tbl) > 0){
     signature_id = signature_tbl$signature_id
   )
 }
-
 ```
 
 # Additional Guides
