@@ -114,8 +114,11 @@ Here, we provide two signature objects that comes with the package for demonstra
 
 ```{r, warning=FALSE, echo=FALSE, message=FALSE}
 # Read in the signature object
-LLFS_Aging_Gene_2023 <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "LLFS_Aging_Gene_2023.rds")) 
-Myc_reduce_mice_liver_24m <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "Myc_reduce_mice_liver_24m.rds")) 
+LLFS_Aging_Gene_2023 <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "LLFS_Aging_Gene_2023.rds"))
+
+
+Myc_reduce_mice_liver_24m <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "Myc_reduce_mice_liver_24m.rds"))
+
 ```
 
 # Upload a signature

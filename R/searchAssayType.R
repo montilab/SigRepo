@@ -11,11 +11,11 @@ searchAssayType <- function(type = "All") {
   # Create the table of assay types and their availability
   tbl <- data.frame(
     Assay = c(
-      "Transcriptomics",
-      "Proteomics",
-      "Metabolomics",
-      "Methylomics",
-      "Genetic_Variations",
+      "transcriptomics",
+      "proteomics",
+      "metabolomics",
+      "methylomics",
+      "genetic_variations",
       "DNA_Binding_Sites"
     ),
     Status = c(
