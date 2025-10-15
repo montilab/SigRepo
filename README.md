@@ -107,7 +107,7 @@ database.
   **OmicSignature::OmicSignature()**
 
 ## **Example 1**: Upload `LLFS_Aging_Gene_2023` signature
-
+Here we show how to upload a previously created OmicSignature, named `LLFS_Aging_Gene_2023` (see [here](https://montilab.github.io/OmicSignature/articles/CreateOmS.html) for how to create one).
 ``` r
 ## Show the OmicSignature summary
 print(LLFS_Aging_Gene_2023)
