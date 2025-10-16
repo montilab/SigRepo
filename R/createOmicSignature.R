@@ -154,7 +154,7 @@ createOmicSignature <- function(
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn))  
     # Return error message
-    base::stop(e, "\n")
+    base::stop("OmicSignature Error: ", e, "\n")
   })
   
   # Disconnect from database ####

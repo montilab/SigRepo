@@ -61,10 +61,8 @@ getSignature <- function(
   
   # If user_role is not admin, check if user has the permission to access the signature ####
   if(user_role != "admin"){
-    
     # Get a list of signature with visibility = FALSE
     signature_visibility <- signature_tbl |> dplyr::filter(.data$visibility == FALSE) |> dplyr::distinct(.data$signature_id, .data$visibility) 
-    
     # Check if user has the permission to view the signatures ####
     for(w in 1:base::nrow(signature_visibility)){
       #w=1;
@@ -82,7 +80,6 @@ getSignature <- function(
         signature_tbl <- signature_tbl |> dplyr::filter(!.data$signature_id %in% signature_visibility$signature_id[w])
       }
     }
-    
   }
   
   # Check if signature exists
