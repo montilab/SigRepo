@@ -68,9 +68,9 @@ library(OmicSignature)
 ```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 # Create a connection handler
 conn_handler <- SigRepo::newConnHandler(
-  dbname = base::Sys.getenv("DB_NAME"), 
-  host = base::Sys.getenv("DB_HOST"), 
-  port = base::as.integer(base::Sys.getenv("DB_PORT")), 
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
   user = base::Sys.getenv("DB_USER"), 
   password = base::Sys.getenv("DB_PASSWORD")
 )
@@ -98,10 +98,10 @@ Here, we provided 4 signature objects that came with the package for demonstrati
 
 ```{r}
 # Read in the signature objects
-omic_signature_1 <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "omic_signature_1.RDS"))
-omic_signature_2 <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "omic_signature_2.RDS"))
-omic_signature_3 <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "omic_signature_3.RDS"))
-omic_signature_4 <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "omic_signature_4.RDS"))
+omic_signature_1 <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "omic_signature_1.rds"))
+omic_signature_2 <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "omic_signature_2.rds"))
+omic_signature_3 <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "omic_signature_3.rds"))
+omic_signature_4 <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "omic_signature_4.rds"))
 ```
 
 # Create an omic collection 
@@ -148,11 +148,13 @@ The `searchCollection()` function allows users to retrieve all collections that 
 ## Example 1: Search for all collections 
 
 ```{r}
+# Get all collections
 collection_tbl_1 <- SigRepo::searchCollection(conn_handler = conn_handler)
 
+# WARNINGS: THE COLLECTION TABLE CAN BE LARGE, ONLY THE FIRST SIX OBSERVATIONS WILL BE SHOWN.
 if(nrow(collection_tbl_1) > 0){
   knitr::kable(
-    collection_tbl_1, 
+    base::head(collection_tbl_1), 
     row.names = FALSE
   )
 }
@@ -185,7 +187,8 @@ __IMPORTANT NOTE:__
 
 ## Example 1: Get all collections that are publicly available in the database 
 
-```{r}
+```
+# WARNINGS: THE COLLECTION LIST CAN BE LARGE TO DOWNLOAD (NOT RUN)
 collection_list_1 <- SigRepo::getCollection(conn_handler = conn_handler)
 ```
 
