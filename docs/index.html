@@ -5,18 +5,17 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Storing and processing omic signatures • SigRepo</title>
-<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
-<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="apple-touch-icon-120x120.png">
-<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="apple-touch-icon-76x76.png">
-<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="apple-touch-icon-60x60.png">
+<title>Storing and processing omic signatures and collections • SigRepo</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" sizes="any" href="favicon.ico">
+<link rel="manifest" href="site.webmanifest">
 <script src="lightswitch.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Storing and processing omic signatures">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Storing and processing omic signatures and collections">
 <meta name="description" content="As high-throughput technology evolves, a large number of omics-signatures are being derived. This package helps to store signatures efficiently and retrieve them conveniently.">
 <meta property="og:description" content="As high-throughput technology evolves, a large number of omics-signatures are being derived. This package helps to store signatures efficiently and retrieve them conveniently.">
 <meta property="og:image" content="https://montilab.github.io/SigRepo/logo.png">
@@ -213,11 +212,11 @@
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Uploading signature metadata to the database...</span></span>
 <span><span class="co">#&gt; Saving difexp to the database...</span></span>
-<span><span class="co">#&gt; now dyn.load("/Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/library/curl/libs/curl.so") ...</span></span>
+<span><span class="co">#&gt; now dyn.load("/Library/Frameworks/R.framework/Versions/4.5-x86_64/Resources/library/curl/libs/curl.so") ...</span></span>
 <span><span class="co">#&gt; Adding signature owner to the signature access table of the database...</span></span>
 <span><span class="co">#&gt; Adding signature feature set to the database...</span></span>
 <span><span class="co">#&gt; Finished uploading.</span></span>
-<span><span class="co">#&gt; ID of the uploaded signature: 11</span></span></code></pre></div>
+<span><span class="co">#&gt; ID of the uploaded signature: 364</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="example-2-upload-llfs_aging_gene_2023-signature">
@@ -233,7 +232,7 @@
 <span><span class="co">#&gt; Adding signature owner to the signature access table of the database...</span></span>
 <span><span class="co">#&gt; Adding signature feature set to the database...</span></span>
 <span><span class="co">#&gt; Finished uploading.</span></span>
-<span><span class="co">#&gt; ID of the uploaded signature: 12</span></span></code></pre></div>
+<span><span class="co">#&gt; ID of the uploaded signature: 365</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="example-3-upload-myc_reduce_mice_liver_24m-signature">
@@ -370,48 +369,49 @@
 </h1>
 <p>The <code><a href="reference/searchSignature.html">searchSignature()</a></code> function allows users to search for all or a specific set of signatures that are available in the database.</p>
 <div class="section level2">
-<h2 id="example-1-search-for-all-signatures">Example 1: Search for all signatures<a class="anchor" aria-label="anchor" href="#example-1-search-for-all-signatures"></a>
+<h2 id="example-1-search-for-all-signatures">Example 1: Search for all signatures.<a class="anchor" aria-label="anchor" href="#example-1-search-for-all-signatures"></a>
 </h2>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">signature_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/searchSignature.html">searchSignature</a></span><span class="op">(</span>conn_handler <span class="op">=</span> <span class="va">conn_handler</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># WARNINGS: THE TABLE IS LARGE, SO ONLY THE FIRST SIX OBSERVATIONS ARE SHOWN.</span></span>
 <span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">signature_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
-<span>    <span class="va">signature_tbl</span>, </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">signature_tbl</span><span class="op">)</span>, </span>
 <span>    row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <table style="width:100%;" class="table">
 <colgroup>
-<col width="2%">
-<col width="6%">
-<col width="2%">
 <col width="3%">
 <col width="3%">
-<col width="2%">
-<col width="5%">
-<col width="2%">
-<col width="9%">
-<col width="7%">
-<col width="2%">
-<col width="2%">
-<col width="3%">
-<col width="2%">
 <col width="3%">
 <col width="3%">
-<col width="1%">
-<col width="1%">
-<col width="5%">
-<col width="2%">
-<col width="2%">
 <col width="3%">
 <col width="3%">
-<col width="2%">
-<col width="4%">
-<col width="2%">
-<col width="6%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th align="right">signature_id</th>
 <th align="left">signature_name</th>
 <th align="left">organism</th>
@@ -441,179 +441,179 @@
 <th align="left">signature_hashkey</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
-<td align="right">7</td>
-<td align="left">Myc_reduce_mice_liver_24m_v1</td>
-<td align="left">Mus musculus</td>
-<td align="left">bi-directional</td>
-<td align="left">transcriptomics</td>
-<td align="left">Myc_reduce</td>
-<td align="left">transcriptomics by array</td>
-<td align="left">liver</td>
-<td align="left">none</td>
-<td align="left">mice Myc haploinsufficient (Myc(+/-))</td>
-<td align="right">5</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">0.05</td>
-<td align="left">NA</td>
-<td align="left">Myc,KO,longevity</td>
-<td align="right">25619689</td>
-<td align="right">2015</td>
-<td align="left">animal_strain: &lt;C57BL/6&gt;</td>
-<td align="right">1</td>
-<td align="right">884</td>
-<td align="right">5</td>
-<td align="right">10</td>
-<td align="left">root</td>
-<td align="left">2025-09-19 19:50:04</td>
-<td align="right">0</td>
-<td align="left">eacd0935d97847d56cb717455b0e48a3</td>
-</tr>
-<tr class="even">
-<td align="right">8</td>
-<td align="left">Myc_reduce_mice_liver_24m_v2</td>
-<td align="left">Mus musculus</td>
-<td align="left">bi-directional</td>
-<td align="left">transcriptomics</td>
-<td align="left">Myc_reduce</td>
-<td align="left">transcriptomics by array</td>
-<td align="left">liver</td>
-<td align="left">none</td>
-<td align="left">mice Myc haploinsufficient (Myc(+/-))</td>
-<td align="right">5</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">0.05</td>
-<td align="left">NA</td>
-<td align="left">Myc,KO,longevity</td>
-<td align="right">25619689</td>
-<td align="right">2015</td>
-<td align="left">animal_strain: &lt;C57BL/6&gt;</td>
-<td align="right">1</td>
-<td align="right">884</td>
-<td align="right">5</td>
-<td align="right">10</td>
-<td align="left">root</td>
-<td align="left">2025-09-19 19:50:04</td>
-<td align="right">0</td>
-<td align="left">ec356cabc33fcc22f8a0b77b24db91ab</td>
-</tr>
-<tr class="odd">
-<td align="right">9</td>
-<td align="left">Myc_reduce_mice_liver_24m_v3</td>
-<td align="left">Mus musculus</td>
-<td align="left">bi-directional</td>
-<td align="left">transcriptomics</td>
-<td align="left">Myc_reduce</td>
-<td align="left">transcriptomics by array</td>
-<td align="left">liver</td>
-<td align="left">none</td>
-<td align="left">mice Myc haploinsufficient (Myc(+/-))</td>
-<td align="right">5</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">0.05</td>
-<td align="left">NA</td>
-<td align="left">Myc,KO,longevity</td>
-<td align="right">25619689</td>
-<td align="right">2015</td>
-<td align="left">animal_strain: &lt;C57BL/6&gt;</td>
-<td align="right">1</td>
-<td align="right">884</td>
-<td align="right">5</td>
-<td align="right">10</td>
-<td align="left">root</td>
-<td align="left">2025-09-19 19:50:07</td>
-<td align="right">0</td>
-<td align="left">fa416468cc91f872f073e15efdaf1ece</td>
-</tr>
-<tr class="even">
-<td align="right">10</td>
-<td align="left">Myc_reduce_mice_liver_24m_v4</td>
-<td align="left">Mus musculus</td>
-<td align="left">bi-directional</td>
-<td align="left">transcriptomics</td>
-<td align="left">Myc_reduce</td>
-<td align="left">transcriptomics by array</td>
-<td align="left">liver</td>
-<td align="left">none</td>
-<td align="left">mice Myc haploinsufficient (Myc(+/-))</td>
-<td align="right">5</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">0.05</td>
-<td align="left">NA</td>
-<td align="left">Myc,KO,longevity</td>
-<td align="right">25619689</td>
-<td align="right">2015</td>
-<td align="left">animal_strain: &lt;C57BL/6&gt;</td>
-<td align="right">1</td>
-<td align="right">884</td>
-<td align="right">5</td>
-<td align="right">10</td>
-<td align="left">root</td>
-<td align="left">2025-09-19 19:50:07</td>
-<td align="right">0</td>
-<td align="left">5bc419a0fbd2c012e669a19c67f2b434</td>
-</tr>
-<tr class="odd">
-<td align="right">11</td>
-<td align="left">Myc_reduce_mice_liver_24m_readme</td>
-<td align="left">Mus musculus</td>
-<td align="left">bi-directional</td>
-<td align="left">transcriptomics</td>
-<td align="left">Myc_reduce</td>
-<td align="left">transcriptomics by array</td>
-<td align="left">liver</td>
-<td align="left">none</td>
-<td align="left">mice Myc haploinsufficient (Myc(+/-))</td>
-<td align="right">5</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">0.05</td>
-<td align="left">NA</td>
-<td align="left">Myc,KO,longevity</td>
-<td align="right">25619689</td>
-<td align="right">2015</td>
-<td align="left">animal_strain: &lt;C57BL/6&gt;</td>
-<td align="right">1</td>
-<td align="right">884</td>
-<td align="right">5</td>
-<td align="right">10</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:06:55</td>
-<td align="right">0</td>
-<td align="left">7e24a413c1287f840d492b2963c263a5</td>
-</tr>
-<tr class="even">
-<td align="right">12</td>
-<td align="left">LLFS_Aging_Gene_2023</td>
+<tr>
+<td align="right">213</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_ACC_MontiLab2025</td>
 <td align="left">Homo sapiens</td>
 <td align="left">bi-directional</td>
 <td align="left">transcriptomics</td>
 <td align="left">Aging</td>
-<td align="left">transcriptomics by array</td>
-<td align="left">blood</td>
-<td align="left">sex,fc,education,percent_intergenic,PC1-4,GRM</td>
+<td align="left">transcriptomics by bulk RNA-seq</td>
+<td align="left">unknown</td>
+<td align="left">tumor purity, race, gender</td>
+<td align="left">TCGA HPV-negative ACC aging signature</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
 <td align="left">NA</td>
-<td align="right">6</td>
+<td align="left">TCGA,ACC,Aging</td>
 <td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">0.01</td>
-<td align="left">NA</td>
-<td align="left">human,aging,LLFS</td>
-<td align="right">NA</td>
-<td align="right">2023</td>
+<td align="right">2025</td>
 <td align="left">NA</td>
 <td align="right">1</td>
-<td align="right">1000</td>
-<td align="right">82</td>
-<td align="right">87</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:06:56</td>
+<td align="right">32402</td>
+<td align="right">18031</td>
+<td align="right">14371</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:01:24</td>
 <td align="right">0</td>
-<td align="left">7fdecac66691beed1703efc25487768c</td>
+<td align="left">37b8bb25907349dfaa1b38fecc9e872b</td>
+</tr>
+<tr>
+<td align="right">214</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_BLCA_MontiLab2025</td>
+<td align="left">Homo sapiens</td>
+<td align="left">bi-directional</td>
+<td align="left">transcriptomics</td>
+<td align="left">Aging</td>
+<td align="left">transcriptomics by bulk RNA-seq</td>
+<td align="left">unknown</td>
+<td align="left">tumor purity, race, gender</td>
+<td align="left">TCGA HPV-negative BLCA aging signature</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">NA</td>
+<td align="left">TCGA,BLCA,Aging</td>
+<td align="right">NA</td>
+<td align="right">2025</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">39689</td>
+<td align="right">22346</td>
+<td align="right">17343</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:01:35</td>
+<td align="right">0</td>
+<td align="left">28d8ba3d012ecbc6a080996fc2dcd66e</td>
+</tr>
+<tr>
+<td align="right">215</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_BRCA_MontiLab2025</td>
+<td align="left">Homo sapiens</td>
+<td align="left">bi-directional</td>
+<td align="left">transcriptomics</td>
+<td align="left">Aging</td>
+<td align="left">transcriptomics by bulk RNA-seq</td>
+<td align="left">unknown</td>
+<td align="left">tumor purity, race, gender</td>
+<td align="left">TCGA HPV-negative BRCA aging signature</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">NA</td>
+<td align="left">TCGA,BRCA,Aging</td>
+<td align="right">NA</td>
+<td align="right">2025</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">42011</td>
+<td align="right">26478</td>
+<td align="right">15533</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:01:49</td>
+<td align="right">0</td>
+<td align="left">9ae65c31c82b6edc15819fb7f8cd0640</td>
+</tr>
+<tr>
+<td align="right">216</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_CESC_MontiLab2025</td>
+<td align="left">Homo sapiens</td>
+<td align="left">bi-directional</td>
+<td align="left">transcriptomics</td>
+<td align="left">Aging</td>
+<td align="left">transcriptomics by bulk RNA-seq</td>
+<td align="left">unknown</td>
+<td align="left">tumor purity, race, gender</td>
+<td align="left">TCGA HPV-negative CESC aging signature</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">NA</td>
+<td align="left">TCGA,CESC,Aging</td>
+<td align="right">NA</td>
+<td align="right">2025</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">38521</td>
+<td align="right">21746</td>
+<td align="right">16775</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:02:05</td>
+<td align="right">0</td>
+<td align="left">e487cfd606e3d4e2214a8e4435b424b8</td>
+</tr>
+<tr>
+<td align="right">217</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_COAD_MontiLab2025</td>
+<td align="left">Homo sapiens</td>
+<td align="left">bi-directional</td>
+<td align="left">transcriptomics</td>
+<td align="left">Aging</td>
+<td align="left">transcriptomics by bulk RNA-seq</td>
+<td align="left">unknown</td>
+<td align="left">tumor purity, race, gender</td>
+<td align="left">TCGA HPV-negative COAD aging signature</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">NA</td>
+<td align="left">TCGA,COAD,Aging</td>
+<td align="right">NA</td>
+<td align="right">2025</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">38857</td>
+<td align="right">22186</td>
+<td align="right">16671</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:02:20</td>
+<td align="right">0</td>
+<td align="left">afb09a078a63c9342530d2a119698085</td>
+</tr>
+<tr>
+<td align="right">218</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_ESCA_MontiLab2025</td>
+<td align="left">Homo sapiens</td>
+<td align="left">bi-directional</td>
+<td align="left">transcriptomics</td>
+<td align="left">Aging</td>
+<td align="left">transcriptomics by bulk RNA-seq</td>
+<td align="left">unknown</td>
+<td align="left">tumor purity, race, gender</td>
+<td align="left">TCGA HPV-negative ESCA aging signature</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">NA</td>
+<td align="left">TCGA,ESCA,Aging</td>
+<td align="right">NA</td>
+<td align="right">2025</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">42053</td>
+<td align="right">15816</td>
+<td align="right">26237</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:02:33</td>
+<td align="right">0</td>
+<td align="left">3275eeda945640a32d963a55d22143a9</td>
 </tr>
 </tbody>
 </table>
@@ -634,37 +634,37 @@
 <span>    row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<table class="table">
+<table style="width:100%;" class="table">
 <colgroup>
 <col width="3%">
-<col width="4%">
-<col width="3%">
-<col width="3%">
-<col width="3%">
-<col width="2%">
-<col width="5%">
-<col width="2%">
-<col width="10%">
-<col width="2%">
 <col width="3%">
 <col width="3%">
 <col width="3%">
 <col width="3%">
-<col width="4%">
-<col width="3%">
-<col width="1%">
-<col width="1%">
-<col width="1%">
-<col width="2%">
 <col width="3%">
 <col width="3%">
-<col width="4%">
-<col width="2%">
-<col width="4%">
-<col width="2%">
-<col width="7%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th align="right">signature_id</th>
 <th align="left">signature_name</th>
 <th align="left">organism</th>
@@ -693,8 +693,8 @@
 <th align="right">visibility</th>
 <th align="left">signature_hashkey</th>
 </tr></thead>
-<tbody><tr class="odd">
-<td align="right">12</td>
+<tbody><tr>
+<td align="right">365</td>
 <td align="left">LLFS_Aging_Gene_2023</td>
 <td align="left">Homo sapiens</td>
 <td align="left">bi-directional</td>
@@ -718,7 +718,7 @@
 <td align="right">82</td>
 <td align="right">87</td>
 <td align="left">root</td>
-<td align="left">2025-09-24 13:06:56</td>
+<td align="left">2025-10-16 14:31:44</td>
 <td align="right">0</td>
 <td align="left">7fdecac66691beed1703efc25487768c</td>
 </tr></tbody>
@@ -737,14 +737,8 @@
 <div class="section level2">
 <h2 id="example-1-retrieve-all-signatures-that-are-publicly-available-or-owned-by-the-user-in-the-database">Example 1: Retrieve all signatures that are publicly available or owned by the user in the database<a class="anchor" aria-label="anchor" href="#example-1-retrieve-all-signatures-that-are-publicly-available-or-owned-by-the-user-in-the-database"></a>
 </h2>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">signature_list</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/getSignature.html">getSignature</a></span><span class="op">(</span>conn_handler <span class="op">=</span> <span class="va">conn_handler</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_v1 created.</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_v2 created.</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_v3 created.</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_v4 created.</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_readme created.</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature object LLFS_Aging_Gene_2023 created.</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># WARNINGS: THE LIST CAN BE LARGE TO DOWNLOAD (NOT RUN)</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>signature_list <span class="ot">&lt;-</span> SigRepo<span class="sc">::</span><span class="fu">getSignature</span>(<span class="at">conn_handler =</span> conn_handler)</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="example-2-retrieve-a-specific-signature-that-is-publicly-available-or-owned-by-the-user-in-the-database-eg-signature_name--llfs_aging_gene_2023">Example 2: Retrieve a specific signature that is publicly available or owned by the user in the database, e.g., <strong>signature_name = “LLFS_Aging_Gene_2023”</strong>
@@ -755,7 +749,7 @@
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  signature_name <span class="op">=</span> <span class="st">"LLFS_Aging_Gene_2023"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature object LLFS_Aging_Gene_2023 created.</span></span></code></pre></div>
+<span><span class="co">#&gt; Error in value[[3L]](cond): OmicSignature Error: Error in if (is.na(metadata$covariates)) {: the condition has length &gt; 1</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level1">
@@ -783,12 +777,12 @@
 <span>    signature_id <span class="op">=</span> <span class="va">signature_tbl</span><span class="op">$</span><span class="va">signature_id</span>  </span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Remove difexp belongs to signature_id = '12' from the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '12' from 'signatures' table of the database.</span></span>
-<span><span class="co">#&gt; Remove features belongs to signature_id = '12' from 'signature_feature_set' table of the database.</span></span>
-<span><span class="co">#&gt; Remove user access to signature_id = '12' from 'signature_access' table of the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '12' from 'signature_collection_access' table of the database.</span></span>
-<span><span class="co">#&gt; signature_id = '12' has been removed.</span></span></code></pre></div>
+<span><span class="co">#&gt; Remove difexp belongs to signature_id = '365' from the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '365' from 'signatures' table of the database.</span></span>
+<span><span class="co">#&gt; Remove features belongs to signature_id = '365' from 'signature_feature_set' table of the database.</span></span>
+<span><span class="co">#&gt; Remove user access to signature_id = '365' from 'signature_access' table of the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '365' from 'signature_collection_access' table of the database.</span></span>
+<span><span class="co">#&gt; signature_id = '365' has been removed.</span></span></code></pre></div>
 </div>
 <div class="section level1">
 <h1 id="update-a-signature">Update a signature<a class="anchor" aria-label="anchor" href="#update-a-signature"></a>
@@ -877,7 +871,7 @@
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_readme created.</span></span>
-<span><span class="co">#&gt;  signature_id = '11' has been updated.</span></span></code></pre></div>
+<span><span class="co">#&gt;  signature_id = '364' has been updated.</span></span></code></pre></div>
 <p>Let’s look up <strong>signature_name = “Myc_reduce_mice_liver_24m_readme”</strong> and see if the value of <code>platform</code> has been changed.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">signature_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/searchSignature.html">searchSignature</a></span><span class="op">(</span></span>
@@ -893,35 +887,35 @@
 <span><span class="op">}</span></span></code></pre></div>
 <table style="width:100%;" class="table">
 <colgroup>
-<col width="2%">
-<col width="6%">
-<col width="2%">
 <col width="3%">
 <col width="3%">
-<col width="2%">
-<col width="8%">
-<col width="2%">
-<col width="2%">
-<col width="7%">
-<col width="2%">
-<col width="2%">
-<col width="3%">
-<col width="2%">
-<col width="4%">
-<col width="3%">
-<col width="2%">
-<col width="1%">
-<col width="5%">
-<col width="2%">
 <col width="3%">
 <col width="3%">
-<col width="4%">
-<col width="2%">
-<col width="4%">
-<col width="2%">
-<col width="6%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th align="right">signature_id</th>
 <th align="left">signature_name</th>
 <th align="left">organism</th>
@@ -950,8 +944,8 @@
 <th align="right">visibility</th>
 <th align="left">signature_hashkey</th>
 </tr></thead>
-<tbody><tr class="odd">
-<td align="right">11</td>
+<tbody><tr>
+<td align="right">364</td>
 <td align="left">Myc_reduce_mice_liver_24m_readme</td>
 <td align="left">Mus musculus</td>
 <td align="left">bi-directional</td>
@@ -975,7 +969,7 @@
 <td align="right">5</td>
 <td align="right">10</td>
 <td align="left">root</td>
-<td align="left">2025-09-24 13:07:00</td>
+<td align="left">2025-10-16 14:32:07</td>
 <td align="right">0</td>
 <td align="left">7e24a413c1287f840d492b2963c263a5</td>
 </tr></tbody>
@@ -995,12 +989,12 @@
 <span>    signature_id <span class="op">=</span> <span class="va">signature_tbl</span><span class="op">$</span><span class="va">signature_id</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Remove difexp belongs to signature_id = '11' from the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '11' from 'signatures' table of the database.</span></span>
-<span><span class="co">#&gt; Remove features belongs to signature_id = '11' from 'signature_feature_set' table of the database.</span></span>
-<span><span class="co">#&gt; Remove user access to signature_id = '11' from 'signature_access' table of the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '11' from 'signature_collection_access' table of the database.</span></span>
-<span><span class="co">#&gt; signature_id = '11' has been removed.</span></span></code></pre></div>
+<span><span class="co">#&gt; Remove difexp belongs to signature_id = '364' from the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '364' from 'signatures' table of the database.</span></span>
+<span><span class="co">#&gt; Remove features belongs to signature_id = '364' from 'signature_feature_set' table of the database.</span></span>
+<span><span class="co">#&gt; Remove user access to signature_id = '364' from 'signature_access' table of the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '364' from 'signature_collection_access' table of the database.</span></span>
+<span><span class="co">#&gt; signature_id = '364' has been removed.</span></span></code></pre></div>
 </div>
 <div class="section level1">
 <h1 id="additional-guides">Additional Guides<a class="anchor" aria-label="anchor" href="#additional-guides"></a>
@@ -1039,12 +1033,12 @@
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
 <li>
-<a href="https://github.com/RC-88" class="external-link">Reina Chau</a> <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0003-3012-1404" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
+<a href="https://github.com/RC-88" class="external-link">Reina Chau</a> <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0003-3012-1404" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 <li>
-<a href="https://github.com/Cvicnaire" class="external-link">Cameron Vicnaire</a> <br><small class="roles"> Author </small>  </li>
-<li>Mengze Li <br><small class="roles"> Author </small>  </li>
+<a href="https://github.com/Cvicnaire" class="external-link">Cameron Vicnaire</a> <br><small class="roles"> Author </small>   </li>
+<li>Mengze Li <br><small class="roles"> Author </small>   </li>
 <li>
-<a href="https://github.com/tetomonti" class="external-link">Stefano Monti</a> <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-9376-0660" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
+<a href="https://github.com/tetomonti" class="external-link">Stefano Monti</a> <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-9376-0660" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 </ul>
 </div>
 
@@ -1059,7 +1053,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer>

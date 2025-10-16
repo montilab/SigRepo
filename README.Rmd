@@ -233,14 +233,15 @@ SigRepo::addSignature(
 
 The `searchSignature()` function allows users to search for all or a specific set of signatures that are available in the database. 
 
-## Example 1: Search for all signatures 
-
+## Example 1: Search for all signatures. 
+ 
 ```{r}
 signature_tbl <- SigRepo::searchSignature(conn_handler = conn_handler)
 
+# WARNINGS: THE TABLE IS LARGE, SO ONLY THE FIRST SIX OBSERVATIONS ARE SHOWN.
 if(nrow(signature_tbl) > 0){
   knitr::kable(
-    signature_tbl, 
+    head(signature_tbl), 
     row.names = FALSE
   )
 }
@@ -271,9 +272,10 @@ __IMPORTANT NOTE:__
 - Users can **ONLY RETRIEVE** a list of signatures that are publicly available in the database including their own uploaded signatures. 
 - If a signature is `PRIVATE` and belongs to other user in the database, users will need to be given an `editor` permission from its owner in order to access, retrieve, and edit their signatures.
 
-## Example 1: Retrieve all signatures that are publicly available or owned by the user in the database
+## Example 1: Retrieve all signatures that are publicly available or owned by the user in the database 
 
-```{r}
+```
+# WARNINGS: THE LIST CAN BE LARGE TO DOWNLOAD (NOT RUN)
 signature_list <- SigRepo::getSignature(conn_handler = conn_handler)
 ```
 
