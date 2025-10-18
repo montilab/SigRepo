@@ -30,7 +30,7 @@ test_that("newConnHandler creates a connection handler correctly",{
 test_that("addSignature correctly adds a transcriptomic signature into the database", {
   
   # Create signature object 
-  test_transcriptomics_sig <- base::readRDS(testthat::test_path("test_data", "test_data_transcriptomics.RDS"))
+  test_transcriptomics_sig <- base::readRDS(testthat::test_path("test_data", "test_data_transcriptomics.rds"))
 
   # calling the function to add the test signature into the database ####
   
@@ -84,7 +84,7 @@ test_that("getSignature properly retrieves the added transcriptomic signature fr
 test_that("updateSignature updates the old data with the new data in the database",{
   
   # using the revised transcriptomics signature
-  test_transcriptomics_sig_revised <- base::readRDS(testthat::test_path("test_data", "test_data_transcriptomics_revised.RDS"))
+  test_transcriptomics_sig_revised <- base::readRDS(testthat::test_path("test_data", "test_data_transcriptomics_revised.rds"))
   
   # updating the signature in the database
   expect_no_error({

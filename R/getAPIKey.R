@@ -13,7 +13,7 @@ getAPIKey <- function(
   
   # Whether to print the diagnostic messages
   SigRepo::print_messages(verbose = verbose)
-  
+
   # Establish user connection ###
   conn <- SigRepo::conn_init(conn_handler = conn_handler)
   

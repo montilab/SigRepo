@@ -33,7 +33,7 @@ library(OmicSignature)
 
 # <img src="man/figures/logo.png" align="left" width="190" /> SigRepo: An R package for storing and processing omic signatures
 
-The `SigRepo` package provides a comprehensive set of functions for easy storage and management of biological signatures and their components. SigRepo (the __client__) works alongside `SigRepo_Server`, its __server__ counterpart. While SigRepo enables you to store, search, and retrieve signatures and signature collections, these operations rely on a running SigRepo_Server instance.
+The `SigRepo` package provides a comprehensive set of functions for easy storage and management of biological signatures and their components. SigRepo (the `client`) works alongside `SigRepo_Server`, its `server` counterpart. While SigRepo enables you to store, search, and retrieve signatures and signature collections, these operations rely on a running SigRepo_Server instance.
 
 Interested in setting up your own SigRepo_Server? Check out the installation instructions <a target="_blank" href="https://montilab.github.io/SigRepo_Server/articles/install_sigrepo.html" >here</a>.
 
@@ -160,10 +160,9 @@ missing_features <- SigRepo::addSignature(
 )
 ```
 
-## **Example 3**: Create an omic signature using `OmicSignature` package and upload to the database 
+## **Example 3**: Create an omic signature using **OmicSignature** package and upload to the database 
 
 ```{r Example 3}
-
 # Create an OmicSignature metadata
 metadata <- OmicSignature::createMetadata(
   # required attributes:

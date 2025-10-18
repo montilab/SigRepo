@@ -70,7 +70,7 @@
  SigRepo: An R package for storing and processing omic signatures<a class="anchor" aria-label="anchor" href="#id_-sigrepo-an-r-package-for-storing-and-processing-omic-signatures"></a>
 </h1>
 </div>
-<p>The <code>SigRepo</code> package provides a comprehensive set of functions for easy storage and management of biological signatures and their components. SigRepo (the <strong>client</strong>) works alongside <code>SigRepo_Server</code>, its <strong>server</strong> counterpart. While SigRepo enables you to store, search, and retrieve signatures and signature collections, these operations rely on a running SigRepo_Server instance.</p>
+<p>The <code>SigRepo</code> package provides a comprehensive set of functions for easy storage and management of biological signatures and their components. SigRepo (the <code>client</code>) works alongside <code>SigRepo_Server</code>, its <code>server</code> counterpart. While SigRepo enables you to store, search, and retrieve signatures and signature collections, these operations rely on a running SigRepo_Server instance.</p>
 <p>Interested in setting up your own SigRepo_Server? Check out the installation instructions <a target="_blank" href="https://montilab.github.io/SigRepo_Server/articles/install_sigrepo.html">here</a>.</p>
 <p>To upload and download signatures — and to fully utilize the functionalities offered by the SigRepo package — signatures and signature collections must be represented as specific R6 objects. You can create these objects using our proprietary package, <a target="_blank" href="https://github.com/montilab/OmicSignature" class="external-link">OmicSignature</a>.</p>
 <p>Click on each link below for more information:</p>
@@ -182,7 +182,7 @@
 <span><span class="co">#&gt; Adding signature owner to the signature access table of the database...</span></span>
 <span><span class="co">#&gt; Adding signature feature set to the database...</span></span>
 <span><span class="co">#&gt; Finished uploading.</span></span>
-<span><span class="co">#&gt; ID of the uploaded signature: 452</span></span></code></pre></div>
+<span><span class="co">#&gt; ID of the uploaded signature: 458</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="example-2-upload-myc_reduce_mice_liver_24m-signature">
@@ -343,11 +343,10 @@
 </div>
 <div class="section level2">
 <h2 id="example-3-create-an-omic-signature-using-omicsignature-package-and-upload-to-the-database">
-<strong>Example 3</strong>: Create an omic signature using <code>OmicSignature</code> package and upload to the database<a class="anchor" aria-label="anchor" href="#example-3-create-an-omic-signature-using-omicsignature-package-and-upload-to-the-database"></a>
+<strong>Example 3</strong>: Create an omic signature using <strong>OmicSignature</strong> package and upload to the database<a class="anchor" aria-label="anchor" href="#example-3-create-an-omic-signature-using-omicsignature-package-and-upload-to-the-database"></a>
 </h2>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="co"># Create an OmicSignature metadata</span></span>
+<code class="sourceCode R"><span><span class="co"># Create an OmicSignature metadata</span></span>
 <span><span class="va">metadata</span> <span class="op">&lt;-</span> <span class="fu">OmicSignature</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/OmicSignature/man/createMetadata.html" class="external-link">createMetadata</a></span><span class="op">(</span></span>
 <span>  <span class="co"># required attributes:</span></span>
 <span>  signature_name <span class="op">=</span> <span class="st">"Myc_reduce_mice_liver_24m_readme"</span>,</span>
@@ -419,7 +418,7 @@
 <span><span class="co">#&gt; Adding signature owner to the signature access table of the database...</span></span>
 <span><span class="co">#&gt; Adding signature feature set to the database...</span></span>
 <span><span class="co">#&gt; Finished uploading.</span></span>
-<span><span class="co">#&gt; ID of the uploaded signature: 454</span></span></code></pre></div>
+<span><span class="co">#&gt; ID of the uploaded signature: 460</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level1">
@@ -753,7 +752,7 @@
 <th align="left">signature_hashkey</th>
 </tr></thead>
 <tbody><tr>
-<td align="right">452</td>
+<td align="right">458</td>
 <td align="left">LLFS_Aging_Gene_2023</td>
 <td align="left">Homo sapiens</td>
 <td align="left">bi-directional</td>
@@ -777,7 +776,7 @@
 <td align="right">82</td>
 <td align="right">87</td>
 <td align="left">montilab</td>
-<td align="left">2025-10-18 00:21:05</td>
+<td align="left">2025-10-18 00:39:21</td>
 <td align="right">0</td>
 <td align="left">b35b7c1d387440d474bfcb3cb162c9a6</td>
 </tr></tbody>
@@ -836,12 +835,12 @@
 <span>    signature_id <span class="op">=</span> <span class="va">signature_tbl</span><span class="op">$</span><span class="va">signature_id</span>  </span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Remove difexp belongs to signature_id = '452' from the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '452' from 'signatures' table of the database.</span></span>
-<span><span class="co">#&gt; Remove features belongs to signature_id = '452' from 'signature_feature_set' table of the database.</span></span>
-<span><span class="co">#&gt; Remove user access to signature_id = '452' from 'signature_access' table of the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '452' from 'signature_collection_access' table of the database.</span></span>
-<span><span class="co">#&gt; signature_id = '452' has been removed.</span></span></code></pre></div>
+<span><span class="co">#&gt; Remove difexp belongs to signature_id = '458' from the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '458' from 'signatures' table of the database.</span></span>
+<span><span class="co">#&gt; Remove features belongs to signature_id = '458' from 'signature_feature_set' table of the database.</span></span>
+<span><span class="co">#&gt; Remove user access to signature_id = '458' from 'signature_access' table of the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '458' from 'signature_collection_access' table of the database.</span></span>
+<span><span class="co">#&gt; signature_id = '458' has been removed.</span></span></code></pre></div>
 </div>
 <div class="section level1">
 <h1 id="update-a-signature">Update a signature<a class="anchor" aria-label="anchor" href="#update-a-signature"></a>
@@ -930,7 +929,7 @@
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_readme created.</span></span>
-<span><span class="co">#&gt;  signature_id = '454' has been updated.</span></span></code></pre></div>
+<span><span class="co">#&gt;  signature_id = '460' has been updated.</span></span></code></pre></div>
 <p>Let’s look up <code>signature_name = "Myc_reduce_mice_liver_24m_readme"</code> and see if the value of <code>platform</code> has been changed.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">signature_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/searchSignature.html">searchSignature</a></span><span class="op">(</span></span>
@@ -1004,7 +1003,7 @@
 <th align="left">signature_hashkey</th>
 </tr></thead>
 <tbody><tr>
-<td align="right">454</td>
+<td align="right">460</td>
 <td align="left">Myc_reduce_mice_liver_24m_readme</td>
 <td align="left">Mus musculus</td>
 <td align="left">bi-directional</td>
@@ -1028,7 +1027,7 @@
 <td align="right">5</td>
 <td align="right">10</td>
 <td align="left">montilab</td>
-<td align="left">2025-10-18 00:21:34</td>
+<td align="left">2025-10-18 00:39:50</td>
 <td align="right">0</td>
 <td align="left">a10176ce6e727366cf740e2bfb56e2bc</td>
 </tr></tbody>
@@ -1048,12 +1047,12 @@
 <span>    signature_id <span class="op">=</span> <span class="va">signature_tbl</span><span class="op">$</span><span class="va">signature_id</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Remove difexp belongs to signature_id = '454' from the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '454' from 'signatures' table of the database.</span></span>
-<span><span class="co">#&gt; Remove features belongs to signature_id = '454' from 'signature_feature_set' table of the database.</span></span>
-<span><span class="co">#&gt; Remove user access to signature_id = '454' from 'signature_access' table of the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '454' from 'signature_collection_access' table of the database.</span></span>
-<span><span class="co">#&gt; signature_id = '454' has been removed.</span></span></code></pre></div>
+<span><span class="co">#&gt; Remove difexp belongs to signature_id = '460' from the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '460' from 'signatures' table of the database.</span></span>
+<span><span class="co">#&gt; Remove features belongs to signature_id = '460' from 'signature_feature_set' table of the database.</span></span>
+<span><span class="co">#&gt; Remove user access to signature_id = '460' from 'signature_access' table of the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '460' from 'signature_collection_access' table of the database.</span></span>
+<span><span class="co">#&gt; signature_id = '460' has been removed.</span></span></code></pre></div>
 </div>
 <div class="section level1">
 <h1 id="additional-guides">Additional Guides<a class="anchor" aria-label="anchor" href="#additional-guides"></a>

@@ -5,10 +5,10 @@
 
 The `SigRepo` package provides a comprehensive set of functions for easy
 storage and management of biological signatures and their components.
-SigRepo (the **client**) works alongside `SigRepo_Server`, its
-**server** counterpart. While SigRepo enables you to store, search, and
-retrieve signatures and signature collections, these operations rely on
-a running SigRepo_Server instance.
+SigRepo (the `client`) works alongside `SigRepo_Server`, its `server`
+counterpart. While SigRepo enables you to store, search, and retrieve
+signatures and signature collections, these operations rely on a running
+SigRepo_Server instance.
 
 Interested in setting up your own SigRepo_Server? Check out the
 installation instructions
@@ -156,7 +156,7 @@ SigRepo::addSignature(
 #> Adding signature owner to the signature access table of the database...
 #> Adding signature feature set to the database...
 #> Finished uploading.
-#> ID of the uploaded signature: 452
+#> ID of the uploaded signature: 458
 ```
 
 ## **Example 2**: Upload `Myc_reduce_mice_liver_24m` signature
@@ -318,10 +318,9 @@ missing_features <- SigRepo::addSignature(
 #> To add these features to our database, please contact our admin for support.
 ```
 
-## **Example 3**: Create an omic signature using `OmicSignature` package and upload to the database
+## **Example 3**: Create an omic signature using **OmicSignature** package and upload to the database
 
 ``` r
-
 # Create an OmicSignature metadata
 metadata <- OmicSignature::createMetadata(
   # required attributes:
@@ -394,7 +393,7 @@ SigRepo::addSignature(
 #> Adding signature owner to the signature access table of the database...
 #> Adding signature feature set to the database...
 #> Finished uploading.
-#> ID of the uploaded signature: 454
+#> ID of the uploaded signature: 460
 ```
 
 # Search for a list of signatures
@@ -444,7 +443,7 @@ if(base::nrow(signature_tbl) > 0){
 
 | signature_id | signature_name | organism | direction_type | assay_type | phenotype | platform_name | sample_type | covariates | description | score_cutoff | logfc_cutoff | p_value_cutoff | adj_p_cutoff | cutoff_description | keywords | PMID | year | others | has_difexp | num_of_difexp | num_up_regulated | num_down_regulated | user_name | date_created | visibility | signature_hashkey |
 |---:|:---|:---|:---|:---|:---|:---|:---|:---|:---|---:|---:|---:|---:|:---|:---|---:|---:|:---|---:|---:|---:|---:|:---|:---|---:|:---|
-| 452 | LLFS_Aging_Gene_2023 | Homo sapiens | bi-directional | transcriptomics | Aging | transcriptomics by array | blood | sex,fc,education,percent_intergenic,PC1-4,GRM | NA | 6 | NA | NA | 0.01 | NA | human,aging,LLFS | NA | 2023 | NA | 1 | 1000 | 82 | 87 | montilab | 2025-10-18 00:21:05 | 0 | b35b7c1d387440d474bfcb3cb162c9a6 |
+| 458 | LLFS_Aging_Gene_2023 | Homo sapiens | bi-directional | transcriptomics | Aging | transcriptomics by array | blood | sex,fc,education,percent_intergenic,PC1-4,GRM | NA | 6 | NA | NA | 0.01 | NA | human,aging,LLFS | NA | 2023 | NA | 1 | 1000 | 82 | 87 | montilab | 2025-10-18 00:39:21 | 0 | b35b7c1d387440d474bfcb3cb162c9a6 |
 
 # Retrieve a list of omic signatures
 
@@ -505,12 +504,12 @@ if(base::nrow(signature_tbl) > 0){
     signature_id = signature_tbl$signature_id  
   )
 }
-#> Remove difexp belongs to signature_id = '452' from the database.
-#> Remove signature_id = '452' from 'signatures' table of the database.
-#> Remove features belongs to signature_id = '452' from 'signature_feature_set' table of the database.
-#> Remove user access to signature_id = '452' from 'signature_access' table of the database.
-#> Remove signature_id = '452' from 'signature_collection_access' table of the database.
-#> signature_id = '452' has been removed.
+#> Remove difexp belongs to signature_id = '458' from the database.
+#> Remove signature_id = '458' from 'signatures' table of the database.
+#> Remove features belongs to signature_id = '458' from 'signature_feature_set' table of the database.
+#> Remove user access to signature_id = '458' from 'signature_access' table of the database.
+#> Remove signature_id = '458' from 'signature_collection_access' table of the database.
+#> signature_id = '458' has been removed.
 ```
 
 # Update a signature
@@ -610,7 +609,7 @@ if(base::nrow(signature_tbl) > 0){
   )
 }
 #>   [Success] OmicSignature object Myc_reduce_mice_liver_24m_readme created.
-#>  signature_id = '454' has been updated.
+#>  signature_id = '460' has been updated.
 ```
 
 Let’s look up `signature_name = "Myc_reduce_mice_liver_24m_readme"` and
@@ -632,7 +631,7 @@ if(base::nrow(signature_tbl) > 0){
 
 | signature_id | signature_name | organism | direction_type | assay_type | phenotype | platform_name | sample_type | covariates | description | score_cutoff | logfc_cutoff | p_value_cutoff | adj_p_cutoff | cutoff_description | keywords | PMID | year | others | has_difexp | num_of_difexp | num_up_regulated | num_down_regulated | user_name | date_created | visibility | signature_hashkey |
 |---:|:---|:---|:---|:---|:---|:---|:---|:---|:---|---:|---:|---:|---:|:---|:---|---:|---:|:---|---:|---:|---:|---:|:---|:---|---:|:---|
-| 454 | Myc_reduce_mice_liver_24m_readme | Mus musculus | bi-directional | transcriptomics | Myc_reduce | transcriptomics by single-cell RNA-seq | liver | none | mice Myc haploinsufficient (Myc(+/-)) | 5 | NA | NA | 0.05 | NA | Myc, KO, longevity | 25619689 | 2015 | animal_strain: \<C57BL/6\> | 1 | 884 | 5 | 10 | montilab | 2025-10-18 00:21:34 | 0 | a10176ce6e727366cf740e2bfb56e2bc |
+| 460 | Myc_reduce_mice_liver_24m_readme | Mus musculus | bi-directional | transcriptomics | Myc_reduce | transcriptomics by single-cell RNA-seq | liver | none | mice Myc haploinsufficient (Myc(+/-)) | 5 | NA | NA | 0.05 | NA | Myc, KO, longevity | 25619689 | 2015 | animal_strain: \<C57BL/6\> | 1 | 884 | 5 | 10 | montilab | 2025-10-18 00:39:50 | 0 | a10176ce6e727366cf740e2bfb56e2bc |
 
 Finally, remove `signature_name = "Myc_reduce_mice_liver_24m_readme"`
 from the database
@@ -651,12 +650,12 @@ if(base::nrow(signature_tbl) > 0){
     signature_id = signature_tbl$signature_id
   )
 }
-#> Remove difexp belongs to signature_id = '454' from the database.
-#> Remove signature_id = '454' from 'signatures' table of the database.
-#> Remove features belongs to signature_id = '454' from 'signature_feature_set' table of the database.
-#> Remove user access to signature_id = '454' from 'signature_access' table of the database.
-#> Remove signature_id = '454' from 'signature_collection_access' table of the database.
-#> signature_id = '454' has been removed.
+#> Remove difexp belongs to signature_id = '460' from the database.
+#> Remove signature_id = '460' from 'signatures' table of the database.
+#> Remove features belongs to signature_id = '460' from 'signature_feature_set' table of the database.
+#> Remove user access to signature_id = '460' from 'signature_access' table of the database.
+#> Remove signature_id = '460' from 'signature_collection_access' table of the database.
+#> signature_id = '460' has been removed.
 ```
 
 # Additional Guides

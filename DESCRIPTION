@@ -28,6 +28,7 @@ Imports:
   methods,
   OmicSignature,
   purrr,
+  readr,
   rlang,
   RMySQL,
   tidyr
