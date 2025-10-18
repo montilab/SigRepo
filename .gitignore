@@ -19,5 +19,6 @@
 *.Rproj
 
 # Ignore folders
-.Rproj.user
+.Rproj.user/
+docs/
 

@@ -2,10 +2,11 @@
 
 # <img src="man/figures/logo.png" align="left" width="190" /> SigRepo: An R package for storing and processing omic signatures
 
+![build](https://github.com/montilab/cadra/workflows/rcmdcheck/badge.svg)
 ![pkgdown](https://github.com/montilab/SigRepo/workflows/pkgdown/badge.svg)
-![Docker pulls](https://img.shields.io/docker/pulls/montilab/SigRepo)
+![Docker pulls](https://img.shields.io/docker/pulls/montilab/sigrepo)
 ![Docker image
-size](https://img.shields.io/docker/image-size/montilab/SigRepo)
+size](https://img.shields.io/docker/image-size/montilab/sigRepo)
 ![GitHub last
 commit](https://img.shields.io/github/last-commit/montilab/SigRepo)
 
@@ -162,7 +163,7 @@ signature to the database.
     #> Adding signature owner to the signature access table of the database...
     #> Adding signature feature set to the database...
     #> Finished uploading.
-    #> ID of the uploaded signature: 465
+    #> ID of the uploaded signature: 467
 
 ## **Example 2**: Upload `Myc_reduce_mice_liver_24m` signature
 
@@ -737,7 +738,7 @@ signature</td>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: right;">465</td>
+<td style="text-align: right;">467</td>
 <td style="text-align: left;">LLFS_Aging_Gene_2023</td>
 <td style="text-align: left;">Homo sapiens</td>
 <td style="text-align: left;">bi-directional</td>
@@ -762,7 +763,7 @@ style="text-align: left;">sex,fc,education,percent_intergenic,PC1-4,GRM</td>
 <td style="text-align: right;">82</td>
 <td style="text-align: right;">87</td>
 <td style="text-align: left;">montilab</td>
-<td style="text-align: left;">2025-10-18 01:28:08</td>
+<td style="text-align: left;">2025-10-18 01:43:17</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: left;">b35b7c1d387440d474bfcb3cb162c9a6</td>
 </tr>
@@ -826,12 +827,12 @@ signature from the database.
         signature_id = signature_tbl$signature_id  
       )
     }
-    #> Remove difexp belongs to signature_id = '465' from the database.
-    #> Remove signature_id = '465' from 'signatures' table of the database.
-    #> Remove features belongs to signature_id = '465' from 'signature_feature_set' table of the database.
-    #> Remove user access to signature_id = '465' from 'signature_access' table of the database.
-    #> Remove signature_id = '465' from 'signature_collection_access' table of the database.
-    #> signature_id = '465' has been removed.
+    #> Remove difexp belongs to signature_id = '467' from the database.
+    #> Remove signature_id = '467' from 'signatures' table of the database.
+    #> Remove features belongs to signature_id = '467' from 'signature_feature_set' table of the database.
+    #> Remove user access to signature_id = '467' from 'signature_access' table of the database.
+    #> Remove signature_id = '467' from 'signature_collection_access' table of the database.
+    #> signature_id = '467' has been removed.
 
 # Update a signature
 
