@@ -195,7 +195,7 @@ metadata <- OmicSignature::createMetadata(
   keywords = "Myc, KO, longevity",
   cutoff_description = NULL,
   author = NULL,
-  PMID = 25619689,
+  PMID = "25619689",
   year = 2015,
 
   # example of customized attributes:
@@ -361,7 +361,7 @@ metadata_revised <- OmicSignature::createMetadata(
   keywords = "Myc, KO, longevity",
   cutoff_description = NULL,
   author = NULL,
-  PMID = 25619689,
+  PMID = "25619689",
   year = 2015,
 
   # example of customized attributes:
