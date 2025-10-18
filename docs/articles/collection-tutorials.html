@@ -68,7 +68,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Upload Collection</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/montilab/SigRepo/blob/master/vignettes/collection-tutorials.Rmd" class="external-link"><code>vignettes/collection-tutorials.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/montilab/SigRepo/blob/HEAD/vignettes/collection-tutorials.Rmd" class="external-link"><code>vignettes/collection-tutorials.Rmd</code></a></small>
       <div class="d-none name"><code>collection-tutorials.Rmd</code></div>
     </div>
 
@@ -175,8 +175,12 @@ upload a collection to the database.</p>
 <span>  return_collection_id <span class="op">=</span> <span class="cn">FALSE</span>,       <span class="co"># Whether to return the uploaded collection id. Default is FALSE.</span></span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>                      <span class="co"># Whether to print diagnostic messages. Default is TRUE.</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt;  You already uploaded a collection with the name = 'my_collection' to the SigRepo database.</span></span>
-<span><span class="co">#&gt;  ID of the uploaded collection: 121</span></span></code></pre></div>
+<span><span class="co">#&gt; Uploading each signature in the collection to the database...</span></span>
+<span><span class="co">#&gt; Uploading collection metadata to the database...</span></span>
+<span><span class="co">#&gt; Adding user to collection access table in the database...</span></span>
+<span><span class="co">#&gt; Adding signature to the collection access table of the database...</span></span>
+<span><span class="co">#&gt; Finished uploading.</span></span>
+<span><span class="co">#&gt; ID of the uploaded collection: 124</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="search-for-a-collection-in-the-database">Search for a collection in the database<a class="anchor" aria-label="anchor" href="#search-for-a-collection-in-the-database"></a>
@@ -326,11 +330,11 @@ RNA-seq differential expression results</td>
 <span>    row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<table class="table">
+<table style="width:100%;" class="table">
 <colgroup>
 <col width="6%">
 <col width="7%">
-<col width="15%">
+<col width="16%">
 <col width="4%">
 <col width="9%">
 <col width="5%">
@@ -353,27 +357,27 @@ RNA-seq differential expression results</td>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="right">121</td>
+<td align="right">124</td>
 <td align="left">my_collection</td>
-<td align="left">This is the updated description.</td>
+<td align="left">An example of signature collection</td>
 <td align="left">montilab</td>
-<td align="left">2025-10-18 02:41:33</td>
+<td align="left">2025-10-18 03:04:34</td>
 <td align="right">0</td>
 <td align="left">a7213731b133effec506851ef7cb443f</td>
 <td align="right">413</td>
-<td align="left">3b8364d2bd8f9cd269bf850c9d1b7ed2</td>
+<td align="left">8e508f8274e5bde90688a3d91d3f7754</td>
 <td align="left">Myc_reduce_mice_liver_24m_v1</td>
 </tr>
 <tr class="even">
-<td align="right">121</td>
+<td align="right">124</td>
 <td align="left">my_collection</td>
-<td align="left">This is the updated description.</td>
+<td align="left">An example of signature collection</td>
 <td align="left">montilab</td>
-<td align="left">2025-10-18 02:41:33</td>
+<td align="left">2025-10-18 03:04:34</td>
 <td align="right">0</td>
 <td align="left">a7213731b133effec506851ef7cb443f</td>
 <td align="right">414</td>
-<td align="left">f053052643a8b32c26740505d161e8fe</td>
+<td align="left">1769ad536fb89d1b4a56109e62273451</td>
 <td align="left">Myc_reduce_mice_liver_24m_v2</td>
 </tr>
 </tbody>
@@ -413,7 +417,7 @@ owned by user in the database, e.g.,
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>,</span>
 <span>  collection_name <span class="op">=</span> <span class="st">"my_collection"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; now dyn.load("/home/runner/work/_temp/Library/curl/libs/curl.so") ...</span></span>
+<span><span class="co">#&gt; now dyn.load("/Library/Frameworks/R.framework/Versions/4.5-x86_64/Resources/library/curl/libs/curl.so") ...</span></span>
 <span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_v1 created.</span></span>
 <span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_v2 created.</span></span>
 <span><span class="co">#&gt;   [Success] OmicSignature Collection my_collection created.</span></span></code></pre></div>
@@ -453,8 +457,7 @@ follows:</p>
 <span>    description <span class="op">=</span>  <span class="st">"This is the updated description."</span> </span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Error in SigRepo::updateCollectionMetadata(conn_handler = conn_handler, : </span></span>
-<span><span class="co">#&gt; There is no collection_id = '121' in the 'collection' table of the SigRepo database.</span></span></code></pre></div>
+<span><span class="co">#&gt; collection_id = '124' has been updated.</span></span></code></pre></div>
 <p>Now, let’s search for <code>"my_collection"</code> in the database
 and see if its description has been updated.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
@@ -463,7 +466,6 @@ and see if its description has been updated.</p>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  collection_name <span class="op">=</span> <span class="st">"my_collection"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; There is no collection returned from the search parameters.</span></span>
 <span></span>
 <span><span class="co"># If the collection exists, display the table</span></span>
 <span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
@@ -472,6 +474,58 @@ and see if its description has been updated.</p>
 <span>    row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
+<table class="table">
+<colgroup>
+<col width="6%">
+<col width="7%">
+<col width="15%">
+<col width="4%">
+<col width="9%">
+<col width="5%">
+<col width="15%">
+<col width="6%">
+<col width="15%">
+<col width="13%">
+</colgroup>
+<thead><tr class="header">
+<th align="right">collection_id</th>
+<th align="left">collection_name</th>
+<th align="left">description</th>
+<th align="left">user_name</th>
+<th align="left">date_created</th>
+<th align="right">visibility</th>
+<th align="left">collection_hashkey</th>
+<th align="right">signature_id</th>
+<th align="left">signature_collection_hashkey</th>
+<th align="left">signature_name</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">124</td>
+<td align="left">my_collection</td>
+<td align="left">This is the updated description.</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 03:04:34</td>
+<td align="right">0</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">413</td>
+<td align="left">8e508f8274e5bde90688a3d91d3f7754</td>
+<td align="left">Myc_reduce_mice_liver_24m_v1</td>
+</tr>
+<tr class="even">
+<td align="right">124</td>
+<td align="left">my_collection</td>
+<td align="left">This is the updated description.</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 03:04:34</td>
+<td align="right">0</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">414</td>
+<td align="left">1769ad536fb89d1b4a56109e62273451</td>
+<td align="left">Myc_reduce_mice_liver_24m_v2</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level2">
 <h2 id="add-signatures-to-an-existing-collection-in-the-database">Add signatures to an existing collection in the database<a class="anchor" aria-label="anchor" href="#add-signatures-to-an-existing-collection-in-the-database"></a>
@@ -530,7 +584,6 @@ and see if the signatures are added to the collection.</p>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  collection_name <span class="op">=</span> <span class="st">"my_collection"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; There is no collection returned from the search parameters.</span></span>
 <span></span>
 <span><span class="co"># If collection exists, display the table</span></span>
 <span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
@@ -539,6 +592,82 @@ and see if the signatures are added to the collection.</p>
 <span>    row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
+<table class="table">
+<colgroup>
+<col width="6%">
+<col width="7%">
+<col width="15%">
+<col width="4%">
+<col width="9%">
+<col width="5%">
+<col width="15%">
+<col width="6%">
+<col width="15%">
+<col width="13%">
+</colgroup>
+<thead><tr class="header">
+<th align="right">collection_id</th>
+<th align="left">collection_name</th>
+<th align="left">description</th>
+<th align="left">user_name</th>
+<th align="left">date_created</th>
+<th align="right">visibility</th>
+<th align="left">collection_hashkey</th>
+<th align="right">signature_id</th>
+<th align="left">signature_collection_hashkey</th>
+<th align="left">signature_name</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">124</td>
+<td align="left">my_collection</td>
+<td align="left">This is the updated description.</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 03:04:34</td>
+<td align="right">0</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">413</td>
+<td align="left">8e508f8274e5bde90688a3d91d3f7754</td>
+<td align="left">Myc_reduce_mice_liver_24m_v1</td>
+</tr>
+<tr class="even">
+<td align="right">124</td>
+<td align="left">my_collection</td>
+<td align="left">This is the updated description.</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 03:04:34</td>
+<td align="right">0</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">414</td>
+<td align="left">1769ad536fb89d1b4a56109e62273451</td>
+<td align="left">Myc_reduce_mice_liver_24m_v2</td>
+</tr>
+<tr class="odd">
+<td align="right">124</td>
+<td align="left">my_collection</td>
+<td align="left">This is the updated description.</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 03:04:34</td>
+<td align="right">0</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">415</td>
+<td align="left">957b2316d04f835b7155aa3c5d38b9f1</td>
+<td align="left">Myc_reduce_mice_liver_24m_v3</td>
+</tr>
+<tr class="even">
+<td align="right">124</td>
+<td align="left">my_collection</td>
+<td align="left">This is the updated description.</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 03:04:34</td>
+<td align="right">0</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">416</td>
+<td align="left">c827bdea7c5c02f82da145c59ad44870</td>
+<td align="left">Myc_reduce_mice_liver_24m_v4</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level2">
 <h2 id="remove-a-list-of-signatures-from-a-collection-in-the-database">Remove a list of signatures from a collection in the database<a class="anchor" aria-label="anchor" href="#remove-a-list-of-signatures-from-a-collection-in-the-database"></a>
@@ -564,7 +693,6 @@ owner to access, retrieve, and edit their collections.</li>
 <span>  collection_name <span class="op">=</span> <span class="st">"my_collection"</span>,</span>
 <span>  signature_name <span class="op">=</span> <span class="st">"Myc_reduce_mice_liver_24m_v1"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; There is no collection returned from the search parameters.</span></span>
 <span></span>
 <span><span class="co"># If signature collection combo exists, remove the signature.</span></span>
 <span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
@@ -573,7 +701,8 @@ owner to access, retrieve, and edit their collections.</li>
 <span>    collection_id <span class="op">=</span> <span class="va">collection_tbl</span><span class="op">$</span><span class="va">collection_id</span>,</span>
 <span>    signature_id <span class="op">=</span> <span class="va">collection_tbl</span><span class="op">$</span><span class="va">signature_id</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
+<span><span class="op">}</span></span>
+<span><span class="co">#&gt; Removing signature_id = '413' from collection_id = '124' completed.</span></span></code></pre></div>
 <p>Now, let’s search for <code>"my_collection"</code> in the database
 and see if signatures have been removed from the collection.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
@@ -582,7 +711,6 @@ and see if signatures have been removed from the collection.</p>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  collection_name <span class="op">=</span> <span class="st">"my_collection"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; There is no collection returned from the search parameters.</span></span>
 <span></span>
 <span><span class="co"># If collection exists, display the table</span></span>
 <span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
@@ -591,6 +719,70 @@ and see if signatures have been removed from the collection.</p>
 <span>    row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
+<table class="table">
+<colgroup>
+<col width="6%">
+<col width="7%">
+<col width="15%">
+<col width="4%">
+<col width="9%">
+<col width="5%">
+<col width="15%">
+<col width="6%">
+<col width="15%">
+<col width="13%">
+</colgroup>
+<thead><tr class="header">
+<th align="right">collection_id</th>
+<th align="left">collection_name</th>
+<th align="left">description</th>
+<th align="left">user_name</th>
+<th align="left">date_created</th>
+<th align="right">visibility</th>
+<th align="left">collection_hashkey</th>
+<th align="right">signature_id</th>
+<th align="left">signature_collection_hashkey</th>
+<th align="left">signature_name</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">124</td>
+<td align="left">my_collection</td>
+<td align="left">This is the updated description.</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 03:04:34</td>
+<td align="right">0</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">414</td>
+<td align="left">1769ad536fb89d1b4a56109e62273451</td>
+<td align="left">Myc_reduce_mice_liver_24m_v2</td>
+</tr>
+<tr class="even">
+<td align="right">124</td>
+<td align="left">my_collection</td>
+<td align="left">This is the updated description.</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 03:04:34</td>
+<td align="right">0</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">415</td>
+<td align="left">957b2316d04f835b7155aa3c5d38b9f1</td>
+<td align="left">Myc_reduce_mice_liver_24m_v3</td>
+</tr>
+<tr class="odd">
+<td align="right">124</td>
+<td align="left">my_collection</td>
+<td align="left">This is the updated description.</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 03:04:34</td>
+<td align="right">0</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">416</td>
+<td align="left">c827bdea7c5c02f82da145c59ad44870</td>
+<td align="left">Myc_reduce_mice_liver_24m_v4</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level2">
 <h2 id="delete-the-whole-collection-from-the-database">Delete the whole collection from the database<a class="anchor" aria-label="anchor" href="#delete-the-whole-collection-from-the-database"></a>
@@ -613,7 +805,6 @@ time.</li>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  collection_name <span class="op">=</span> <span class="st">"my_collection"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; There is no collection returned from the search parameters.</span></span>
 <span></span>
 <span><span class="co"># If the collection exists, remove it from the database</span></span>
 <span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
@@ -621,7 +812,11 @@ time.</li>
 <span>    conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>    collection_id <span class="op">=</span> <span class="va">collection_tbl</span><span class="op">$</span><span class="va">collection_id</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
+<span><span class="op">}</span></span>
+<span><span class="co">#&gt; Remove collection_id = '124' from 'collection' table of the database.</span></span>
+<span><span class="co">#&gt; Remove collection_id = '124' from 'collection_access' table of the database.</span></span>
+<span><span class="co">#&gt; Remove signatures belongs to collection_id = '124' from 'signature_collection_access' table of the database.</span></span>
+<span><span class="co">#&gt; collection_id = '124' has been removed.</span></span></code></pre></div>
 <p>Finally, let’s search for <code>"my_collection"</code> in the
 database and see if the collection has been removed.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
