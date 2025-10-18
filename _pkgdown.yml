@@ -1,0 +1,121 @@
+url: https://montilab.github.io/SigRepo/
+
+development:
+  mode: auto
+
+template:
+  bootstrap: 5
+  bootswatch: lux
+  light-switch: true
+  includes:
+    in_header: <link rel="stylesheet" type="text/css" href="https://..." />
+
+authors:
+  Reina Chau:
+    href: https://github.com/RC-88
+  Cameron Vicnaire:
+    href: https://github.com/Cvicnaire
+  Vanessa Li:
+    href: https://github.com/katgit
+  Stefano Monti:
+    href: https://github.com/tetomonti
+
+news:
+  one_page: false
+  
+reference:
+  - title: Connect to Database
+    desc: ~
+    contents:
+      - '`newConnHandler`'
+  
+  - title: Search Data in Database
+    desc: ~
+    contents:
+      - '`searchAssayType`'
+      - '`searchCollection`'
+      - '`searchKeyword`'
+      - '`searchOrganism`'
+      - '`searchPhenotype`'
+      - '`searchPlatform`'
+      - '`searchProteomicsFeatureSet`'
+      - '`searchSampleType`'
+      - '`searchSignature`'
+      - '`searchTranscriptomicsFeatureSet`'
+      - '`searchUser`'
+    
+  - title: Retrieve Data from Database
+    desc: ~
+    contents:
+      - '`getAPIKey`'
+      - '`getCollection`'
+      - '`getSignature`'
+
+  - title: Import Data to Database
+    desc: ~
+    contents:
+      - '`addCollection`'
+      - '`addKeyword`'
+      - '`addOrganism`'
+      - '`addPhenotype`'
+      - '`addPlatform`'
+      - '`addProteomicsFeatureSet`'
+      - '`addProteomicsSignatureSet`'
+      - '`addSampleType`'
+      - '`addSignature`'
+      - '`addSignatureToCollection`'
+      - '`addTranscriptomicsFeatureSet`'
+      - '`addTranscriptomicsSignatureSet`'
+      - '`addUser`'
+      - '`addUserToSignature`'
+      - '`addUserToCollection`'
+  
+  - title: Update Data in Database
+    desc: ~
+    contents:
+      - '`updateCollectionMetadata`'
+      - '`updateSignature`'
+      - '`updateUser`'
+  
+  - title: Delete Data from Database
+    desc: ~
+    contents:
+      - '`deleteCollection`'
+      - '`deleteOrganism`'
+      - '`deletePhenotype`'
+      - '`deletePlatform`'
+      - '`deleteSampleType`'
+      - '`deleteSignature`'
+      - '`deleteUser`'
+      - '`inActivateUser`'
+      - '`removeSignatureFromCollection`'
+
+navbar:
+  title: SigRepo
+  structure:
+    left: [signature, collection, reference, change_log]
+    right: [search, github, lightswitch]
+  components:
+    signature:
+      text: "Upload Signature"
+      href: index.html
+    collection:
+      text: "Upload Collection"
+      href: articles/collection-tutorials.html        
+    reference:
+      text: "Reference"
+      href: reference/index.html 
+    change_log:
+      text: "Change Log"
+      href: news/index.html
+    github:
+      icon: fa-github
+      aria-label: "GitHub Icon"
+      href: https://github.com/montilab/SigRepo  
+
+footer:
+  structure: 
+    left: developed_by
+    right: built_with
+    
+    

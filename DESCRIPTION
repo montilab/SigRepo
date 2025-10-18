@@ -1,0 +1,48 @@
+Package: SigRepo
+Type: Package
+Title: Storing and processing omic signatures and collections
+Version: 1.0.0
+Authors@R: 
+  c(person(given="Reina", family="Chau", role=c("aut","cre"), 
+           email="rchau88@bu.edu", comment=c(ORCID="0000-0003-3012-1404")), 
+    person(given="Cameron", family="Vicnaire", role=c("aut"), 
+           email="camv@bu.edu"), 
+    person(given="Mengze", family="Li", role=c("aut"), 
+           email="vmli@bu.edu"), 
+    person(given="Stefano", family="Monti", role=c("aut"), 
+           email="smonti@bu.edu", comment=c(ORCID="0000-0002-9376-0660")))
+Description: As high-throughput technology evolves, a large number of omics-signatures are being derived. 
+  This package helps to store signatures efficiently and retrieve them conveniently. 
+Depends: R (>= 4.4.0)
+License: GPL-3 + file LICENSE
+URL: https://github.com/montilab/SigRepo/
+Encoding: UTF-8
+RoxygenNote: 7.3.3
+LazyData: true 
+Imports:
+  DBI,
+  digest,
+  dplyr,
+  httr,
+  jsonlite,
+  methods,
+  OmicSignature,
+  purrr,
+  readr,
+  rlang,
+  RMySQL,
+  tidyr
+Remotes:
+  montilab/OmicSignature
+Suggests:
+  BiocManager,
+  devtools,
+  knitr,
+  pkgdown,
+  rmarkdown,
+  testthat (>= 3.0.0),
+  tidyverse
+Config/testthat/edition: 3
+biocViews: Software, FeatureExtraction
+VignetteBuilder: knitr
+BugReports: https://github.com/montilab/SigRepo/issues

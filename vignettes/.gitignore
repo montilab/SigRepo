@@ -1,0 +1,9 @@
+
+# Ignore specific files 
+.Rhistory
+.DS_Store
+.Rapp.history
+
+# Ignore extensions
+*.html
+*.R
