@@ -163,7 +163,7 @@ signature to the database.
     #> Adding signature owner to the signature access table of the database...
     #> Adding signature feature set to the database...
     #> Finished uploading.
-    #> ID of the uploaded signature: 469
+    #> ID of the uploaded signature: 480
 
 ## **Example 2**: Upload `Myc_reduce_mice_liver_24m` signature
 
@@ -350,7 +350,7 @@ omics layer.
       keywords = "Myc, KO, longevity",
       cutoff_description = NULL,
       author = NULL,
-      PMID = 25619689,
+      PMID = "25619689",
       year = 2015,
 
       # example of customized attributes:
@@ -381,7 +381,7 @@ omics layer.
       signature = signature,
       difexp = difexp
     )
-    #> Error in private$checkMetadata(metadata, signatureType = metadata$direction_type, : is.character(metadata$PMID) is not TRUE
+    #>   [Success] OmicSignature object Myc_reduce_mice_liver_24m_readme created.
 
     # Add signature to database
     SigRepo::addSignature(
@@ -391,7 +391,12 @@ omics layer.
       return_signature_id = FALSE,        # Whether to return the uploaded signature id. Default is FALSE.
       verbose = TRUE                      # Whether to print diagnostic messages. Default is TRUE.
     )
-    #> Error: object 'omic_signature' not found
+    #> Uploading signature metadata to the database...
+    #> Saving difexp to the database...
+    #> Adding signature owner to the signature access table of the database...
+    #> Adding signature feature set to the database...
+    #> Finished uploading.
+    #> ID of the uploaded signature: 482
 
 # Search for a list of signatures
 
@@ -738,7 +743,7 @@ signature</td>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: right;">469</td>
+<td style="text-align: right;">480</td>
 <td style="text-align: left;">LLFS_Aging_Gene_2023</td>
 <td style="text-align: left;">Homo sapiens</td>
 <td style="text-align: left;">bi-directional</td>
@@ -763,7 +768,7 @@ style="text-align: left;">sex,fc,education,percent_intergenic,PC1-4,GRM</td>
 <td style="text-align: right;">82</td>
 <td style="text-align: right;">87</td>
 <td style="text-align: left;">montilab</td>
-<td style="text-align: left;">2025-10-18 01:51:41</td>
+<td style="text-align: left;">2025-10-18 02:15:09</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: left;">b35b7c1d387440d474bfcb3cb162c9a6</td>
 </tr>
@@ -827,12 +832,12 @@ signature from the database.
         signature_id = signature_tbl$signature_id  
       )
     }
-    #> Remove difexp belongs to signature_id = '469' from the database.
-    #> Remove signature_id = '469' from 'signatures' table of the database.
-    #> Remove features belongs to signature_id = '469' from 'signature_feature_set' table of the database.
-    #> Remove user access to signature_id = '469' from 'signature_access' table of the database.
-    #> Remove signature_id = '469' from 'signature_collection_access' table of the database.
-    #> signature_id = '469' has been removed.
+    #> Remove difexp belongs to signature_id = '480' from the database.
+    #> Remove signature_id = '480' from 'signatures' table of the database.
+    #> Remove features belongs to signature_id = '480' from 'signature_feature_set' table of the database.
+    #> Remove user access to signature_id = '480' from 'signature_access' table of the database.
+    #> Remove signature_id = '480' from 'signature_collection_access' table of the database.
+    #> signature_id = '480' has been removed.
 
 # Update a signature
 
@@ -880,7 +885,7 @@ wish to update the `platform` information with a correct value, e.g.,
       keywords = "Myc, KO, longevity",
       cutoff_description = NULL,
       author = NULL,
-      PMID = 25619689,
+      PMID = "25619689",
       year = 2015,
 
       # example of customized attributes:
@@ -911,7 +916,7 @@ wish to update the `platform` information with a correct value, e.g.,
       signature = signature,
       difexp = difexp
     )
-    #> Error in private$checkMetadata(metadata, signatureType = metadata$direction_type, : is.character(metadata$PMID) is not TRUE
+    #>   [Success] OmicSignature object Myc_reduce_mice_liver_24m_readme created.
 
     # Now, let's search for Myc_reduce_mice_liver_24m_readme in the database
     # in which we would like to revise the value of platform to "transcriptomics by single-cell RNA-seq"
@@ -928,6 +933,7 @@ wish to update the `platform` information with a correct value, e.g.,
         omic_signature = updated_omic_signature
       )
     }
+    #> Error in value[[3L]](cond): OmicSignature Error: Error in private$checkMetadata(metadata, signatureType = metadata$direction_type, : is.character(metadata$PMID) is not TRUE
 
 Let’s look up `signature_name = "Myc_reduce_mice_liver_24m_readme"` and
 see if the value of `platform` has been changed.
@@ -943,6 +949,100 @@ see if the value of `platform` has been changed.
         row.names = FALSE
       )
     }
+
+<table>
+<colgroup>
+<col style="width: 2%" />
+<col style="width: 7%" />
+<col style="width: 2%" />
+<col style="width: 3%" />
+<col style="width: 3%" />
+<col style="width: 2%" />
+<col style="width: 5%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 8%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 3%" />
+<col style="width: 2%" />
+<col style="width: 4%" />
+<col style="width: 4%" />
+<col style="width: 1%" />
+<col style="width: 1%" />
+<col style="width: 5%" />
+<col style="width: 2%" />
+<col style="width: 3%" />
+<col style="width: 3%" />
+<col style="width: 4%" />
+<col style="width: 2%" />
+<col style="width: 4%" />
+<col style="width: 2%" />
+<col style="width: 7%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">signature_id</th>
+<th style="text-align: left;">signature_name</th>
+<th style="text-align: left;">organism</th>
+<th style="text-align: left;">direction_type</th>
+<th style="text-align: left;">assay_type</th>
+<th style="text-align: left;">phenotype</th>
+<th style="text-align: left;">platform_name</th>
+<th style="text-align: left;">sample_type</th>
+<th style="text-align: left;">covariates</th>
+<th style="text-align: left;">description</th>
+<th style="text-align: right;">score_cutoff</th>
+<th style="text-align: right;">logfc_cutoff</th>
+<th style="text-align: right;">p_value_cutoff</th>
+<th style="text-align: right;">adj_p_cutoff</th>
+<th style="text-align: left;">cutoff_description</th>
+<th style="text-align: left;">keywords</th>
+<th style="text-align: right;">PMID</th>
+<th style="text-align: right;">year</th>
+<th style="text-align: left;">others</th>
+<th style="text-align: right;">has_difexp</th>
+<th style="text-align: right;">num_of_difexp</th>
+<th style="text-align: right;">num_up_regulated</th>
+<th style="text-align: right;">num_down_regulated</th>
+<th style="text-align: left;">user_name</th>
+<th style="text-align: left;">date_created</th>
+<th style="text-align: right;">visibility</th>
+<th style="text-align: left;">signature_hashkey</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">482</td>
+<td style="text-align: left;">Myc_reduce_mice_liver_24m_readme</td>
+<td style="text-align: left;">Mus musculus</td>
+<td style="text-align: left;">bi-directional</td>
+<td style="text-align: left;">transcriptomics</td>
+<td style="text-align: left;">Myc_reduce</td>
+<td style="text-align: left;">transcriptomics by array</td>
+<td style="text-align: left;">liver</td>
+<td style="text-align: left;">none</td>
+<td style="text-align: left;">mice Myc haploinsufficient (Myc(+/-))</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">Myc, KO, longevity</td>
+<td style="text-align: right;">25619689</td>
+<td style="text-align: right;">2015</td>
+<td style="text-align: left;">animal_strain: &lt;C57BL/6&gt;</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">884</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: left;">montilab</td>
+<td style="text-align: left;">2025-10-18 02:15:23</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">a10176ce6e727366cf740e2bfb56e2bc</td>
+</tr>
+</tbody>
+</table>
 
 Finally, remove `signature_name = "Myc_reduce_mice_liver_24m_readme"`
 from the database
@@ -960,6 +1060,12 @@ from the database
         signature_id = signature_tbl$signature_id
       )
     }
+    #> Remove difexp belongs to signature_id = '482' from the database.
+    #> Remove signature_id = '482' from 'signatures' table of the database.
+    #> Remove features belongs to signature_id = '482' from 'signature_feature_set' table of the database.
+    #> Remove user access to signature_id = '482' from 'signature_access' table of the database.
+    #> Remove signature_id = '482' from 'signature_collection_access' table of the database.
+    #> signature_id = '482' has been removed.
 
 # Additional Guides
 
