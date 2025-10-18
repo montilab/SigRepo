@@ -53,6 +53,7 @@ and its associated values in the database</p>
 <span>  <span class="va">conn</span>,</span>
 <span>  <span class="va">db_table_name</span>,</span>
 <span>  return_var <span class="op">=</span> <span class="st">"*"</span>,</span>
+<span>  exclude_return_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  filter_coln_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  filter_coln_val <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  filter_var_by <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -75,6 +76,10 @@ and its associated values in the database</p>
 <dt id="arg-return-var">return_var<a class="anchor" aria-label="anchor" href="#arg-return-var"></a></dt>
 <dd><p>a list of column variables to be returned from the given table.
 Default '*' (means everything).</p></dd>
+
+
+<dt id="arg-exclude-return-var">exclude_return_var<a class="anchor" aria-label="anchor" href="#arg-exclude-return-var"></a></dt>
+<dd><p>a list of column names to be excluded from the returned table.</p></dd>
 
 
 <dt id="arg-filter-coln-var">filter_coln_var<a class="anchor" aria-label="anchor" href="#arg-filter-coln-var"></a></dt>

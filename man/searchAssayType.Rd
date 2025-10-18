@@ -4,15 +4,23 @@
 \alias{searchAssayType}
 \title{searchAssayType}
 \usage{
-searchAssayType(type = "All")
+searchAssayType(assay_type = NULL)
 }
 \arguments{
-\item{type}{Character. One of \code{"All"}, \code{"Available"}, or \code{"Unavailable"}.
-Controls which assay types are returned. Default is \code{"All"}.}
+\item{assay_type}{A list of assay types to be looked up. 
+Default is NULL which will return all of the assay types in the database.}
 }
 \value{
 A data frame with assay types and their availability status.
+
+There are two availability status:
+\code{"Available"} means the assay type currently exists in the database,
+and users can upload signatures or collections that are specifically
+associated with this assay type.
+\code{"Unavailable"} means the assay type isn't existed in the database yet,
+and users cannot upload signatures or collections that are specifically
+associated with this assay type.
 }
 \description{
-Search for current omics assay types and filter them by availability status.
+Search for omics assay types and its availability status.
 }

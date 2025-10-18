@@ -49,12 +49,6 @@ addUserToCollection <- function(
   # Check access_type for each user
   access_type <- base::match.arg(access_type, several.ok = TRUE)  
   
-  # Get unique user_name
-  user_name <- base::unique(user_name) 
-  
-  # Get unique collection id
-  collection_id <- base::unique(collection_id)     
-  
   # Check collection_id
   if(!base::length(collection_id) == 1 || base::all(collection_id %in% c(NA, ""))){
     # Disconnect from database ####
@@ -85,7 +79,7 @@ addUserToCollection <- function(
     db_table_name = "users",
     return_var = "*",
     filter_coln_var = "user_name", 
-    filter_coln_val = list("user_name" = user_name),
+    filter_coln_val = base::list("user_name" = base::unique(user_name)),
     check_db_table = FALSE
   )
   
@@ -103,7 +97,7 @@ addUserToCollection <- function(
     db_table_name = "collection",
     return_var = "*",
     filter_coln_var = "collection_id",
-    filter_coln_val = list("collection_id" = collection_id),
+    filter_coln_val = base::list("collection_id" = base::unique(collection_id)),
     check_db_table = TRUE
   )
   
@@ -127,14 +121,13 @@ addUserToCollection <- function(
         db_table_name = "collection",
         return_var = "*",
         filter_coln_var = c("collection_id", "user_name"), 
-        filter_coln_val = list("collection_id" = collection_id, "user_name" = orig_user_name),
+        filter_coln_val = base::list("collection_id" = collection_id, "user_name" = orig_user_name),
         filter_var_by = "AND",
         check_db_table = FALSE
       )
       
       # If not, check if user was added as an owner or editor
       if(base::nrow(collection_user_tbl) == 0){
-        
         signature_access_tbl <- SigRepo::lookup_table_sql(
           conn = conn,
           db_table_name = "collection_access",
@@ -144,7 +137,6 @@ addUserToCollection <- function(
           filter_var_by = c("AND", "AND"),
           check_db_table = TRUE
         )
-        
         # If user does not have permission, throw an error message
         if(base::nrow(signature_access_tbl) == 0){
           # Disconnect from database ####
@@ -153,6 +145,7 @@ addUserToCollection <- function(
           base::stop(base::sprintf("\nUser = '%s' does not have the permission to add user = % to collection_id = '%s' in the SigRepo database.\n", orig_user_name, base::paste0("'", user_name, "'", collapse = ", "), collection_id))
         }
       }
+      
     }
     
     # Create user collection access table

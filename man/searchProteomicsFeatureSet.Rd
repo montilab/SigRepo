@@ -15,9 +15,11 @@ searchProteomicsFeatureSet(
 \item{conn_handler}{A handler uses to establish connection to the database 
 obtained from SigRepo::newConnhandler() (required)}
 
-\item{feature_name}{A list of feature names to look up.}
+\item{feature_name}{A list of feature names to look up. 
+Default is NULL which will return all of the feature names in the database.}
 
-\item{organism}{A list of organism to look up.}
+\item{organism}{A list of organism to look up.
+Default is NULL which will return all of the organisms in the database.}
 
 \item{verbose}{a logical value indicates whether or not to print the
 diagnostic messages. Default is \code{TRUE}.}

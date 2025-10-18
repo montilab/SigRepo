@@ -10,8 +10,8 @@ searchPhenotype(conn_handler, phenotype = NULL, verbose = TRUE)
 \item{conn_handler}{A handler uses to establish connection to the database 
 obtained from SigRepo::newConnhandler() (required)}
 
-\item{phenotype}{A phenotype, or a  list of phenotypes to search by. Default is NULL which
-will return all of the phenotypes in the database}
+\item{phenotype}{A phenotype, or a  list of phenotypes to search by. 
+Default is NULL which will return all of the phenotypes in the database}
 
 \item{verbose}{A logical value indicates whether or not to print the
 diagnostic messages. Default is \code{TRUE}.}

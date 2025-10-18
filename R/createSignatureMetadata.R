@@ -262,7 +262,7 @@ createSignatureMetadata <- function(
       keywords <- base::paste0(metadata$keywords, collapse = ",")
       # Create keyword table
       keyword_tbl <- base::data.frame(
-        keyword = metadata$keywords,
+        keyword = base::strsplit(metadata$keywords, split = ",", fixed = TRUE) |> base::unlist() |> base::trimws(),
         stringsAsFactors = FALSE
       )
       # Add keyword to database

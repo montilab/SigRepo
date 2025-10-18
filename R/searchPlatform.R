@@ -33,7 +33,7 @@ searchPlatform <- function(
     platform_tbl <- SigRepo::lookup_table_sql(
       conn = conn, 
       db_table_name = "platforms", 
-      return_var = "*", 
+      return_var = "platform_name", 
       check_db_table = TRUE
     )  
     
@@ -42,9 +42,9 @@ searchPlatform <- function(
     platform_tbl <- SigRepo::lookup_table_sql(
       conn = conn, 
       db_table_name = "platforms", 
-      return_var = "*", 
+      return_var = "platform_name", 
       filter_coln_var = "platform_name", 
-      filter_coln_val = list("platform_name" = base::unique(platform_name)),
+      filter_coln_val = base::list("platform_name" = base::unique(platform_name)),
       check_db_table = TRUE
     ) 
     

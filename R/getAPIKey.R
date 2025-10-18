@@ -2,10 +2,17 @@
 #' @description Get API Key of a specific user in the database
 #' @param conn_handler A handler uses to establish connection to the database 
 #' obtained from SigRepo::newConnhandler() (required) 
+#' @param verbose A logical value indicates whether or not to print the
+#' diagnostic messages. Default is \code{TRUE}.
+#' 
 #' @export
 getAPIKey <- function(
-    conn_handler
+    conn_handler,
+    verbose = TRUE
 ){
+  
+  # Whether to print the diagnostic messages
+  SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
   conn <- SigRepo::conn_init(conn_handler = conn_handler)

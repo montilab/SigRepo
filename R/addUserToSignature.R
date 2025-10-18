@@ -49,12 +49,6 @@ addUserToSignature <- function(
   # Check access_type for each user
   access_type <- base::match.arg(access_type, several.ok = FALSE)  
   
-  # Get unique user_name
-  user_name <- base::unique(user_name) 
-  
-  # Get unique signature id
-  signature_id <- base::unique(signature_id) 
-  
   # Check signature_id
   if(!base::length(signature_id) == 1 || base::all(signature_id %in% c(NA, ""))){
     # Disconnect from database ####
@@ -85,12 +79,12 @@ addUserToSignature <- function(
     db_table_name = "users",
     return_var = "*",
     filter_coln_var = "user_name", 
-    filter_coln_val = list("user_name" = user_name),
+    filter_coln_val = base::list("user_name" = base::unique(user_name)),
     check_db_table = FALSE
   )
   
   # If any user does not exit in the database, throw an error message
-  if(base::nrow(user_tbl) != base::length(unique(user_name))){
+  if(base::nrow(user_tbl) != base::length(base::unique(user_name))){
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn)) 
     # Show message
@@ -103,7 +97,7 @@ addUserToSignature <- function(
     db_table_name = "signatures",
     return_var = "*",
     filter_coln_var = "signature_id",
-    filter_coln_val = list("signature_id" = signature_id),
+    filter_coln_val = base::list("signature_id" = base::unique(signature_id)),
     check_db_table = TRUE
   )
   
@@ -119,6 +113,7 @@ addUserToSignature <- function(
     
     # If user is not admin, check if it has access to the signature
     if(orig_user_role != "admin"){
+      
       # Check if user is the one who uploaded the signature
       signature_user_tbl <- SigRepo::lookup_table_sql(
         conn = conn,
@@ -129,6 +124,7 @@ addUserToSignature <- function(
         filter_var_by = "AND",
         check_db_table = FALSE
       )
+      
       # If not, check if user was added as an owner or editor
       if(base::nrow(signature_user_tbl) == 0){
         signature_access_tbl <- SigRepo::lookup_table_sql(
@@ -140,6 +136,7 @@ addUserToSignature <- function(
           filter_var_by = c("AND", "AND"),
           check_db_table = TRUE
         )
+        
         # If user does not have permission, throw an error message
         if(base::nrow(signature_access_tbl) == 0){
           # Disconnect from database ####
@@ -148,6 +145,7 @@ addUserToSignature <- function(
           base::stop(base::sprintf("\nUser = '%s' does not have the permission to add User = % to signature_id = '%s' in the SigRepo database.\n", orig_user_name, base::paste0("'", user_name, "'", collapse = ", "), signature_id))
         }
       }
+      
     }
     
     # Create user signature access table

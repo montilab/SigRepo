@@ -1,24 +1,34 @@
 #' @title searchAssayType
-#' @description Search for current omics assay types and filter them by availability status.
-#'
-#' @param type Character. One of \code{"All"}, \code{"Available"}, or \code{"Unavailable"}.
-#'             Controls which assay types are returned. Default is \code{"All"}.
-#'
+#' @description Search for omics assay types and its availability status.
+#' @param assay_type A list of assay types to be looked up. 
+#' Default is NULL which will return all of the assay types in the database.
+#' 
 #' @return A data frame with assay types and their availability status.
-#'
+#' 
+#' There are two availability status:
+#' \code{"Available"} means the assay type currently exists in the database,
+#' and users can upload signatures or collections that are specifically
+#' associated with this assay type.
+#' \code{"Unavailable"} means the assay type isn't existed in the database yet,
+#' and users cannot upload signatures or collections that are specifically
+#' associated with this assay type.
+#' 
 #' @export
-searchAssayType <- function(type = "All") {
+searchAssayType <- function(
+    assay_type = NULL
+) {
+  
   # Create the table of assay types and their availability
-  tbl <- data.frame(
-    Assay = c(
+  assay_tbl <- base::data.frame(
+    assay_type = c(
       "transcriptomics",
       "proteomics",
       "metabolomics",
       "methylomics",
       "genetic_variations",
-      "DNA_Binding_Sites"
+      "dna_binding_sites"
     ),
-    Status = c(
+    status = c(
       "Available",
       "Available",
       "Unavailable",
@@ -29,18 +39,22 @@ searchAssayType <- function(type = "All") {
     stringsAsFactors = FALSE
   )
   
-  # Normalize the input
-  type <- tolower(type)
-  
-  # Validate input
-  if (!type %in% c("all", "available", "unavailable")) {
-    stop("Invalid type. Please choose one of 'All', 'Available', or 'Unavailable'.")
+  # Look up assay_type
+  if(base::length(assay_type) == 0 || base::all(assay_type %in% c("", NA))){
+    
+    return(assay_tbl) 
+    
+  }else{
+    
+    # Normalize the input
+    assay_type <- base::trimws(base::tolower(assay_type))
+    
+    tbl <- assay_tbl |> 
+      dplyr::filter(.data$assay_type %in% base::trimws(base::tolower(!!assay_type)))
+      
+    return(tbl) 
+    
   }
   
-  # Filter based on status
-  if (type != "all") {
-    tbl <- tbl[tolower(tbl$Status) == type, ]
-  }
-  
-  return(tbl)
 }
+

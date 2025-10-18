@@ -160,6 +160,7 @@ delete_table_sql <- function(
 #' @param db_table_name A table in the database
 #' @param return_var a list of column variables to be returned from the given table. 
 #' Default '*' (means everything).
+#' @param exclude_return_var a list of column names to be excluded from the returned table.
 #' @param filter_coln_var a list of column variables in the given table. Default NULL.
 #' @param filter_coln_val a list of values associated with 'filter_coln_var' variables. 
 #' Most importantly, 'filter_coln_val' must have names or labels that matched the values of 'filter_coln_var'.
@@ -174,6 +175,7 @@ lookup_table_sql <- function(
     conn, 
     db_table_name, 
     return_var = "*", 
+    exclude_return_var = NULL,
     filter_coln_var = NULL, 
     filter_coln_val = NULL, 
     filter_var_by = NULL, 
@@ -264,6 +266,11 @@ lookup_table_sql <- function(
     # Return error message
     base::stop(e, "\n")
   }) 
+  
+  # Whether to exclude selected column names from the returned table
+  if(base::length(exclude_return_var) > 0){
+    table <- table %>% dplyr::select(dplyr::all_of(base::colnames(table)[base::which(!base::colnames(table) %in% exclude_return_var)]))
+  }
   
   # Return table
   return(table)

@@ -32,61 +32,63 @@ reference:
   - title: Search Data in Database
     desc: ~
     contents:
-      - '`searchSignature`'
+      - '`searchAssayType`'
       - '`searchCollection`'
-      - '`searchTranscriptomicsFeatureSet`'
+      - '`searchKeyword`'
+      - '`searchOrganism`'
+      - '`searchPhenotype`'
+      - '`searchPlatform`'
       - '`searchProteomicsFeatureSet`'
-      - '`searchSampleTypes`'
-      - '`searchOrganisms`'
-      - '`searchPhenotypes`'
-      - '`searchPlatforms`'
+      - '`searchSampleType`'
+      - '`searchSignature`'
+      - '`searchTranscriptomicsFeatureSet`'
       - '`searchUser`'
     
   - title: Retrieve Data from Database
     desc: ~
     contents:
-      - '`getSignature`'
-      - '`getCollection`'
       - '`getAPIKey`'
+      - '`getCollection`'
+      - '`getSignature`'
 
   - title: Import Data to Database
     desc: ~
     contents:
-      - '`addSignature`'
-      - '`addUserToSignature`'
       - '`addCollection`'
-      - '`addUserToCollection`'
-      - '`addSignatureToCollection`'
-      - '`addProteomicsFeatureSet`'
-      - '`addProteomicsSignatureSet`'
-      - '`addTranscriptomicsFeatureSet`'
-      - '`addTranscriptomicsSignatureSet`'
-      - '`addSampleType`'
+      - '`addKeyword`'
       - '`addOrganism`'
       - '`addPhenotype`'
       - '`addPlatform`'
-      - '`addKeyword`'
+      - '`addProteomicsFeatureSet`'
+      - '`addProteomicsSignatureSet`'
+      - '`addSampleType`'
+      - '`addSignature`'
+      - '`addSignatureToCollection`'
+      - '`addTranscriptomicsFeatureSet`'
+      - '`addTranscriptomicsSignatureSet`'
       - '`addUser`'
+      - '`addUserToSignature`'
+      - '`addUserToCollection`'
   
   - title: Update Data in Database
     desc: ~
     contents:
-      - '`updateSignature`'
       - '`updateCollectionMetadata`'
+      - '`updateSignature`'
       - '`updateUser`'
   
   - title: Delete Data from Database
     desc: ~
     contents:
-      - '`deleteSignature`'
       - '`deleteCollection`'
-      - '`removeSignatureFromCollection`'
-      - '`deleteSampleType`'
       - '`deleteOrganism`'
       - '`deletePhenotype`'
       - '`deletePlatform`'
+      - '`deleteSampleType`'
+      - '`deleteSignature`'
       - '`deleteUser`'
       - '`inActivateUser`'
+      - '`removeSignatureFromCollection`'
 
 navbar:
   title: SigRepo

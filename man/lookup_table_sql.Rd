@@ -8,6 +8,7 @@ lookup_table_sql(
   conn,
   db_table_name,
   return_var = "*",
+  exclude_return_var = NULL,
   filter_coln_var = NULL,
   filter_coln_val = NULL,
   filter_var_by = NULL,
@@ -21,6 +22,8 @@ lookup_table_sql(
 
 \item{return_var}{a list of column variables to be returned from the given table. 
 Default '*' (means everything).}
+
+\item{exclude_return_var}{a list of column names to be excluded from the returned table.}
 
 \item{filter_coln_var}{a list of column variables in the given table. Default NULL.}
 

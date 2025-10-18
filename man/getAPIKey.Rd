@@ -4,11 +4,14 @@
 \alias{getAPIKey}
 \title{getAPIKey}
 \usage{
-getAPIKey(conn_handler)
+getAPIKey(conn_handler, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{A handler uses to establish connection to the database 
 obtained from SigRepo::newConnhandler() (required)}
+
+\item{verbose}{A logical value indicates whether or not to print the
+diagnostic messages. Default is \code{TRUE}.}
 }
 \description{
 Get API Key of a specific user in the database
