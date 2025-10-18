@@ -70,7 +70,7 @@
  SigRepo: An R package for storing and processing omic signatures<a class="anchor" aria-label="anchor" href="#id_-sigrepo-an-r-package-for-storing-and-processing-omic-signatures"></a>
 </h1>
 </div>
-<p><img src="https://github.com/montilab/cadra/workflows/rcmdcheck/badge.svg" alt="build"><img src="https://github.com/montilab/SigRepo/workflows/pkgdown/badge.svg" alt="pkgdown"><img src="https://img.shields.io/docker/pulls/montilab/sigrepo" alt="Docker pulls"><img src="https://img.shields.io/docker/image-size/montilab/sigRepo" alt="Docker image size"><img src="https://img.shields.io/github/last-commit/montilab/SigRepo" alt="GitHub last commit"></p>
+<p><img src="https://github.com/montilab/SigRepo/workflows/rcmdcheck/badge.svg" alt="build"><img src="https://github.com/montilab/SigRepo/workflows/pkgdown/badge.svg" alt="pkgdown"><img src="https://img.shields.io/docker/pulls/montilab/sigrepo" alt="Docker pulls"><img src="https://img.shields.io/docker/image-size/montilab/sigrepo" alt="Docker image size"><img src="https://img.shields.io/github/last-commit/montilab/SigRepo" alt="GitHub last commit"></p>
 <p>The <code>SigRepo</code> package provides a comprehensive set of functions for easy storage and management of biological signatures and their components. SigRepo (the <code>client</code>) works alongside <code>SigRepo_Server</code>, its <code>server</code> counterpart. While SigRepo enables you to store, search, and retrieve signatures and signature collections, these operations rely on a running SigRepo_Server instance.</p>
 <p>Interested in setting up your own SigRepo_Server? Check out the installation instructions <a target="_blank" href="https://montilab.github.io/SigRepo_Server/articles/install_sigrepo.html">here</a>.</p>
 <p>To upload and download signatures — and to fully utilize the functionalities offered by the SigRepo package — signatures and signature collections must be represented as specific R6 objects. You can create these objects using our proprietary package, <a target="_blank" href="https://github.com/montilab/OmicSignature" class="external-link">OmicSignature</a>.</p>
@@ -182,7 +182,7 @@
 <span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt; Adding signature owner to the signature access table of the database...</span></span>
 <span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt; Adding signature feature set to the database...</span></span>
 <span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt; Finished uploading.</span></span>
-<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt; ID of the uploaded signature: 467</span></span></code></pre></div>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt; ID of the uploaded signature: 469</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="example-2-upload-myc_reduce_mice_liver_24m-signature">
@@ -1176,7 +1176,7 @@ signature_hashkey
 </tr></thead>
 <tbody><tr class="odd">
 <td style="text-align: right;">
-467
+469
 </td>
 <td style="text-align: left;">
 LLFS_Aging_Gene_2023
@@ -1248,7 +1248,7 @@ NA
 montilab
 </td>
 <td style="text-align: left;">
-2025-10-18 01:43:17
+2025-10-18 01:51:41
 </td>
 <td style="text-align: right;">
 0
@@ -1310,12 +1310,12 @@ b35b7c1d387440d474bfcb3cb162c9a6
 <span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>    <span class="at">signature_id =</span> signature_tbl<span class="sc">$</span>signature_id  </span>
 <span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>  )</span>
 <span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>}</span>
-<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a><span class="co">#&gt; Remove difexp belongs to signature_id = '467' from the database.</span></span>
-<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a><span class="co">#&gt; Remove signature_id = '467' from 'signatures' table of the database.</span></span>
-<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a><span class="co">#&gt; Remove features belongs to signature_id = '467' from 'signature_feature_set' table of the database.</span></span>
-<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a><span class="co">#&gt; Remove user access to signature_id = '467' from 'signature_access' table of the database.</span></span>
-<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a><span class="co">#&gt; Remove signature_id = '467' from 'signature_collection_access' table of the database.</span></span>
-<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a><span class="co">#&gt; signature_id = '467' has been removed.</span></span></code></pre></div>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a><span class="co">#&gt; Remove difexp belongs to signature_id = '469' from the database.</span></span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a><span class="co">#&gt; Remove signature_id = '469' from 'signatures' table of the database.</span></span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a><span class="co">#&gt; Remove features belongs to signature_id = '469' from 'signature_feature_set' table of the database.</span></span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a><span class="co">#&gt; Remove user access to signature_id = '469' from 'signature_access' table of the database.</span></span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a><span class="co">#&gt; Remove signature_id = '469' from 'signature_collection_access' table of the database.</span></span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a><span class="co">#&gt; signature_id = '469' has been removed.</span></span></code></pre></div>
 </div>
 <div class="section level1">
 <h1 id="update-a-signature">Update a signature<a class="anchor" aria-label="anchor" href="#update-a-signature"></a>
