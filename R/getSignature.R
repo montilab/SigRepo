@@ -164,8 +164,7 @@ getSignature <- function(
     # Create an omic signature object for each signature id ####
     for(r in 1:base::nrow(signature_tbl)){
       #r=1;
-      db_signature_tbl <- signature_tbl |> dplyr::slice(r) |>
-        dplyr::mutate_if(is.character, function(x){ ifelse(base::is.na(x), "", x) })
+      db_signature_tbl <- signature_tbl |> dplyr::slice(r) 
       
       # Create an OmicSignature object
       omic_signature <- SigRepo::createOmicSignature(
