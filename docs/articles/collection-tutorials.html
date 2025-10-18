@@ -6,12 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Upload Collection • SigRepo</title>
-<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
-<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png">
-<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png">
-<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png">
-<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" sizes="any" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
 <script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -101,7 +100,7 @@
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/montilab/SigRepo/" class="external-link">SigRepo</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Load OmicSignature package</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">OmicSignature</span><span class="op">)</span></span></code></pre>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/montilab/OmicSignature" class="external-link">OmicSignature</a></span><span class="op">)</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="create-a-handler-to-connect-to-sigrepo-database">Create a handler to connect to SigRepo Database<a class="anchor" aria-label="anchor" href="#create-a-handler-to-connect-to-sigrepo-database"></a>
@@ -121,30 +120,26 @@ conn_handler &lt;- SigRepo::newConnHandler(
 <p>Here, we provided 4 signature objects that came with the package for
 demonstrations:</p>
 <ol style="list-style-type: decimal">
-<li>omic_signature_1
-(<strong>Myc_reduce_mice_liver_24m_v1</strong>)</li>
-<li>omic_signature_2
-(<strong>Myc_reduce_mice_liver_24m_v2</strong>)</li>
-<li>omic_signature_3
-(<strong>Myc_reduce_mice_liver_24m_v3</strong>)</li>
-<li>omic_signature_4
-(<strong>Myc_reduce_mice_liver_24m_v4</strong>)</li>
+<li>omic_signature_1 (<code>Myc_reduce_mice_liver_24m_v1</code>)</li>
+<li>omic_signature_2 (<code>Myc_reduce_mice_liver_24m_v2</code>)</li>
+<li>omic_signature_3 (<code>Myc_reduce_mice_liver_24m_v3</code>)</li>
+<li>omic_signature_4 (<code>Myc_reduce_mice_liver_24m_v4</code>)</li>
 </ol>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Read in the signature objects</span></span>
-<span><span class="va">omic_signature_1</span> <span class="op">&lt;-</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"inst/extdata"</span>, package <span class="op">=</span> <span class="st">"SigRepo"</span><span class="op">)</span>, <span class="st">"omic_signature_1.RDS"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">omic_signature_2</span> <span class="op">&lt;-</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"inst/extdata"</span>, package <span class="op">=</span> <span class="st">"SigRepo"</span><span class="op">)</span>, <span class="st">"omic_signature_2.RDS"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">omic_signature_3</span> <span class="op">&lt;-</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"inst/extdata"</span>, package <span class="op">=</span> <span class="st">"SigRepo"</span><span class="op">)</span>, <span class="st">"omic_signature_3.RDS"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">omic_signature_4</span> <span class="op">&lt;-</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"inst/extdata"</span>, package <span class="op">=</span> <span class="st">"SigRepo"</span><span class="op">)</span>, <span class="st">"omic_signature_4.RDS"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">omic_signature_1</span> <span class="op">&lt;-</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"inst/extdata"</span>, package <span class="op">=</span> <span class="st">"SigRepo"</span><span class="op">)</span>, <span class="st">"omic_signature_1.rds"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">omic_signature_2</span> <span class="op">&lt;-</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"inst/extdata"</span>, package <span class="op">=</span> <span class="st">"SigRepo"</span><span class="op">)</span>, <span class="st">"omic_signature_2.rds"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">omic_signature_3</span> <span class="op">&lt;-</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"inst/extdata"</span>, package <span class="op">=</span> <span class="st">"SigRepo"</span><span class="op">)</span>, <span class="st">"omic_signature_3.rds"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">omic_signature_4</span> <span class="op">&lt;-</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"inst/extdata"</span>, package <span class="op">=</span> <span class="st">"SigRepo"</span><span class="op">)</span>, <span class="st">"omic_signature_4.rds"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="create-an-omic-collection">Create an omic collection<a class="anchor" aria-label="anchor" href="#create-an-omic-collection"></a>
 </h2>
 <p>Here, we will create a collection with two signatures,
-<strong>omic_signature_1</strong> and <strong>omic_signature_1</strong>,
+<code>omic_signature_1</code> and <code>omic_signature_1</code>,
 provided above. See <code>?OmicSignatureCollection()</code> from
-<strong>OmicSignature</strong> package for more details on how to create
-an omic collection object.</p>
+<code>OmicSignature</code> package for more details on how to create an
+omic collection object.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create a metadata object for the collection</span></span>
 <span><span class="va">metadata</span> <span class="op">&lt;-</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -162,14 +157,14 @@ an omic collection object.</p>
 <div class="section level2">
 <h2 id="upload-a-collection-to-the-database">Upload a collection to the database<a class="anchor" aria-label="anchor" href="#upload-a-collection-to-the-database"></a>
 </h2>
-<p>The <code><a href="../reference/addCollection.html">addCollection()</a></code> function allows users to upload a
-collection to the database.</p>
+<p>The <code><a href="../reference/addCollection.html">SigRepo::addCollection()</a></code> function allows users to
+upload a collection to the database.</p>
 <p><strong>IMPORTANT NOTE:</strong></p>
 <ul>
-<li>The user <strong>MUST HAVE</strong> an <code>editor</code> or
+<li>The user <code>MUST HAVE</code> an <code>editor</code> or
 <code>admin</code> account to use this function.</li>
-<li>A collection <strong>MUST BE</strong> an R6 object obtained from
-<strong>OmicSignature::OmicSignatureCollection()</strong>
+<li>A collection <code>MUST BE</code> an R6 object obtained from
+<code><a href="https://rdrr.io/pkg/OmicSignature/man/OmicSignatureCollection.html" class="external-link">OmicSignature::OmicSignatureCollection()</a></code>
 </li>
 </ul>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
@@ -185,37 +180,39 @@ collection to the database.</p>
 <span><span class="co">#&gt; Adding user to collection access table in the database...</span></span>
 <span><span class="co">#&gt; Adding signature to the collection access table of the database...</span></span>
 <span><span class="co">#&gt; Finished uploading.</span></span>
-<span><span class="co">#&gt; ID of the uploaded collection: 16</span></span></code></pre></div>
+<span><span class="co">#&gt; ID of the uploaded collection: 109</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="search-for-a-collection-in-the-database">Search for a collection in the database<a class="anchor" aria-label="anchor" href="#search-for-a-collection-in-the-database"></a>
 </h2>
-<p>The <code><a href="../reference/searchCollection.html">searchCollection()</a></code> function allows users to retrieve
-all collections that are available in the database.</p>
+<p>The <code><a href="../reference/searchCollection.html">SigRepo::searchCollection()</a></code> function allows users to
+retrieve all collections that are available in the database.</p>
 <div class="section level3">
 <h3 id="example-1-search-for-all-collections">Example 1: Search for all collections<a class="anchor" aria-label="anchor" href="#example-1-search-for-all-collections"></a>
 </h3>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">collection_tbl_1</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/searchCollection.html">searchCollection</a></span><span class="op">(</span>conn_handler <span class="op">=</span> <span class="va">conn_handler</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Get all collections</span></span>
+<span><span class="va">collection_tbl_1</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/searchCollection.html">searchCollection</a></span><span class="op">(</span>conn_handler <span class="op">=</span> <span class="va">conn_handler</span><span class="op">)</span></span>
 <span></span>
-<span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl_1</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="co"># WARNINGS: THE COLLECTION TABLE CAN BE LARGE, SO ONLY THE FIRST SIX OBSERVATIONS ARE SHOWN.</span></span>
+<span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl_1</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
-<span>    <span class="va">collection_tbl_1</span>, </span>
+<span>    <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">collection_tbl_1</span><span class="op">)</span>, </span>
 <span>    row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<table style="width:100%;" class="table">
+<table class="table">
 <colgroup>
-<col width="6%">
-<col width="7%">
-<col width="16%">
-<col width="4%">
-<col width="9%">
+<col width="3%">
+<col width="10%">
+<col width="41%">
+<col width="3%">
 <col width="5%">
-<col width="15%">
-<col width="6%">
-<col width="15%">
-<col width="13%">
+<col width="2%">
+<col width="8%">
+<col width="3%">
+<col width="8%">
+<col width="11%">
 </colgroup>
 <thead><tr class="header">
 <th align="right">collection_id</th>
@@ -231,35 +228,95 @@ all collections that are available in the database.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="right">16</td>
-<td align="left">my_collection</td>
-<td align="left">An example of signature collection</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:08:19</td>
+<td align="right">61</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_MontiLab2024</td>
+<td align="left">agingâ€associated transcriptomic signature from
+HPV-negative Head and Neck Squamous Cell Carcinoma (HNSC) using TCGA
+RNA-seq differential expression results</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:09:35</td>
 <td align="right">0</td>
-<td align="left">43c6365dc2edb6de573018eb53fdddc6</td>
-<td align="right">7</td>
-<td align="left">5878a7ab84fb43402106c575658472fa</td>
-<td align="left">Myc_reduce_mice_liver_24m_v1</td>
+<td align="left">47b45086ae30d329d17ad93db68479de</td>
+<td align="right">213</td>
+<td align="left">4abdc3cd86a6f59eeb33ac7bf55252e2</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_ACC_MontiLab2025</td>
 </tr>
 <tr class="even">
-<td align="right">16</td>
-<td align="left">my_collection</td>
-<td align="left">An example of signature collection</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:08:19</td>
+<td align="right">61</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_MontiLab2024</td>
+<td align="left">agingâ€associated transcriptomic signature from
+HPV-negative Head and Neck Squamous Cell Carcinoma (HNSC) using TCGA
+RNA-seq differential expression results</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:09:35</td>
 <td align="right">0</td>
-<td align="left">43c6365dc2edb6de573018eb53fdddc6</td>
-<td align="right">8</td>
-<td align="left">006f52e9102a8d3be2fe5614f42ba989</td>
-<td align="left">Myc_reduce_mice_liver_24m_v2</td>
+<td align="left">47b45086ae30d329d17ad93db68479de</td>
+<td align="right">214</td>
+<td align="left">8b4077aa6a4434add27043542cad2e8a</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_BLCA_MontiLab2025</td>
+</tr>
+<tr class="odd">
+<td align="right">61</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_MontiLab2024</td>
+<td align="left">agingâ€associated transcriptomic signature from
+HPV-negative Head and Neck Squamous Cell Carcinoma (HNSC) using TCGA
+RNA-seq differential expression results</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:09:35</td>
+<td align="right">0</td>
+<td align="left">47b45086ae30d329d17ad93db68479de</td>
+<td align="right">215</td>
+<td align="left">43d0193b623ae62359f03ad342298498</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_BRCA_MontiLab2025</td>
+</tr>
+<tr class="even">
+<td align="right">61</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_MontiLab2024</td>
+<td align="left">agingâ€associated transcriptomic signature from
+HPV-negative Head and Neck Squamous Cell Carcinoma (HNSC) using TCGA
+RNA-seq differential expression results</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:09:35</td>
+<td align="right">0</td>
+<td align="left">47b45086ae30d329d17ad93db68479de</td>
+<td align="right">216</td>
+<td align="left">f984e7003314d15197a30d239df47b01</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_CESC_MontiLab2025</td>
+</tr>
+<tr class="odd">
+<td align="right">61</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_MontiLab2024</td>
+<td align="left">agingâ€associated transcriptomic signature from
+HPV-negative Head and Neck Squamous Cell Carcinoma (HNSC) using TCGA
+RNA-seq differential expression results</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:09:35</td>
+<td align="right">0</td>
+<td align="left">47b45086ae30d329d17ad93db68479de</td>
+<td align="right">217</td>
+<td align="left">82fae89f903a358b58654d5e2f2d33c8</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_COAD_MontiLab2025</td>
+</tr>
+<tr class="even">
+<td align="right">61</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_MontiLab2024</td>
+<td align="left">agingâ€associated transcriptomic signature from
+HPV-negative Head and Neck Squamous Cell Carcinoma (HNSC) using TCGA
+RNA-seq differential expression results</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:09:35</td>
+<td align="right">0</td>
+<td align="left">47b45086ae30d329d17ad93db68479de</td>
+<td align="right">218</td>
+<td align="left">6498fece50ede60a446812e25f080c7d</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_ESCA_MontiLab2025</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section level3">
 <h3 id="example-2-search-for-a-specific-collection-by-its-name-e-g--collection_name-my_collection-">Example 2: Search for a specific collection by its name, e.g.,
-<strong>collection_name = “my_collection”</strong>.<a class="anchor" aria-label="anchor" href="#example-2-search-for-a-specific-collection-by-its-name-e-g--collection_name-my_collection-"></a>
+<code>collection_name = "my_collection"</code>.<a class="anchor" aria-label="anchor" href="#example-2-search-for-a-specific-collection-by-its-name-e-g--collection_name-my_collection-"></a>
 </h3>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">collection_tbl_2</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/searchCollection.html">searchCollection</a></span><span class="op">(</span></span>
@@ -267,7 +324,7 @@ all collections that are available in the database.</p>
 <span>  collection_name <span class="op">=</span> <span class="st">"my_collection"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl_2</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl_2</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
 <span>    <span class="va">collection_tbl_2</span>, </span>
 <span>    row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -300,27 +357,27 @@ all collections that are available in the database.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="right">16</td>
+<td align="right">109</td>
 <td align="left">my_collection</td>
 <td align="left">An example of signature collection</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:08:19</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 01:03:05</td>
 <td align="right">0</td>
-<td align="left">43c6365dc2edb6de573018eb53fdddc6</td>
-<td align="right">7</td>
-<td align="left">5878a7ab84fb43402106c575658472fa</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">413</td>
+<td align="left">679422b0f20d4457aedba81cb5870a04</td>
 <td align="left">Myc_reduce_mice_liver_24m_v1</td>
 </tr>
 <tr class="even">
-<td align="right">16</td>
+<td align="right">109</td>
 <td align="left">my_collection</td>
 <td align="left">An example of signature collection</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:08:19</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 01:03:05</td>
 <td align="right">0</td>
-<td align="left">43c6365dc2edb6de573018eb53fdddc6</td>
-<td align="right">8</td>
-<td align="left">006f52e9102a8d3be2fe5614f42ba989</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">414</td>
+<td align="left">dd447685c5e7ee4499734a2074294b82</td>
 <td align="left">Myc_reduce_mice_liver_24m_v2</td>
 </tr>
 </tbody>
@@ -330,13 +387,13 @@ all collections that are available in the database.</p>
 <div class="section level2">
 <h2 id="retrieve-a-set-of-collections-in-the-database">Retrieve a set of collections in the database<a class="anchor" aria-label="anchor" href="#retrieve-a-set-of-collections-in-the-database"></a>
 </h2>
-<p>The <code><a href="../reference/getCollection.html">getCollection()</a></code> function allows users to retrieve a
-set of collections that are <strong>PUBLICLY</strong> available in the
-database.</p>
+<p>The <code><a href="../reference/getCollection.html">SigRepo::getCollection()</a></code> function allows users to
+retrieve a set of collections that are <code>PUBLICLY</code> available
+in the database.</p>
 <p><strong>IMPORTANT NOTE:</strong></p>
 <ul>
-<li>Users can <strong>ONLY RETRIEVE</strong> a list of collections that
-are publicly available in the database including their own uploaded
+<li>Users can <code>ONLY RETRIEVE</code> a list of collections that are
+publicly available in the database including their own uploaded
 collections.</li>
 <li>If a collection is <code>PRIVATE</code> and belongs to other user in
 the database, users will need to be given an <code>editor</code>
@@ -347,23 +404,20 @@ collections.</li>
 <h3 id="example-1-get-all-collections-that-are-publicly-available-in-the-database">Example 1: Get all collections that are publicly available in the
 database<a class="anchor" aria-label="anchor" href="#example-1-get-all-collections-that-are-publicly-available-in-the-database"></a>
 </h3>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">collection_list_1</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/getCollection.html">getCollection</a></span><span class="op">(</span>conn_handler <span class="op">=</span> <span class="va">conn_handler</span><span class="op">)</span></span>
-<span><span class="co">#&gt; now dyn.load("/Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/library/curl/libs/curl.so") ...</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_v1 created.</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_v2 created.</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature Collection my_collection created.</span></span></code></pre></div>
+<pre><code><span><span class="co"># WARNINGS: THE COLLECTION LIST CAN BE LARGE TO DOWNLOAD (NOT RUN)</span></span>
+<span><span class="va">collection_list_1</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/getCollection.html">getCollection</a></span><span class="op">(</span>conn_handler <span class="op">=</span> <span class="va">conn_handler</span><span class="op">)</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="example-2-get-a-specific-collection-that-is-publicly-available-or-owned-by-user-in-the-database-e-g--collection_name-my_collection">Example 2: Get a specific collection that is publicly available or
-owned by user in the database, e.g., <strong>collection_name =
-“my_collection”</strong><a class="anchor" aria-label="anchor" href="#example-2-get-a-specific-collection-that-is-publicly-available-or-owned-by-user-in-the-database-e-g--collection_name-my_collection"></a>
+owned by user in the database, e.g.,
+<code>collection_name = "my_collection"</code><a class="anchor" aria-label="anchor" href="#example-2-get-a-specific-collection-that-is-publicly-available-or-owned-by-user-in-the-database-e-g--collection_name-my_collection"></a>
 </h3>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">collection_list_2</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/getCollection.html">getCollection</a></span><span class="op">(</span></span>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>,</span>
 <span>  collection_name <span class="op">=</span> <span class="st">"my_collection"</span></span>
 <span><span class="op">)</span></span>
+<span><span class="co">#&gt; now dyn.load("/Library/Frameworks/R.framework/Versions/4.5-x86_64/Resources/library/curl/libs/curl.so") ...</span></span>
 <span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_v1 created.</span></span>
 <span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_v2 created.</span></span>
 <span><span class="co">#&gt;   [Success] OmicSignature Collection my_collection created.</span></span></code></pre></div>
@@ -372,38 +426,40 @@ owned by user in the database, e.g., <strong>collection_name =
 <div class="section level2">
 <h2 id="update-a-collection-metadata">Update a collection metadata<a class="anchor" aria-label="anchor" href="#update-a-collection-metadata"></a>
 </h2>
-<p>The <code><a href="../reference/updateCollectionMetadata.html">updateCollectionMetadata()</a></code> function allows users to
-update the metadata information of a collection in the database.</p>
+<p>The <code><a href="../reference/updateCollectionMetadata.html">SigRepo::updateCollectionMetadata()</a></code> function allows
+users to update the metadata information of a collection in the
+database.</p>
 <p><strong>IMPORTANT NOTE:</strong></p>
 <ul>
-<li>Users <strong>MUST HAVE</strong> an <code>editor</code> or
+<li>Users <code>MUST HAVE</code> an <code>editor</code> or
 <code>admin</code> account to use this function.</li>
-<li>Furthermore, users can <strong>ONLY UPDATE</strong> their own
-uploaded signatures or were given an <code>editor</code> permission from
-its owner to access, retrieve, and edit their collections.</li>
+<li>Furthermore, users can <code>ONLY UPDATE</code> their own uploaded
+signatures or were given an <code>editor</code> permission from its
+owner to access, retrieve, and edit their collections.</li>
 </ul>
-<p>For example, if you wish to change the description of
-<strong>“my_collection”</strong> in the database to <strong>“This is the
-updated description.”</strong> You can use the
-<code><a href="../reference/updateCollectionMetadata.html">updateCollectionMetadata()</a></code> function as follows:</p>
+<p>For example, if you want to change the description of
+<code>"my_collection"</code> in the database to
+<code>"This is the updated description."</code> You can use the
+<code><a href="../reference/updateCollectionMetadata.html">SigRepo::updateCollectionMetadata()</a></code> function as
+follows:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># 1. Let's search for my_collection in the database</span></span>
+<code class="sourceCode R"><span><span class="co"># Let's search for my_collection in the database</span></span>
 <span><span class="va">collection_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/searchCollection.html">searchCollection</a></span><span class="op">(</span></span>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  collection_name <span class="op">=</span> <span class="st">"my_collection"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 2. If the collection exists, update it with the new description</span></span>
-<span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="co"># If the collection exists, update it with the new description</span></span>
+<span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/updateCollectionMetadata.html">updateCollectionMetadata</a></span><span class="op">(</span></span>
 <span>    conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>    collection_id <span class="op">=</span> <span class="va">collection_tbl</span><span class="op">$</span><span class="va">collection_id</span>,</span>
 <span>    description <span class="op">=</span>  <span class="st">"This is the updated description."</span> </span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; collection_id = '16' has been updated.</span></span></code></pre></div>
-<p>Now, let’s search for <code>my_collection</code> in the database and
-see if its description has been updated.</p>
+<span><span class="co">#&gt; collection_id = '109' has been updated.</span></span></code></pre></div>
+<p>Now, let’s search for <code>"my_collection"</code> in the database
+and see if its description has been updated.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Search for my_collection in the database</span></span>
 <span><span class="va">collection_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/searchCollection.html">searchCollection</a></span><span class="op">(</span></span>
@@ -411,8 +467,8 @@ see if its description has been updated.</p>
 <span>  collection_name <span class="op">=</span> <span class="st">"my_collection"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># If the collection exists, output data table</span></span>
-<span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="co"># If the collection exists, display the table</span></span>
+<span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
 <span>    <span class="va">collection_tbl</span>,</span>
 <span>    row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -445,27 +501,27 @@ see if its description has been updated.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="right">16</td>
+<td align="right">109</td>
 <td align="left">my_collection</td>
 <td align="left">This is the updated description.</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:08:19</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 01:03:05</td>
 <td align="right">0</td>
-<td align="left">43c6365dc2edb6de573018eb53fdddc6</td>
-<td align="right">7</td>
-<td align="left">5878a7ab84fb43402106c575658472fa</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">413</td>
+<td align="left">679422b0f20d4457aedba81cb5870a04</td>
 <td align="left">Myc_reduce_mice_liver_24m_v1</td>
 </tr>
 <tr class="even">
-<td align="right">16</td>
+<td align="right">109</td>
 <td align="left">my_collection</td>
 <td align="left">This is the updated description.</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:08:19</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 01:03:05</td>
 <td align="right">0</td>
-<td align="left">43c6365dc2edb6de573018eb53fdddc6</td>
-<td align="right">8</td>
-<td align="left">006f52e9102a8d3be2fe5614f42ba989</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">414</td>
+<td align="left">dd447685c5e7ee4499734a2074294b82</td>
 <td align="left">Myc_reduce_mice_liver_24m_v2</td>
 </tr>
 </tbody>
@@ -474,37 +530,38 @@ see if its description has been updated.</p>
 <div class="section level2">
 <h2 id="add-signatures-to-an-existing-collection-in-the-database">Add signatures to an existing collection in the database<a class="anchor" aria-label="anchor" href="#add-signatures-to-an-existing-collection-in-the-database"></a>
 </h2>
-<p>The <code><a href="../reference/addSignatureToCollection.html">addSignatureToCollection()</a></code> function allows users to
-add a set of signatures to an existing collection in the database.</p>
+<p>The <code><a href="../reference/addSignatureToCollection.html">SigRepo::addSignatureToCollection()</a></code> function allows
+users to add a set of signatures to an existing collection in the
+database.</p>
 <p><strong>IMPORTANT NOTE:</strong></p>
 <ul>
-<li>Users <strong>MUST HAVE</strong> an <code>editor</code> or
+<li>Users <code>MUST HAVE</code>an <code>editor</code> or
 <code>admin</code> account to use this function.</li>
-<li>Furthermore, users can <strong>ONLY UPDATE</strong> their own
-uploaded signatures or were given an <code>editor</code> permission from
-its owner to access, retrieve, and edit their collections.</li>
+<li>Furthermore, users can <code>ONLY UPDATE</code> their own uploaded
+signatures or were given an <code>editor</code> permission from its
+owner to access, retrieve, and edit their collections.</li>
 </ul>
 <p>For example, if you wish to create two new signatures
-(<strong>omic_signature_3</strong>, <strong>omic_signature_4</strong>)
-and add them to <strong>“my_collection”</strong> in the database.</p>
+(<code>"omic_signature_3"</code>, <code>"omic_signature_4"</code>) and
+add them to <code>"my_collection"</code>in the database.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># 1. Add omic_signature_3 to the database</span></span>
-<span><span class="va">signature_id_1</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/addSignature.html">addSignature</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="co"># Add omic_signature_3 to the database</span></span>
+<span><span class="va">signature_id_3</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/addSignature.html">addSignature</a></span><span class="op">(</span></span>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  omic_signature <span class="op">=</span> <span class="va">omic_signature_3</span>,</span>
 <span>  return_signature_id <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 2. Add omic_signature_4 to the database</span></span>
-<span><span class="va">signature_id_2</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/addSignature.html">addSignature</a></span><span class="op">(</span></span>
+<span><span class="co"># Add omic_signature_4 to the database</span></span>
+<span><span class="va">signature_id_4</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/addSignature.html">addSignature</a></span><span class="op">(</span></span>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  omic_signature <span class="op">=</span> <span class="va">omic_signature_4</span>,</span>
 <span>  return_signature_id <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 3. Search for my_collection in the database</span></span>
+<span><span class="co"># Search for my_collection in the database</span></span>
 <span><span class="va">collection_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/searchCollection.html">searchCollection</a></span><span class="op">(</span></span>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  collection_name <span class="op">=</span> <span class="st">"my_collection"</span>,</span>
@@ -512,22 +569,24 @@ and add them to <strong>“my_collection”</strong> in the database.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># If both collection and signatures exist, add its signature ids to collection.</span></span>
-<span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">signature_id_1</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">signature_id_2</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span> <span class="op">&amp;&amp;</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">signature_id_3</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span> <span class="op">&amp;&amp;</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">signature_id_4</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/addSignatureToCollection.html">addSignatureToCollection</a></span><span class="op">(</span></span>
 <span>    conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>    collection_id <span class="op">=</span> <span class="va">collection_tbl</span><span class="op">$</span><span class="va">collection_id</span>,</span>
-<span>    signature_id <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">signature_id_1</span>, <span class="va">signature_id_2</span><span class="op">)</span></span>
+<span>    signature_id <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">signature_id_3</span>, <span class="va">signature_id_4</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p>Now, let’s search for <code>my_collection</code> in the database and
-see if signature is added to the collection.</p>
+<p>Now, let’s search for <code>"my_collection"</code> in the database
+and see if the signatures are added to the collection.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">collection_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/searchCollection.html">searchCollection</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="co"># Search for my_collection in the database</span></span>
+<span><span class="va">collection_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/searchCollection.html">searchCollection</a></span><span class="op">(</span></span>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  collection_name <span class="op">=</span> <span class="st">"my_collection"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="co"># If collection exists, display the table</span></span>
+<span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
 <span>    <span class="va">collection_tbl</span>,</span>
 <span>    row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -560,51 +619,51 @@ see if signature is added to the collection.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="right">16</td>
+<td align="right">109</td>
 <td align="left">my_collection</td>
 <td align="left">This is the updated description.</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:08:19</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 01:03:05</td>
 <td align="right">0</td>
-<td align="left">43c6365dc2edb6de573018eb53fdddc6</td>
-<td align="right">7</td>
-<td align="left">5878a7ab84fb43402106c575658472fa</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">413</td>
+<td align="left">679422b0f20d4457aedba81cb5870a04</td>
 <td align="left">Myc_reduce_mice_liver_24m_v1</td>
 </tr>
 <tr class="even">
-<td align="right">16</td>
+<td align="right">109</td>
 <td align="left">my_collection</td>
 <td align="left">This is the updated description.</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:08:19</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 01:03:05</td>
 <td align="right">0</td>
-<td align="left">43c6365dc2edb6de573018eb53fdddc6</td>
-<td align="right">8</td>
-<td align="left">006f52e9102a8d3be2fe5614f42ba989</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">414</td>
+<td align="left">dd447685c5e7ee4499734a2074294b82</td>
 <td align="left">Myc_reduce_mice_liver_24m_v2</td>
 </tr>
 <tr class="odd">
-<td align="right">16</td>
+<td align="right">109</td>
 <td align="left">my_collection</td>
 <td align="left">This is the updated description.</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:08:19</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 01:03:05</td>
 <td align="right">0</td>
-<td align="left">43c6365dc2edb6de573018eb53fdddc6</td>
-<td align="right">9</td>
-<td align="left">3636638817772e42b59d74cff571fbb3</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">415</td>
+<td align="left">5c90ea0e7bedb74b27852e5320d2e759</td>
 <td align="left">Myc_reduce_mice_liver_24m_v3</td>
 </tr>
 <tr class="even">
-<td align="right">16</td>
+<td align="right">109</td>
 <td align="left">my_collection</td>
 <td align="left">This is the updated description.</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:08:19</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 01:03:05</td>
 <td align="right">0</td>
-<td align="left">43c6365dc2edb6de573018eb53fdddc6</td>
-<td align="right">10</td>
-<td align="left">a14ac55a4f27472c5d894ec1c3c743d2</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">416</td>
+<td align="left">b906977b7225989df4a009eed43a21ab</td>
 <td align="left">Myc_reduce_mice_liver_24m_v4</td>
 </tr>
 </tbody>
@@ -613,46 +672,48 @@ see if signature is added to the collection.</p>
 <div class="section level2">
 <h2 id="remove-a-list-of-signatures-from-a-collection-in-the-database">Remove a list of signatures from a collection in the database<a class="anchor" aria-label="anchor" href="#remove-a-list-of-signatures-from-a-collection-in-the-database"></a>
 </h2>
-<p>The <code><a href="../reference/removeSignatureFromCollection.html">removeSignatureFromCollection()</a></code> function allows
-users to remove a list of signatures from a collection in the
+<p>The <code><a href="../reference/removeSignatureFromCollection.html">SigRepo::removeSignatureFromCollection()</a></code> function
+allows users to remove a list of signatures from a collection in the
 database.</p>
 <p><strong>IMPORTANT NOTE:</strong></p>
 <ul>
-<li>Users <strong>MUST HAVE</strong> an <code>editor</code> or
+<li>Users <code>MUST HAVE</code>an <code>editor</code> or
 <code>admin</code> access to use this function.</li>
-<li>Furthermore, users can <strong>ONLY UPDATE</strong> their own
-uploaded signatures or were given an <code>editor</code> permission from
-its owner to access, retrieve, and edit their collections.</li>
+<li>Furthermore, users can <code>ONLY UPDATE</code>their own uploaded
+signatures or were given an <code>editor</code> permission from its
+owner to access, retrieve, and edit their collections.</li>
 </ul>
 <p>For example, if you wish to remove
-<strong>Myc_reduce_mice_liver_24m_v1</strong> from
-<strong>“my_collection”</strong> in the database</p>
+<code>"Myc_reduce_mice_liver_24m_v1"</code> from
+<code>"my_collection"</code>in the database</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># 1. Lets' check if signature = Myc_reduce_mice_liver_24m_v1 is in my_collection</span></span>
+<code class="sourceCode R"><span><span class="co"># Lets' check if signature = Myc_reduce_mice_liver_24m_v1 is in my_collection</span></span>
 <span><span class="va">collection_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/searchCollection.html">searchCollection</a></span><span class="op">(</span></span>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  collection_name <span class="op">=</span> <span class="st">"my_collection"</span>,</span>
 <span>  signature_name <span class="op">=</span> <span class="st">"Myc_reduce_mice_liver_24m_v1"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 2. If signature collection combo exists, remove the signature.</span></span>
-<span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="co"># If signature collection combo exists, remove the signature.</span></span>
+<span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/removeSignatureFromCollection.html">removeSignatureFromCollection</a></span><span class="op">(</span></span>
 <span>    conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>    collection_id <span class="op">=</span> <span class="va">collection_tbl</span><span class="op">$</span><span class="va">collection_id</span>,</span>
 <span>    signature_id <span class="op">=</span> <span class="va">collection_tbl</span><span class="op">$</span><span class="va">signature_id</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Removing signature_id = '7' from collection_id = '16' completed.</span></span></code></pre></div>
-<p>Now, let’s search for <code>my_collection</code> in the database and
-see if the signature has been removed from the collection.</p>
+<span><span class="co">#&gt; Removing signature_id = '413' from collection_id = '109' completed.</span></span></code></pre></div>
+<p>Now, let’s search for <code>"my_collection"</code> in the database
+and see if signatures have been removed from the collection.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">collection_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/searchCollection.html">searchCollection</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="co"># Search for my_collection in the database</span></span>
+<span><span class="va">collection_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/searchCollection.html">searchCollection</a></span><span class="op">(</span></span>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  collection_name <span class="op">=</span> <span class="st">"my_collection"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="co"># If collection exists, display the table</span></span>
+<span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
 <span>    <span class="va">collection_tbl</span>,</span>
 <span>    row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -685,39 +746,39 @@ see if the signature has been removed from the collection.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="right">16</td>
+<td align="right">109</td>
 <td align="left">my_collection</td>
 <td align="left">This is the updated description.</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:08:19</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 01:03:05</td>
 <td align="right">0</td>
-<td align="left">43c6365dc2edb6de573018eb53fdddc6</td>
-<td align="right">8</td>
-<td align="left">006f52e9102a8d3be2fe5614f42ba989</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">414</td>
+<td align="left">dd447685c5e7ee4499734a2074294b82</td>
 <td align="left">Myc_reduce_mice_liver_24m_v2</td>
 </tr>
 <tr class="even">
-<td align="right">16</td>
+<td align="right">109</td>
 <td align="left">my_collection</td>
 <td align="left">This is the updated description.</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:08:19</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 01:03:05</td>
 <td align="right">0</td>
-<td align="left">43c6365dc2edb6de573018eb53fdddc6</td>
-<td align="right">9</td>
-<td align="left">3636638817772e42b59d74cff571fbb3</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">415</td>
+<td align="left">5c90ea0e7bedb74b27852e5320d2e759</td>
 <td align="left">Myc_reduce_mice_liver_24m_v3</td>
 </tr>
 <tr class="odd">
-<td align="right">16</td>
+<td align="right">109</td>
 <td align="left">my_collection</td>
 <td align="left">This is the updated description.</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:08:19</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 01:03:05</td>
 <td align="right">0</td>
-<td align="left">43c6365dc2edb6de573018eb53fdddc6</td>
-<td align="right">10</td>
-<td align="left">a14ac55a4f27472c5d894ec1c3c743d2</td>
+<td align="left">a7213731b133effec506851ef7cb443f</td>
+<td align="right">416</td>
+<td align="left">b906977b7225989df4a009eed43a21ab</td>
 <td align="left">Myc_reduce_mice_liver_24m_v4</td>
 </tr>
 </tbody>
@@ -726,39 +787,38 @@ see if the signature has been removed from the collection.</p>
 <div class="section level2">
 <h2 id="delete-the-whole-collection-from-the-database">Delete the whole collection from the database<a class="anchor" aria-label="anchor" href="#delete-the-whole-collection-from-the-database"></a>
 </h2>
-<p>The <code><a href="../reference/deleteCollection.html">deleteCollection()</a></code> function allows users to delete a
-collection from the database.</p>
+<p>The <code><a href="../reference/deleteCollection.html">SigRepo::deleteCollection()</a></code> function allows users to
+delete a collection from the database.</p>
 <p><strong>IMPORTANT NOTE:</strong></p>
 <ul>
-<li>Users <strong>MUST HAVE</strong> an <code>editor</code> or
+<li>Users <code>MUST HAVE</code> an <code>editor</code> or
 <code>admin</code> account to use this function.</li>
-<li>Furthermore, users can <strong>ONLY DELETE</strong> their own
-uploaded collections or were given an <code>editor</code> permission
-from other users in the database to access and delete their
-collection.</li>
-<li>A collection can <strong>ONLY BE REMOVED OR DELETED</strong> one at
-a time.</li>
+<li>Furthermore, users can <code>ONLY DELETE</code> their own uploaded
+collections or were given an <code>editor</code> permission from other
+users in the database to access and delete their collection.</li>
+<li>A collection can <code>ONLY BE REMOVED OR DELETED</code> one at a
+time.</li>
 </ul>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># 1. Search for my_collection in the database </span></span>
+<code class="sourceCode R"><span><span class="co"># Search for my_collection in the database </span></span>
 <span><span class="va">collection_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/searchCollection.html">searchCollection</a></span><span class="op">(</span></span>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  collection_name <span class="op">=</span> <span class="st">"my_collection"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 2. If the collection exists, remove it from the database</span></span>
-<span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="co"># If the collection exists, remove it from the database</span></span>
+<span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">collection_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/deleteCollection.html">deleteCollection</a></span><span class="op">(</span></span>
 <span>    conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>    collection_id <span class="op">=</span> <span class="va">collection_tbl</span><span class="op">$</span><span class="va">collection_id</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Remove collection_id = '16' from 'collection' table of the database.</span></span>
-<span><span class="co">#&gt; Remove collection_id = '16' from 'collection_access' table of the database.</span></span>
-<span><span class="co">#&gt; Remove signatures belongs to collection_id = '16' from 'signature_collection_access' table of the database.</span></span>
-<span><span class="co">#&gt; collection_id = '16' has been removed.</span></span></code></pre></div>
-<p>Finally, let’s search for <code>my_collection</code> in the database
-and see if the collection has been removed.</p>
+<span><span class="co">#&gt; Remove collection_id = '109' from 'collection' table of the database.</span></span>
+<span><span class="co">#&gt; Remove collection_id = '109' from 'collection_access' table of the database.</span></span>
+<span><span class="co">#&gt; Remove signatures belongs to collection_id = '109' from 'signature_collection_access' table of the database.</span></span>
+<span><span class="co">#&gt; collection_id = '109' has been removed.</span></span></code></pre></div>
+<p>Finally, let’s search for <code>"my_collection"</code> in the
+database and see if the collection has been removed.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">collection_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="../reference/searchCollection.html">searchCollection</a></span><span class="op">(</span></span>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
@@ -777,7 +837,7 @@ and see if the collection has been removed.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer>

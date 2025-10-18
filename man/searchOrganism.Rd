@@ -10,8 +10,8 @@ searchOrganism(conn_handler, organism = NULL, verbose = TRUE)
 \item{conn_handler}{A handler uses to establish connection to the database 
 obtained from SigRepo::newConnhandler() (required)}
 
-\item{organism}{an organism, or  list of organisms to search by. Default is NULL which
-will return all of the organisms in the database.}
+\item{organism}{an organism, or  list of organisms to search by. 
+Default is NULL which will return all of the organisms in the database.}
 
 \item{verbose}{a logical value indicates whether or not to print the
 diagnostic messages. Default is \code{TRUE}.}

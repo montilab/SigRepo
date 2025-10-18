@@ -53,7 +53,7 @@ searchUser <- function(
   # Disconnect from database ####
   base::suppressWarnings(DBI::dbDisconnect(conn))
   
-  # Return tabl
+  # Return table
   return(user_tbl)
 
 }

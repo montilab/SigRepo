@@ -56,17 +56,9 @@ createOmicSignature <- function(
   }
   
   # Create metadata
-  metadata <- db_signature_tbl |> base::as.list()
-  
-  # Clean-up covariates ###
-  if(base::length(metadata$covariates) > 0 & base::all(!metadata$covariates %in% c("", NA))){
-    metadata$covariates <- base::strsplit(metadata$covariates, split = ",", fixed = TRUE) |> base::unlist() |> base::trimws()
-  }
-  
-  # Clean-up keywords ###
-  if(base::length(metadata$keywords) > 0 & base::all(!metadata$keywords %in% c("", NA))){
-    metadata$keywords <- base::strsplit(metadata$keywords, split = ",", fixed = TRUE) |> base::unlist() |> base::trimws()
-  }
+  metadata <- db_signature_tbl |> 
+    dplyr::mutate_if(base::is.character, function(x){ base::ifelse(base::is.na(x), "", x) }) |> 
+    base::as.list()
   
   # Clean-up others ###
   if(base::length(metadata$others) > 0 & base::all(!metadata$others %in% c("", NA))){
@@ -154,7 +146,7 @@ createOmicSignature <- function(
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn))  
     # Return error message
-    base::stop(e, "\n")
+    base::stop("OmicSignature Error: ", e, "\n")
   })
   
   # Disconnect from database ####

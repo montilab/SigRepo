@@ -1,6 +1,6 @@
 Package: SigRepo
 Type: Package
-Title: Storing and processing omic signatures
+Title: Storing and processing omic signatures and collections
 Version: 1.0.0
 Authors@R: 
   c(person(given="Reina", family="Chau", role=c("aut","cre"), 
@@ -17,7 +17,7 @@ Depends: R (>= 4.4.0)
 License: GPL-3 + file LICENSE
 URL: https://github.com/montilab/SigRepo/
 Encoding: UTF-8
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 LazyData: true 
 Imports:
   DBI,
@@ -28,6 +28,7 @@ Imports:
   methods,
   OmicSignature,
   purrr,
+  readr,
   rlang,
   RMySQL,
   tidyr

@@ -61,7 +61,7 @@ searchCollection <- function(
   }
   
   # Check if signature exists
-  if(nrow(collection_tbl) == 0){
+  if(base::nrow(collection_tbl) == 0){
     
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn))     

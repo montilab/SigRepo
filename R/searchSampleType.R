@@ -35,7 +35,7 @@ searchSampleType <- function(
     sample_type_tbl <- SigRepo::lookup_table_sql(
       conn = conn, 
       db_table_name = "sample_types", 
-      return_var = "*", 
+      return_var = c("sample_type", "brenda_accession"),
       check_db_table = TRUE
     )  
     
@@ -44,7 +44,7 @@ searchSampleType <- function(
     sample_type_tbl <- SigRepo::lookup_table_sql(
       conn = conn, 
       db_table_name = "sample_types", 
-      return_var = "*", 
+      return_var = c("sample_type", "brenda_accession"),
       filter_coln_var = "sample_type", 
       filter_coln_val = base::list("sample_type" = base::unique(sample_type)),
       check_db_table = TRUE

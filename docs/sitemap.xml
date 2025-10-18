@@ -58,11 +58,17 @@
 <url><loc>https://montilab.github.io/SigRepo/reference/protTransform.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/removeDuplicates.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/removeSignatureFromCollection.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/searchAssayType.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/searchCollection.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/searchKeyword.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/searchOrganism.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/searchOrganisms.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/searchPhenotype.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/searchPhenotypes.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/searchPlatform.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/searchPlatforms.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/searchProteomicsFeatureSet.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/searchSampleType.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/searchSampleTypes.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/searchSignature.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/searchTranscriptomicsFeatureSet.html</loc></url>

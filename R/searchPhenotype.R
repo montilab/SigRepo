@@ -2,8 +2,8 @@
 #' @description Search for a phenotype in the database
 #' @param conn_handler A handler uses to establish connection to the database 
 #' obtained from SigRepo::newConnhandler() (required)
-#' @param phenotype A phenotype, or a  list of phenotypes to search by. Default is NULL which
-#' will return all of the phenotypes in the database
+#' @param phenotype A phenotype, or a  list of phenotypes to search by. 
+#' Default is NULL which will return all of the phenotypes in the database
 #' @param verbose A logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
 #' 
@@ -33,7 +33,7 @@ searchPhenotype <- function(
     phenotype_tbl <- SigRepo::lookup_table_sql(
       conn = conn, 
       db_table_name = "phenotypes", 
-      return_var = "*", 
+      return_var = "phenotype", 
       check_db_table = TRUE
     )  
     
@@ -42,7 +42,7 @@ searchPhenotype <- function(
     phenotype_tbl <- SigRepo::lookup_table_sql(
       conn = conn, 
       db_table_name = "phenotypes", 
-      return_var = "*", 
+      return_var = "phenotype", 
       filter_coln_var = "phenotype", 
       filter_coln_val = base::list("phenotype" = base::unique(phenotype)),
       check_db_table = TRUE

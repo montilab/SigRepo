@@ -5,12 +5,12 @@
 # whereas the unanchored regular expression notes will match any file name containing “notes”, e.g. R/notes.R, man/important-notes.R, data/endnotes.Rdata, etc.
 
 # Ignore folders
-^\.Rproj\.user$
-^\.git$
-^\.github$ 
-^docs$
-^pkgdown$
-tests/testthat/_snaps
+^\.Rproj\.user/
+^\.git/
+^\.github/
+^docs/
+^pkgdown/
+^tests/testthat/_snaps/
 
 # Ignore extensions
 ^.*\.Rproj$
@@ -21,15 +21,15 @@ tests/testthat/_snaps
 ^\.DS_Store$
 ^\.Rhistory$
 ^\.Renviron$
-Dockerfile$
-Dockerfile-.*$
-docker-compose.yml$
-docker-compose-.*.yml$
-mysql.env
-rstudio-server.env
-install_r_packages.R
-add-rstudio-users.sh
-install_sigrepo.sh
-uninstall_sigrepo.sh
-README.Rmd
-_pkgdown.yml
+^Dockerfile$
+^Dockerfile-.*$
+^docker-compose\.yml$
+^docker-compose-.*\.yml$
+^mysql\.env$
+^rstudio-server\.env$
+^install_r_packages\.R$
+^add-rstudio-users\.sh$
+^install_sigrepo\.sh$
+^uninstall_sigrepo\.sh$
+^_pkgdown\.yml$
+^README\.Rmd$

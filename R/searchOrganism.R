@@ -2,8 +2,8 @@
 #' @description Search for an organism in the database, can handle a singular organism or list 
 #' @param conn_handler A handler uses to establish connection to the database 
 #' obtained from SigRepo::newConnhandler() (required)
-#' @param organism an organism, or  list of organisms to search by. Default is NULL which
-#' will return all of the organisms in the database.
+#' @param organism an organism, or  list of organisms to search by. 
+#' Default is NULL which will return all of the organisms in the database.
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
 #'
@@ -33,7 +33,7 @@ searchOrganism <- function(
     organism_tbl <- SigRepo::lookup_table_sql(
       conn = conn, 
       db_table_name = "organisms", 
-      return_var = "*", 
+      return_var = "organism", 
       check_db_table = TRUE
     )  
     

@@ -68,7 +68,7 @@ searchSignature <- function(
       db_table_name = "organisms", 
       return_var = c("organism_id", "organism"), 
       filter_coln_var = "organism_id", 
-      filter_coln_val = list("organism_id" = lookup_organism_id),
+      filter_coln_val = base::list("organism_id" = lookup_organism_id),
       check_db_table = TRUE
     ) 
     
@@ -80,7 +80,7 @@ searchSignature <- function(
       db_table_name = "phenotypes", 
       return_var = c("phenotype_id", "phenotype"), 
       filter_coln_var = "phenotype_id", 
-      filter_coln_val = list("phenotype_id" = lookup_phenotype_id),
+      filter_coln_val = base::list("phenotype_id" = lookup_phenotype_id),
       check_db_table = TRUE
     ) 
     
@@ -92,7 +92,7 @@ searchSignature <- function(
       db_table_name = "sample_types", 
       return_var = c("sample_type_id", "sample_type"), 
       filter_coln_var = "sample_type_id", 
-      filter_coln_val = list("sample_type_id" = lookup_sample_type_id),
+      filter_coln_val = base::list("sample_type_id" = lookup_sample_type_id),
       check_db_table = TRUE
     ) 
     
@@ -143,7 +143,7 @@ searchSignature <- function(
         signature_tbl <- signature_tbl |> dplyr::filter(base::trimws(base::tolower(!!!rlang::syms(filter_var))) %in% base::trimws(base::tolower(filter_val)))
       }
     }
-
+    
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn))
     

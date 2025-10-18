@@ -5,18 +5,17 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Storing and processing omic signatures • SigRepo</title>
-<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
-<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="apple-touch-icon-120x120.png">
-<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="apple-touch-icon-76x76.png">
-<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="apple-touch-icon-60x60.png">
+<title>Storing and processing omic signatures and collections • SigRepo</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" sizes="any" href="favicon.ico">
+<link rel="manifest" href="site.webmanifest">
 <script src="lightswitch.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Storing and processing omic signatures">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Storing and processing omic signatures and collections">
 <meta name="description" content="As high-throughput technology evolves, a large number of omics-signatures are being derived. This package helps to store signatures efficiently and retrieve them conveniently.">
 <meta property="og:description" content="As high-throughput technology evolves, a large number of omics-signatures are being derived. This package helps to store signatures efficiently and retrieve them conveniently.">
 <meta property="og:image" content="https://montilab.github.io/SigRepo/logo.png">
@@ -71,15 +70,16 @@
  SigRepo: An R package for storing and processing omic signatures<a class="anchor" aria-label="anchor" href="#id_-sigrepo-an-r-package-for-storing-and-processing-omic-signatures"></a>
 </h1>
 </div>
-<p>The <code>SigRepo</code> package includes a suite of functions for easily storing and managing biological signatures and its constituents. Currently, <code>Sigrepo</code> is capable of storing, searching, and retrieving signatures and its signature collections from a MySQL database of choice. Interest in setting-up your own <code>SigRepo</code> database? See <a href="">here</a> on how to initiate a MySQL database with the appropriate schema.</p>
-<p>In order to interact with a suite of functions in <code>SigRepo</code> package, the input data must represent an R6 object for the representation of signatures and signature collections, and they can be created using our proprietary package, <a href="https://github.com/montilab/OmicSignature" class="external-link">OmicSignature</a>.</p>
+<p>The <code>SigRepo</code> package provides a comprehensive set of functions for easy storage and management of biological signatures and their components. SigRepo (the <code>client</code>) works alongside <code>SigRepo_Server</code>, its <code>server</code> counterpart. While SigRepo enables you to store, search, and retrieve signatures and signature collections, these operations rely on a running SigRepo_Server instance.</p>
+<p>Interested in setting up your own SigRepo_Server? Check out the installation instructions <a target="_blank" href="https://montilab.github.io/SigRepo_Server/articles/install_sigrepo.html">here</a>.</p>
+<p>To upload and download signatures — and to fully utilize the functionalities offered by the SigRepo package — signatures and signature collections must be represented as specific R6 objects. You can create these objects using our proprietary package, <a target="_blank" href="https://github.com/montilab/OmicSignature" class="external-link">OmicSignature</a>.</p>
 <p>Click on each link below for more information:</p>
 <ul>
-<li><a href="https://montilab.github.io/OmicSignature/articles/ObjectStructure.html" class="external-link">Overview of the object structure</a></li>
-<li><a href="https://montilab.github.io/OmicSignature/articles/CreateOmS.html" class="external-link">Create an OmicSignature (OmS)</a></li>
-<li><a href="https://montilab.github.io/OmicSignature/articles/CreateOmSC.html" class="external-link">Create an OmicSignatureCollection (OmSC)</a></li>
+<li><a href="https://montilab.github.io/OmicSignature/articles/ObjectStructure.html" target="_blank" class="external-link">Overview of the object structure</a></li>
+<li><a href="https://montilab.github.io/OmicSignature/articles/CreateOmS.html" target="_blank" class="external-link">Create an OmicSignature (OmS)</a></li>
+<li><a href="https://montilab.github.io/OmicSignature/articles/CreateOmSC.html" target="_blank" class="external-link">Create an OmicSignatureCollection (OmSC)</a></li>
 </ul>
-<p>For demonstrations, we will walk through the steps of how to use <code>SigRepo</code> package to store, retrieve, and interact with a list of signatures stored in our MySQL SigRepo Database.</p>
+<p>Below, we walk you through few essential steps to install the <code>SigRepo</code> package, and to store, retrieve, and interact with a list of signatures stored in an <a target="_blank" href="https://sigrepo.org" class="external-link">already deployed SigRepo server</a>.</p>
 </div>
 <div class="section level1">
 <h1 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -104,13 +104,18 @@
 <span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a></span>
 <span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a><span class="co"># Load OmicSignature package</span></span>
 <span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a><span class="fu">library</span>(OmicSignature)</span></code></pre></div>
+<div class="section level2">
+<h2 id="before-you-begin">Before you begin<a class="anchor" aria-label="anchor" href="#before-you-begin"></a>
+</h2>
+<p>Please navigate to our <a href="https://sigrepo.org" target="_blank" class="external-link">sigrepo.org</a> portal to create your account. On the login page, click <code>"Register here!"</code> and fill out the registration form to create an account. You will receive an email when your account has been activated. Due to SQL constraints, having multiple users on the same testing account, like running the tutorial in the readme, will fail to connect. Each user using their own account is ideal.</p>
+</div>
 </div>
 <div class="section level1">
 <h1 id="connect-to-sigrepo-database">Connect to SigRepo Database<a class="anchor" aria-label="anchor" href="#connect-to-sigrepo-database"></a>
 </h1>
-<p>We adopt a MySQL database structure for efficiently storing, searching, and retrieving the biological signatures and its constituents. To access the signatures stored in our database, <a href="https://sigrepo.org/" class="external-link">VISIT OUR WEBSITE</a> to create an account or <a href="mailto:sigrepo@bu.edu">CONTACT US</a> to be added.</p>
+<p>We adopt a MySQL database structure for efficiently storing, searching, and retrieving the biological signatures and its constituents. To access the signatures stored in our database, <a target="_blank" href="https://sigrepo.org/" class="external-link">VISIT OUR WEBSITE</a> to create an account or <a href="mailto:sigrepo@bu.edu">CONTACT US</a> to be added.</p>
 <p>There are three types of user accounts:<br> - <code>admin</code> has <b>READ</b> and <b>WRITE</b> access to all signatures in the database.<br> - <code>editor</code> has <b>READ</b> and <b>WRITE</b> access to ONLY their own uploaded signatures in the database.<br> - <code>viewer</code> has <b>ONLY READ</b> access to see a list of signatures that are publicly available in the database but <b>DO NOT HAVE WRITE</b> access to the database.<br></p>
-<p>Once you have a valid account, to connect to our SigRepo database, one can use the <code><a href="reference/newConnHandler.html">newConnHandler()</a></code> function to create a handler which contains user credentials to establish connection to our database.</p>
+<p>Once you have a valid account, to connect to our SigRepo database, one can use the <code><a href="reference/newConnHandler.html">SigRepo::newConnHandler()</a></code> function to create a handler which contains user credentials to establish connection to our database.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Create a connection handler</span></span>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>conn_handler <span class="ot">&lt;-</span> SigRepo<span class="sc">::</span><span class="fu">newConnHandler</span>(</span>
 <span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="at">dbname =</span> <span class="st">"sigrepo"</span>, </span>
@@ -132,115 +137,87 @@
 <div class="section level1">
 <h1 id="upload-a-signature">Upload a signature<a class="anchor" aria-label="anchor" href="#upload-a-signature"></a>
 </h1>
-<p>The <code><a href="reference/addSignature.html">addSignature()</a></code> function allows users to upload a signature to the database.</p>
+<p>The <code><a href="reference/addSignature.html">SigRepo::addSignature()</a></code> function allows users to upload a signature to the database.</p>
 <p><strong>IMPORTANT NOTE:</strong></p>
 <ul>
-<li>User <strong>MUST HAVE</strong> an <code>editor</code> or <code>admin</code> account to use this function.</li>
-<li>A signature <strong>MUST BE</strong> an R6 object obtained from <strong>OmicSignature::OmicSignature()</strong>
+<li>User <code>MUST HAVE</code> an <code>editor</code> or <code>admin</code> account to use this function.</li>
+<li>A signature <code>MUST BE</code> an R6 object obtained from <code><a href="https://rdrr.io/pkg/OmicSignature/man/OmicSignature.html" class="external-link">OmicSignature::OmicSignature()</a></code>
 </li>
 </ul>
 <div class="section level2">
-<h2 id="example-1-create-an-omic-signature-using-omicsignature-package-and-upload-to-the-database">
-<strong>Example 1</strong>: Create an omic signature using <strong>OmicSignature</strong> package and upload to the database<a class="anchor" aria-label="anchor" href="#example-1-create-an-omic-signature-using-omicsignature-package-and-upload-to-the-database"></a>
+<h2 id="example-1-upload-llfs_aging_gene_2023-signature">
+<strong>Example 1</strong>: Upload <code>LLFS_Aging_Gene_2023</code> signature<a class="anchor" aria-label="anchor" href="#example-1-upload-llfs_aging_gene_2023-signature"></a>
 </h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Create an OmicSignature metadata</span></span>
-<span><span class="va">metadata</span> <span class="op">&lt;-</span> <span class="fu">OmicSignature</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/OmicSignature/man/createMetadata.html" class="external-link">createMetadata</a></span><span class="op">(</span></span>
-<span>  <span class="co"># required attributes:</span></span>
-<span>  signature_name <span class="op">=</span> <span class="st">"Myc_reduce_mice_liver_24m_readme"</span>,</span>
-<span>  organism <span class="op">=</span> <span class="st">"Mus musculus"</span>,</span>
-<span>  direction_type <span class="op">=</span> <span class="st">"bi-directional"</span>,</span>
-<span>  assay_type <span class="op">=</span> <span class="st">"transcriptomics"</span>,</span>
-<span>  phenotype <span class="op">=</span> <span class="st">"Myc_reduce"</span>,</span>
+<code class="sourceCode R"><span><span class="co">## Show the OmicSignature summary</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">LLFS_Aging_Gene_2023</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Signature Object: </span></span>
+<span><span class="co">#&gt;   Metadata: </span></span>
+<span><span class="co">#&gt;     adj_p_cutoff = 0.01 </span></span>
+<span><span class="co">#&gt;     assay_type = transcriptomics </span></span>
+<span><span class="co">#&gt;     covariates = sex,fc,education,percent_intergenic,PC1-4,GRM </span></span>
+<span><span class="co">#&gt;     direction_type = bi-directional </span></span>
+<span><span class="co">#&gt;     keywords = human, aging, LLFS </span></span>
+<span><span class="co">#&gt;     organism = Homo Sapiens </span></span>
+<span><span class="co">#&gt;     phenotype = Aging </span></span>
+<span><span class="co">#&gt;     platform = transcriptomics by array </span></span>
+<span><span class="co">#&gt;     sample_type = blood </span></span>
+<span><span class="co">#&gt;     score_cutoff = 6 </span></span>
+<span><span class="co">#&gt;     signature_name = LLFS_Aging_Gene_2023 </span></span>
+<span><span class="co">#&gt;     year = 2023 </span></span>
+<span><span class="co">#&gt;   Signature: </span></span>
+<span><span class="co">#&gt;     Group1 (82)</span></span>
+<span><span class="co">#&gt;     Group2 (87)</span></span>
+<span><span class="co">#&gt;   Differential Expression Data: </span></span>
+<span><span class="co">#&gt;     1000 x 8</span></span>
 <span></span>
-<span>  <span class="co"># optional and recommended:</span></span>
-<span>  covariates <span class="op">=</span> <span class="st">"none"</span>,</span>
-<span>  description <span class="op">=</span> <span class="st">"mice Myc haploinsufficient (Myc(+/-))"</span>,</span>
-<span>  platform <span class="op">=</span> <span class="st">"transcriptomics by array"</span>,</span>
-<span>  sample_type <span class="op">=</span> <span class="st">"liver"</span>, <span class="co"># use BRENDA ontology</span></span>
-<span></span>
-<span>  <span class="co"># optional cut-off attributes.</span></span>
-<span>  <span class="co"># specifying them can facilitate the extraction of signatures.</span></span>
-<span>  logfc_cutoff <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  p_value_cutoff <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  adj_p_cutoff <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  score_cutoff <span class="op">=</span> <span class="fl">5</span>,</span>
-<span></span>
-<span>  <span class="co"># other optional built-in attributes:</span></span>
-<span>  keywords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Myc"</span>, <span class="st">"KO"</span>, <span class="st">"longevity"</span><span class="op">)</span>,</span>
-<span>  cutoff_description <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  author <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  PMID <span class="op">=</span> <span class="fl">25619689</span>,</span>
-<span>  year <span class="op">=</span> <span class="fl">2015</span>,</span>
-<span></span>
-<span>  <span class="co"># example of customized attributes:</span></span>
-<span>  others <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"animal_strain"</span> <span class="op">=</span> <span class="st">"C57BL/6"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Create difexp object</span></span>
-<span><span class="va">difexp</span> <span class="op">&lt;-</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, package <span class="op">=</span> <span class="st">"OmicSignature"</span><span class="op">)</span>, <span class="st">"difmatrix_Myc_mice_liver_24m.rds"</span><span class="op">)</span><span class="op">)</span> </span>
-<span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">difexp</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu">OmicSignature</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/OmicSignature/man/replaceDifexpCol.html" class="external-link">replaceDifexpCol</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">difexp</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in OmicSignature::replaceDifexpCol(base::colnames(difexp)): Required</span></span>
-<span><span class="co">#&gt; column for OmicSignature object difexp: feature_name, is not found in your</span></span>
-<span><span class="co">#&gt; input. This may cause problem when creating your OmicSignature object.</span></span>
-<span></span>
-<span><span class="co"># Rename ensembl with feature name and add group label to difexp</span></span>
-<span><span class="va">difexp</span> <span class="op">&lt;-</span> <span class="va">difexp</span> <span class="op">|&gt;</span>  </span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>feature_name <span class="op">=</span> <span class="va">ensembl</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>group_label <span class="op">=</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">score</span> <span class="op">&gt;</span> <span class="fl">0</span>, <span class="st">"MYC Reduce"</span>, <span class="st">"WT"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Create signature object</span></span>
-<span><span class="va">signature</span> <span class="op">&lt;-</span> <span class="va">difexp</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">score</span><span class="op">)</span> <span class="op">&gt;</span> <span class="va">metadata</span><span class="op">$</span><span class="va">score_cutoff</span> <span class="op">&amp;</span> <span class="va">.data</span><span class="op">$</span><span class="va">adj_p</span> <span class="op">&lt;</span> <span class="va">metadata</span><span class="op">$</span><span class="va">adj_p_cutoff</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"probe_id"</span>, <span class="st">"feature_name"</span>, <span class="st">"score"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>group_label <span class="op">=</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">score</span> <span class="op">&gt;</span> <span class="fl">0</span>, <span class="st">"MYC Reduce"</span>, <span class="st">"WT"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Create signature object </span></span>
-<span><span class="va">omic_signature</span> <span class="op">&lt;-</span> <span class="fu">OmicSignature</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/OmicSignature/man/OmicSignature.html" class="external-link">OmicSignature</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
-<span>  metadata <span class="op">=</span> <span class="va">metadata</span>,</span>
-<span>  signature <span class="op">=</span> <span class="va">signature</span>,</span>
-<span>  difexp <span class="op">=</span> <span class="va">difexp</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_readme created.</span></span>
-<span></span>
-<span><span class="co"># Add signature to database</span></span>
+<span><span class="co">## Add the signature to the repository</span></span>
 <span><span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/addSignature.html">addSignature</a></span><span class="op">(</span></span>
-<span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>,        <span class="co"># A handler contains user credentials to establish connection to a remote database</span></span>
-<span>  omic_signature <span class="op">=</span> <span class="va">omic_signature</span>,    <span class="co"># An R6 object obtained from OmicSignature::OmicSignature()</span></span>
-<span>  visibility <span class="op">=</span> <span class="cn">FALSE</span>,                 <span class="co"># Whether to make signature public or private. Default is FALSE.</span></span>
-<span>  return_signature_id <span class="op">=</span> <span class="cn">FALSE</span>,        <span class="co"># Whether to return the uploaded signature id. Default is FALSE.</span></span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>                      <span class="co"># Whether to print diagnostic messages. Default is TRUE.</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; Uploading signature metadata to the database...</span></span>
-<span><span class="co">#&gt; Saving difexp to the database...</span></span>
-<span><span class="co">#&gt; now dyn.load("/Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/library/curl/libs/curl.so") ...</span></span>
-<span><span class="co">#&gt; Adding signature owner to the signature access table of the database...</span></span>
-<span><span class="co">#&gt; Adding signature feature set to the database...</span></span>
-<span><span class="co">#&gt; Finished uploading.</span></span>
-<span><span class="co">#&gt; ID of the uploaded signature: 11</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="example-2-upload-llfs_aging_gene_2023-signature">
-<strong>Example 2</strong>: Upload <code>LLFS_Aging_Gene_2023</code> signature<a class="anchor" aria-label="anchor" href="#example-2-upload-llfs_aging_gene_2023-signature"></a>
-</h2>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/addSignature.html">addSignature</a></span><span class="op">(</span></span>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  omic_signature <span class="op">=</span> <span class="va">LLFS_Aging_Gene_2023</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Uploading signature metadata to the database...</span></span>
 <span><span class="co">#&gt; Saving difexp to the database...</span></span>
+<span><span class="co">#&gt; now dyn.load("/Library/Frameworks/R.framework/Versions/4.5-x86_64/Resources/library/curl/libs/curl.so") ...</span></span>
 <span><span class="co">#&gt; Adding signature owner to the signature access table of the database...</span></span>
 <span><span class="co">#&gt; Adding signature feature set to the database...</span></span>
 <span><span class="co">#&gt; Finished uploading.</span></span>
-<span><span class="co">#&gt; ID of the uploaded signature: 12</span></span></code></pre></div>
+<span><span class="co">#&gt; ID of the uploaded signature: 458</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="example-3-upload-myc_reduce_mice_liver_24m-signature">
-<strong>Example 3</strong>: Upload <code>Myc_reduce_mice_liver_24m</code> signature<a class="anchor" aria-label="anchor" href="#example-3-upload-myc_reduce_mice_liver_24m-signature"></a>
+<h2 id="example-2-upload-myc_reduce_mice_liver_24m-signature">
+<strong>Example 2</strong>: Upload <code>Myc_reduce_mice_liver_24m</code> signature<a class="anchor" aria-label="anchor" href="#example-2-upload-myc_reduce_mice_liver_24m-signature"></a>
 </h2>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">missing_features</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/addSignature.html">addSignature</a></span><span class="op">(</span></span>
+<p>In this example, we show what happens when the OmicSignature contains <code>feature_name</code>’s that are not part of “dictionary” for the corresponding omics layer.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Show the OmicSignature summary</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">Myc_reduce_mice_liver_24m</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Signature Object: </span></span>
+<span><span class="co">#&gt;   Metadata: </span></span>
+<span><span class="co">#&gt;     adj_p_cutoff = 0.05 </span></span>
+<span><span class="co">#&gt;     assay_type = transcriptomics </span></span>
+<span><span class="co">#&gt;     covariates = none </span></span>
+<span><span class="co">#&gt;     description = mice Myc haploinsufficient (Myc(+/-)) </span></span>
+<span><span class="co">#&gt;     direction_type = bi-directional </span></span>
+<span><span class="co">#&gt;     keywords = Myc, KO, longevity </span></span>
+<span><span class="co">#&gt;     organism = Mus musculus </span></span>
+<span><span class="co">#&gt;     others = C57BL/6 </span></span>
+<span><span class="co">#&gt;     phenotype = Myc_reduce </span></span>
+<span><span class="co">#&gt;     platform = transcriptomics by array </span></span>
+<span><span class="co">#&gt;     PMID = 25619689 </span></span>
+<span><span class="co">#&gt;     sample_type = liver </span></span>
+<span><span class="co">#&gt;     score_cutoff = 5 </span></span>
+<span><span class="co">#&gt;     signature_name = Myc_reduce_mice_liver_24m </span></span>
+<span><span class="co">#&gt;     year = 2015 </span></span>
+<span><span class="co">#&gt;   Metadata user defined fields: </span></span>
+<span><span class="co">#&gt;     animal_strain = C57BL/6 </span></span>
+<span><span class="co">#&gt;   Signature: </span></span>
+<span><span class="co">#&gt;     Group1 (30)</span></span>
+<span><span class="co">#&gt;     Group2 (78)</span></span>
+<span><span class="co">#&gt;   Differential Expression Data: </span></span>
+<span><span class="co">#&gt;     1000 x 5</span></span>
+<span></span>
+<span><span class="va">missing_features</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/addSignature.html">addSignature</a></span><span class="op">(</span></span>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  omic_signature <span class="op">=</span> <span class="va">Myc_reduce_mice_liver_24m</span>,</span>
 <span>  return_missing_features <span class="op">=</span> <span class="cn">TRUE</span>       <span class="co"># Whether to return a list of missing features during upload.</span></span>
@@ -364,54 +341,135 @@
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; To add these features to our database, please contact our admin for support.</span></span></code></pre></div>
 </div>
+<div class="section level2">
+<h2 id="example-3-create-an-omic-signature-using-omicsignature-package-and-upload-to-the-database">
+<strong>Example 3</strong>: Create an omic signature using <strong>OmicSignature</strong> package and upload to the database<a class="anchor" aria-label="anchor" href="#example-3-create-an-omic-signature-using-omicsignature-package-and-upload-to-the-database"></a>
+</h2>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Create an OmicSignature metadata</span></span>
+<span><span class="va">metadata</span> <span class="op">&lt;-</span> <span class="fu">OmicSignature</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/OmicSignature/man/createMetadata.html" class="external-link">createMetadata</a></span><span class="op">(</span></span>
+<span>  <span class="co"># required attributes:</span></span>
+<span>  signature_name <span class="op">=</span> <span class="st">"Myc_reduce_mice_liver_24m_readme"</span>,</span>
+<span>  organism <span class="op">=</span> <span class="st">"Mus musculus"</span>,</span>
+<span>  direction_type <span class="op">=</span> <span class="st">"bi-directional"</span>,</span>
+<span>  assay_type <span class="op">=</span> <span class="st">"transcriptomics"</span>,</span>
+<span>  phenotype <span class="op">=</span> <span class="st">"Myc_reduce"</span>,</span>
+<span></span>
+<span>  <span class="co"># optional and recommended:</span></span>
+<span>  covariates <span class="op">=</span> <span class="st">"none"</span>,</span>
+<span>  description <span class="op">=</span> <span class="st">"mice Myc haploinsufficient (Myc(+/-))"</span>,</span>
+<span>  platform <span class="op">=</span> <span class="st">"transcriptomics by array"</span>,</span>
+<span>  sample_type <span class="op">=</span> <span class="st">"liver"</span>, <span class="co"># use BRENDA ontology</span></span>
+<span></span>
+<span>  <span class="co"># optional cut-off attributes.</span></span>
+<span>  <span class="co"># specifying them can facilitate the extraction of signatures.</span></span>
+<span>  logfc_cutoff <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  p_value_cutoff <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  adj_p_cutoff <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  score_cutoff <span class="op">=</span> <span class="fl">5</span>,</span>
+<span></span>
+<span>  <span class="co"># other optional built-in attributes:</span></span>
+<span>  keywords <span class="op">=</span> <span class="st">"Myc, KO, longevity"</span>,</span>
+<span>  cutoff_description <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  author <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  PMID <span class="op">=</span> <span class="fl">25619689</span>,</span>
+<span>  year <span class="op">=</span> <span class="fl">2015</span>,</span>
+<span></span>
+<span>  <span class="co"># example of customized attributes:</span></span>
+<span>  others <span class="op">=</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"animal_strain"</span> <span class="op">=</span> <span class="st">"C57BL/6"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create difexp object</span></span>
+<span><span class="va">difexp</span> <span class="op">&lt;-</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, package <span class="op">=</span> <span class="st">"OmicSignature"</span><span class="op">)</span>, <span class="st">"difmatrix_Myc_mice_liver_24m.rds"</span><span class="op">)</span><span class="op">)</span> </span>
+<span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">difexp</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu">OmicSignature</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/OmicSignature/man/replaceDifexpCol.html" class="external-link">replaceDifexpCol</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">difexp</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning in OmicSignature::replaceDifexpCol(base::colnames(difexp)): Required</span></span>
+<span><span class="co">#&gt; column for OmicSignature object difexp: feature_name, is not found in your</span></span>
+<span><span class="co">#&gt; input. This may cause problem when creating your OmicSignature object.</span></span>
+<span></span>
+<span><span class="co"># Rename ensembl with feature name and add group label to difexp</span></span>
+<span><span class="va">difexp</span> <span class="op">&lt;-</span> <span class="va">difexp</span> <span class="op">|&gt;</span>  </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>feature_name <span class="op">=</span> <span class="va">ensembl</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>group_label <span class="op">=</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">score</span> <span class="op">&gt;</span> <span class="fl">0</span>, <span class="st">"MYC Reduce"</span>, <span class="st">"WT"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create signature object</span></span>
+<span><span class="va">signature</span> <span class="op">&lt;-</span> <span class="va">difexp</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">score</span><span class="op">)</span> <span class="op">&gt;</span> <span class="va">metadata</span><span class="op">$</span><span class="va">score_cutoff</span> <span class="op">&amp;</span> <span class="va">.data</span><span class="op">$</span><span class="va">adj_p</span> <span class="op">&lt;</span> <span class="va">metadata</span><span class="op">$</span><span class="va">adj_p_cutoff</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"probe_id"</span>, <span class="st">"feature_name"</span>, <span class="st">"score"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>group_label <span class="op">=</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">score</span> <span class="op">&gt;</span> <span class="fl">0</span>, <span class="st">"MYC Reduce"</span>, <span class="st">"WT"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create signature object </span></span>
+<span><span class="va">omic_signature</span> <span class="op">&lt;-</span> <span class="fu">OmicSignature</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/OmicSignature/man/OmicSignature.html" class="external-link">OmicSignature</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span></span>
+<span>  metadata <span class="op">=</span> <span class="va">metadata</span>,</span>
+<span>  signature <span class="op">=</span> <span class="va">signature</span>,</span>
+<span>  difexp <span class="op">=</span> <span class="va">difexp</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_readme created.</span></span>
+<span></span>
+<span><span class="co"># Add signature to database</span></span>
+<span><span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/addSignature.html">addSignature</a></span><span class="op">(</span></span>
+<span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>,        <span class="co"># A handler contains user credentials to establish connection to a remote database</span></span>
+<span>  omic_signature <span class="op">=</span> <span class="va">omic_signature</span>,    <span class="co"># An R6 object obtained from OmicSignature::OmicSignature()</span></span>
+<span>  visibility <span class="op">=</span> <span class="cn">FALSE</span>,                 <span class="co"># Whether to make signature public or private. Default is FALSE.</span></span>
+<span>  return_signature_id <span class="op">=</span> <span class="cn">FALSE</span>,        <span class="co"># Whether to return the uploaded signature id. Default is FALSE.</span></span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>                      <span class="co"># Whether to print diagnostic messages. Default is TRUE.</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Uploading signature metadata to the database...</span></span>
+<span><span class="co">#&gt; Saving difexp to the database...</span></span>
+<span><span class="co">#&gt; Adding signature owner to the signature access table of the database...</span></span>
+<span><span class="co">#&gt; Adding signature feature set to the database...</span></span>
+<span><span class="co">#&gt; Finished uploading.</span></span>
+<span><span class="co">#&gt; ID of the uploaded signature: 460</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level1">
 <h1 id="search-for-a-list-of-signatures">Search for a list of signatures<a class="anchor" aria-label="anchor" href="#search-for-a-list-of-signatures"></a>
 </h1>
-<p>The <code><a href="reference/searchSignature.html">searchSignature()</a></code> function allows users to search for all or a specific set of signatures that are available in the database.</p>
+<p>The <code><a href="reference/searchSignature.html">SigRepo::searchSignature()</a></code> function allows users to search for all or a specific set of signatures that are available in the database.</p>
 <div class="section level2">
-<h2 id="example-1-search-for-all-signatures">Example 1: Search for all signatures<a class="anchor" aria-label="anchor" href="#example-1-search-for-all-signatures"></a>
+<h2 id="example-1-search-for-all-signatures">Example 1: Search for all signatures.<a class="anchor" aria-label="anchor" href="#example-1-search-for-all-signatures"></a>
 </h2>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">signature_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/searchSignature.html">searchSignature</a></span><span class="op">(</span>conn_handler <span class="op">=</span> <span class="va">conn_handler</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Get all signatures</span></span>
+<span><span class="va">signature_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/searchSignature.html">searchSignature</a></span><span class="op">(</span>conn_handler <span class="op">=</span> <span class="va">conn_handler</span><span class="op">)</span></span>
 <span></span>
-<span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">signature_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="co"># WARNINGS: THE SIGNATURE TABLE CAN BE LARGE, SO ONLY THE FIRST SIX OBSERVATIONS ARE SHOWN.</span></span>
+<span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">signature_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
-<span>    <span class="va">signature_tbl</span>, </span>
+<span>    <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">signature_tbl</span><span class="op">)</span>, </span>
 <span>    row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <table style="width:100%;" class="table">
 <colgroup>
-<col width="2%">
-<col width="6%">
-<col width="2%">
 <col width="3%">
 <col width="3%">
-<col width="2%">
-<col width="5%">
-<col width="2%">
-<col width="9%">
-<col width="7%">
-<col width="2%">
-<col width="2%">
-<col width="3%">
-<col width="2%">
 <col width="3%">
 <col width="3%">
-<col width="1%">
-<col width="1%">
-<col width="5%">
-<col width="2%">
-<col width="2%">
 <col width="3%">
 <col width="3%">
-<col width="2%">
-<col width="4%">
-<col width="2%">
-<col width="6%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th align="right">signature_id</th>
 <th align="left">signature_name</th>
 <th align="left">organism</th>
@@ -441,185 +499,185 @@
 <th align="left">signature_hashkey</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
-<td align="right">7</td>
-<td align="left">Myc_reduce_mice_liver_24m_v1</td>
-<td align="left">Mus musculus</td>
-<td align="left">bi-directional</td>
-<td align="left">transcriptomics</td>
-<td align="left">Myc_reduce</td>
-<td align="left">transcriptomics by array</td>
-<td align="left">liver</td>
-<td align="left">none</td>
-<td align="left">mice Myc haploinsufficient (Myc(+/-))</td>
-<td align="right">5</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">0.05</td>
-<td align="left">NA</td>
-<td align="left">Myc,KO,longevity</td>
-<td align="right">25619689</td>
-<td align="right">2015</td>
-<td align="left">animal_strain: &lt;C57BL/6&gt;</td>
-<td align="right">1</td>
-<td align="right">884</td>
-<td align="right">5</td>
-<td align="right">10</td>
-<td align="left">root</td>
-<td align="left">2025-09-19 19:50:04</td>
-<td align="right">0</td>
-<td align="left">eacd0935d97847d56cb717455b0e48a3</td>
-</tr>
-<tr class="even">
-<td align="right">8</td>
-<td align="left">Myc_reduce_mice_liver_24m_v2</td>
-<td align="left">Mus musculus</td>
-<td align="left">bi-directional</td>
-<td align="left">transcriptomics</td>
-<td align="left">Myc_reduce</td>
-<td align="left">transcriptomics by array</td>
-<td align="left">liver</td>
-<td align="left">none</td>
-<td align="left">mice Myc haploinsufficient (Myc(+/-))</td>
-<td align="right">5</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">0.05</td>
-<td align="left">NA</td>
-<td align="left">Myc,KO,longevity</td>
-<td align="right">25619689</td>
-<td align="right">2015</td>
-<td align="left">animal_strain: &lt;C57BL/6&gt;</td>
-<td align="right">1</td>
-<td align="right">884</td>
-<td align="right">5</td>
-<td align="right">10</td>
-<td align="left">root</td>
-<td align="left">2025-09-19 19:50:04</td>
-<td align="right">0</td>
-<td align="left">ec356cabc33fcc22f8a0b77b24db91ab</td>
-</tr>
-<tr class="odd">
-<td align="right">9</td>
-<td align="left">Myc_reduce_mice_liver_24m_v3</td>
-<td align="left">Mus musculus</td>
-<td align="left">bi-directional</td>
-<td align="left">transcriptomics</td>
-<td align="left">Myc_reduce</td>
-<td align="left">transcriptomics by array</td>
-<td align="left">liver</td>
-<td align="left">none</td>
-<td align="left">mice Myc haploinsufficient (Myc(+/-))</td>
-<td align="right">5</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">0.05</td>
-<td align="left">NA</td>
-<td align="left">Myc,KO,longevity</td>
-<td align="right">25619689</td>
-<td align="right">2015</td>
-<td align="left">animal_strain: &lt;C57BL/6&gt;</td>
-<td align="right">1</td>
-<td align="right">884</td>
-<td align="right">5</td>
-<td align="right">10</td>
-<td align="left">root</td>
-<td align="left">2025-09-19 19:50:07</td>
-<td align="right">0</td>
-<td align="left">fa416468cc91f872f073e15efdaf1ece</td>
-</tr>
-<tr class="even">
-<td align="right">10</td>
-<td align="left">Myc_reduce_mice_liver_24m_v4</td>
-<td align="left">Mus musculus</td>
-<td align="left">bi-directional</td>
-<td align="left">transcriptomics</td>
-<td align="left">Myc_reduce</td>
-<td align="left">transcriptomics by array</td>
-<td align="left">liver</td>
-<td align="left">none</td>
-<td align="left">mice Myc haploinsufficient (Myc(+/-))</td>
-<td align="right">5</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">0.05</td>
-<td align="left">NA</td>
-<td align="left">Myc,KO,longevity</td>
-<td align="right">25619689</td>
-<td align="right">2015</td>
-<td align="left">animal_strain: &lt;C57BL/6&gt;</td>
-<td align="right">1</td>
-<td align="right">884</td>
-<td align="right">5</td>
-<td align="right">10</td>
-<td align="left">root</td>
-<td align="left">2025-09-19 19:50:07</td>
-<td align="right">0</td>
-<td align="left">5bc419a0fbd2c012e669a19c67f2b434</td>
-</tr>
-<tr class="odd">
-<td align="right">11</td>
-<td align="left">Myc_reduce_mice_liver_24m_readme</td>
-<td align="left">Mus musculus</td>
-<td align="left">bi-directional</td>
-<td align="left">transcriptomics</td>
-<td align="left">Myc_reduce</td>
-<td align="left">transcriptomics by array</td>
-<td align="left">liver</td>
-<td align="left">none</td>
-<td align="left">mice Myc haploinsufficient (Myc(+/-))</td>
-<td align="right">5</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">0.05</td>
-<td align="left">NA</td>
-<td align="left">Myc,KO,longevity</td>
-<td align="right">25619689</td>
-<td align="right">2015</td>
-<td align="left">animal_strain: &lt;C57BL/6&gt;</td>
-<td align="right">1</td>
-<td align="right">884</td>
-<td align="right">5</td>
-<td align="right">10</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:06:55</td>
-<td align="right">0</td>
-<td align="left">7e24a413c1287f840d492b2963c263a5</td>
-</tr>
-<tr class="even">
-<td align="right">12</td>
-<td align="left">LLFS_Aging_Gene_2023</td>
+<tr>
+<td align="right">213</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_ACC_MontiLab2025</td>
 <td align="left">Homo sapiens</td>
 <td align="left">bi-directional</td>
 <td align="left">transcriptomics</td>
 <td align="left">Aging</td>
-<td align="left">transcriptomics by array</td>
-<td align="left">blood</td>
-<td align="left">sex,fc,education,percent_intergenic,PC1-4,GRM</td>
+<td align="left">transcriptomics by bulk RNA-seq</td>
+<td align="left">unknown</td>
+<td align="left">tumor purity, race, gender</td>
+<td align="left">TCGA HPV-negative ACC aging signature</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
 <td align="left">NA</td>
-<td align="right">6</td>
+<td align="left">TCGA,ACC,Aging</td>
 <td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">0.01</td>
-<td align="left">NA</td>
-<td align="left">human,aging,LLFS</td>
-<td align="right">NA</td>
-<td align="right">2023</td>
+<td align="right">2025</td>
 <td align="left">NA</td>
 <td align="right">1</td>
-<td align="right">1000</td>
-<td align="right">82</td>
-<td align="right">87</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:06:56</td>
+<td align="right">32402</td>
+<td align="right">18031</td>
+<td align="right">14371</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:01:24</td>
 <td align="right">0</td>
-<td align="left">7fdecac66691beed1703efc25487768c</td>
+<td align="left">37b8bb25907349dfaa1b38fecc9e872b</td>
+</tr>
+<tr>
+<td align="right">214</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_BLCA_MontiLab2025</td>
+<td align="left">Homo sapiens</td>
+<td align="left">bi-directional</td>
+<td align="left">transcriptomics</td>
+<td align="left">Aging</td>
+<td align="left">transcriptomics by bulk RNA-seq</td>
+<td align="left">unknown</td>
+<td align="left">tumor purity, race, gender</td>
+<td align="left">TCGA HPV-negative BLCA aging signature</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">NA</td>
+<td align="left">TCGA,BLCA,Aging</td>
+<td align="right">NA</td>
+<td align="right">2025</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">39689</td>
+<td align="right">22346</td>
+<td align="right">17343</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:01:35</td>
+<td align="right">0</td>
+<td align="left">28d8ba3d012ecbc6a080996fc2dcd66e</td>
+</tr>
+<tr>
+<td align="right">215</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_BRCA_MontiLab2025</td>
+<td align="left">Homo sapiens</td>
+<td align="left">bi-directional</td>
+<td align="left">transcriptomics</td>
+<td align="left">Aging</td>
+<td align="left">transcriptomics by bulk RNA-seq</td>
+<td align="left">unknown</td>
+<td align="left">tumor purity, race, gender</td>
+<td align="left">TCGA HPV-negative BRCA aging signature</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">NA</td>
+<td align="left">TCGA,BRCA,Aging</td>
+<td align="right">NA</td>
+<td align="right">2025</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">42011</td>
+<td align="right">26478</td>
+<td align="right">15533</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:01:49</td>
+<td align="right">0</td>
+<td align="left">9ae65c31c82b6edc15819fb7f8cd0640</td>
+</tr>
+<tr>
+<td align="right">216</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_CESC_MontiLab2025</td>
+<td align="left">Homo sapiens</td>
+<td align="left">bi-directional</td>
+<td align="left">transcriptomics</td>
+<td align="left">Aging</td>
+<td align="left">transcriptomics by bulk RNA-seq</td>
+<td align="left">unknown</td>
+<td align="left">tumor purity, race, gender</td>
+<td align="left">TCGA HPV-negative CESC aging signature</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">NA</td>
+<td align="left">TCGA,CESC,Aging</td>
+<td align="right">NA</td>
+<td align="right">2025</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">38521</td>
+<td align="right">21746</td>
+<td align="right">16775</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:02:05</td>
+<td align="right">0</td>
+<td align="left">e487cfd606e3d4e2214a8e4435b424b8</td>
+</tr>
+<tr>
+<td align="right">217</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_COAD_MontiLab2025</td>
+<td align="left">Homo sapiens</td>
+<td align="left">bi-directional</td>
+<td align="left">transcriptomics</td>
+<td align="left">Aging</td>
+<td align="left">transcriptomics by bulk RNA-seq</td>
+<td align="left">unknown</td>
+<td align="left">tumor purity, race, gender</td>
+<td align="left">TCGA HPV-negative COAD aging signature</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">NA</td>
+<td align="left">TCGA,COAD,Aging</td>
+<td align="right">NA</td>
+<td align="right">2025</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">38857</td>
+<td align="right">22186</td>
+<td align="right">16671</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:02:20</td>
+<td align="right">0</td>
+<td align="left">afb09a078a63c9342530d2a119698085</td>
+</tr>
+<tr>
+<td align="right">218</td>
+<td align="left">Aging_Hs_HNSC_RNASeq_TCGA_ESCA_MontiLab2025</td>
+<td align="left">Homo sapiens</td>
+<td align="left">bi-directional</td>
+<td align="left">transcriptomics</td>
+<td align="left">Aging</td>
+<td align="left">transcriptomics by bulk RNA-seq</td>
+<td align="left">unknown</td>
+<td align="left">tumor purity, race, gender</td>
+<td align="left">TCGA HPV-negative ESCA aging signature</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">NA</td>
+<td align="left">TCGA,ESCA,Aging</td>
+<td align="right">NA</td>
+<td align="right">2025</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">42053</td>
+<td align="right">15816</td>
+<td align="right">26237</td>
+<td align="left">H_Nikoueian</td>
+<td align="left">2025-10-03 15:02:33</td>
+<td align="right">0</td>
+<td align="left">3275eeda945640a32d963a55d22143a9</td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="section level2">
-<h2 id="example-2-search-for-a-specific-signature-eg-signature_name--llfs_aging_gene_2023">Example 2: Search for a specific signature, e.g., <strong>signature_name = “LLFS_Aging_Gene_2023”</strong>
+<h2 id="example-2-search-for-a-specific-signature-eg-signature_name--llfs_aging_gene_2023">Example 2: Search for a specific signature, e.g., <code>signature_name = "LLFS_Aging_Gene_2023"</code>
 <a class="anchor" aria-label="anchor" href="#example-2-search-for-a-specific-signature-eg-signature_name--llfs_aging_gene_2023"></a>
 </h2>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
@@ -628,43 +686,43 @@
 <span>  signature_name <span class="op">=</span> <span class="st">"LLFS_Aging_Gene_2023"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">signature_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">signature_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
 <span>    <span class="va">signature_tbl</span>, </span>
 <span>    row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<table class="table">
+<table style="width:100%;" class="table">
 <colgroup>
 <col width="3%">
-<col width="4%">
-<col width="3%">
-<col width="3%">
-<col width="3%">
-<col width="2%">
-<col width="5%">
-<col width="2%">
-<col width="10%">
-<col width="2%">
 <col width="3%">
 <col width="3%">
 <col width="3%">
 <col width="3%">
-<col width="4%">
-<col width="3%">
-<col width="1%">
-<col width="1%">
-<col width="1%">
-<col width="2%">
 <col width="3%">
 <col width="3%">
-<col width="4%">
-<col width="2%">
-<col width="4%">
-<col width="2%">
-<col width="7%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th align="right">signature_id</th>
 <th align="left">signature_name</th>
 <th align="left">organism</th>
@@ -693,8 +751,8 @@
 <th align="right">visibility</th>
 <th align="left">signature_hashkey</th>
 </tr></thead>
-<tbody><tr class="odd">
-<td align="right">12</td>
+<tbody><tr>
+<td align="right">458</td>
 <td align="left">LLFS_Aging_Gene_2023</td>
 <td align="left">Homo sapiens</td>
 <td align="left">bi-directional</td>
@@ -717,10 +775,10 @@
 <td align="right">1000</td>
 <td align="right">82</td>
 <td align="right">87</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:06:56</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 00:39:21</td>
 <td align="right">0</td>
-<td align="left">7fdecac66691beed1703efc25487768c</td>
+<td align="left">b35b7c1d387440d474bfcb3cb162c9a6</td>
 </tr></tbody>
 </table>
 </div>
@@ -728,26 +786,20 @@
 <div class="section level1">
 <h1 id="retrieve-a-list-of-omic-signatures">Retrieve a list of omic signatures<a class="anchor" aria-label="anchor" href="#retrieve-a-list-of-omic-signatures"></a>
 </h1>
-<p>The <code><a href="reference/getSignature.html">getSignature()</a></code> function allows users to retrieve a list of omic signature objects that they are <strong>PUBLICLY</strong> available in the database.</p>
+<p>The <code><a href="reference/getSignature.html">SigRepo::getSignature()</a></code> function allows users to retrieve a list of omic signature objects that they are <code>PUBLICLY</code> available in the database.</p>
 <p><strong>IMPORTANT NOTE:</strong></p>
 <ul>
-<li>Users can <strong>ONLY RETRIEVE</strong> a list of signatures that are publicly available in the database including their own uploaded signatures.</li>
+<li>Users can <code>ONLY RETRIEVE</code> a list of signatures that are publicly available in the database including their own uploaded signatures.</li>
 <li>If a signature is <code>PRIVATE</code> and belongs to other user in the database, users will need to be given an <code>editor</code> permission from its owner in order to access, retrieve, and edit their signatures.</li>
 </ul>
 <div class="section level2">
 <h2 id="example-1-retrieve-all-signatures-that-are-publicly-available-or-owned-by-the-user-in-the-database">Example 1: Retrieve all signatures that are publicly available or owned by the user in the database<a class="anchor" aria-label="anchor" href="#example-1-retrieve-all-signatures-that-are-publicly-available-or-owned-by-the-user-in-the-database"></a>
 </h2>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">signature_list</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/getSignature.html">getSignature</a></span><span class="op">(</span>conn_handler <span class="op">=</span> <span class="va">conn_handler</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_v1 created.</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_v2 created.</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_v3 created.</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_v4 created.</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_readme created.</span></span>
-<span><span class="co">#&gt;   [Success] OmicSignature object LLFS_Aging_Gene_2023 created.</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># WARNINGS: THE SIGNATURE LIST CAN BE LARGE TO DOWNLOAD (NOT RUN)</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>signature_list <span class="ot">&lt;-</span> SigRepo<span class="sc">::</span><span class="fu">getSignature</span>(<span class="at">conn_handler =</span> conn_handler)</span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="example-2-retrieve-a-specific-signature-that-is-publicly-available-or-owned-by-the-user-in-the-database-eg-signature_name--llfs_aging_gene_2023">Example 2: Retrieve a specific signature that is publicly available or owned by the user in the database, e.g., <strong>signature_name = “LLFS_Aging_Gene_2023”</strong>
+<h2 id="example-2-retrieve-a-specific-signature-that-is-publicly-available-or-owned-by-the-user-in-the-database-eg-signature_name--llfs_aging_gene_2023">Example 2: Retrieve a specific signature that is publicly available or owned by the user in the database, e.g., <code>signature_name = "LLFS_Aging_Gene_2023"</code>
 <a class="anchor" aria-label="anchor" href="#example-2-retrieve-a-specific-signature-that-is-publicly-available-or-owned-by-the-user-in-the-database-eg-signature_name--llfs_aging_gene_2023"></a>
 </h2>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
@@ -761,14 +813,14 @@
 <div class="section level1">
 <h1 id="delete-a-signature">Delete a signature<a class="anchor" aria-label="anchor" href="#delete-a-signature"></a>
 </h1>
-<p>The <code><a href="reference/deleteSignature.html">deleteSignature()</a></code> function allows users to delete a signature from the database.</p>
+<p>The <code><a href="reference/deleteSignature.html">SigRepo::deleteSignature()</a></code> function allows users to delete a signature from the database.</p>
 <p><strong>IMPORTANT NOTE:</strong></p>
 <ul>
-<li>Users <strong>MUST HAVE</strong> an <code>editor</code> or <code>admin</code> account to use this function.</li>
-<li>Users can <strong>ONLY DELETE</strong> their own uploaded signatures or were given an <code>editor</code> permission from its owner to access, retrieve, and edit their signatures.</li>
-<li>Users can <strong>ONLY DELETE</strong> a signature one at a time.</li>
+<li>Users <code>MUST HAVE</code> an <code>editor</code> or <code>admin</code> account to use this function.</li>
+<li>Users can <code>ONLY DELETE</code> their own uploaded signatures or were given an <code>editor</code> permission from its owner to access, retrieve, and edit their signatures.</li>
+<li>Users can <code>ONLY DELETE</code> a signature one at a time.</li>
 </ul>
-<p><strong>For example:</strong> You want to remove <strong>signature_name = “LLFS_Aging_Gene_2023”</strong> from the database.</p>
+<p><strong>For example:</strong> You want to remove <code>signature_name = "LLFS_Aging_Gene_2023"</code> from the database.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Let's search for signature_name = "LLFS_Aging_Gene_2023" in the database</span></span>
 <span><span class="va">signature_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/searchSignature.html">searchSignature</a></span><span class="op">(</span></span>
@@ -777,32 +829,32 @@
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># If the signature exists, remove it from the database</span></span>
-<span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">signature_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">signature_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/deleteSignature.html">deleteSignature</a></span><span class="op">(</span></span>
 <span>    conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>    signature_id <span class="op">=</span> <span class="va">signature_tbl</span><span class="op">$</span><span class="va">signature_id</span>  </span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Remove difexp belongs to signature_id = '12' from the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '12' from 'signatures' table of the database.</span></span>
-<span><span class="co">#&gt; Remove features belongs to signature_id = '12' from 'signature_feature_set' table of the database.</span></span>
-<span><span class="co">#&gt; Remove user access to signature_id = '12' from 'signature_access' table of the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '12' from 'signature_collection_access' table of the database.</span></span>
-<span><span class="co">#&gt; signature_id = '12' has been removed.</span></span></code></pre></div>
+<span><span class="co">#&gt; Remove difexp belongs to signature_id = '458' from the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '458' from 'signatures' table of the database.</span></span>
+<span><span class="co">#&gt; Remove features belongs to signature_id = '458' from 'signature_feature_set' table of the database.</span></span>
+<span><span class="co">#&gt; Remove user access to signature_id = '458' from 'signature_access' table of the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '458' from 'signature_collection_access' table of the database.</span></span>
+<span><span class="co">#&gt; signature_id = '458' has been removed.</span></span></code></pre></div>
 </div>
 <div class="section level1">
 <h1 id="update-a-signature">Update a signature<a class="anchor" aria-label="anchor" href="#update-a-signature"></a>
 </h1>
-<p>The <code><a href="reference/updateSignature.html">updateSignature()</a></code> function allows users to update a specific signature in the SigRepo database.</p>
+<p>The <code><a href="reference/updateSignature.html">SigRepo::updateSignature()</a></code> function allows users to update a specific signature in the SigRepo database.</p>
 <p><strong>IMPORTANT NOTE:</strong></p>
 <ul>
-<li>Users <strong>MUST HAVE</strong> an <code>editor</code> or <code>admin</code> account to use this function.</li>
-<li>Users can <strong>ONLY UPDATE</strong> their own uploaded signatures or were given an <code>editor</code> permission from its owner to access, retrieve, and edit their signatures.</li>
-<li>Users can <strong>ONLY UPDATE</strong> a signature one at a time.</li>
+<li>Users <code>MUST HAVE</code> an <code>editor</code> or <code>admin</code> account to use this function.</li>
+<li>Users can <code>ONLY UPDATE</code> their own uploaded signatures or were given an <code>editor</code> permission from its owner to access, retrieve, and edit their signatures.</li>
+<li>Users can <code>ONLY UPDATE</code> a signature one at a time.</li>
 </ul>
-<p><strong>For example:</strong> If the <code>platform</code> information in the previous uploaded signature, <strong>“Myc_reduce_mice_liver_24m_readme”</strong>, is incorrect, and you wish to update the <code>platform</code> information with the correct value, e.g., <strong>platform = “transcriptomics by single-cell RNA-seq”</strong>. You can use the <code><a href="reference/updateSignature.html">updateSignature()</a></code> function as follows:</p>
+<p><strong>For example:</strong> If the <code>platform</code> information in the previous uploaded signature, <code>"Myc_reduce_mice_liver_24m_readme"</code>, is incorrect, and you wish to update the <code>platform</code> information with a correct value, e.g., <code>platform = "transcriptomics by single-cell RNA-seq"</code>. You can use the <code><a href="reference/updateSignature.html">SigRepo::updateSignature()</a></code> function as follows:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># 1. Revise the metadata object with new platform = transcriptomics by single-cell RNA-seq</span></span>
+<code class="sourceCode R"><span><span class="co"># Revise the metadata object with new platform = "transcriptomics by single-cell RNA-seq"</span></span>
 <span><span class="va">metadata_revised</span> <span class="op">&lt;-</span> <span class="fu">OmicSignature</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/OmicSignature/man/createMetadata.html" class="external-link">createMetadata</a></span><span class="op">(</span></span>
 <span>  <span class="co"># required attributes:</span></span>
 <span>  signature_name <span class="op">=</span> <span class="st">"Myc_reduce_mice_liver_24m_readme"</span>,</span>
@@ -825,14 +877,14 @@
 <span>  score_cutoff <span class="op">=</span> <span class="fl">5</span>,</span>
 <span></span>
 <span>  <span class="co"># other optional built-in attributes:</span></span>
-<span>  keywords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Myc"</span>, <span class="st">"KO"</span>, <span class="st">"longevity"</span><span class="op">)</span>,</span>
+<span>  keywords <span class="op">=</span> <span class="st">"Myc, KO, longevity"</span>,</span>
 <span>  cutoff_description <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  author <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  PMID <span class="op">=</span> <span class="fl">25619689</span>,</span>
 <span>  year <span class="op">=</span> <span class="fl">2015</span>,</span>
 <span></span>
 <span>  <span class="co"># example of customized attributes:</span></span>
-<span>  others <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"animal_strain"</span> <span class="op">=</span> <span class="st">"C57BL/6"</span><span class="op">)</span></span>
+<span>  others <span class="op">=</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"animal_strain"</span> <span class="op">=</span> <span class="st">"C57BL/6"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Create difexp object</span></span>
@@ -849,7 +901,7 @@
 <span></span>
 <span><span class="co"># Create signature object</span></span>
 <span><span class="va">signature</span> <span class="op">&lt;-</span> <span class="va">difexp</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">score</span><span class="op">)</span> <span class="op">&gt;</span> <span class="va">metadata</span><span class="op">$</span><span class="va">score_cutoff</span> <span class="op">&amp;</span> <span class="va">.data</span><span class="op">$</span><span class="va">adj_p</span> <span class="op">&lt;</span> <span class="va">metadata</span><span class="op">$</span><span class="va">adj_p_cutoff</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">score</span><span class="op">)</span> <span class="op">&gt;</span> <span class="va">metadata_revised</span><span class="op">$</span><span class="va">score_cutoff</span> <span class="op">&amp;</span> <span class="va">.data</span><span class="op">$</span><span class="va">adj_p</span> <span class="op">&lt;</span> <span class="va">metadata_revised</span><span class="op">$</span><span class="va">adj_p_cutoff</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"probe_id"</span>, <span class="st">"feature_name"</span>, <span class="st">"score"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>group_label <span class="op">=</span> <span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">score</span> <span class="op">&gt;</span> <span class="fl">0</span>, <span class="st">"MYC Reduce"</span>, <span class="st">"WT"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -862,7 +914,7 @@
 <span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_readme created.</span></span></code></pre></div>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Now, let's search for Myc_reduce_mice_liver_24m_readme in the database</span></span>
-<span><span class="co"># in which we would like to revise the value of platform to 'transcriptomics by single-cell RNA-seq'</span></span>
+<span><span class="co"># in which we would like to revise the value of platform to "transcriptomics by single-cell RNA-seq"</span></span>
 <span><span class="va">signature_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/searchSignature.html">searchSignature</a></span><span class="op">(</span></span>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  signature_name <span class="op">=</span> <span class="va">metadata_revised</span><span class="op">$</span><span class="va">signature_name</span></span>
@@ -877,8 +929,8 @@
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_readme created.</span></span>
-<span><span class="co">#&gt;  signature_id = '11' has been updated.</span></span></code></pre></div>
-<p>Let’s look up <strong>signature_name = “Myc_reduce_mice_liver_24m_readme”</strong> and see if the value of <code>platform</code> has been changed.</p>
+<span><span class="co">#&gt;  signature_id = '460' has been updated.</span></span></code></pre></div>
+<p>Let’s look up <code>signature_name = "Myc_reduce_mice_liver_24m_readme"</code> and see if the value of <code>platform</code> has been changed.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">signature_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/searchSignature.html">searchSignature</a></span><span class="op">(</span></span>
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
@@ -893,35 +945,35 @@
 <span><span class="op">}</span></span></code></pre></div>
 <table style="width:100%;" class="table">
 <colgroup>
-<col width="2%">
-<col width="6%">
-<col width="2%">
 <col width="3%">
 <col width="3%">
-<col width="2%">
-<col width="8%">
-<col width="2%">
-<col width="2%">
-<col width="7%">
-<col width="2%">
-<col width="2%">
-<col width="3%">
-<col width="2%">
-<col width="4%">
-<col width="3%">
-<col width="2%">
-<col width="1%">
-<col width="5%">
-<col width="2%">
 <col width="3%">
 <col width="3%">
-<col width="4%">
-<col width="2%">
-<col width="4%">
-<col width="2%">
-<col width="6%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
+<col width="3%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th align="right">signature_id</th>
 <th align="left">signature_name</th>
 <th align="left">organism</th>
@@ -950,8 +1002,8 @@
 <th align="right">visibility</th>
 <th align="left">signature_hashkey</th>
 </tr></thead>
-<tbody><tr class="odd">
-<td align="right">11</td>
+<tbody><tr>
+<td align="right">460</td>
 <td align="left">Myc_reduce_mice_liver_24m_readme</td>
 <td align="left">Mus musculus</td>
 <td align="left">bi-directional</td>
@@ -966,7 +1018,7 @@
 <td align="right">NA</td>
 <td align="right">0.05</td>
 <td align="left">NA</td>
-<td align="left">Myc,KO,longevity</td>
+<td align="left">Myc, KO, longevity</td>
 <td align="right">25619689</td>
 <td align="right">2015</td>
 <td align="left">animal_strain: &lt;C57BL/6&gt;</td>
@@ -974,13 +1026,13 @@
 <td align="right">884</td>
 <td align="right">5</td>
 <td align="right">10</td>
-<td align="left">root</td>
-<td align="left">2025-09-24 13:07:00</td>
+<td align="left">montilab</td>
+<td align="left">2025-10-18 00:39:50</td>
 <td align="right">0</td>
-<td align="left">7e24a413c1287f840d492b2963c263a5</td>
+<td align="left">a10176ce6e727366cf740e2bfb56e2bc</td>
 </tr></tbody>
 </table>
-<p>Finally, remove <strong>signature_name = “Myc_reduce_mice_liver_24m_readme”</strong> from the database</p>
+<p>Finally, remove <code>signature_name = "Myc_reduce_mice_liver_24m_readme"</code> from the database</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Let's search for signature_name = "Myc_reduce_mice_liver_24m_readme" in the database</span></span>
 <span><span class="va">signature_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/searchSignature.html">searchSignature</a></span><span class="op">(</span></span>
@@ -989,18 +1041,18 @@
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># If the signature exists, remove it from the database</span></span>
-<span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">signature_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="kw">if</span><span class="op">(</span><span class="fu">base</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">signature_tbl</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/deleteSignature.html">deleteSignature</a></span><span class="op">(</span></span>
 <span>    conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>    signature_id <span class="op">=</span> <span class="va">signature_tbl</span><span class="op">$</span><span class="va">signature_id</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Remove difexp belongs to signature_id = '11' from the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '11' from 'signatures' table of the database.</span></span>
-<span><span class="co">#&gt; Remove features belongs to signature_id = '11' from 'signature_feature_set' table of the database.</span></span>
-<span><span class="co">#&gt; Remove user access to signature_id = '11' from 'signature_access' table of the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '11' from 'signature_collection_access' table of the database.</span></span>
-<span><span class="co">#&gt; signature_id = '11' has been removed.</span></span></code></pre></div>
+<span><span class="co">#&gt; Remove difexp belongs to signature_id = '460' from the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '460' from 'signatures' table of the database.</span></span>
+<span><span class="co">#&gt; Remove features belongs to signature_id = '460' from 'signature_feature_set' table of the database.</span></span>
+<span><span class="co">#&gt; Remove user access to signature_id = '460' from 'signature_access' table of the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '460' from 'signature_collection_access' table of the database.</span></span>
+<span><span class="co">#&gt; signature_id = '460' has been removed.</span></span></code></pre></div>
 </div>
 <div class="section level1">
 <h1 id="additional-guides">Additional Guides<a class="anchor" aria-label="anchor" href="#additional-guides"></a>
@@ -1039,12 +1091,12 @@
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
 <li>
-<a href="https://github.com/RC-88" class="external-link">Reina Chau</a> <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0003-3012-1404" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
+<a href="https://github.com/RC-88" class="external-link">Reina Chau</a> <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0003-3012-1404" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 <li>
-<a href="https://github.com/Cvicnaire" class="external-link">Cameron Vicnaire</a> <br><small class="roles"> Author </small>  </li>
-<li>Mengze Li <br><small class="roles"> Author </small>  </li>
+<a href="https://github.com/Cvicnaire" class="external-link">Cameron Vicnaire</a> <br><small class="roles"> Author </small>   </li>
+<li>Mengze Li <br><small class="roles"> Author </small>   </li>
 <li>
-<a href="https://github.com/tetomonti" class="external-link">Stefano Monti</a> <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-9376-0660" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
+<a href="https://github.com/tetomonti" class="external-link">Stefano Monti</a> <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0002-9376-0660" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 </ul>
 </div>
 
@@ -1059,7 +1111,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer>

@@ -3,7 +3,9 @@
 #' @param conn_handler A handler uses to establish connection to the database 
 #' obtained from SigRepo::newConnhandler() (required)
 #' @param feature_name A list of feature names to look up. 
+#' Default is NULL which will return all of the feature names in the database.
 #' @param organism A list of organism to look up.
+#' Default is NULL which will return all of the organisms in the database.
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
 #' 
@@ -37,7 +39,8 @@ searchProteomicsFeatureSet <- function(
     feature_tbl <- SigRepo::lookup_table_sql(
       conn = conn, 
       db_table_name = ref_table, 
-      return_var = "*", 
+      return_var = "feature_name", 
+      exclude_return_var = "feature_id",
       check_db_table = TRUE
     )  
     
@@ -46,7 +49,8 @@ searchProteomicsFeatureSet <- function(
     feature_tbl <- SigRepo::lookup_table_sql(
       conn = conn, 
       db_table_name = ref_table, 
-      return_var = "*", 
+      return_var = "feature_name", 
+      exclude_return_var = "feature_id",
       filter_coln_var = "feature_name",
       filter_coln_val = base::list("feature_name" = base::unique(feature_name)),
       check_db_table = TRUE
