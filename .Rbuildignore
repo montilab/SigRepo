@@ -33,3 +33,4 @@
 ^uninstall_sigrepo\.sh$
 ^_pkgdown\.yml$
 ^README\.Rmd$
+^\.Rproj\.user$
