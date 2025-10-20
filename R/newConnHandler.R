@@ -54,7 +54,7 @@ newConnHandler <- function(
       api_port = api_port,
       user = user,
       password = password,
-      localhost = localhost
+      localhost = base::ifelse(localhost == 1, 1, 0)
     )
   )
   
