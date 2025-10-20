@@ -36,7 +36,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>newConnHandler</h1>
-      <small class="dont-index">Source: <a href="https://github.com/montilab/SigRepo/blob/HEAD/R/newConnHandler.R" class="external-link"><code>R/newConnHandler.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/montilab/SigRepo/blob/master/R/newConnHandler.R" class="external-link"><code>R/newConnHandler.R</code></a></small>
       <div class="d-none name"><code>newConnHandler.Rd</code></div>
     </div>
 
@@ -52,7 +52,8 @@
 <span>  port <span class="op">=</span> <span class="fl">3306</span>,</span>
 <span>  api_port <span class="op">=</span> <span class="fl">8020</span>,</span>
 <span>  user <span class="op">=</span> <span class="st">"guest"</span>,</span>
-<span>  password <span class="op">=</span> <span class="st">"guest"</span></span>
+<span>  password <span class="op">=</span> <span class="st">"guest"</span>,</span>
+<span>  localhost <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -82,6 +83,11 @@
 
 <dt id="arg-password">password<a class="anchor" aria-label="anchor" href="#arg-password"></a></dt>
 <dd><p>Password associated with the user (required)</p></dd>
+
+
+<dt id="arg-localhost">localhost<a class="anchor" aria-label="anchor" href="#arg-localhost"></a></dt>
+<dd><p>Whether the connection is established through a localhost.
+Default is FALSE.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -36,7 +36,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>checkPermissions</h1>
-      <small class="dont-index">Source: <a href="https://github.com/montilab/SigRepo/blob/HEAD/R/checkFunctions.R" class="external-link"><code>R/checkFunctions.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/montilab/SigRepo/blob/master/R/checkFunctions.R" class="external-link"><code>R/checkFunctions.R</code></a></small>
       <div class="d-none name"><code>checkPermissions.Rd</code></div>
     </div>
 
@@ -62,11 +62,12 @@
 
 
 <dt id="arg-action-type">action_type<a class="anchor" aria-label="anchor" href="#arg-action-type"></a></dt>
-<dd><p>An established connection to database using SigRepo::newConnhandler()</p></dd>
+<dd><p>A list of actions that the connected user can perform.
+Options: SELECT, INSERT, UPDATE, DELETE, CREATE USER</p></dd>
 
 
 <dt id="arg-required-role">required_role<a class="anchor" aria-label="anchor" href="#arg-required-role"></a></dt>
-<dd><p>An established connection to database using SigRepo::newConnhandler()</p></dd>
+<dd><p>The required role of the user who can perform the action.</p></dd>
 
 </dl></div>
 

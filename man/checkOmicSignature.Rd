@@ -4,15 +4,12 @@
 \alias{checkOmicSignature}
 \title{checkOmicSignature}
 \usage{
-checkOmicSignature(omic_signature, check = TRUE)
+checkOmicSignature(omic_signature)
 }
 \arguments{
-\item{omic_signature}{An R6 class object from OmicSignature package}
-
-\item{check}{A logical value determines whether the OmicSignature object 
-needs to be validated. Default TRUE.}
+\item{omic_signature}{An OmicSignature object from OmicSignature package}
 }
 \description{
-Check omic_signature is a valid R6 object
+Check if omic_signature is a valid R6 object
 }
 \keyword{internal}

@@ -21,11 +21,8 @@ createSignatureMetadata <- function(
   # Establish user connection ###
   conn <- SigRepo::conn_init(conn_handler = conn_handler)
   
-  # Check if omic_signature is a valid R6 object ####
   # If yes, return whether it has difexp included ####
-  has_difexp <- SigRepo::checkOmicSignature(
-    omic_signature = omic_signature
-  )
+  has_difexp <- base::ifelse(!base::is.null(omic_signature$difexp), 1, 0)
   
   # If has_difexp = TRUE, then get number of difexp
   if(has_difexp == TRUE){
@@ -41,10 +38,10 @@ createSignatureMetadata <- function(
   signature <- omic_signature$signature 
   
   # Create number of up regulated features
-  num_up_regulated <- base::length(which(signature$score > 0))
+  num_up_regulated <- base::length(base::which(base::as.numeric(signature$score) > 0))
 
   # Create number of up regulated features
-  num_down_regulated <- base::length(which(signature$score < 0))
+  num_down_regulated <- base::length(base::which(as.numeric(signature$score) < 0))
   
   # Extract metadata from omic_signature ####
   metadata <- omic_signature$metadata
@@ -75,7 +72,7 @@ createSignatureMetadata <- function(
     db_table_name = "organisms", 
     return_var = c("organism_id", "organism"), 
     filter_coln_var = "organism", 
-    filter_coln_val = list("organism" = lookup_organism),
+    filter_coln_val = base::list("organism" = lookup_organism),
     check_db_table = TRUE
   ) 
   
@@ -179,10 +176,10 @@ createSignatureMetadata <- function(
   
   # covariates ####
   if("covariates" %in% base::names(metadata)){
-    if(base::length(metadata$covariates[1]) == 0){
+    if(base::length(metadata$covariates) == 0){
       covariates <- 'NULL'
     }else{
-      covariates <- metadata$covariates[1]
+      covariates <- base::paste0(metadata$covariates, collapse = ",")
     }
   }else{
     covariates <- 'NULL'
@@ -190,7 +187,7 @@ createSignatureMetadata <- function(
   
   # description ####
   if("description" %in% base::names(metadata)){
-    if(base::length(metadata$description[1]) == 0){
+    if(base::length(metadata$description) == 0){
       description <- 'NULL'
     }else{
       description <- metadata$description[1]
@@ -201,7 +198,7 @@ createSignatureMetadata <- function(
   
   # score_cutoff ####
   if("score_cutoff" %in% base::names(metadata)){
-    if(base::length(metadata$score_cutoff[1]) == 0){
+    if(base::length(metadata$score_cutoff) == 0){
       score_cutoff <- 'NULL'
     }else{
       score_cutoff <-  metadata$score_cutoff[1]
@@ -212,7 +209,7 @@ createSignatureMetadata <- function(
   
   # logfc_cutoff ####
   if("logfc_cutoff" %in% base::names(metadata)){
-    if(base::length(metadata$logfc_cutoff[1]) == 0){
+    if(base::length(metadata$logfc_cutoff) == 0){
       logfc_cutoff <- 'NULL'
     }else{
       logfc_cutoff <- metadata$logfc_cutoff[1]
@@ -223,7 +220,7 @@ createSignatureMetadata <- function(
   
   # p_value_cutoff ####
   if("p_value_cutoff" %in% base::names(metadata)){
-    if(base::length(metadata$p_value_cutoff[1]) == 0){
+    if(base::length(metadata$p_value_cutoff) == 0){
       p_value_cutoff <- 'NULL'
     }else{
       p_value_cutoff <- metadata$p_value_cutoff[1]
@@ -234,7 +231,7 @@ createSignatureMetadata <- function(
   
   # adj_p_cutoff ####
   if("adj_p_cutoff" %in% base::names(metadata)){
-    if(base::length(metadata$adj_p_cutoff[1]) == 0){
+    if(base::length(metadata$adj_p_cutoff) == 0){
       adj_p_cutoff <- 'NULL'
     }else{
       adj_p_cutoff <- metadata$adj_p_cutoff[1]
@@ -245,7 +242,7 @@ createSignatureMetadata <- function(
   
   # cutoff_description ####
   if("cutoff_description" %in% base::names(metadata)){
-    if(base::length(metadata$cutoff_description[1]) == 0){
+    if(base::length(metadata$cutoff_description) == 0){
       cutoff_description <- 'NULL'
     }else{
       cutoff_description <- metadata$cutoff_description[1]
@@ -346,7 +343,7 @@ createSignatureMetadata <- function(
   # Disconnect from database ####
   base::suppressWarnings(DBI::dbDisconnect(conn)) 
   
-  # Return the metadata tbl ####
+  # Return the metadata tbl
   return(metadata_tbl)
   
 }

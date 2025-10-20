@@ -23,21 +23,22 @@ verbose <- function(...){
   
   # Fetch verbose option
   opt <- base::getOption("verbose")
-
+  
   # If opt is FALSE
   if(!opt) return(base::invisible(NULL))
   
   # Return messages
   msgs <- base::list(...)
   base::message(msgs, "\n")
-
+  
 }
 
 #' @title checkPermissions
 #' @description Check api key whether it is valid to access the database
 #' @param conn An established connection to database using SigRepo::newConnhandler() 
-#' @param action_type An established connection to database using SigRepo::newConnhandler() 
-#' @param required_role An established connection to database using SigRepo::newConnhandler() 
+#' @param action_type A list of actions that the connected user can perform. 
+#' Options: SELECT, INSERT, UPDATE, DELETE, CREATE USER
+#' @param required_role The required role of the user who can perform the action. 
 #' 
 #' @keywords internal 
 #' 
@@ -334,43 +335,15 @@ checkDuplicatedEmails <- function(
 }
 
 #' @title checkOmicSignature
-#' @description Check omic_signature is a valid R6 object
-#' @param omic_signature An R6 class object from OmicSignature package
-#' @param check A logical value determines whether the OmicSignature object 
-#' needs to be validated. Default TRUE.
+#' @description Check if omic_signature is a valid R6 object
+#' @param omic_signature An OmicSignature object from OmicSignature package
 #' 
 #' @keywords internal 
 #' 
 #' @export
 checkOmicSignature <- function(
-    omic_signature,
-    check = TRUE
+    omic_signature
 ){
-  
-  # Whether to validate the object
-  if(check == FALSE){
-    
-    # Check difexp is provided ####
-    if("difexp" %in% base::names(omic_signature)){
-      difexp <- omic_signature$difexp
-      if(base::is.null(difexp)){
-        difexp <- NULL
-      }else{
-        # Check if difexp is a data frame 
-        if(!methods::is(difexp, "data.frame") || base::length(difexp) == 0) 
-          base::stop("'difexp' in OmicSignature must be a data frame object and cannot be empty.")
-      }
-    }else{
-      difexp <- NULL
-    }
-    
-    # Create has_difexp variable to store whether omic_signature has difexp included 
-    has_difexp <- base::ifelse(!base::is.null(difexp), 1, 0) 
-    
-    # Return difexp status
-    return(has_difexp)
-    
-  }
   
   # Check if omic_signature is an OmicSignature class object ####
   if(!methods::is(omic_signature, "OmicSignature"))
@@ -399,7 +372,7 @@ checkOmicSignature <- function(
   # Check signature name (required) ####
   if(base::length(metadata$signature_name[1]) == 0 || metadata$signature_name[1] %in% c(NA, ""))
     base::stop("'signature_name' in OmicSignature's metadata object is required and cannot be empty.")
-
+  
   # Check organism (required) #####
   if(base::length(metadata$organism[1]) == 0 || metadata$organism[1] %in% c(NA, ""))
     base::stop("'organism' in OmicSignature's metadata object is required and cannot be empty.")
@@ -430,13 +403,13 @@ checkOmicSignature <- function(
   # Check required signature fields ####
   signature_fields <- c('feature_name', 'probe_id', 'score')
   
-  if(any(!signature_fields %in% base::colnames(signature)))
+  if(base::any(!signature_fields %in% base::colnames(signature)))
     base::stop(base::sprintf("'signature' in OmicSignature object must have the following column names: %s", base::paste0(signature_fields, collapse = ", ")))
   
   if(metadata$direction_type[1] %in% c("bi-directional", "categorical") && !"group_label" %in% base::colnames(signature)){
     base::stop(base::sprintf("'signature' in OmicSignature object requires a 'group_label' variable as the direction of the signature is 'bi-directional' or 'categorical'"))
-  }else{
-    signature <- signature %>% dplyr::mutate(group_label = NULL)
+  }else if(metadata$direction_type[1] %in% c("uni-directional") && !"group_label" %in% base::colnames(signature)){
+    signature <- signature %>% dplyr::mutate(group_label = "")
   }
   
   # Make sure required column fields do not have any empty values ####
@@ -462,11 +435,11 @@ checkOmicSignature <- function(
   
   if(!base::is.null(difexp) && base::any(!difexp_req_fields %in% base::colnames(difexp)) && base::all(!difexp_opt_fields %in% base::colnames(difexp)))
     base::stop(base::sprintf("'difexp' in OmicSignature object must have the following required column names: %s, and as least one of the following fields: %s", base::paste0("'", difexp_req_fields, "'", collapse = ", "), base::paste0("'", difexp_opt_fields, "'", collapse = "/")))
-
+  
   if(!base::is.null(difexp) && metadata$direction_type[1] %in% c("bi-directional", "categorical") && !"group_label" %in% base::colnames(difexp)){
     base::stop(base::sprintf("When the direction of the signature is bi-directional or categorical, 'difexp' in OmicSignature requires a 'group_label' variable."))
-  }else{
-    difexp <- difexp %>% dplyr::mutate(group_label = NULL)
+  }else if(!base::is.null(difexp) && metadata$direction_type[1] %in% c("uni-directional") && !"group_label" %in% base::colnames(difexp)){
+    difexp <- difexp %>% dplyr::mutate(group_label = "")
   }
   
   # Make sure required column fields do not have any empty values ####
@@ -481,14 +454,89 @@ checkOmicSignature <- function(
     base::stop("Some probe_ids in the `signature` object are not included in the probe_ids of the `difexp` object.")
   }
   
-  # Return difexp status
-  return(has_difexp)
+  # Check whether covariates is given ####
+  if(!"covariates" %in% base::names(metadata)){
+    metadata$covariates <- NULL
+  }else{
+    metadata$covariates <- base::paste0(metadata$covariates, collapse = ",")
+  }
+  
+  # Check whether description is given ####
+  if(!"description" %in% base::names(metadata)){
+    metadata$description <- NULL
+  }
+  
+  # Check whether score_cutoff is given ####
+  if(!"score_cutoff" %in% base::names(metadata)){
+    metadata$score_cutoff <- NULL
+  }
+  
+  # Check whether logfc_cutoff is given ####
+  if(!"logfc_cutoff" %in% base::names(metadata)){
+    metadata$logfc_cutoff <- NULL
+  }
+  
+  # Check whether p_value_cutoff is given ####
+  if(!"p_value_cutoff" %in% base::names(metadata)){
+    metadata$p_value_cutoff <- NULL
+  }
+  
+  # Check whether adj_p_cutoff is given ####
+  if(!"adj_p_cutoff" %in% base::names(metadata)){
+    metadata$adj_p_cutoff <- NULL
+  }
+  
+  # Check cutoff_description is given ####
+  if(!"cutoff_description" %in% base::names(metadata)){
+    metadata$cutoff_description <- NULL
+  }
+  
+  # Check whether keywords is given ####
+  if(!"keywords" %in% base::names(metadata)){
+    metadata$keywords <- NULL
+  }else{
+    metadata$keywords <- base::paste0(metadata$keywords, collapse = ",")
+  }
+  
+  # Check whether PMID is given ####
+  if(!"PMID" %in% base::names(metadata)){
+    metadata$PMID <- NULL
+  }else{
+    metadata$PMID <- base::paste0(metadata$PMID, collapse = ",")
+  }
+  
+  # Check if year is given ####
+  if(!"year" %in% base::names(metadata)){
+    metadata$year <- NULL
+  }else{
+    metadata$year <- base::paste0(metadata$year, collapse = ",")
+  }
+  
+  # Check whether others is given ####
+  if(!"others" %in% base::names(metadata)){
+    metadata$others <- NULL
+  } 
+  
+  # Update signature and difexp in signature objects
+  omic_signature <- base::tryCatch({
+    OmicSignature::OmicSignature$new(
+      metadata = metadata,
+      signature = signature,
+      difexp = difexp
+    )
+  }, error = function(e){
+    # Return error message
+    base::stop("OmicSignature Error: ", e, "\n")
+  })
+  
+  # Return difexp status and omic_signature
+  return(omic_signature = omic_signature)
   
 }
 
 
 #' @title checkOmicCollection
-#' @description Check omic_signature is a valid R6 object
+#' @description Check if omic_collection is a valid R6 object
 #' @param omic_collection An OmicSignatureCollection object from OmicSignature package
 #' 
 #' @keywords internal
@@ -516,7 +564,7 @@ checkOmicCollection <- function(
   # Check required metadata fields ####
   metadata_fields <- c('collection_name', 'description')
   
-  if(any(!metadata_fields %in% base::names(metadata)))
+  if(base::any(!metadata_fields %in% base::names(metadata)))
     base::stop("'metadata' in OmicSignatureCollection must have the following names:", base::paste0(metadata_fields, collapse = ", "))
   
   # Extract OmicSigList from omic_collection ####
@@ -526,18 +574,35 @@ checkOmicCollection <- function(
   if(!methods::is(omic_sig_list, "list"))
     base::stop("'OmicSigList' in OmicSignatureCollection must be a list containning a list of signature objects.")
   
+  # Create a place holder to store signature collection
+  omic_signature_collection <- base::list()
+  
   # Check required signature fields ####
-  purrr::walk(
-    base::seq_along(omic_sig_list),
-    function(c){
-      #c=1;
-      SigRepo::checkOmicSignature(
-        omic_signature = omic_sig_list[[c]],
-        check = TRUE
-      )
-    }
-  )
-
+  for(c in base::seq_along(omic_sig_list)){
+    #c=1;
+    omic_signature <- SigRepo::checkOmicSignature(
+      omic_signature = omic_sig_list[[c]]
+    )
+    # Append OmicSignature object to overall list
+    omic_signature_collection <- c(
+      omic_signature_collection, 
+      omic_signature
+    )
+  }
+  
+  # Create an OmicSignatureCollection object
+  omic_collection <- base::tryCatch({
+    OmicSignature::OmicSignatureCollection$new(
+      metadata = metadata,
+      OmicSigList = omic_signature_collection
+    )
+  }, error = function(e){
+    base::stop("OmicSignatureCollection Error: ", e, "\n")
+  })
+  
+  # Return omic_collection
+  return(omic_collection = omic_collection)
+  
 }
 
 #' @title getNumOfObs
@@ -558,14 +623,14 @@ getNumOfObs <- function(
   
   # Get number of observations 
   n_obs <- base::tryCatch({
-    base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = statement))
+    base::suppressWarnings(
+      DBI::dbGetQuery(conn = conn, statement = statement)
+    )
   }, error = function(e){
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn))  
     # Return error message
     base::stop(e, "\n")
-  }, warning = function(w){
-    base::message(w, "\n")
   })
   
   # Return number of observations 
@@ -601,14 +666,14 @@ getDBColNames <- function(
   
   # Run sql statement
   db_table <- base::tryCatch({
-    base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = statement))
+    base::suppressWarnings(
+      DBI::dbGetQuery(conn = conn, statement = statement)
+    )
   }, error = function(e){
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn))    
     # Return error message
     base::stop(e, "\n")
-  }, warning = function(w){
-    base::message(w, "\n")
   })
   
   col_names <- base::colnames(db_table)

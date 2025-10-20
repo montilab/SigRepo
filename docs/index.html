@@ -177,13 +177,17 @@
 <span>  conn_handler <span class="op">=</span> <span class="va">conn_handler</span>, </span>
 <span>  omic_signature <span class="op">=</span> <span class="va">LLFS_Aging_Gene_2023</span></span>
 <span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning in private$checkMetadata(metadata, signatureType =</span></span>
+<span><span class="co">#&gt; metadata$direction_type, : Organism is not in the predefined list. Ignore this</span></span>
+<span><span class="co">#&gt; message if intentional.</span></span>
+<span><span class="co">#&gt;   [Success] OmicSignature object LLFS_Aging_Gene_2023 created.</span></span>
 <span><span class="co">#&gt; Uploading signature metadata to the database...</span></span>
 <span><span class="co">#&gt; Saving difexp to the database...</span></span>
 <span><span class="co">#&gt; now dyn.load("/Library/Frameworks/R.framework/Versions/4.5-x86_64/Resources/library/curl/libs/curl.so") ...</span></span>
 <span><span class="co">#&gt; Adding signature owner to the signature access table of the database...</span></span>
 <span><span class="co">#&gt; Adding signature feature set to the database...</span></span>
 <span><span class="co">#&gt; Finished uploading.</span></span>
-<span><span class="co">#&gt; ID of the uploaded signature: 489</span></span></code></pre></div>
+<span><span class="co">#&gt; ID of the uploaded signature: 518</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="example-2-upload-myc_reduce_mice_liver_24m-signature">
@@ -223,6 +227,7 @@
 <span>  omic_signature <span class="op">=</span> <span class="va">Myc_reduce_mice_liver_24m</span>,</span>
 <span>  return_missing_features <span class="op">=</span> <span class="cn">TRUE</span>       <span class="co"># Whether to return a list of missing features during upload.</span></span>
 <span><span class="op">)</span></span>
+<span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m created.</span></span>
 <span><span class="co">#&gt; Uploading signature metadata to the database...</span></span>
 <span><span class="co">#&gt; Saving difexp to the database...</span></span>
 <span><span class="co">#&gt; Adding signature owner to the signature access table of the database...</span></span>
@@ -414,12 +419,13 @@
 <span>  return_signature_id <span class="op">=</span> <span class="cn">FALSE</span>,        <span class="co"># Whether to return the uploaded signature id. Default is FALSE.</span></span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>                      <span class="co"># Whether to print diagnostic messages. Default is TRUE.</span></span>
 <span><span class="op">)</span></span>
+<span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_readme created.</span></span>
 <span><span class="co">#&gt; Uploading signature metadata to the database...</span></span>
 <span><span class="co">#&gt; Saving difexp to the database...</span></span>
 <span><span class="co">#&gt; Adding signature owner to the signature access table of the database...</span></span>
 <span><span class="co">#&gt; Adding signature feature set to the database...</span></span>
 <span><span class="co">#&gt; Finished uploading.</span></span>
-<span><span class="co">#&gt; ID of the uploaded signature: 491</span></span></code></pre></div>
+<span><span class="co">#&gt; ID of the uploaded signature: 520</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level1">
@@ -470,7 +476,7 @@
 <col width="3%">
 <col width="3%">
 </colgroup>
-<thead><tr>
+<thead><tr class="header">
 <th align="right">signature_id</th>
 <th align="left">signature_name</th>
 <th align="left">organism</th>
@@ -500,7 +506,7 @@
 <th align="left">signature_hashkey</th>
 </tr></thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td align="right">213</td>
 <td align="left">Aging_Hs_HNSC_RNASeq_TCGA_ACC_MontiLab2025</td>
 <td align="left">Homo sapiens</td>
@@ -529,7 +535,7 @@
 <td align="right">0</td>
 <td align="left">37b8bb25907349dfaa1b38fecc9e872b</td>
 </tr>
-<tr>
+<tr class="even">
 <td align="right">214</td>
 <td align="left">Aging_Hs_HNSC_RNASeq_TCGA_BLCA_MontiLab2025</td>
 <td align="left">Homo sapiens</td>
@@ -558,7 +564,7 @@
 <td align="right">0</td>
 <td align="left">28d8ba3d012ecbc6a080996fc2dcd66e</td>
 </tr>
-<tr>
+<tr class="odd">
 <td align="right">215</td>
 <td align="left">Aging_Hs_HNSC_RNASeq_TCGA_BRCA_MontiLab2025</td>
 <td align="left">Homo sapiens</td>
@@ -587,7 +593,7 @@
 <td align="right">0</td>
 <td align="left">9ae65c31c82b6edc15819fb7f8cd0640</td>
 </tr>
-<tr>
+<tr class="even">
 <td align="right">216</td>
 <td align="left">Aging_Hs_HNSC_RNASeq_TCGA_CESC_MontiLab2025</td>
 <td align="left">Homo sapiens</td>
@@ -616,7 +622,7 @@
 <td align="right">0</td>
 <td align="left">e487cfd606e3d4e2214a8e4435b424b8</td>
 </tr>
-<tr>
+<tr class="odd">
 <td align="right">217</td>
 <td align="left">Aging_Hs_HNSC_RNASeq_TCGA_COAD_MontiLab2025</td>
 <td align="left">Homo sapiens</td>
@@ -645,7 +651,7 @@
 <td align="right">0</td>
 <td align="left">afb09a078a63c9342530d2a119698085</td>
 </tr>
-<tr>
+<tr class="even">
 <td align="right">218</td>
 <td align="left">Aging_Hs_HNSC_RNASeq_TCGA_ESCA_MontiLab2025</td>
 <td align="left">Homo sapiens</td>
@@ -723,7 +729,7 @@
 <col width="3%">
 <col width="3%">
 </colgroup>
-<thead><tr>
+<thead><tr class="header">
 <th align="right">signature_id</th>
 <th align="left">signature_name</th>
 <th align="left">organism</th>
@@ -752,8 +758,8 @@
 <th align="right">visibility</th>
 <th align="left">signature_hashkey</th>
 </tr></thead>
-<tbody><tr>
-<td align="right">489</td>
+<tbody><tr class="odd">
+<td align="right">518</td>
 <td align="left">LLFS_Aging_Gene_2023</td>
 <td align="left">Homo sapiens</td>
 <td align="left">bi-directional</td>
@@ -777,7 +783,7 @@
 <td align="right">82</td>
 <td align="right">87</td>
 <td align="left">montilab</td>
-<td align="left">2025-10-18 02:37:13</td>
+<td align="left">2025-10-20 21:18:34</td>
 <td align="right">0</td>
 <td align="left">b35b7c1d387440d474bfcb3cb162c9a6</td>
 </tr></tbody>
@@ -836,12 +842,12 @@
 <span>    signature_id <span class="op">=</span> <span class="va">signature_tbl</span><span class="op">$</span><span class="va">signature_id</span>  </span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Remove difexp belongs to signature_id = '489' from the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '489' from 'signatures' table of the database.</span></span>
-<span><span class="co">#&gt; Remove features belongs to signature_id = '489' from 'signature_feature_set' table of the database.</span></span>
-<span><span class="co">#&gt; Remove user access to signature_id = '489' from 'signature_access' table of the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '489' from 'signature_collection_access' table of the database.</span></span>
-<span><span class="co">#&gt; signature_id = '489' has been removed.</span></span></code></pre></div>
+<span><span class="co">#&gt; Remove difexp belongs to signature_id = '518' from the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '518' from 'signatures' table of the database.</span></span>
+<span><span class="co">#&gt; Remove features belongs to signature_id = '518' from 'signature_feature_set' table of the database.</span></span>
+<span><span class="co">#&gt; Remove user access to signature_id = '518' from 'signature_access' table of the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '518' from 'signature_collection_access' table of the database.</span></span>
+<span><span class="co">#&gt; signature_id = '518' has been removed.</span></span></code></pre></div>
 </div>
 <div class="section level1">
 <h1 id="update-a-signature">Update a signature<a class="anchor" aria-label="anchor" href="#update-a-signature"></a>
@@ -930,7 +936,7 @@
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span><span class="co">#&gt;   [Success] OmicSignature object Myc_reduce_mice_liver_24m_readme created.</span></span>
-<span><span class="co">#&gt;  signature_id = '491' has been updated.</span></span></code></pre></div>
+<span><span class="co">#&gt;  signature_id = '520' has been updated.</span></span></code></pre></div>
 <p>Let’s look up <code>signature_name = "Myc_reduce_mice_liver_24m_readme"</code> and see if the value of <code>platform</code> has been changed.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">signature_tbl</span> <span class="op">&lt;-</span> <span class="fu">SigRepo</span><span class="fu">::</span><span class="fu"><a href="reference/searchSignature.html">searchSignature</a></span><span class="op">(</span></span>
@@ -974,7 +980,7 @@
 <col width="3%">
 <col width="3%">
 </colgroup>
-<thead><tr>
+<thead><tr class="header">
 <th align="right">signature_id</th>
 <th align="left">signature_name</th>
 <th align="left">organism</th>
@@ -1003,8 +1009,8 @@
 <th align="right">visibility</th>
 <th align="left">signature_hashkey</th>
 </tr></thead>
-<tbody><tr>
-<td align="right">491</td>
+<tbody><tr class="odd">
+<td align="right">520</td>
 <td align="left">Myc_reduce_mice_liver_24m_readme</td>
 <td align="left">Mus musculus</td>
 <td align="left">bi-directional</td>
@@ -1028,7 +1034,7 @@
 <td align="right">5</td>
 <td align="right">10</td>
 <td align="left">montilab</td>
-<td align="left">2025-10-18 02:37:41</td>
+<td align="left">2025-10-20 21:19:02</td>
 <td align="right">0</td>
 <td align="left">a10176ce6e727366cf740e2bfb56e2bc</td>
 </tr></tbody>
@@ -1048,12 +1054,12 @@
 <span>    signature_id <span class="op">=</span> <span class="va">signature_tbl</span><span class="op">$</span><span class="va">signature_id</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Remove difexp belongs to signature_id = '491' from the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '491' from 'signatures' table of the database.</span></span>
-<span><span class="co">#&gt; Remove features belongs to signature_id = '491' from 'signature_feature_set' table of the database.</span></span>
-<span><span class="co">#&gt; Remove user access to signature_id = '491' from 'signature_access' table of the database.</span></span>
-<span><span class="co">#&gt; Remove signature_id = '491' from 'signature_collection_access' table of the database.</span></span>
-<span><span class="co">#&gt; signature_id = '491' has been removed.</span></span></code></pre></div>
+<span><span class="co">#&gt; Remove difexp belongs to signature_id = '520' from the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '520' from 'signatures' table of the database.</span></span>
+<span><span class="co">#&gt; Remove features belongs to signature_id = '520' from 'signature_feature_set' table of the database.</span></span>
+<span><span class="co">#&gt; Remove user access to signature_id = '520' from 'signature_access' table of the database.</span></span>
+<span><span class="co">#&gt; Remove signature_id = '520' from 'signature_collection_access' table of the database.</span></span>
+<span><span class="co">#&gt; signature_id = '520' has been removed.</span></span></code></pre></div>
 </div>
 <div class="section level1">
 <h1 id="additional-guides">Additional Guides<a class="anchor" aria-label="anchor" href="#additional-guides"></a>

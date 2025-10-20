@@ -14,7 +14,7 @@ showOrganismErrorMessage <- function(
   
   base::stop(
     base::sprintf("\nThe following organisms do not exist in the '%s' table of the database: %s\n", db_table_name, base::paste0("'", unknown_values, "'", collapse = "\n")), 
-    base::sprintf("\nYou can use 'searchOrganisms()' to see a list of available organisms.\n"),
+    base::sprintf("\nYou can use 'searchOrganism()' to see a list of available organisms.\n"),
     base::sprintf("\nTo add these organisms to our database, please contact our admin for support.\n")
   ) 
   
@@ -35,7 +35,7 @@ showPlatformErrorMessage <- function(
   
   base::stop(
     base::sprintf("\nThe following platforms do not exist in the '%s' table of the database: %s\n", db_table_name, base::paste0("'", unknown_values, "'", collapse = "\n")), 
-    base::sprintf("\nYou can use 'searchPlatforms()' to see a list of available platforms.\n"),
+    base::sprintf("\nYou can use 'searchPlatform()' to see a list of available platforms.\n"),
     base::sprintf("\nIf you think you can use one of the already available platforms, please update your signature accordingly!\n"),
     base::sprintf("\nOtherwise, please consider adding your newly defined platforms to the database using SigRepo::addPlatform() before importing your signature.\n")
   )
@@ -57,7 +57,7 @@ showSampleTypeErrorMessage <- function(
   
   base::stop(
     base::sprintf("\nThe following sample types do not existed in the '%s' table of the database: %s\n", db_table_name, base::paste0("'", unknown_values, "'", collapse = "\n")), 
-    base::sprintf("\nYou can use 'searchSampleTypes()' to see a list of available sample types.\n"),
+    base::sprintf("\nYou can use 'searchSampleType()' to see a list of available sample types.\n"),
     base::sprintf("\nTo add these sample types to our database, please contact our admin for support.\n")
   )
   

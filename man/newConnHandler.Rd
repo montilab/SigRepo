@@ -10,7 +10,8 @@ newConnHandler(
   port = 3306,
   api_port = 8020,
   user = "guest",
-  password = "guest"
+  password = "guest",
+  localhost = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,9 @@ newConnHandler(
 \item{user}{Name of user to establish the connection (required)}
 
 \item{password}{Password associated with the user (required)}
+
+\item{localhost}{Whether the connection is established through a localhost.
+Default is FALSE.}
 }
 \value{
 A list of user credentials to establish connection to the remote database.

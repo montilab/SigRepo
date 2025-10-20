@@ -76,10 +76,15 @@ addSignature <- function(
       missing_users <- base::setdiff(add_users$user_name, valid_users$user_name)
       # Check for any missing users
       if(base::length(missing_users) > 0)
-        base::stop(base::sprintf("The following users do not exist in the database: %s", base::paste(missing_users, collapse = ", ")))
+        base::stop(base::sprintf("The following users do not exist in the database: %s", base::paste0(missing_users, collapse = ", ")))
     }
     
   }
+  
+  # Check if omic_signature is a valid R6 object ####
+  omic_signature <- SigRepo::checkOmicSignature(
+    omic_signature = omic_signature
+  )
 
   # Create signature metadata table ####
   metadata_tbl <- SigRepo::createSignatureMetadata(
@@ -160,7 +165,7 @@ addSignature <- function(
       db_table_name = db_table_name, 
       return_var = "*", 
       filter_coln_var = "signature_hashkey",
-      filter_coln_val = list("signature_hashkey" = metadata_tbl$signature_hashkey[1]),
+      filter_coln_val = base::list("signature_hashkey" = metadata_tbl$signature_hashkey[1]),
       check_db_table = FALSE
     ) 
     
@@ -176,7 +181,7 @@ addSignature <- function(
       data_path <- base::tempdir()
       base::saveRDS(difexp, file = base::file.path(data_path, base::paste0(metadata_tbl$signature_hashkey[1], ".RDS")))
       # Get API URL
-      api_url <- base::sprintf("http://%s:%s/store_difexp?api_key=%s&signature_hashkey=%s", conn_handler$host[1], conn_handler$api_port[1], conn_info$api_key[1], metadata_tbl$signature_hashkey[1])
+      api_url <- base::sprintf("http://%s:%s/store_difexp?api_key=%s&signature_hashkey=%s", base::ifelse(conn_handler$localhost[1] == TRUE, "localhost", conn_handler$host[1]), conn_handler$api_port[1], conn_info$api_key[1], metadata_tbl$signature_hashkey[1])
       # Store difexp in database
       res <-
         httr::POST(
@@ -450,8 +455,7 @@ addSignature <- function(
     SigRepo::verbose(base::sprintf("ID of the uploaded signature: %s\n", signature_tbl$signature_id[1]))
     
     # Return signature id
-    if(return_signature_id == TRUE)
-      return(signature_tbl$signature_id[1])
+    if(return_signature_id == TRUE) return(signature_tbl$signature_id[1])
 
   } 
 }  
