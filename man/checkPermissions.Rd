@@ -13,9 +13,10 @@ checkPermissions(
 \arguments{
 \item{conn}{An established connection to database using SigRepo::newConnhandler()}
 
-\item{action_type}{An established connection to database using SigRepo::newConnhandler()}
+\item{action_type}{A list of actions that the connected user can perform. 
+Options: SELECT, INSERT, UPDATE, DELETE, CREATE USER}
 
-\item{required_role}{An established connection to database using SigRepo::newConnhandler()}
+\item{required_role}{The required role of the user who can perform the action.}
 }
 \description{
 Check api key whether it is valid to access the database

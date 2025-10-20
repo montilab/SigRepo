@@ -45,18 +45,21 @@ addCollection <- function(
   # Get visibility ####
   visibility <- base::ifelse(visibility == TRUE, 1, 0)
   
-  # Create collection metadata table ####
-  metadata_tbl <- SigRepo::createCollectionMetadata(
-    conn_handler = conn_handler, 
+  # Check if omic_collection is a valid R6 object ####
+  omic_collection <- SigRepo::checkOmicCollection(
     omic_collection = omic_collection
-  ) 
+  )
+  
+  # Extract metadata from omic_collection ####
+  metadata <- omic_collection$metadata
   
   # Add additional variables in collection metadata table ####
-  metadata_tbl <- metadata_tbl |> 
-    dplyr::mutate(
-      user_name = user_name,
-      visibility = visibility
-    )
+  metadata_tbl <- base::data.frame(
+    collection_name = metadata$collection_name,
+    description = metadata$description,
+    user_name = user_name,
+    visibility = visibility
+  )
   
   # Create a hash key to look up whether collection is already existed in the database ####
   metadata_tbl <- SigRepo::createHashKey(
@@ -225,9 +228,7 @@ addCollection <- function(
     SigRepo::verbose(base::sprintf("ID of the uploaded collection: %s\n", collection_tbl$collection_id[1]))
     
     # Return collection id
-    if(return_collection_id == TRUE){
-      return(collection_tbl$collection_id[1])
-    }
+    if(return_collection_id == TRUE) return(collection_tbl$collection_id[1])
 
   }
 }

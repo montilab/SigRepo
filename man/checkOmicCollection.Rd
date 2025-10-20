@@ -10,6 +10,6 @@ checkOmicCollection(omic_collection)
 \item{omic_collection}{An OmicSignatureCollection object from OmicSignature package}
 }
 \description{
-Check omic_signature is a valid R6 object
+Check if omic_collection is a valid R6 object
 }
 \keyword{internal}

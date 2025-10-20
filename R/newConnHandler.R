@@ -6,6 +6,8 @@
 #' @param api_port Port on the server to access database API (required)
 #' @param user Name of user to establish the connection (required)
 #' @param password Password associated with the user (required)
+#' @param localhost Whether the connection is established through a localhost.
+#' Default is FALSE.
 #' @return A list of user credentials to establish connection to the remote database.
 #' 
 #' @export
@@ -15,7 +17,8 @@ newConnHandler <- function(
     port = 3306, 
     api_port = 8020,
     user = "guest", 
-    password = "guest"
+    password = "guest",
+    localhost = FALSE
 ){
   
   # Check dbname ####
@@ -50,7 +53,8 @@ newConnHandler <- function(
       port = port,
       api_port = api_port,
       user = user,
-      password = password
+      password = password,
+      localhost = localhost
     )
   )
   

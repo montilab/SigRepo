@@ -137,10 +137,14 @@ createOmicCollection <- function(
   base::names(omic_signature_list) <- db_signature_tbl$signature_name
   
   # Create an OmicSignatureCollection object
-  OmicCol <- OmicSignature::OmicSignatureCollection$new(
-    metadata = metadata,
-    OmicSigList = omic_signature_list
-  )
+  OmicCol <- base::tryCatch({
+    OmicSignature::OmicSignatureCollection$new(
+      metadata = metadata,
+      OmicSigList = omic_signature_list
+    )
+  }, error = function(e){
+    base::stop("OmicSignatureCollection Error: ", e, "\n")
+  })
   
   # Disconnect from database ####
   base::suppressWarnings(DBI::dbDisconnect(conn))
