@@ -57,7 +57,7 @@ createOmicSignature <- function(
   
   # Create metadata
   metadata <- db_signature_tbl |>
-    dplyr::mutate(PMID = base::as.character(PMID)) |>
+    dplyr::mutate(PMID = base::as.character(.data$PMID)) |>
     dplyr::mutate_if(base::is.character, function(x){ base::ifelse(base::is.na(x), "", x) }) |>
     base::as.list()
   
