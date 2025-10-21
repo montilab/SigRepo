@@ -3,22 +3,21 @@
 #' @param dbname Name of MySQL database to point to (required)
 #' @param host Name of the server where MySQL database is hosted on (required)
 #' @param port Port on the server to connect to MySQL database (required)
-#' @param api_port Port on the server to access database API (required)
 #' @param user Name of user to establish the connection (required)
 #' @param password Password associated with the user (required)
-#' @param localhost Whether the connection is established through a localhost.
-#' Default is FALSE.
-#' @return A list of user credentials to establish connection to the remote database.
+#' @param api_host Name of the server where the API is hosted on (required)
+#' @param api_port Port on the server to access the API (required)
+#' @return A list of user credentials to establish connection to the database.
 #' 
 #' @export
 newConnHandler <- function(
     dbname = 'sigrepo', 
     host = "sigrepo.org", 
     port = 3306, 
-    api_port = 8020,
     user = "guest", 
     password = "guest",
-    localhost = FALSE
+    api_host = "sigrepo.org",
+    api_port = 8020
 ){
   
   # Check dbname ####
@@ -33,10 +32,6 @@ newConnHandler <- function(
   base::stopifnot("'port' must have a length of 1 and cannot be empty and must be a numeric value." = 
                     (base::length(port) == 1 && !port %in% c(NA, "")))
   
-  # Check api_port ####
-  base::stopifnot("'api_port' must have a length of 1 and cannot be empty and must be a numeric value." = 
-                    (base::length(api_port) == 1 && !api_port %in% c(NA, ""))) 
-  
   # Check user ####
   base::stopifnot("'user' must have a length of 1 and cannot be empty." = 
                     (base::length(user) == 1 && !user %in% c(NA, "")))
@@ -44,17 +39,25 @@ newConnHandler <- function(
   # Check password ####
   base::stopifnot("'password' must have a length of 1 and cannot be empty." = 
                     (base::length(password) == 1 && !password %in% c(NA, "")))
+
+  # Check api_host ####
+  base::stopifnot("'api_host' must have a length of 1 and cannot be empty" = 
+                    (base::length(api_host) == 1 && !api_host %in% c(NA, ""))) 
+  
+  # Check api_port ####
+  base::stopifnot("'api_port' must have a length of 1 and cannot be empty and must be a numeric value." = 
+                    (base::length(api_port) == 1 && !api_port %in% c(NA, ""))) 
   
   # Return connection handler ###
   return(
     base::list(
       dbname = dbname,
       host = host,
-      port = port,
-      api_port = api_port,
+      port = base::as.numeric(port),
       user = user,
       password = password,
-      localhost = localhost
+      api_host = api_host,
+      api_port = base::as.numeric(api_port)
     )
   )
   

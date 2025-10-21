@@ -76,7 +76,7 @@ createOmicSignature <- function(
   # If signature has difexp, get a copy by its signature hash key ####
   if(db_signature_tbl$has_difexp[1] == TRUE){
     # Get API URL
-    api_url <- base::sprintf("http://%s:%s/get_difexp?api_key=%s&signature_hashkey=%s", base::ifelse(conn_handler$localhost[1] == TRUE, "localhost", conn_handler$host[1]), conn_handler$api_port[1], conn_info$api_key[1], db_signature_tbl$signature_hashkey[1])
+    api_url <- base::sprintf("http://%s:%s/get_difexp?api_key=%s&signature_hashkey=%s", conn_handler$api_host[1], conn_handler$api_port[1], conn_info$api_key[1], db_signature_tbl$signature_hashkey[1])
     # Get difexp in database
     res <- httr::GET(url = api_url)
     # Check status code

@@ -103,11 +103,11 @@ checkPermissions <- function(
       base::strsplit(",") |> 
       purrr::flatten_chr() |> 
       base::trimws()
-    user_privileges <- c(user_privileges, privs)
+    user_privileges <- c(user_privileges, privs) |> base::unique()
   }
   
   # Check if user has the permission to perform the selected actions in the database
-  if(base::any(!action_type %in% user_privileges)){
+  if(!"ALL PRIVILEGES" %in% base::toupper(user_privileges) && base::any(!action_type %in% user_privileges)){
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn))  
     # Return error message
@@ -128,7 +128,7 @@ checkPermissions <- function(
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn))  
     # Return error message
-    base::stop(sprintf("User = '%s' does not have permission to perform this action in the database.", conn_info$user)) 
+    base::stop(base::sprintf("User = '%s' does not have permission to perform this action in the database.", conn_info$user)) 
   }
   
   # Return user connection and user role

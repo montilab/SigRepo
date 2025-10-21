@@ -36,7 +36,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>newConnHandler</h1>
-      <small class="dont-index">Source: <a href="https://github.com/montilab/SigRepo/blob/HEAD/R/newConnHandler.R" class="external-link"><code>R/newConnHandler.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/montilab/SigRepo/blob/master/R/newConnHandler.R" class="external-link"><code>R/newConnHandler.R</code></a></small>
       <div class="d-none name"><code>newConnHandler.Rd</code></div>
     </div>
 
@@ -50,10 +50,10 @@
 <span>  dbname <span class="op">=</span> <span class="st">"sigrepo"</span>,</span>
 <span>  host <span class="op">=</span> <span class="st">"sigrepo.org"</span>,</span>
 <span>  port <span class="op">=</span> <span class="fl">3306</span>,</span>
-<span>  api_port <span class="op">=</span> <span class="fl">8020</span>,</span>
 <span>  user <span class="op">=</span> <span class="st">"guest"</span>,</span>
 <span>  password <span class="op">=</span> <span class="st">"guest"</span>,</span>
-<span>  localhost <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  api_host <span class="op">=</span> <span class="st">"sigrepo.org"</span>,</span>
+<span>  api_port <span class="op">=</span> <span class="fl">8020</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -73,10 +73,6 @@
 <dd><p>Port on the server to connect to MySQL database (required)</p></dd>
 
 
-<dt id="arg-api-port">api_port<a class="anchor" aria-label="anchor" href="#arg-api-port"></a></dt>
-<dd><p>Port on the server to access database API (required)</p></dd>
-
-
 <dt id="arg-user">user<a class="anchor" aria-label="anchor" href="#arg-user"></a></dt>
 <dd><p>Name of user to establish the connection (required)</p></dd>
 
@@ -85,14 +81,17 @@
 <dd><p>Password associated with the user (required)</p></dd>
 
 
-<dt id="arg-localhost">localhost<a class="anchor" aria-label="anchor" href="#arg-localhost"></a></dt>
-<dd><p>Whether the connection is established through a localhost.
-Default is FALSE.</p></dd>
+<dt id="arg-api-host">api_host<a class="anchor" aria-label="anchor" href="#arg-api-host"></a></dt>
+<dd><p>Name of the server where the API is hosted on (required)</p></dd>
+
+
+<dt id="arg-api-port">api_port<a class="anchor" aria-label="anchor" href="#arg-api-port"></a></dt>
+<dd><p>Port on the server to access the API (required)</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list of user credentials to establish connection to the remote database.</p>
+    <p>A list of user credentials to establish connection to the database.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
