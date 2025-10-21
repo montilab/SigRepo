@@ -92,7 +92,7 @@ deleteSignature <- function(
         )
         
         # If user does not have permission, throw an error message
-        if(nrow(signature_access_tbl) == 0){
+        if(base::nrow(signature_access_tbl) == 0){
           
           # Disconnect from database ####
           base::suppressWarnings(DBI::dbDisconnect(conn)) 
@@ -109,7 +109,7 @@ deleteSignature <- function(
       # Return message
       SigRepo::verbose(base::sprintf("Remove difexp belongs to signature_id = '%s' from the database.", signature_id))
       # Get API URL
-      api_url <- base::sprintf("http://%s:%s/delete_difexp?api_key=%s&signature_hashkey=%s", base::ifelse(conn_handler$localhost[1] == TRUE, "localhost", conn_handler$host[1]), conn_handler$api_port[1], conn_info$api_key[1], signature_tbl$signature_hashkey[1])
+      api_url <- base::sprintf("http://%s:%s/delete_difexp?api_key=%s&signature_hashkey=%s", conn_handler$api_host[1], conn_handler$api_port[1], conn_info$api_key[1], signature_tbl$signature_hashkey[1])
       # Delete difexp from database
       res <- httr::DELETE(url = api_url)
       # Check status code

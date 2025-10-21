@@ -8,10 +8,10 @@ newConnHandler(
   dbname = "sigrepo",
   host = "sigrepo.org",
   port = 3306,
-  api_port = 8020,
   user = "guest",
   password = "guest",
-  localhost = FALSE
+  api_host = "sigrepo.org",
+  api_port = 8020
 )
 }
 \arguments{
@@ -21,17 +21,16 @@ newConnHandler(
 
 \item{port}{Port on the server to connect to MySQL database (required)}
 
-\item{api_port}{Port on the server to access database API (required)}
-
 \item{user}{Name of user to establish the connection (required)}
 
 \item{password}{Password associated with the user (required)}
 
-\item{localhost}{Whether the connection is established through a localhost.
-Default is FALSE.}
+\item{api_host}{Name of the server where the API is hosted on (required)}
+
+\item{api_port}{Port on the server to access the API (required)}
 }
 \value{
-A list of user credentials to establish connection to the remote database.
+A list of user credentials to establish connection to the database.
 }
 \description{
 Create a handler to connect to a remote database.
