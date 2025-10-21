@@ -92,9 +92,7 @@ addCollection <- function(
     )
     
     # Return collection id
-    if(return_collection_id == TRUE){
-      return(collection_tbl$collection_id[1])
-    }
+    if(return_collection_id == TRUE) return(collection_tbl$collection_id[1])
     
   }else{
     
