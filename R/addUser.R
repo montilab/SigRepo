@@ -165,8 +165,7 @@ addUser <- function(
         base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT ALL PRIVILEGES ON `sigrepo`.* TO '%s'@'%%' WITH GRANT OPTION;", table$user_name[u])))
         base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = "FLUSH PRIVILEGES;"))
       }else if(table$user_role[u] == "editor"){
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("REVOKE ALL PRIVILEGES ON `sigrepo`.* FROM '%s'@'%%';", table$user_name[u])))
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SHOW, SELECT ON `sigrepo`.* TO '%s'@'%%';", table$user_name[u])))
+        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT ON `sigrepo`.* TO '%s'@'%%';", table$user_name[u])))
         base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT ON `sigrepo`.`users` TO '%s'@'%%';", table$user_name[u])))
         base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT ON `sigrepo`.`keywords` TO '%s'@'%%';", table$user_name[u])))
         base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT ON `sigrepo`.`phenotypes` TO '%s'@'%%';", table$user_name[u])))
@@ -179,8 +178,7 @@ addUser <- function(
         base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON `sigrepo`.`collection_access` TO '%s'@'%%';", table$user_name[u])))
         base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = "FLUSH PRIVILEGES;"))       
       }else if(table$user_role[u] == "viewer"){
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("REVOKE ALL PRIVILEGES ON `sigrepo`.* FROM '%s'@'%%';", table$user_name[u])))
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SHOW, SELECT ON `sigrepo`.* TO '%s'@'%%';", table$user_name[u])))
+        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT ON `sigrepo`.* TO '%s'@'%%';", table$user_name[u])))
         base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = "FLUSH PRIVILEGES;"))        
       }
     }
