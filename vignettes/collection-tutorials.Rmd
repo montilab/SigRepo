@@ -1,8 +1,8 @@
 ---
-title: "Upload Collection"
+title: "Signature Collection Tutorial"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Upload Collection}
+  %\VignetteIndexEntry{Signature Collection Tutorial}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
