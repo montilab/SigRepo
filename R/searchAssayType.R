@@ -25,13 +25,11 @@ searchAssayType <- function(
       "proteomics",
       "metabolomics",
       "methylomics",
-      "genetic_variations",
-      "dna_binding_sites"
+      "SNPs"
     ),
     status = c(
       "Available",
       "Available",
-      "Unavailable",
       "Unavailable",
       "Unavailable",
       "Unavailable"

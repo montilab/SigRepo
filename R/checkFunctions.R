@@ -384,7 +384,7 @@ checkOmicSignature <- function(
     base::stop(base::sprintf("'direction_type' in OmicSignature's metadata object must be one of the following options: %s", base::paste0(direction_type_options, collapse = "/")))
   
   # Check assay_type (required) ####
-  assay_type_options <- c("transcriptomics", "proteomics", "metabolomics", "methylomics", "genetic_variations", "dna_binding_sites")
+  assay_type_options <- c("transcriptomics", "proteomics", "metabolomics", "methylomics", "SNPs")
   
   if(!metadata$assay_type[1] %in% assay_type_options)
     base::stop(base::sprintf("'assay_type' in OmicSignature's metadata object must be one of the following options: %s", base::paste0(assay_type_options, collapse = "/")))
