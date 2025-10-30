@@ -25,3 +25,13 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Get a list of signatures uploaded by a specified user in the database.
 }
+\examples{
+\dontrun{
+SigRepo::getSignature(conn_handler = conn_handler,
+                      signature_id = 56,
+                      signature_name = "test_signature",
+                      verbose = TRUE
+)
+}
+      
+}

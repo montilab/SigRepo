@@ -6,6 +6,13 @@
 #' Default is NULL which will return all of the organisms in the database.
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' SigRepo::searchCollection(conn_handler = conn_handler,
+#'                           organism = "Mus musculus",
+#'                           verbose = TRUE)
+#' }
+#'     
 #'
 #' @export
 searchOrganism <- function(

@@ -19,3 +19,13 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Add platforms to database
 }
+\examples{
+\dontrun{
+# example code
+platform_tbl <- data.frame(platform_name = c("platform_1","platform_2"))
+
+SigRepo::addPlatform(conn_handler = conn_handler,
+                    platform_tbl = platform_tbl,
+                    verbose = TRUE)
+}
+}

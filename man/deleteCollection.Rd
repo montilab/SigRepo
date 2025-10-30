@@ -18,3 +18,10 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Delete a collection from the collection table of the database
 }
+\examples{
+\dontrun{
+#' SigRepo::deleteCollection(conn_handler = conn_handler,
+                          collection_id = 56,
+                          verbose = TRUE)
+}
+}

@@ -7,6 +7,19 @@
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
 #' 
+#' @examples
+#' \dontrun{
+#' # example code
+#' 
+#' organism_tbl <- data.frame(
+#' organism = c("organism_1", "organism_2"))
+#' 
+#' SigRepo::addOrganism(conn_handler = conn_handler,
+#'                      organism_tbl = organism_tbl,
+#'                      verbose = TRUE)
+#'}
+#'    
+#' 
 #' @export
 addOrganism <- function(
     conn_handler,

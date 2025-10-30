@@ -6,6 +6,12 @@
 #' Default is NULL which will return all of the keywords in the database.
 #' @param verbose A logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' SigRepo::searchKeyword(conn_handler = conn_handler,
+#'                        keyword = "test_keyord",
+#'                        verbose = TRUE)
+#' }
 #' 
 #' @export
 searchKeyword <- function(

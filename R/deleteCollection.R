@@ -6,6 +6,12 @@
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
 #' 
+#' @examples
+#' \dontrun{
+#' #' SigRepo::deleteCollection(conn_handler = conn_handler,
+#'                           collection_id = 56,
+#'                           verbose = TRUE)
+#' }
 #' @export
 deleteCollection <- function(
     conn_handler, 

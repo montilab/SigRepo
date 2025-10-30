@@ -8,6 +8,22 @@
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
 #' 
+#' @examples
+#' 
+#' \dontrun{
+#' user_tbl <- data.frame(user_name = "joe12343",
+#'                        user_password = "ffgfd",
+#'                        user_email = "joejoe@gmail.com",
+#'                        user_first = "joe",
+#'                        user_last = "joe",
+#'                        user_affiliation = "Imaginary Tester")
+#'                        
+#' SigRepo::addUser(conn_handler = conn_handler,
+#'                  user_tbl = user_tbl,
+#'                  verbose = FALSE)
+#'
+#' }
+#' 
 #' @export
 addUser <- function(
     conn_handler,

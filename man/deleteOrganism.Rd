@@ -18,3 +18,12 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Remove organisms from database
 }
+\examples{
+\dontrun{
+# example code
+SigRepo::deleteCollection(conn_handler = conn_handler,
+                          organism = 'test_organism',
+                          verbose = TRUE)
+}
+
+}

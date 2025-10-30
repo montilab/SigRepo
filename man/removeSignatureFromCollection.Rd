@@ -26,3 +26,14 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Delete a list of signatures from a collection in the database
 }
+\examples{
+\dontrun{
+SigRepo::removeSignatureFromCollection(conn_handler = conn_handler
+                                       collection_id = 60,
+                                       signature_id = c(59,70),
+                                       verbose = TRUE
+                                       )
+}
+  
+
+}

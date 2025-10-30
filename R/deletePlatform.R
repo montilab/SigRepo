@@ -5,6 +5,12 @@
 #' @param platform_name A list of platform names to be removed (required)
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' SigRepo::deletePlatform(conn_handler = conn_handler,
+#'                         platform_name = "test_platform",
+#'                         verbose = TRUE)
+#' }
 #' 
 #' @export
 deletePlatform <- function(

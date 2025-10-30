@@ -19,3 +19,11 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Get phenotypes in the database
 }
+\examples{
+\dontrun{
+SigRepo::searchUser(conn_handler = conn_handler,
+                    user_namne = "John_Doe")
+}
+
+
+}

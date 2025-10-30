@@ -38,3 +38,13 @@ diagnostic messages. Default is \code{TRUE}.}
 Add a list of users with specific access to a collection 
 in the database
 }
+\examples{
+\dontrun{
+# example code
+SigRepo::addUserToCollection(conn_handler = conn_handler,
+                             collection_id = 67,
+                             user_name = "john smith",
+                             access_type = "editor")
+}
+
+}

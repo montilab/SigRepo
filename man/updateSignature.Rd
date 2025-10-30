@@ -29,3 +29,12 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Update a signature in the database
 }
+\examples{
+\dontrun{
+SigRepo::updateSignature(conn_handler = conn_handler,
+                         signature_id = 20,
+                         omic_signature = test_omic_signature)
+}
+
+
+}

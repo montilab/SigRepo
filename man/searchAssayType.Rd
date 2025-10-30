@@ -24,3 +24,10 @@ associated with this assay type.
 \description{
 Search for omics assay types and its availability status.
 }
+\examples{
+\dontrun{
+SigRepo::searchAssayType(assay_type = "transcriptomics")
+}
+
+
+}

@@ -7,6 +7,16 @@
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
 #' 
+#' @examples
+#' \dontrun{
+#' # example code
+#' sample_type_tbl <- data.frame(c("sample_1","sample_2"))
+#' 
+#' SigRepo::addSampleType(conn_handler = conn_handler,
+#'                        sample_type_tbl = sample_type_tbl,
+#'                        verbose = FALSE)
+#' }
+#' 
 #' @export
 addSampleType <- function(
     conn_handler,

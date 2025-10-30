@@ -38,3 +38,12 @@ diagnostic messages. Default is \code{TRUE}.}
 Add a list of users with specific access to a signature 
 in the database
 }
+\examples{
+\dontrun{
+# example code
+SigRepo::addUserToSignature(conn_handler = conn_handler,
+                             signature_id = 60,
+                             user_name = "john smith",
+                             access_type = "editor")
+}
+}

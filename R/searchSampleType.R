@@ -7,6 +7,13 @@
 #' @param brenda_accession A list of Brenda accession to search by. Default is NULL.
 #' @param verbose A logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' SigRepo::searchSampleType(conn_handler = conn_handler,
+#'                           sample_type = "test_sample_type",
+#'                           )
+#' }
+#' 
 #'
 #' @export
 searchSampleType <- function(

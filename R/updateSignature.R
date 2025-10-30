@@ -8,6 +8,13 @@
 #' to view and access one's uploaded signature. Default is \code{FALSE}.
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' SigRepo::updateSignature(conn_handler = conn_handler,
+#'                          signature_id = 20,
+#'                          omic_signature = test_omic_signature)
+#'}
+#' 
 #' 
 #' @export
 updateSignature <- function(

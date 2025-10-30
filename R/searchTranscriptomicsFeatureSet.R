@@ -8,6 +8,14 @@
 #' Default is NULL which will return all of the organisms in the database.
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' SigRepo::searchTranscriptomicsFeatureSet(conn_handler = conn_handler,
+#'                                           feature_name = "test_feature_name",
+#'                                           organism = "Mus musculus",
+#'                                           verbose = TRUE)
+#' }
+#' 
 #' 
 #' @export
 searchTranscriptomicsFeatureSet <- function(

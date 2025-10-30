@@ -18,3 +18,12 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Remove sample types from database
 }
+\examples{
+\dontrun{
+SigRepo::deleteSampleType(conn_handler = conn_handler,
+                          sample_type = "sample_type",
+                          verbose = TRUE)
+}
+
+
+}
