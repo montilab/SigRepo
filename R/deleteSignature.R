@@ -5,6 +5,13 @@
 #' @param signature_id ID of signature to be removed from the database (required)
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' SigRepo::deleteSignature(conn_handler = conn_handler,
+#'                          signature_id = 58,
+#'                          verbose = FALSE)
+#' }
+#'
 #' 
 #' @export
 deleteSignature <- function(

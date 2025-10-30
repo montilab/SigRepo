@@ -18,3 +18,12 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Remove phenotypes from database
 }
+\examples{
+\dontrun{
+# example code
+SigRepo::deletePhenotype(conn_handler = conn_handler,
+                        phenotype = "test_phenotype",
+                        verbose = TRUE)
+}
+
+}

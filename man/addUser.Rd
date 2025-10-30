@@ -20,3 +20,20 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Add a list of users to the database
 }
+\examples{
+
+\dontrun{
+user_tbl <- data.frame(user_name = "joe12343",
+                       user_password = "ffgfd",
+                       user_email = "joejoe@gmail.com",
+                       user_first = "joe",
+                       user_last = "joe",
+                       user_affiliation = "Imaginary Tester")
+                       
+SigRepo::addUser(conn_handler = conn_handler,
+                 user_tbl = user_tbl,
+                 verbose = FALSE)
+
+}
+
+}

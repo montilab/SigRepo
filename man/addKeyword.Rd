@@ -19,3 +19,14 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Add keywords to database
 }
+\examples{
+\dontrun{
+# example code
+keyword_tbl <- data.frame(keyword = c("keyword_1","keyword_2"))
+
+SigRepo::addKeyword(conn_handler = conn_handler,
+                    keyword_tbl = keyword_tbl,
+                    verbose = TRUE)
+}
+
+}

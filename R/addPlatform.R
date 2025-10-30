@@ -6,7 +6,15 @@
 #' platform_name (required)
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' # example code
+#' platform_tbl <- data.frame(platform_name = c("platform_1","platform_2"))
 #' 
+#' SigRepo::addPlatform(conn_handler = conn_handler,
+#'                     platform_tbl = platform_tbl,
+#'                     verbose = TRUE)
+#' }
 #' @export
 addPlatform <- function(
     conn_handler,

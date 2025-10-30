@@ -40,3 +40,18 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Add signature to database
 }
+\examples{
+\dontrun{
+# SigRepo::addSignature(
+# requried
+conn_handler = conn_handler,
+omic_signature = omc_signature_1,
+# optional
+visibility = FALSE, # default is false
+add_users = c("John", "Jane"),
+return_signature_id = TRUE,
+verbose = TRUE)
+}
+
+
+}

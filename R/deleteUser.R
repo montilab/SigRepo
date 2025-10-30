@@ -5,7 +5,13 @@
 #' @param user_name Name of the user to be deleted (required).
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
-#' 
+#' @examples
+#' \dontrun{
+#' SigRepo::deleteUser(conn_handler = conn_handler,
+#'                     user_name = "John_Doe",
+#'                     verbose = TRUE)
+#' }
+#'     
 #' @export
 deleteUser <- function(
     conn_handler,

@@ -26,3 +26,12 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Search sample types in the database
 }
+\examples{
+\dontrun{
+SigRepo::searchSampleType(conn_handler = conn_handler,
+                          sample_type = "test_sample_type",
+                          )
+}
+
+
+}

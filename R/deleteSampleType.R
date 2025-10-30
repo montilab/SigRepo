@@ -5,6 +5,13 @@
 #' @param sample_type A list of sample types to be removed (required)
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' SigRepo::deleteSampleType(conn_handler = conn_handler,
+#'                           sample_type = "sample_type",
+#'                           verbose = TRUE)
+#' }
+#' 
 #' 
 #' @export
 deleteSampleType <- function(

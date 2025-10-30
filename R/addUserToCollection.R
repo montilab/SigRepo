@@ -18,6 +18,15 @@
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
 #' 
+#' @examples
+#' \dontrun{
+#' # example code
+#' SigRepo::addUserToCollection(conn_handler = conn_handler,
+#'                              collection_id = 67,
+#'                              user_name = "john smith",
+#'                              access_type = "editor")
+#' }
+#' 
 #' @export
 addUserToCollection <- function(
     conn_handler,

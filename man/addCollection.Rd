@@ -31,3 +31,19 @@ diagnostic messages. Default is \code{TRUE}. #test}
 \description{
 Add signature collections to database
 }
+\examples{
+\dontrun{
+SigRepo::addCollection(
+# required
+conn_handler = conn_handler,
+omic_collection  = omic_collection_1,
+
+# optional
+visibility = FALSE,
+return_collection_id = TRUE,
+verbose = TRUE
+)
+}
+
+
+}

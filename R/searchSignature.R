@@ -11,6 +11,13 @@
 #' @param platform_name The platform name to be looked up by.
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' SigRepo::searchSignature(conn_handler = conn_handler,
+#'                          signature_id = "test_signature",
+#'                          user_name = "John_Doe")
+#' }
+#'  
 #' 
 #' @export
 searchSignature <- function(

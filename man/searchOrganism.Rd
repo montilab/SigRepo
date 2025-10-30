@@ -19,3 +19,12 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Search for an organism in the database, can handle a singular organism or list
 }
+\examples{
+\dontrun{
+SigRepo::searchCollection(conn_handler = conn_handler,
+                          organism = "Mus musculus",
+                          verbose = TRUE)
+}
+    
+
+}

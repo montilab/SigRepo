@@ -18,3 +18,11 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Remove platforms from database
 }
+\examples{
+\dontrun{
+SigRepo::deletePlatform(conn_handler = conn_handler,
+                        platform_name = "test_platform",
+                        verbose = TRUE)
+}
+
+}

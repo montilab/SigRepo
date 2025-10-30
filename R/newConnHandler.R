@@ -9,6 +9,18 @@
 #' @param api_port Port on the server to access the API (required)
 #' @return A list of user credentials to establish connection to the database.
 #' 
+#' @examples
+#' \dontrun{
+#' SigRepo::newConnHandler(dbname = "sigrepo",
+#'                         host = "sigrepo.org,
+#'                         port = 3306,
+#'                         user = ted_williams,
+#'                         password = "ted_will_123,
+#'                         api_host = "sigrepo.org",
+#'                         api_port = 8020
+#'                         )
+#' }
+#' 
 #' @export
 newConnHandler <- function(
     dbname = 'sigrepo', 

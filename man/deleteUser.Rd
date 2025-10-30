@@ -18,3 +18,11 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Delete a user from the database
 }
+\examples{
+\dontrun{
+SigRepo::deleteUser(conn_handler = conn_handler,
+                    user_name = "John_Doe",
+                    verbose = TRUE)
+}
+    
+}

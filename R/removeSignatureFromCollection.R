@@ -7,6 +7,15 @@
 #' in the database (required)
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' SigRepo::removeSignatureFromCollection(conn_handler = conn_handler
+#'                                        collection_id = 60,
+#'                                        signature_id = c(59,70),
+#'                                        verbose = TRUE
+#'                                        )
+#' }
+#'   
 #' 
 #' @export
 removeSignatureFromCollection <- function(

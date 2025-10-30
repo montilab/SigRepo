@@ -6,6 +6,12 @@
 #' will return all of the users in the database
 #' @param verbose A logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' SigRepo::searchUser(conn_handler = conn_handler,
+#'                     user_namne = "John_Doe")
+#' }
+#' 
 #' 
 #' @export
 searchUser <- function(

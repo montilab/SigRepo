@@ -9,6 +9,16 @@
 #' @param user_name Name of users that the collection belongs to.
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' SigRepo::searchCollection(conn_handler = conn_handler,
+#'                            #optional search params, 
+#'                            #just using the connection handler will retrieve all signatures' metadata
+#'                            collection_name = "test_collection", 
+#'                            collection_id = "67",
+#'                            )
+#' }
+#'  
 #' 
 #' @export
 searchCollection <- function(

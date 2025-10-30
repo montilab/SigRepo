@@ -18,3 +18,12 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Delete a signature from the signatures table of the database
 }
+\examples{
+\dontrun{
+SigRepo::deleteSignature(conn_handler = conn_handler,
+                         signature_id = 58,
+                         verbose = FALSE)
+}
+
+
+}
