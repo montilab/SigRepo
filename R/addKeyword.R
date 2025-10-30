@@ -6,6 +6,15 @@
 #' keyword (required) 
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' # example code
+#' keyword_tbl <- data.frame(keyword = c("keyword_1","keyword_2"))
+#' 
+#' SigRepo::addKeyword(conn_handler = conn_handler,
+#'                     keyword_tbl = keyword_tbl,
+#'                     verbose = TRUE)
+#' }
 #' 
 #' @export
 addKeyword <- function(

@@ -27,3 +27,13 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Search for a list of transcriptomics features in the database
 }
+\examples{
+\dontrun{
+SigRepo::searchTranscriptomicsFeatureSet(conn_handler = conn_handler,
+                                          feature_name = "test_feature_name",
+                                          organism = "Mus musculus",
+                                          verbose = TRUE)
+}
+
+
+}

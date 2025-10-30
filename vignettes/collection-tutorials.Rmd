@@ -98,10 +98,10 @@ Here, we provided 4 signature objects that came with the package for demonstrati
 
 ```{r}
 # Read in the signature objects
-omic_signature_1 <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "omic_signature_1.rds"))
-omic_signature_2 <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "omic_signature_2.rds"))
-omic_signature_3 <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "omic_signature_3.rds"))
-omic_signature_4 <- base::readRDS(base::file.path(base::system.file("inst/extdata", package = "SigRepo"), "omic_signature_4.rds"))
+omic_signature_1 <- SigRepo::omic_signature_1
+omic_signature_2 <- SigRepo::omic_signature_2
+omic_signature_3 <- SigRepo::omic_signature_3
+omic_signature_4 <- SigRepo::omic_signature_4
 ```
 
 # Create an omic collection 

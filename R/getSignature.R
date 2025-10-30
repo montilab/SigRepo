@@ -8,6 +8,15 @@
 #' diagnostic messages. Default is \code{TRUE}.
 #' 
 #' @export
+#' @examples
+#' \dontrun{
+#' SigRepo::getSignature(conn_handler = conn_handler,
+#'                       signature_id = 56,
+#'                       signature_name = "test_signature",
+#'                       verbose = TRUE
+#' )
+#' }
+#'       
 getSignature <- function(
     conn_handler,
     signature_name = NULL,

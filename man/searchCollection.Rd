@@ -34,3 +34,15 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Search for a list of collection in the database
 }
+\examples{
+\dontrun{
+SigRepo::searchCollection(conn_handler = conn_handler,
+                           #optional search params, 
+                           #just using the connection handler will retrieve all signatures' metadata
+                           collection_name = "test_collection", 
+                           collection_id = "67",
+                           )
+}
+ 
+
+}

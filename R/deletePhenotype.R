@@ -5,6 +5,13 @@
 #' @param phenotype A list of phenotypes to be removed (required) 
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' # example code
+#' SigRepo::deletePhenotype(conn_handler = conn_handler,
+#'                         phenotype = "test_phenotype",
+#'                         verbose = TRUE)
+#' }
 #' 
 #' @export
 deletePhenotype <- function(

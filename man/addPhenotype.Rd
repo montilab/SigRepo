@@ -19,3 +19,15 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Add phenotypes to database
 }
+\examples{
+\dontrun{
+# example code
+
+phenotype_tbl <- data.frame(phenotype = c("phenotype_1","phenotype_2"))
+
+SigRepo::addPhenotype(conn_handler = conn_handler,
+                      phenotype_tbl = phenotype_tbl,
+                      verbose = TRUE)
+}
+
+}

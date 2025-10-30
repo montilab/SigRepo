@@ -8,6 +8,8 @@
 <url><loc>https://montilab.github.io/SigRepo/index.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/news/index.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/news/news-1.0.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/LLFS_Aging_Gene_2023.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/Myc_reduce_mice_liver_24m.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/addCollection.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/addKeyword.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/addOrganism.html</loc></url>
@@ -54,6 +56,10 @@
 <url><loc>https://montilab.github.io/SigRepo/reference/insert_table_sql.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/lookup_table_sql.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/newConnHandler.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/omic_signature_1.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/omic_signature_2.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/omic_signature_3.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/omic_signature_4.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/print_messages.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/protTransform.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/removeDuplicates.html</loc></url>

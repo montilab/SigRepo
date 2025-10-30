@@ -19,3 +19,11 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Search for platform in the database
 }
+\examples{
+\dontrun{
+SigRepo::searchPlatform(conn_handler = conn_handler,
+                        platform_name = "test_platform",
+                        verbose = TRUE)
+}
+      
+}

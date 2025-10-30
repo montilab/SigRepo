@@ -8,6 +8,14 @@
 #' Default is NULL which will return all of the organisms in the database.
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' SigRepo::searchProteomicsFeatureSet(conn_handler = conn_handler,
+#'                                     feature_name = "test_feature",
+#'                                     organism = "Homo sapiens"
+#'                                     )
+#' }
+#' 
 #' 
 #' @export
 searchProteomicsFeatureSet <- function(

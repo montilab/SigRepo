@@ -27,3 +27,13 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Search for a list of proteomics features in the database
 }
+\examples{
+\dontrun{
+SigRepo::searchProteomicsFeatureSet(conn_handler = conn_handler,
+                                    feature_name = "test_feature",
+                                    organism = "Homo sapiens"
+                                    )
+}
+
+
+}

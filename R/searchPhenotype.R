@@ -6,6 +6,12 @@
 #' Default is NULL which will return all of the phenotypes in the database
 #' @param verbose A logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' SigRepo::searchPhenotype(conn_handler = conn_handler,
+#'                          phenotype = "test_phenotype",
+#'                          verbose = TRUE)
+#' }
 #' 
 #' @export
 searchPhenotype <- function(

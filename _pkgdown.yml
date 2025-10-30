@@ -89,7 +89,17 @@ reference:
       - '`deleteUser`'
       - '`inActivateUser`'
       - '`removeSignatureFromCollection`'
-
+      
+  - title: Example Data
+    desc: Example signatures included in the package
+    contents:
+      - '`LLFS_Aging_Gene_2023`'
+      - '`Myc_reduce_mice_liver_24m`'
+      - '`omic_signature_1`'
+      - '`omic_signature_2`'
+      - '`omic_signature_3`'
+      - '`omic_signature_4`'
+      
 navbar:
   title: SigRepo
   structure:

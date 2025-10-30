@@ -40,3 +40,12 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Search for a list of signatures in the database
 }
+\examples{
+\dontrun{
+SigRepo::searchSignature(conn_handler = conn_handler,
+                         signature_id = "test_signature",
+                         user_name = "John_Doe")
+}
+ 
+
+}

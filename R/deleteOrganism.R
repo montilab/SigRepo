@@ -5,6 +5,13 @@
 #' @param organism A list of organisms to be removed (required) 
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
+#' @examples
+#' \dontrun{
+#' # example code
+#' SigRepo::deleteCollection(conn_handler = conn_handler,
+#'                           organism = 'test_organism',
+#'                           verbose = TRUE)
+#' }
 #' 
 #' @export
 deleteOrganism <- function(

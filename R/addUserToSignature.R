@@ -18,6 +18,14 @@
 #' @param verbose a logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
 #' 
+#' @examples
+#' \dontrun{
+#' # example code
+#' SigRepo::addUserToSignature(conn_handler = conn_handler,
+#'                              signature_id = 60,
+#'                              user_name = "john smith",
+#'                              access_type = "editor")
+#' }
 #' @export
 addUserToSignature <- function(
     conn_handler,

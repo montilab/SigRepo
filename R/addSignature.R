@@ -16,6 +16,20 @@
 #' @param verbose A logical value indicates whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
 #' 
+#' @examples
+#' \dontrun{
+#' # SigRepo::addSignature(
+#' # requried
+#' conn_handler = conn_handler,
+#' omic_signature = omc_signature_1,
+#' # optional
+#' visibility = FALSE, # default is false
+#' add_users = c("John", "Jane"),
+#' return_signature_id = TRUE,
+#' verbose = TRUE)
+#' }
+#' 
+#' 
 #' @export
 addSignature <- function(
     conn_handler,

@@ -12,6 +12,11 @@
 #' \code{"Unavailable"} means the assay type isn't existed in the database yet,
 #' and users cannot upload signatures or collections that are specifically
 #' associated with this assay type.
+#' @examples
+#' \dontrun{
+#' SigRepo::searchAssayType(assay_type = "transcriptomics")
+#' }
+#' 
 #' 
 #' @export
 searchAssayType <- function(

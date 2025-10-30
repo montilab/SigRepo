@@ -19,3 +19,11 @@ diagnostic messages. Default is \code{TRUE}.}
 \description{
 Search for a phenotype in the database
 }
+\examples{
+\dontrun{
+SigRepo::searchPhenotype(conn_handler = conn_handler,
+                         phenotype = "test_phenotype",
+                         verbose = TRUE)
+}
+
+}
