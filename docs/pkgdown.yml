@@ -4,7 +4,7 @@ pkgdown_sha: ~
 articles:
   collection-tutorials: collection-tutorials.html
   signature-tutorials: signature-tutorials.html
-last_built: 2025-10-31T00:18Z
+last_built: 2025-10-31T16:53Z
 urls:
   reference: https://montilab.github.io/SigRepo/reference
   article: https://montilab.github.io/SigRepo/articles
