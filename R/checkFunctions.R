@@ -28,8 +28,8 @@ verbose <- function(...){
   if(!opt) return(base::invisible(NULL))
   
   # Return messages
-  msgs <- base::list(...)
-  base::message(msgs, "\n")
+  msg_text <- paste(..., collapse = "")
+  base::message(msg_text)
   
 }
 

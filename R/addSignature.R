@@ -1,7 +1,8 @@
 #' @title addSignature
 #' @description Add signature to database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required)
+#' @param conn_handler A connection handler object obtained from a call to 
+#' SigRepo::newConnhandler() to establish a connection with 
+#' the database. \strong{Required}
 #' @param omic_signature An R6 class object from OmicSignature package (required)
 #' @param visibility A logical value indicates whether or not to allow others  
 #' to view and access one's uploaded signature. Default is \code{FALSE}.
