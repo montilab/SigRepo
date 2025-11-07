@@ -18,23 +18,27 @@ addSignature(
 \item{conn_handler}{A handler uses to establish connection to the database 
 obtained from SigRepo::newConnhandler() (required)}
 
-\item{omic_signature}{An R6 class object from OmicSignature package (required)}
+\item{omic_signature}{An R6 class object representing the omic signature, 
+typically created using the \code{OmicSignature} package. \strong{Required}}
 
-\item{visibility}{A logical value indicates whether or not to allow others
-to view and access one's uploaded signature. Default is \code{FALSE}.}
+\item{visibility}{A logical value indicating whether the uploaded signature 
+should be publicly visible and accessible to all users \code{(TRUE)} or kept 
+private \code{(FALSE)}. The default is \code{FALSE}.}
 
-\item{add_users}{If visibility is set to FALSE (e.g. private), then the user 
-can add a list of users to allow them to view and access the signature privately. 
-Provide a data frame with a list of users and their corresponding 
-access types (owner/editor/viewer) to the signature.}
+\item{add_users}{An optional data frame specifying a list of users and their 
+private access types to the signature. This argument is only relevant when 
+visibility is set to \code{FALSE}. The data frame must contain a list of 
+users and their corresponding access types (owner/editor/viewer) to the 
+signature.}
 
-\item{return_signature_id}{A logical value indicates whether or not to return
-the ID of the uploaded signature. Default is \code{FALSE}.}
+\item{return_signature_id}{A logical value. If \code{TRUE}, the function will 
+return the ID generated for the newly uploaded signature. The default
+is \code{FALSE}.}
 
-\item{return_missing_features}{A logical value indicates whether or not to return
-a list of features that does not exist in the database. Default is \code{FALSE}.}
+\item{return_missing_features}{A logical value indicating whether or not to return
+a list of features that do not exist in the database. Default is \code{FALSE}.}
 
-\item{verbose}{A logical value indicates whether or not to print the
+\item{verbose}{A logical value indicating whether or not to print the
 diagnostic messages. Default is \code{TRUE}.}
 }
 \description{
