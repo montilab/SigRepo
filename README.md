@@ -27,7 +27,7 @@ signature collections must be represented as specific R6 objects. You
 can create these objects using our proprietary package,
 <a target="_blank" href="https://github.com/montilab/OmicSignature">OmicSignature</a>.
 
-Click on each link below for more information:
+Click on each link below for more information():
 
 -   <a
     href="https://montilab.github.io/OmicSignature/articles/ObjectStructure.html"
