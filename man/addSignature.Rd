@@ -15,8 +15,9 @@ addSignature(
 )
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{A connection handler object obtained from a call to 
+SigRepo::newConnhandler() to establish a connection with 
+the database. \strong{Required}}
 
 \item{omic_signature}{An R6 class object representing the omic signature, 
 typically created using the \code{OmicSignature} package. \strong{Required}}
