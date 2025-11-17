@@ -7,18 +7,7 @@
 #' @param password Password associated with the user (required)
 #' @param api_host Name of the server where the API is hosted on (required)
 #' @param api_port Port on the server to access the API (required)
-#' @return A list of user credentials to establish connection to the database. 
-#' This object contains the following 
-#' components:
-#' \describe{ 
-#' \item{\code{dbname}}{ name of MySQL database. } 
-#' \item{\code{host}}{ name of the server where MySQL database hosted on.}
-#' \item{\code{port}}{ port on the server connected to MySQL database.}
-#' \item{\code{user}}{ database user name.}
-#' \item{\code{password}}{ database user password.}
-#' \item{\code{api_host}}{ name of the server where the API is hosted.}
-#' \item{\code{api_port}}{ port on the server to access the API.}
-#' }
+#' @return A list object that contains all the items that are passed in the arguments used for database connection. 
 #' 
 #' @examples
 #' \dontrun{
