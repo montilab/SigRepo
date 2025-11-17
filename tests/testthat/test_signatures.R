@@ -24,8 +24,20 @@ test_that("addSignature correctly adds a transcriptomic signature into the datab
   # Create signature object 
   test_transcriptomics_sig <- base::readRDS(testthat::test_path("test_data", "test_data_transcriptomics.rds"))
 
-  # calling the function to add the test signature into the database ####
+  # Ensure a proper error message is displayed when using a wrong 
+  # connection handler
+  wrong_connection_handler <- -1
+  expect_error( 
+    
+    error_id <- SigRepo::addSignature(
+    conn_handler = wrong_connection_handler,
+    omic_signature = test_transcriptomics_sig,
+    return_signature_id = TRUE,
+    verbose = FALSE
+  ),"Cannot connect to the database. Please check your connection handler.")
   
+  
+  # calling the function to add the test signature into the database ####
   # using <<- to add the id globally so the tests can use it ####
   transcriptomics_signature_id <<- SigRepo::addSignature(
     conn_handler = test_conn,
