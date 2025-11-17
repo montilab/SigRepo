@@ -46,7 +46,14 @@ addSignature <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init(conn_handler = conn_handler)
+  # Assert that the following function executes without error and
+  # give an error message if it fails
+  tryCatch({
+    conn <- SigRepo::conn_init(conn_handler = conn_handler)
+  }, error = function(e){
+    base::stop("Cannot connect to the database. Please check your connection handler.")
+  })
+  
   
   # Check user connection and permission ####
   conn_info <- SigRepo::checkPermissions(
