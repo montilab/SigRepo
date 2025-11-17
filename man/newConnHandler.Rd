@@ -30,7 +30,18 @@ newConnHandler(
 \item{api_port}{Port on the server to access the API (required)}
 }
 \value{
-A list of user credentials to establish connection to the database.
+A list of user credentials to establish connection to the database. 
+This object contains the following 
+components:
+\describe{ 
+\item{\code{dbname}}{ name of MySQL database. } 
+\item{\code{host}}{ name of the server where MySQL database hosted on.}
+\item{\code{port}}{ port on the server connected to MySQL database.}
+\item{\code{user}}{ database user name.}
+\item{\code{password}}{ database user password.}
+\item{\code{api_host}}{ name of the server where the API is hosted.}
+\item{\code{api_port}}{ port on the server to access the API.}
+}
 }
 \description{
 Create a handler to connect to a remote database.
