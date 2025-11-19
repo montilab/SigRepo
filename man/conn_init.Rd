@@ -8,10 +8,10 @@ conn_init(conn_handler)
 }
 \arguments{
 \item{conn_handler}{A handler uses to establish connection to a remote database 
-obtained from SigRepo::newConnhandler() (required)}
+obtained from SigRepo::newConnHandler() (required)}
 }
 \value{
-a MySQL connection class object
+a MySQL connection class object.
 }
 \description{
 Initiate a remote database connection

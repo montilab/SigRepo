@@ -7,7 +7,7 @@
 #' @param password Password associated with the user (required)
 #' @param api_host Name of the server where the API is hosted on (required)
 #' @param api_port Port on the server to access the API (required)
-#' @return A list of user credentials to establish connection to the database.
+#' @return A list object that contains all the items that are passed in the arguments used for database connection. 
 #' 
 #' @examples
 #' \dontrun{
@@ -78,11 +78,11 @@ newConnHandler <- function(
 #' @title conn_init
 #' @description Initiate a remote database connection
 #' @param conn_handler A handler uses to establish connection to a remote database 
-#' obtained from SigRepo::newConnhandler() (required)
+#' obtained from SigRepo::newConnHandler() (required)
 #' 
 #' @keywords internal
 #' 
-#' @return a MySQL connection class object
+#' @return a MySQL connection class object. 
 #' 
 #' @export
 #' @import DBI RMySQL 

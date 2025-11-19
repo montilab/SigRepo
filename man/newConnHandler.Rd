@@ -30,7 +30,7 @@ newConnHandler(
 \item{api_port}{Port on the server to access the API (required)}
 }
 \value{
-A list of user credentials to establish connection to the database.
+A list object that contains all the items that are passed in the arguments used for database connection.
 }
 \description{
 Create a handler to connect to a remote database.
