@@ -7,14 +7,13 @@
 searchPlatform(conn_handler, platform_name = NULL, verbose = TRUE)
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{platform_name}{A platform, or a list of platform names to be looked up. Default is 
-NULL which will return all of the platforms in the database.}
+\item{platform_name}{A platform, or a list of platform names to be looked up. Defaults to
+'NULL', which will return all of the platforms in the database.}
 
-\item{verbose}{A logical value indicates whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether or not to print the
+diagnostic messages. Defaults to 'TRUE'.}
 }
 \description{
 Search for platform in the database

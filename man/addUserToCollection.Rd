@@ -13,10 +13,9 @@ addUserToCollection(
 )
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{collection_id}{An ID of collection in the database (required)}
+\item{collection_id}{Database ID of a collection (required)}
 
 \item{user_name}{A list of users to be added to a collection (required)}
 
@@ -31,8 +30,7 @@ given them access to.
 \code{viewer} has ONLY Read access to collection that other users were 
 given them access to.}
 
-\item{verbose}{a logical value indicates whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
 }
 \description{
 Add a list of users with specific access to a collection 

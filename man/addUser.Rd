@@ -7,15 +7,13 @@
 addUser(conn_handler, user_tbl, verbose = TRUE)
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{user_tbl}{A data frame containing the appropriate column names: 
+\item{user_tbl}{A Data Frame; must contain the following column names: 
 user_name, user_password, user_email, user_first, user_last, user_affiliation, 
 user_role, active (required)}
 
-\item{verbose}{a logical value indicates whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
 }
 \description{
 Add a list of users to the database

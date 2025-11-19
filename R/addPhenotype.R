@@ -1,11 +1,9 @@
 #' @title addPhenotype
 #' @description Add phenotypes to database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required) 
-#' @param phenotype_tbl An data frame containing appropriate column names: 
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param phenotype_tbl A Data Frame; Must contain the following column names: 
 #' phenotype (required) 
-#' @param verbose a logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' @examples
 #' \dontrun{
 #' # example code

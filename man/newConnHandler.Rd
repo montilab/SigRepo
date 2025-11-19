@@ -15,7 +15,7 @@ newConnHandler(
 )
 }
 \arguments{
-\item{dbname}{Name of MySQL database to point to (required)}
+\item{dbname}{Name of MySQL database (required)}
 
 \item{host}{Name of the server where MySQL database is hosted on (required)}
 

@@ -17,10 +17,9 @@ searchSignature(
 )
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{signature_id}{ID of the signatures to be looked up by.}
+\item{signature_id}{Database ID of the signatures to be looked up by.}
 
 \item{signature_name}{Name of the signatures to be looked up by.}
 
@@ -34,8 +33,8 @@ obtained from SigRepo::newConnhandler() (required)}
 
 \item{platform_name}{The platform name to be looked up by.}
 
-\item{verbose}{a logical value indicates whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether or not to print the
+diagnostic messages. Defaults to 'TRUE'.}
 }
 \description{
 Search for a list of signatures in the database

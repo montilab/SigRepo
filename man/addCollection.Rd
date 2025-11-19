@@ -13,20 +13,18 @@ addCollection(
 )
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{omic_collection}{A collection of OmicSignature objects from 
+\item{omic_collection}{A collection of OmicSignature R6 objects from the
 OmicSignature package (required)}
 
-\item{visibility}{A logical value indicates whether or not to allow others 
-to view and access one's uploaded collection. Default is \code{FALSE}.}
+\item{visibility}{Logical; whether the uploaded collection should be visible 
+and accessible to others, Defaults to 'FALSE'}
 
-\item{return_collection_id}{a logical value indicates whether or not to return
-the ID of the uploaded collection. Default is \code{FALSE}.}
+\item{return_collection_id}{Logical; whether to return the ID of the uploaded collection
+Defaults to 'FALSE'}
 
-\item{verbose}{a logical value indicates whether or not to print the
-diagnostic messages. Default is \code{TRUE}. #test}
+\item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
 }
 \description{
 Add signature collections to database

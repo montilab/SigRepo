@@ -1,14 +1,13 @@
 #' @title searchCollection
 #' @description Search for a list of collection in the database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required)
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param collection_name Name of collection to be looked up by.
-#' @param collection_id ID of collection to be looked up by.
-#' @param signature_name Name of the signatures to be looked up by.
-#' @param signature_id ID of the signatures to be looked up by.
+#' @param collection_id Database ID of collection to be looked up by.
+#' @param signature_name Signature name of the signatures to be looked up by.
+#' @param signature_id Database ID of the signatures to be looked up by.
 #' @param user_name Name of users that the collection belongs to.
-#' @param verbose a logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether or not to print the
+#' diagnostic messages. Defaults to 'TRUE'.
 #' @examples
 #' \dontrun{
 #' SigRepo::searchCollection(conn_handler = conn_handler,

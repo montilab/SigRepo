@@ -1,9 +1,8 @@
 #' @title createOmicCollection
 #' @description Get the collection set uploaded by a specific user in the database.
-#' @param conn_handler A handler uses to establish connection to the database
-#' obtained from SigRepo::newConnhandler() (required)
-#' @param db_collection_tbl A collection table with a list of signature ids 
-#' to be made into an OmicSignatureCollection object (required)
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param db_collection_tbl A Data Frame; must have the following column name(s):
+#' 'collecion_id'.
 #'
 #' @import OmicSignature
 #' 

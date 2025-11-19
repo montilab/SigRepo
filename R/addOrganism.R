@@ -1,11 +1,9 @@
 #' @title addOrganism
 #' @description Add organisms to database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required) 
-#' @param organism_tbl A data frame object contains appropriate column names: 
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param organism_tbl A Data Frame; Must contain the following column names: 
 #' organism (required) 
-#' @param verbose a logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' 
 #' @examples
 #' \dontrun{

@@ -18,8 +18,7 @@ updateUser(
 )
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
 \item{user_name}{Name of a user to be updated (required).}
 
@@ -38,8 +37,8 @@ obtained from SigRepo::newConnhandler() (required)}
 \item{active}{Whether to make a user TRUE (active) or FALSE (inactive). 
 Default is NULL.}
 
-\item{verbose}{a logical value indicates whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether or not to print the
+diagnostic messages. Defaults to 'TRUE'}
 }
 \description{
 Update a user in the database

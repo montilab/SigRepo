@@ -15,23 +15,22 @@ addSignatureWithID(
 )
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{omic_signature}{An R6 class object from OmicSignature package (required)}
+\item{omic_signature}{An OmicSignature R6 object from the
+OmicSignature package (required).}
 
 \item{assign_signature_id}{Assign an unique ID to the uploaded signature (required)}
 
 \item{assign_user_name}{Assign an unique user name to the uploaded signature (required)}
 
-\item{visibility}{A logical value indicates whether or not to allow others
-to view and access one's uploaded signature. Default is \code{FALSE}.}
+\item{visibility}{Logical; whether the uploaded collection should be visible 
+and accessible to others, Defaults to 'FALSE'}
 
-\item{check_difexp}{A logical value indicates whether or not to check difexp
-table in the database. Default is \code{TRUE}.}
+\item{check_difexp}{Logical; whether or not to check difexp
+table in the database. Defaults to 'TRUE'}
 
-\item{verbose}{A logical value indicates whether or not to print the
-diagnostic messages. Default is \code{FALSE}.}
+\item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
 }
 \description{
 Add signature to database with an assigned ID

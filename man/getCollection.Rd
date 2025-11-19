@@ -12,14 +12,13 @@ getCollection(
 )
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
 \item{collection_name}{Name of collection to be returned (required)}
 
-\item{collection_id}{ID of collection to be returned (required)}
+\item{collection_id}{Database ID of collection to be returned (required)}
 
-\item{verbose}{a logical value indicates whether or not to print the
+\item{verbose}{Logical; whether or not to print the
 diagnostic messages. Default is \code{TRUE}.}
 }
 \description{

@@ -1,10 +1,8 @@
 #' @title deletePlatform
 #' @description Remove platforms from database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required)
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required)
 #' @param platform_name A list of platform names to be removed (required)
-#' @param verbose a logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' @examples
 #' \dontrun{
 #' SigRepo::deletePlatform(conn_handler = conn_handler,

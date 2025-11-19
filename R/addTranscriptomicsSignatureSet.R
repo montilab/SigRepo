@@ -1,13 +1,11 @@
 #' @title addTranscriptomicsSignatureSet
-#' @description Add signature feature set to database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required) 
-#' @param signature_id ID of the signature (required) 
-#' @param organism_id ID of the organism (required) 
-#' @param signature_set A data frame containing the appropriate column names:
+#' @description Add a signature feature set to database
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param signature_id Database ID of the signature (required) 
+#' @param organism_id  Database ID of the organism (required) 
+#' @param signature_set A Data Frame; Must contain the following column names:
 #' feature_name, probe_id, score, group_label (required) 
-#' @param verbose a logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' 
 #' @keywords internal
 #' 

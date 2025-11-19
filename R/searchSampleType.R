@@ -1,12 +1,11 @@
 #' @title searchSampleType
 #' @description Search sample types in the database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required)
-#' @param sample_type A sample type, or a  list of sample types to search by. Default is NULL which
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param sample_type A sample type, or a  list of sample types to search by. Default to 'NULL', which
 #' will return all of the sample types in the database.
-#' @param brenda_accession A list of Brenda accession to search by. Default is NULL.
-#' @param verbose A logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param brenda_accession A list of Brenda accession to search by. Defaults to 'NULL'.
+#' @param verbose Logical; whether or not to print the
+#' diagnostic messages. Defaults to 'TRUE'.
 #' @examples
 #' \dontrun{
 #' SigRepo::searchSampleType(conn_handler = conn_handler,

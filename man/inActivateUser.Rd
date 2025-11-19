@@ -7,12 +7,11 @@
 inActivateUser(conn_handler, user_name, verbose = TRUE)
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
 \item{user_name}{Name of the user to be inactivated (required).}
 
-\item{verbose}{a logical value indicates whether or not to print the
+\item{verbose}{Logical; whether or not to print the
 diagnostic messages. Default is \code{TRUE}.}
 }
 \description{

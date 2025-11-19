@@ -1,10 +1,8 @@
 #' @title deleteCollection
 #' @description Delete a collection from the collection table of the database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required) 
-#' @param collection_id ID of the collection being removed from the database (required)
-#' @param verbose a logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param collection_id Database ID of the collection to be removed(required)
+#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' 
 #' @examples
 #' \dontrun{
