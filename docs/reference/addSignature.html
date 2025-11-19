@@ -62,44 +62,37 @@
 
 
 <dl><dt id="arg-conn-handler">conn_handler<a class="anchor" aria-label="anchor" href="#arg-conn-handler"></a></dt>
-<dd><p>A connection handler object obtained from a call to
-SigRepo::newConnhandler() to establish a connection with
-the database. <strong>Required</strong></p></dd>
+<dd><p>An R object obtained from SigRepo::newConnhandler() (required)</p></dd>
 
 
 <dt id="arg-omic-signature">omic_signature<a class="anchor" aria-label="anchor" href="#arg-omic-signature"></a></dt>
-<dd><p>An R6 class object representing the omic signature,
-typically created using the <code>OmicSignature</code> package. <strong>Required</strong></p></dd>
+<dd><p>An OmicSignature R6 object from the
+OmicSignature package (required).</p></dd>
 
 
 <dt id="arg-visibility">visibility<a class="anchor" aria-label="anchor" href="#arg-visibility"></a></dt>
-<dd><p>A logical value indicating whether the uploaded signature
-should be publicly visible and accessible to all users <code>(TRUE)</code> or kept
-private <code>(FALSE)</code>. The default is <code>FALSE</code>.</p></dd>
+<dd><p>Logical; whether the uploaded collection should be visible
+and accessible to others, Defaults to 'FALSE'</p></dd>
 
 
 <dt id="arg-add-users">add_users<a class="anchor" aria-label="anchor" href="#arg-add-users"></a></dt>
-<dd><p>An optional data frame specifying a list of users and their
-private access types to the signature. This argument is only relevant when
-visibility is set to <code>FALSE</code>. The data frame must contain a list of
-users and their corresponding access types (owner/editor/viewer) to the
-signature.</p></dd>
+<dd><p>A Data Frame; must contain the following column names:
+'user_name', 'access'. Access types are owner, viewer, or editor.This argument is only relevant when
+visibility is set to 'FALSE'.</p></dd>
 
 
 <dt id="arg-return-signature-id">return_signature_id<a class="anchor" aria-label="anchor" href="#arg-return-signature-id"></a></dt>
-<dd><p>A logical value. If <code>TRUE</code>, the function will
-return the ID generated for the newly uploaded signature. The default
-is <code>FALSE</code>.</p></dd>
+<dd><p>Logical; if 'TRUE', the function will
+return the ID generated for the newly uploaded signature. Defaults to 'FALSE'.</p></dd>
 
 
 <dt id="arg-return-missing-features">return_missing_features<a class="anchor" aria-label="anchor" href="#arg-return-missing-features"></a></dt>
-<dd><p>A logical value indicating whether or not to return
-a list of features that do not exist in the database. Default is <code>FALSE</code>.</p></dd>
+<dd><p>Logical; if set to
+'TRUE' the function will return a list of missing features present in the OmicSignature. Defaults to 'FALSE'</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
-<dd><p>A logical value indicating whether or not to print the
-diagnostic messages. Default is <code>TRUE</code>.</p></dd>
+<dd><p>Logical; whether to print diagnostic messages. Defaults to 'TRUE'</p></dd>
 
 </dl></div>
 

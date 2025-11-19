@@ -1,25 +1,18 @@
 #' @title addSignature
 #' @description Add signature to database
-#' @param conn_handler A connection handler object obtained from a call to 
-#' SigRepo::newConnhandler() to establish a connection with 
-#' the database. \strong{Required}
-#' @param omic_signature An R6 class object representing the omic signature, 
-#' typically created using the \code{OmicSignature} package. \strong{Required}
-#' @param visibility A logical value indicating whether the uploaded signature 
-#' should be publicly visible and accessible to all users \code{(TRUE)} or kept 
-#' private \code{(FALSE)}. The default is \code{FALSE}.
-#' @param add_users An optional data frame specifying a list of users and their 
-#' private access types to the signature. This argument is only relevant when 
-#' visibility is set to \code{FALSE}. The data frame must contain a list of 
-#' users and their corresponding access types (owner/editor/viewer) to the 
-#' signature.
-#' @param return_signature_id A logical value. If \code{TRUE}, the function will 
-#' return the ID generated for the newly uploaded signature. The default
-#' is \code{FALSE}.
-#' @param return_missing_features A logical value indicating whether or not to return
-#' a list of features that do not exist in the database. Default is \code{FALSE}.
-#' @param verbose A logical value indicating whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param omic_signature An OmicSignature R6 object from the
+#' OmicSignature package (required).
+#' @param visibility Logical; whether the uploaded collection should be visible 
+#' and accessible to others, Defaults to 'FALSE'
+#' @param add_users A Data Frame; must contain the following column names:
+#' 'user_name', 'access'. Access types are owner, viewer, or editor.This argument is only relevant when 
+#' visibility is set to 'FALSE'. 
+#' @param return_signature_id Logical; if 'TRUE', the function will 
+#' return the ID generated for the newly uploaded signature. Defaults to 'FALSE'.
+#' @param return_missing_features Logical; if set to 
+#' 'TRUE' the function will return a list of missing features present in the OmicSignature. Defaults to 'FALSE'
+#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' 
 #' @examples
 #' \dontrun{

@@ -60,26 +60,24 @@
 
 
 <dl><dt id="arg-conn-handler">conn_handler<a class="anchor" aria-label="anchor" href="#arg-conn-handler"></a></dt>
-<dd><p>A handler uses to establish connection to the database
-obtained from SigRepo::newConnhandler() (required)</p></dd>
+<dd><p>An R object obtained from SigRepo::newConnhandler() (required)</p></dd>
 
 
 <dt id="arg-signature-id">signature_id<a class="anchor" aria-label="anchor" href="#arg-signature-id"></a></dt>
-<dd><p>ID of the signature (required)</p></dd>
+<dd><p>Database ID of the signature (required)</p></dd>
 
 
 <dt id="arg-organism-id">organism_id<a class="anchor" aria-label="anchor" href="#arg-organism-id"></a></dt>
-<dd><p>ID of the organism (required)</p></dd>
+<dd><p>Database ID of the organism (required)</p></dd>
 
 
 <dt id="arg-signature-set">signature_set<a class="anchor" aria-label="anchor" href="#arg-signature-set"></a></dt>
-<dd><p>A data frame containing the appropriate column names:
+<dd><p>A Data Frame; must contain the following column names:
 feature_name, probe_id, score, group_label (required)</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
-<dd><p>a logical value indicates whether or not to print the
-diagnostic messages. Default is <code>TRUE</code>.</p></dd>
+<dd><p>Logical; whether to print diagnostic messages. Defaults to 'TRUE'</p></dd>
 
 </dl></div>
 

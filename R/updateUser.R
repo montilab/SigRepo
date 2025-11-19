@@ -1,7 +1,6 @@
 #' @title updateUser
 #' @description Update a user in the database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required)
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param user_name Name of a user to be updated (required).
 #' @param password Password of a user to be updated. Default is NULL.
 #' @param email Email of a user to be updated. Default is NULL.
@@ -11,8 +10,8 @@
 #' @param role Role of a user to be updated. Choices are admin/editor/viewer.
 #' @param active Whether to make a user TRUE (active) or FALSE (inactive). 
 #' Default is NULL.
-#' @param verbose a logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether or not to print the
+#' diagnostic messages. Defaults to 'TRUE'
 #' 
 #' @export
 updateUser <- function(

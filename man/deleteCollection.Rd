@@ -7,13 +7,11 @@
 deleteCollection(conn_handler, collection_id, verbose = TRUE)
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{collection_id}{ID of the collection being removed from the database (required)}
+\item{collection_id}{Database ID of the collection to be removed(required)}
 
-\item{verbose}{a logical value indicates whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
 }
 \description{
 Delete a collection from the collection table of the database

@@ -1,12 +1,9 @@
 #' @title addProteomicsFeatureSet
 #' @description Add proteomics feature set to database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required)
-#' @param feature_set A data frame containing appropriate column names: 
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param feature_set A Data Frame; must contain the following column names: 
 #' feature_name, organism, gene_symbol, is_current, version (required)
-#' @param verbose a logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
-#' 
+#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' 
 #' 
 #' @keywords internal

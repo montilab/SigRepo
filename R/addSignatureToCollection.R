@@ -1,12 +1,11 @@
 #' @title addSignatureToCollection
 #' @description Add a list of signatures to a collection in the database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required)
-#' @param collection_id ID of collection in the database (required)
-#' @param signature_id A list of signature IDs to be added to a collection 
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param collection_id Database ID of the OmicSignature Collection (required)
+#' @param signature_id A single signature database ID, or a list, to be added to a collection 
 #' in the database (required)
-#' @param verbose a logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
+#' 
 #' 
 #' @examples
 #' 

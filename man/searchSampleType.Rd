@@ -12,16 +12,15 @@ searchSampleType(
 )
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{sample_type}{A sample type, or a  list of sample types to search by. Default is NULL which
+\item{sample_type}{A sample type, or a  list of sample types to search by. Default to 'NULL', which
 will return all of the sample types in the database.}
 
-\item{brenda_accession}{A list of Brenda accession to search by. Default is NULL.}
+\item{brenda_accession}{A list of Brenda accession to search by. Defaults to 'NULL'.}
 
-\item{verbose}{A logical value indicates whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether or not to print the
+diagnostic messages. Defaults to 'TRUE'.}
 }
 \description{
 Search sample types in the database

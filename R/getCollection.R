@@ -1,10 +1,9 @@
 #' @title getCollection
 #' @description Get a list of collection uploaded by a specified user in the database.
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required)
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param collection_name Name of collection to be returned (required)
-#' @param collection_id ID of collection to be returned (required)
-#' @param verbose a logical value indicates whether or not to print the
+#' @param collection_id Database ID of collection to be returned (required)
+#' @param verbose Logical; whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
 #'  
 #' @export

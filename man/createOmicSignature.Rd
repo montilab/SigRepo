@@ -7,11 +7,10 @@
 createOmicSignature(conn_handler, db_signature_tbl)
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{db_signature_tbl}{A data frame contains a list of signatures
-to be made into an OmicSignature object (required)}
+\item{db_signature_tbl}{A Data Frame; must contain the following column names: 
+'signature_id'}
 }
 \description{
 Get the signature set uploaded by a specific user in the database.

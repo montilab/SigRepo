@@ -1,10 +1,8 @@
 #' @title deleteOrganism
 #' @description Remove organisms from database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required) 
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param organism A list of organisms to be removed (required) 
-#' @param verbose a logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' @examples
 #' \dontrun{
 #' # example code

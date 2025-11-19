@@ -1,9 +1,8 @@
 #' @title createOmicSignature
 #' @description Get the signature set uploaded by a specific user in the database.
-#' @param conn_handler A handler uses to establish connection to the database
-#' obtained from SigRepo::newConnhandler() (required)
-#' @param db_signature_tbl A data frame contains a list of signatures
-#' to be made into an OmicSignature object (required)
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param db_signature_tbl A Data Frame; must contain the following column names: 
+#' 'signature_id'
 #' 
 #' @import OmicSignature
 #' 

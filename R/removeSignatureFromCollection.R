@@ -1,11 +1,10 @@
 #' @title removeSignatureFromCollection
 #' @description Delete a list of signatures from a collection in the database
-#' @param conn_handler A handler uses to establish connection to  
-#' a remote database obtained from SigRepo::newConnhandler() (required)
-#' @param collection_id ID of collection in the database (required)
-#' @param signature_id A list of signature IDs to be removed from a collection 
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param collection_id Database ID of the collection (required)
+#' @param signature_id A list of signature database IDs to be removed from a collection 
 #' in the database (required)
-#' @param verbose a logical value indicates whether or not to print the
+#' @param verbose Logical; whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
 #' @examples
 #' \dontrun{

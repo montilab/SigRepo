@@ -1,11 +1,10 @@
 #' @title searchUser
 #' @description Get phenotypes in the database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required)
-#' @param user_name A list of user names to search by. Default is NULL which
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param user_name A list of user names to search by. Defaults to 'NULL', which
 #' will return all of the users in the database
-#' @param verbose A logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether or not to print the
+#' diagnostic messages. Defaults to 'TRUE'.
 #' @examples
 #' \dontrun{
 #' SigRepo::searchUser(conn_handler = conn_handler,

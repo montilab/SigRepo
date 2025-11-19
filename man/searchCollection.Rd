@@ -15,21 +15,20 @@ searchCollection(
 )
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{collection_id}{ID of collection to be looked up by.}
+\item{collection_id}{Database ID of collection to be looked up by.}
 
 \item{collection_name}{Name of collection to be looked up by.}
 
-\item{signature_name}{Name of the signatures to be looked up by.}
+\item{signature_name}{Signature name of the signatures to be looked up by.}
 
-\item{signature_id}{ID of the signatures to be looked up by.}
+\item{signature_id}{Database ID of the signatures to be looked up by.}
 
 \item{user_name}{Name of users that the collection belongs to.}
 
-\item{verbose}{a logical value indicates whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether or not to print the
+diagnostic messages. Defaults to 'TRUE'.}
 }
 \description{
 Search for a list of collection in the database

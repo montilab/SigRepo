@@ -12,16 +12,14 @@ addSignatureToCollection(
 )
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{collection_id}{ID of collection in the database (required)}
+\item{collection_id}{Database ID of the OmicSignature Collection (required)}
 
-\item{signature_id}{A list of signature IDs to be added to a collection 
+\item{signature_id}{A single signature database ID, or a list, to be added to a collection 
 in the database (required)}
 
-\item{verbose}{a logical value indicates whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
 }
 \description{
 Add a list of signatures to a collection in the database

@@ -1,16 +1,15 @@
 #' @title addSignatureWithID
 #' @description Add signature to database with an assigned ID
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required)
-#' @param omic_signature An R6 class object from OmicSignature package (required)
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param omic_signature An OmicSignature R6 object from the
+#' OmicSignature package (required).
 #' @param assign_signature_id Assign an unique ID to the uploaded signature (required)
 #' @param assign_user_name Assign an unique user name to the uploaded signature (required) 
-#' @param visibility A logical value indicates whether or not to allow others  
-#' to view and access one's uploaded signature. Default is \code{FALSE}.
-#' @param check_difexp A logical value indicates whether or not to check difexp
-#' table in the database. Default is \code{TRUE}.
-#' @param verbose A logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{FALSE}.
+#' @param visibility Logical; whether the uploaded collection should be visible 
+#' and accessible to others, Defaults to 'FALSE'
+#' @param check_difexp Logical; whether or not to check difexp
+#' table in the database. Defaults to 'TRUE'
+#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #'
 #' @keywords internal
 #' 
