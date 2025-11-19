@@ -1,9 +1,8 @@
 #' @title addUserToSignature
 #' @description Add a list of users with specific access to a signature 
 #' in the database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required)
-#' @param signature_id An ID of signature in the database (required)
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param signature_id Database ID of a signature (required)
 #' @param user_name A list of users to be added to a signature (required)
 #' @param access_type A list of permissions to be given to users in order for 
 #' them to view or manage the signature in the database (required). 
@@ -15,8 +14,7 @@
 #' given them access to.
 #' \code{viewer} has ONLY Read access to signatures that other users were 
 #' given them access to.
-#' @param verbose a logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' 
 #' @examples
 #' \dontrun{

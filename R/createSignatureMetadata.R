@@ -1,10 +1,9 @@
 #' @title createSignatureMetadata
 #' @description Create a metadata object for a signature
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required)
-#' @param omic_signature An R6 class object from OmicSignature package (required)
-#' @param verbose A logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{FALSE}. 
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param omic_signature An OmicSignature R6 object from the
+#' OmicSignature package (required).
+#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' 
 #' @keywords internal
 #'

@@ -1,13 +1,12 @@
 #' @title updateSignature
 #' @description Update a signature in the database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required)
-#' @param signature_id ID of signature to be updated (required)
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param signature_id Database ID of signature to be updated (required)
 #' @param omic_signature An R6 class object from the OmicSignature package (required)
 #' @param visibility A logical value indicates whether or not to allow others  
-#' to view and access one's uploaded signature. Default is \code{FALSE}.
-#' @param verbose a logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' to view and access one's uploaded signature. Defaults to 'FALSE'.
+#' @param verbose Logical;  whether or not to print the
+#' diagnostic messages. Defaults to 'TRUE'.
 #' @examples
 #' \dontrun{
 #' SigRepo::updateSignature(conn_handler = conn_handler,

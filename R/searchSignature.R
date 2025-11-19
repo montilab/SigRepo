@@ -1,16 +1,15 @@
 #' @title searchSignature
 #' @description Search for a list of signatures in the database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required)
-#' @param signature_id ID of the signatures to be looked up by.
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param signature_id Database ID of the signatures to be looked up by.
 #' @param signature_name Name of the signatures to be looked up by.
 #' @param user_name The name of the user to be looked up by.
 #' @param organism The organism to be looked up by.
 #' @param phenotype The phenotype to be looked up by.
 #' @param sample_type The sample type to be looked up by.
 #' @param platform_name The platform name to be looked up by.
-#' @param verbose a logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether or not to print the
+#' diagnostic messages. Defaults to 'TRUE'.
 #' @examples
 #' \dontrun{
 #' SigRepo::searchSignature(conn_handler = conn_handler,

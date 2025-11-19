@@ -1,6 +1,6 @@
 #' @title newConnHandler
 #' @description Create a handler to connect to a remote database.
-#' @param dbname Name of MySQL database to point to (required)
+#' @param dbname Name of MySQL database (required)
 #' @param host Name of the server where MySQL database is hosted on (required)
 #' @param port Port on the server to connect to MySQL database (required)
 #' @param user Name of user to establish the connection (required)

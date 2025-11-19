@@ -1,13 +1,12 @@
 #' @title searchProteomicsFeatureSet
 #' @description Search for a list of proteomics features in the database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required)
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param feature_name A list of feature names to look up. 
-#' Default is NULL which will return all of the feature names in the database.
+#' Defaults to 'NULL',  which will return all of the feature names in the database.
 #' @param organism A list of organism to look up.
-#' Default is NULL which will return all of the organisms in the database.
-#' @param verbose a logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' Default to 'NULL' which will return all of the organisms in the database.
+#' @param verbose Logical; whether or not to print the
+#' diagnostic messages. Defaults to 'TRUE'.
 #' @examples
 #' \dontrun{
 #' SigRepo::searchProteomicsFeatureSet(conn_handler = conn_handler,

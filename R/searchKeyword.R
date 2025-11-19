@@ -1,11 +1,10 @@
 #' @title searchKeyword
 #' @description Search for platform in the database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required)
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param keyword A list of keywords to be looked up. 
 #' Default is NULL which will return all of the keywords in the database.
-#' @param verbose A logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether or not to print the
+#' diagnostic messages. Default to 'TRUE'
 #' @examples
 #' \dontrun{
 #' SigRepo::searchKeyword(conn_handler = conn_handler,

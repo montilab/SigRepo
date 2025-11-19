@@ -1,11 +1,9 @@
 #' @title addSampleType
 #' @description Add sample types to database
-#' @param conn_handler A handler uses to establish connection to the database 
-#' obtained from SigRepo::newConnhandler() (required) 
-#' @param sample_type_tbl An data frame containing appropriate column names:
+#' #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required)
+#' @param sample_type_tbl A Data Frame; must contain the following column names:
 #' sample_type, brenda_accession (required)
-#' @param verbose a logical value indicates whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' 
 #' @examples
 #' \dontrun{
