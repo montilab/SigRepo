@@ -7,13 +7,12 @@
 createSignatureMetadata(conn_handler, omic_signature, verbose = FALSE)
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{omic_signature}{An R6 class object from OmicSignature package (required)}
+\item{omic_signature}{An OmicSignature R6 object from the
+OmicSignature package (required).}
 
-\item{verbose}{A logical value indicates whether or not to print the
-diagnostic messages. Default is \code{FALSE}.}
+\item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
 }
 \description{
 Create a metadata object for a signature

@@ -7,14 +7,13 @@
 searchUser(conn_handler, user_name = NULL, verbose = TRUE)
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{user_name}{A list of user names to search by. Default is NULL which
+\item{user_name}{A list of user names to search by. Defaults to 'NULL', which
 will return all of the users in the database}
 
-\item{verbose}{A logical value indicates whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether or not to print the
+diagnostic messages. Defaults to 'TRUE'.}
 }
 \description{
 Get phenotypes in the database

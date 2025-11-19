@@ -7,14 +7,12 @@
 addSampleType(conn_handler, sample_type_tbl, verbose = TRUE)
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{sample_type_tbl}{An data frame containing appropriate column names:
+\item{sample_type_tbl}{A Data Frame; must contain the following column names:
 sample_type, brenda_accession (required)}
 
-\item{verbose}{a logical value indicates whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
 }
 \description{
 Add sample types to database

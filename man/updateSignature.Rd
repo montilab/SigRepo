@@ -13,18 +13,17 @@ updateSignature(
 )
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{signature_id}{ID of signature to be updated (required)}
+\item{signature_id}{Database ID of signature to be updated (required)}
 
 \item{omic_signature}{An R6 class object from the OmicSignature package (required)}
 
 \item{visibility}{A logical value indicates whether or not to allow others
-to view and access one's uploaded signature. Default is \code{FALSE}.}
+to view and access one's uploaded signature. Defaults to 'FALSE'.}
 
-\item{verbose}{a logical value indicates whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical;  whether or not to print the
+diagnostic messages. Defaults to 'TRUE'.}
 }
 \description{
 Update a signature in the database

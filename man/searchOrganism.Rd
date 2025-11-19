@@ -7,14 +7,13 @@
 searchOrganism(conn_handler, organism = NULL, verbose = TRUE)
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
 \item{organism}{an organism, or  list of organisms to search by. 
 Default is NULL which will return all of the organisms in the database.}
 
-\item{verbose}{a logical value indicates whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether or not to print the
+diagnostic messages. Defaults to 'TRUE'}
 }
 \description{
 Search for an organism in the database, can handle a singular organism or list

@@ -7,14 +7,12 @@
 addOrganism(conn_handler, organism_tbl, verbose = TRUE)
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to the database 
-obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{organism_tbl}{A data frame object contains appropriate column names: 
+\item{organism_tbl}{A Data Frame; Must contain the following column names: 
 organism (required)}
 
-\item{verbose}{a logical value indicates whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
 }
 \description{
 Add organisms to database
