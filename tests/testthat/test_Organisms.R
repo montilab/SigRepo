@@ -46,24 +46,27 @@ test_that("searchOrganism handles specific organism search", {
   }
 })
 
-# test_that("searchOrganism handles invalid connection gracefully", {
-#   # Create invalid connection
-#   invalid_conn <- list(
-#     dbname = "invalid",
-#     host = "invalid.host",
-#     port = 9999,
-#     user = "invalid",
-#     password = "invalid",
-#     api_host = "invalid",
-#     api_port = 9999
-#   )
-#   
-#   # Expect error or empty result when connection fails
-#   expect_error(
-#     SigRepo::searchOrganism(conn_handler = invalid_conn),
-#     regexp = ".*"  # Any error message
-#   ) || expect_true(nrow(SigRepo::searchOrganism(conn_handler = invalid_conn)) == 0)
-# })
+test_that("searchOrganism handles invalid connection gracefully", {
+  # Create invalid connection
+  invalid_conn <- list(
+    dbname = "invalid",
+    host = "invalid.host",
+    port = 9999,
+    user = "invalid",
+    password = "invalid",
+    api_host = "invalid",
+    api_port = 9999
+  )
+
+  # Expect error or empty result when connection fails
+  expect_error(
+    SigRepo::searchOrganism(conn_handler = invalid_conn),
+    regexp = ".*"  # Any error message
+  )
+  # Katia: search Organism() function needs to be fixed to handle invalid host
+  # It should return an informative error 
+  ##expect_true(nrow(SigRepo::searchOrganism(conn_handler = invalid_conn)) == 0)
+})
 
 test_that("searchOrganism handles NULL connection handler", {
   expect_error(
@@ -114,7 +117,7 @@ test_that("searchOrganism handles case-insensitive search", {
     conn_handler = test_conn,
     organism = "HOMO SAPIENS"
   )
-  
+  print(result_upper)
   # Both should return similar results (adjust based on your function's behavior)
   expect_true(methods::is(result_lower, "data.frame"))
   expect_true(methods::is(result_upper, "data.frame"))

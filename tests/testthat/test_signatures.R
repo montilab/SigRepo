@@ -13,7 +13,7 @@ test_that("addSignature correctly adds a signature into the database", {
       conn_handler = test_conn,
       omic_signature = test_transcriptomics_sig,
       return_signature_id = TRUE,
-      verbose = TRUE
+      verbose = FALSE
     )
   })
   
@@ -44,7 +44,7 @@ test_that("searchSignature correctly searches for the desired signature", {
       conn_handler = test_conn,
       omic_signature = test_transcriptomics_sig,
       return_signature_id = TRUE,
-      verbose = TRUE
+      verbose = FALSE
     )
   })
   
@@ -100,31 +100,35 @@ test_that("searchSignature filters by organism", {
   #print(head(organism_search))
   
   expect_true(methods::is(organism_search, "data.frame"))
+  expect_true(nrow(organism_search) > 0)
+  
 })
 
-# test_that("searchSignature filters by phenotype", {
-#   test_conn <- create_test_conn()
-#   
-#   phenotype_search <- SigRepo::searchSignature(
-#     conn_handler = test_conn,
-#     phenotype = "test_phenotype",
-#     verbose = FALSE
-#   )
-#   
-#   expect_true(methods::is(phenotype_search, "data.frame"))
-# })
+test_that("searchSignature filters by phenotype", {
+  test_conn <- create_test_conn()
 
-# test_that("searchSignature filters by platform", {
-#   test_conn <- create_test_conn()
-#   
-#   platform_search <- SigRepo::searchSignature(
-#     conn_handler = test_conn,
-#     platform = "test_platform",
-#     verbose = FALSE
-#   )
-#   
-#   expect_true(methods::is(platform_search, "data.frame"))
-# })
+  phenotype_search <- SigRepo::searchSignature(
+    conn_handler = test_conn,
+    phenotype = "Aging",
+    verbose = FALSE
+  )
+
+  expect_true(methods::is(phenotype_search, "data.frame"))
+  expect_true(nrow(phenotype_search) > 0)
+})
+
+test_that("searchSignature filters by platform", {
+  test_conn <- create_test_conn()
+
+  platform_search <- SigRepo::searchSignature(
+    conn_handler = test_conn,
+    platform = "transcriptomics by array",
+    verbose = FALSE
+  )
+
+  expect_true(methods::is(platform_search, "data.frame"))
+  expect_true(nrow(platform_search) > 0)
+})
 
 test_that("searchSignature returns empty result for non-existent signature", {
   test_conn <- create_test_conn()
@@ -151,12 +155,25 @@ test_that("addSignature handles duplicate signatures", {
       conn_handler = test_conn,
       omic_signature = test_transcriptomics_sig,
       return_signature_id = TRUE,
-      verbose = TRUE
+      verbose = FALSE
     )
   })
   
-  # Try to add same signature again - should handle gracefully
+  # Try to add same signature again
+  # If verbose is FALSE, we will not get any warnings or messages that the 
+  # signature is already in the DB
   expect_no_error({
+    SigRepo::addSignature(
+      conn_handler = test_conn,
+      omic_signature = test_transcriptomics_sig,
+      return_signature_id = TRUE,
+      verbose = FALSE
+    )
+  }) 
+  # However, if verbose is set to TRUE, we will get a message that will look like
+  # You already uploaded a signature with the name = 'test_signature' to the SigRepo Database.
+  # ID of the uploaded signature: 882
+  expect_message({
     SigRepo::addSignature(
       conn_handler = test_conn,
       omic_signature = test_transcriptomics_sig,
@@ -164,14 +181,7 @@ test_that("addSignature handles duplicate signatures", {
       verbose = TRUE
     )
   }) 
-  # # If error is expected
-  # expect_error({
-  #   SigRepo::addSignature(
-  #     conn_handler = test_conn,
-  #     omic_signature = test_transcriptomics_sig,
-  #     verbose = FALSE
-  #   )
-  # })
+
   
   # remove signature
   expect_no_error({
@@ -206,14 +216,6 @@ test_that("addSignature validates input data frame", {
     )
   })
   
-  # # If error is expected
-  # expect_no_error({
-  #   SigRepo::addSignature(
-  #     conn_handler = test_conn,
-  #     signature_tbl = data.frame(),
-  #     verbose = FALSE
-  #   )
-  # })
 })
 
 test_that("searchSignature handles NULL connection handler", {
@@ -233,19 +235,22 @@ test_that("addSignature handles NULL connection handler", {
   )
 })
 
-# test_that("searchSignature with multiple filters works correctly", {
-#   test_conn <- create_test_conn()
-#   
-#   multi_filter_search <- SigRepo::searchSignature(
-#     conn_handler = test_conn,
-#     organism = "Homo sapiens",
-#     platform = "test_platform",
-#     phenotype = "test_phenotype",
-#     verbose = FALSE
-#   )
-#   
-#   expect_true(methods::is(multi_filter_search, "data.frame"))
-# })
+test_that("searchSignature with multiple filters works correctly", {
+  test_conn <- create_test_conn()
+
+  multi_filter_search <- SigRepo::searchSignature(
+    conn_handler = test_conn,
+    organism = "Homo sapiens",
+    platform = "transcriptomics by array",
+    phenotype = "Aging",
+    verbose = FALSE
+  )
+  
+  #print(multi_filter_search )
+  # TODO: check if the output is valid
+
+  expect_true(methods::is(multi_filter_search, "data.frame"))
+})
 
 test_that("searchSignature returns consistent results", {
   test_conn <- create_test_conn()

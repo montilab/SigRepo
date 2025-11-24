@@ -12,11 +12,11 @@ create_test_conn <- function() {
 }
 
 # Use this if you need cleanup
-local_test_conn <- function(env = parent.frame()) {
-  conn <- create_test_conn()
-  withr::defer(
-    try(DBI::dbDisconnect(conn), silent = TRUE), 
-    envir = env
-  )
-  conn
-}
+# local_test_conn <- function(env = parent.frame()) {
+#   conn <- create_test_conn()
+#   withr::defer(
+#     try(DBI::dbDisconnect(conn), silent = TRUE), 
+#     envir = env
+#   )
+#   conn
+# }

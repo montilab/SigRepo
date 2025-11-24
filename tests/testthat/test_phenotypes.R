@@ -29,7 +29,8 @@ test_that("searchPhenotype handles specific phenotype search", {
   
   # Test searching for a specific phenotype (adjust if your function has filter parameters)
   phenotype_table <- SigRepo::searchPhenotype(
-    conn_handler = test_conn
+    conn_handler = test_conn,
+    phenotype="Aging"
   )
   
   expect_true(methods::is(phenotype_table, "data.frame"))
