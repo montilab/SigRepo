@@ -4,13 +4,7 @@
 # test connection handler
 test_that("newConnHandler creates a connection handler correctly",{
   
-  test_conn <<- SigRepo::newConnHandler(
-    dbname = "sigrepo",
-    host = "sigrepo.org",  
-    port = 3306,
-    user = "montilab",       # account for testing
-    password = "sigrepo"    # password for testing
-  )
+  test_conn <- create_test_conn()
   
   # Expect test_conn is a list object with 7 elements
   expect_true(base::is.list(test_conn))
