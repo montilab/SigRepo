@@ -12,6 +12,7 @@
 #' @export
 protTransform <- function(
     organism_code = "HUMAN", 
+    organism_name = "Homo sapiens",
     tax_id = "9606",
     version = base::format(base::Sys.Date(), "%m%d%Y"),
     is_current = 1
@@ -45,8 +46,11 @@ protTransform <- function(
     ) |>
     dplyr::select(c("feature_name", "gene_symbol")) |>
     dplyr::mutate(
-      organism = organism_code,
-      version = base::as.integer(version),
+      organism = organism_name,
+      version = base::format(
+        base::as.Date(version, format = "%m%d%Y"),
+        "%Y-%m-%d"
+      ),
       is_current = is_current
     )
   
