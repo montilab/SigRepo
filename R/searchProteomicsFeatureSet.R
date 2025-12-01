@@ -46,7 +46,7 @@ searchProteomicsFeatureSet <- function(
     feature_tbl <- SigRepo::lookup_table_sql(
       conn = conn, 
       db_table_name = ref_table, 
-      return_var = "feature_name", 
+      return_var = "*", 
       exclude_return_var = "feature_id",
       check_db_table = TRUE
     )  
