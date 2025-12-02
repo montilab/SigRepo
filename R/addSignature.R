@@ -146,11 +146,13 @@ addSignature <- function(
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn))
     
-    # Show message
-    SigRepo::verbose(
-      base::sprintf("\tYou already uploaded a signature with the name = '%s' to the SigRepo Database.\n", signature_tbl$signature_name[1]),
-      base::sprintf("\tID of the uploaded signature: %s\n", signature_tbl$signature_id[1])
-    )
+    # Show message, changed it so it will not use verbose flag for actual error messages.
+
+    base::stop(base::sprintf(
+      "You already uploaded a signature with the name = '%s' (ID: '%s') to the SigRepo Database.",
+      signature_tbl$signature_name[1], signature_tbl$signature_id[1]
+    ))
+    
     
     # Return signature id
     if(return_signature_id == TRUE)
