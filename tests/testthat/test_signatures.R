@@ -246,10 +246,9 @@ test_that("searchSignature with multiple filters works correctly", {
     verbose = FALSE
   )
   
-  #print(multi_filter_search )
-  # TODO: check if the output is valid
-
-  expect_true(methods::is(multi_filter_search, "data.frame"))
+  # added an expect equal for the expected amount of columns. It should always be 27
+  testthat::expect_true(methods::is(multi_filter_search, "data.frame"))
+  testthat::expect_equal(ncol(multi_filter_search), 27)
 })
 
 test_that("searchSignature returns consistent results", {
