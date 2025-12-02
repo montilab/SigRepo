@@ -61,11 +61,8 @@ test_that("searchOrganism handles invalid connection gracefully", {
   # Expect error or empty result when connection fails
   expect_error(
     SigRepo::searchOrganism(conn_handler = invalid_conn),
-    regexp = ".*"  # Any error message
+    regexp = "Invalid connection"  # Any error message
   )
-  # Katia: search Organism() function needs to be fixed to handle invalid host
-  # It should return an informative error 
-  ##expect_true(nrow(SigRepo::searchOrganism(conn_handler = invalid_conn)) == 0)
 })
 
 test_that("searchOrganism handles NULL connection handler", {
