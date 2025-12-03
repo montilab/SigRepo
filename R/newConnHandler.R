@@ -106,7 +106,12 @@ conn_init <- function(conn_handler){
       password = password
     )
   }, error = function(e){
-    base::stop(e, "\n")
+    base::stop(
+      "Failed to connect to the database.\n",
+      "Please check your host, username, password, and network connection.\n\n",
+      "Technical details: ", conditionMessage(e),
+      call. = FALSE
+    )
   })
   
   # If user is root, validate if root exists in the users table of the database
