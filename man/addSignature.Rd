@@ -7,7 +7,7 @@
 addSignature(
   conn_handler,
   omic_signature,
-  visibility = FALSE,
+  visibility = TRUE,
   add_users = NULL,
   return_signature_id = FALSE,
   return_missing_features = FALSE,

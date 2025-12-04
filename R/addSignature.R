@@ -32,7 +32,7 @@
 addSignature <- function(
     conn_handler,
     omic_signature,
-    visibility = FALSE,
+    visibility = TRUE,
     add_users = NULL,
     return_signature_id = FALSE,
     return_missing_features = FALSE,
@@ -43,14 +43,7 @@ addSignature <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  # Assert that the following function executes without error and
-  # give an error message if it fails
-  tryCatch({
-    conn <- SigRepo::conn_init(conn_handler = conn_handler)
-  }, error = function(e){
-    base::stop("Cannot connect to the database. Please check your connection handler.")
-  })
-  
+  conn <- SigRepo::conn_init(conn_handler = conn_handler)
   
   # Check user connection and permission ####
   conn_info <- SigRepo::checkPermissions(
@@ -146,11 +139,13 @@ addSignature <- function(
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn))
     
-    # Show message
-    SigRepo::verbose(
-      base::sprintf("\tYou already uploaded a signature with the name = '%s' to the SigRepo Database.\n", signature_tbl$signature_name[1]),
-      base::sprintf("\tID of the uploaded signature: %s\n", signature_tbl$signature_id[1])
-    )
+    # Show message, changed it so it will not use verbose flag for actual error messages.
+
+    base::stop(base::sprintf(
+      "You already uploaded a signature with the name = '%s' (ID: '%s') to the SigRepo Database.",
+      signature_tbl$signature_name[1], signature_tbl$signature_id[1]
+    ))
+    
     
     # Return signature id
     if(return_signature_id == TRUE)
