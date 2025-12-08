@@ -1,7 +1,8 @@
 #' @title deleteSignature
 #' @description Delete a signature from the signatures table of the database
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required)
-#' @param signature_id Database ID of signature to be removed from the database (required)
+#' @param signature_id Database ID of signature to be removed from the database (signature id OR signature name required, both is also an option)
+#' @param signature_name Name of the signature to be removed from the database ( signature id OR signature name required, both is also an option)
 #' @param verbose Logical; whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
 #' @examples
@@ -15,7 +16,8 @@
 #' @export
 deleteSignature <- function(
     conn_handler, 
-    signature_id,
+    signature_id = NULL,
+    signature_name = NULL,
     verbose = TRUE
 ){
   
@@ -38,8 +40,67 @@ deleteSignature <- function(
   # Get user_name ####
   user_name <- conn_info$user[1]
   
-  # Get unique signature id
-  signature_id <- base::unique(signature_id) 
+  # At least one must be provided
+  if (is.null(signature_id) && is.null(signature_name)) {
+    suppressWarnings(DBI::dbDisconnect(conn))
+    stop("\nEither 'signature_id' or 'signature_name' must be supplied.\n")
+  }
+  
+  # Ensure unique inputs
+  if (!is.null(signature_id)) {
+    signature_id <- unique(signature_id)
+    if (length(signature_id) != 1 || all(signature_id %in% c(NA, ""))) {
+      suppressWarnings(DBI::dbDisconnect(conn))
+      stop("\n'signature_id' must have length 1 and cannot be empty.\n")
+    }
+  }
+  
+  if (!is.null(signature_name)) {
+    signature_name <- unique(signature_name)
+    if (length(signature_name) != 1 || all(signature_name %in% c(NA, ""))) {
+      suppressWarnings(DBI::dbDisconnect(conn))
+      stop("\n'signature_name' must have length 1 and cannot be empty.\n")
+    }
+  }
+  
+  # If user supplied BOTH, verify they refer to the same signature
+  if (!is.null(signature_id) && !is.null(signature_name)) {
+    check_tbl <- SigRepo::lookup_table_sql(
+      conn = conn,
+      db_table_name = "signatures",
+      return_var = "signature_id",
+      filter_coln_var = "signature_name",
+      filter_coln_val = list("signature_name" = signature_name),
+      check_db_table = TRUE
+    )
+    
+    if (nrow(check_tbl) == 0 || check_tbl$signature_id[1] != signature_id) {
+      suppressWarnings(DBI::dbDisconnect(conn))
+      stop("\n'signature_id' and 'signature_name' do not refer to the same signature.\n")
+    }
+  }
+  
+  # Resolve signature_id from name if needed
+  if (is.null(signature_id)) {
+    sig_tbl <- SigRepo::lookup_table_sql(
+      conn = conn,
+      db_table_name = "signatures",
+      return_var = "signature_id",
+      filter_coln_var = "signature_name",
+      filter_coln_val = list("signature_name" = signature_name),
+      check_db_table = TRUE
+    )
+    
+    if (nrow(sig_tbl) == 0) {
+      suppressWarnings(DBI::dbDisconnect(conn))
+      stop(sprintf(
+        "\nNo signature with name '%s' exists in the 'signatures' table.\n",
+        signature_name
+      ))
+    }
+    
+    signature_id <- sig_tbl$signature_id[1]
+  }
   
   # Check signature_id
   if(base::length(signature_id) != 1 || base::all(signature_id %in% c(NA, ""))){
