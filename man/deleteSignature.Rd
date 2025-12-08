@@ -4,12 +4,19 @@
 \alias{deleteSignature}
 \title{deleteSignature}
 \usage{
-deleteSignature(conn_handler, signature_id, verbose = TRUE)
+deleteSignature(
+  conn_handler,
+  signature_id = NULL,
+  signature_name = NULL,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{signature_id}{Database ID of signature to be removed from the database (required)}
+\item{signature_id}{Database ID of signature to be removed from the database (signature id OR signature name required, both is also an option)}
+
+\item{signature_name}{Name of the signature to be removed from the database ( signature id OR signature name required, both is also an option)}
 
 \item{verbose}{Logical; whether or not to print the
 diagnostic messages. Default is \code{TRUE}.}
