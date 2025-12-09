@@ -50,11 +50,8 @@ Here, we provide two signature objects that comes with the package for demonstra
 
 ```{r, warning=FALSE, echo=FALSE, message=FALSE}
 # Read in the signature objects
-
-
-data("LLFS_Aging_Gene_2023", package = "SigRepo")
-
-data("Myc_reduce_mice_liver_24m", package = "SigRepo")
+utils::data("LLFS_Aging_Gene_2023", package = "SigRepo")
+utils::data("Myc_reduce_mice_liver_24m", package = "SigRepo")
 ```
 
 ## Upload a signature

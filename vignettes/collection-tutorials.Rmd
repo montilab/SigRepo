@@ -98,10 +98,10 @@ Here, we provided 4 signature objects that came with the package for demonstrati
 
 ```{r}
 # Read in the signature objects
-data("omic_signature_1", package = "SigRepo")
-data("omic_signature_2", package = "SigRepo")
-data("omic_signature_3", package = "SigRepo")
-data("omic_signature_4", package = "SigRepo")
+utils::data("omic_signature_1", package = "SigRepo")
+utils::data("omic_signature_2", package = "SigRepo")
+utils::data("omic_signature_3", package = "SigRepo")
+utils::data("omic_signature_4", package = "SigRepo")
 ```
 
 # Create an omic collection 

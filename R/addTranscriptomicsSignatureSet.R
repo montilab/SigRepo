@@ -181,7 +181,7 @@ addTranscriptomicsSignatureSet <- function(
     table <- SigRepo::createHashKey(
       table = table,
       hash_var = "sig_feature_hashkey",
-      hash_columns = c("signature_id", "feature_id", "assay_type"),
+      hash_columns = c("signature_id", "feature_id", "assay_type", "score"),
       hash_method = "md5"
     )
     

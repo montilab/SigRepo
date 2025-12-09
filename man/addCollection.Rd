@@ -30,17 +30,43 @@ Defaults to 'FALSE'}
 Add signature collections to database
 }
 \examples{
-\dontrun{
-SigRepo::addCollection(
-# required
-conn_handler = conn_handler,
-omic_collection  = omic_collection_1,
 
-# optional
-visibility = FALSE,
-return_collection_id = TRUE,
-verbose = TRUE
+\dontrun{
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
 )
+
+# Load signature objects
+utils::data("omic_signature_1", package = "SigRepo")
+utils::data("omic_signature_2", package = "SigRepo")
+
+# Create a metadata object for the collection
+metadata <- base::list(
+  "collection_name" = "my_collection",
+  "description" = "An example of signature collection"
+)
+
+# Create an omic collection using OmicSignatureCollection() from OmicSignature package
+omic_collection <- OmicSignature::OmicSignatureCollection$new(
+  OmicSigList = base::list(omic_signature_1, omic_signature_2),
+  metadata = metadata
+)
+
+# Add collection
+SigRepo::addCollection(
+  conn_handler = conn_handler,
+  omic_collection  = omic_collection,
+  visibility = FALSE,
+  return_collection_id = TRUE,
+  verbose = TRUE
+)
+
 }
 
 

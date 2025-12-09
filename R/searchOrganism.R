@@ -24,13 +24,7 @@ searchOrganism <- function(
   SigRepo::print_messages(verbose = verbose)
 
   # Establish user connection ###
-  tryCatch({
-    conn <- SigRepo::conn_init(conn_handler = conn_handler)
-
-  },  error = function(e){
-    stop("Failed to connect to the SigRepo Database. Invalid connection.", call. = FALSE)
-  }
-  )
+  conn <- SigRepo::conn_init(conn_handler = conn_handler)
   
   # Check user connection and permissions ####
   conn_info <- SigRepo::checkPermissions(

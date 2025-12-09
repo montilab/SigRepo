@@ -334,6 +334,53 @@ checkDuplicatedEmails <- function(
   }
 }
 
+#' @title checkAssayType
+#' @description Check if assay type is a valid type in the database
+#' @param assay_type An assay type of the signature
+#' 
+#' @keywords internal 
+#' 
+#' @export
+checkAssayType <- function(
+    assay_type
+){
+  
+  # Get assay tbl
+  assay_tbl <- SigRepo:::global_var[["assay_tbl"]]
+  
+  # Check if assay is available
+  check_tbl <- assay_tbl |> 
+    dplyr::filter(base::trimws(base::tolower(.data$assay_type)) %in% base::trimws(base::tolower(!!assay_type)))
+  
+  # Return message
+  if(base::nrow(check_tbl) == 0){
+    base::stop(base::sprintf("Invalid assay type. 'assay_type' must be one of the following options: %s", base::paste0(assay_tbl$assay_type, collapse = "/")))
+  }else if(check_tbl$status[1] == "Unavailable"){
+    base::stop(base::sprintf("\nAssay type = '%s' is not implemented in the database yet.", base::paste0(check_tbl$assay_type[1])))
+  }
+  
+}
+
+#' @title checkDirectionType
+#' @description Check if direction type is a valid type in the database
+#' @param direction_type A direction type of the signature
+#' 
+#' @keywords internal 
+#' 
+#' @export
+checkDirectionType <- function(
+    direction_type
+){
+  
+  # Get direction type options
+  direction_type_options <- SigRepo:::global_var[["direction_type"]] %>% base::tolower() %>% base::trimws()
+  
+  # Return message
+  if(!base::trimws(base::tolower(direction_type[1])) %in% direction_type_options)
+    base::stop(base::sprintf("'direction_type' must be one of the following options: %s", base::paste0(direction_type_options, collapse = "/")))
+
+}
+
 #' @title checkOmicSignature
 #' @description Check if omic_signature is a valid R6 object
 #' @param omic_signature An OmicSignature object from OmicSignature package
@@ -378,17 +425,11 @@ checkOmicSignature <- function(
     base::stop("'organism' in OmicSignature's metadata object is required and cannot be empty.")
   
   # Check direction_type (required) ####
-  direction_type_options <- c("uni-directional", "bi-directional", "categorical")
-  
-  if(!metadata$direction_type[1] %in% direction_type_options)
-    base::stop(base::sprintf("'direction_type' in OmicSignature's metadata object must be one of the following options: %s", base::paste0(direction_type_options, collapse = "/")))
+  SigRepo::checkDirectionType(direction_type = metadata$direction_type[1])
   
   # Check assay_type (required) ####
-  assay_type_options <- c("transcriptomics", "proteomics", "metabolomics", "methylomics", "SNPs")
-  
-  if(!metadata$assay_type[1] %in% assay_type_options)
-    base::stop(base::sprintf("'assay_type' in OmicSignature's metadata object must be one of the following options: %s", base::paste0(assay_type_options, collapse = "/")))
-  
+  SigRepo::checkAssayType(assay_type = metadata$assay_type[1])
+
   # Check phenotype (required) #####
   if(base::length(metadata$phenotype[1]) == 0 || metadata$phenotype[1] %in% c(NA, ""))
     base::stop("'phenotype' in OmicSignature's metadata object is required and cannot be empty.")

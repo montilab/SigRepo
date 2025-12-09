@@ -108,9 +108,8 @@ conn_init <- function(conn_handler){
   }, error = function(e){
     base::stop(
       "Failed to connect to the database.\n",
-      "Please check your host, username, password, and network connection.\n\n",
-      "Technical details: ", conditionMessage(e),
-      call. = FALSE
+      "Please check your host, username, password, and network connection.\n",
+      "Technical details: ", base::as.character(e)
     )
   })
   

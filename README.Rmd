@@ -113,9 +113,6 @@ conn_handler <- SigRepo::newConnHandler(
 )
 ``` 
 
-
-
-
 #  Guides
-- [Uploading Signature Tutorial]
+- [Uploading Signature Tutorial](https://montilab.github.io/SigRepo/articles/signature-tutorials.html)
 - [Uploading Signature Collection Tutorial](https://montilab.github.io/SigRepo/articles/collection-tutorials.html)
