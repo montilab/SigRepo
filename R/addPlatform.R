@@ -3,16 +3,36 @@
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param platform_tbl A Data Frame; Must contain the following column names:
 #' platform_name (required)
-#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
-#' @examples
-#' \dontrun{
-#' # example code
-#' platform_tbl <- data.frame(platform_name = c("platform_1","platform_2"))
+#' @param verbose Logical; whether to print diagnostic messages. 
+#' Defaults to 'TRUE'.
 #' 
-#' SigRepo::addPlatform(conn_handler = conn_handler,
-#'                     platform_tbl = platform_tbl,
-#'                     verbose = TRUE)
+#' @examples
+#' 
+#' \dontrun{
+#' 
+#' # Create platforms table
+#' platform_tbl <- base::data.frame(
+#'   platform_name = c("platform_1", "platform_2")
+#' )
+#' 
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
+#' )
+#' 
+#' # Add platforms to database
+#' SigRepo::addPlatform(
+#'   conn_handler = conn_handler,
+#'   platform_tbl = platform_tbl,
+#'   verbose = TRUE
+#' )
+#' 
 #' }
+#' 
 #' @export
 addPlatform <- function(
     conn_handler,

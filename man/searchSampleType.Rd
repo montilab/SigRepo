@@ -19,17 +19,32 @@ will return all of the sample types in the database.}
 
 \item{brenda_accession}{A list of Brenda accession to search by. Defaults to 'NULL'.}
 
-\item{verbose}{Logical; whether or not to print the
-diagnostic messages. Defaults to 'TRUE'.}
+\item{verbose}{Logical; whether or not to print the diagnostic messages. 
+Defaults to 'TRUE'.}
 }
 \description{
 Search sample types in the database
 }
 \examples{
+
 \dontrun{
-SigRepo::searchSampleType(conn_handler = conn_handler,
-                          sample_type = "test_sample_type",
-                          )
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Search for a list of sample types in the database
+SigRepo::searchSampleType(
+  conn_handler = conn_handler, 
+  sample_type = "test_sample_type", 
+  verbose = TRUE
+)
+
 }
 
 

@@ -24,7 +24,8 @@ and accessible to others, Defaults to 'FALSE'}
 \item{return_collection_id}{Logical; whether to return the ID of the uploaded collection
 Defaults to 'FALSE'}
 
-\item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
+\item{verbose}{Logical; whether to print diagnostic messages. 
+Defaults to 'TRUE'.}
 }
 \description{
 Add signature collections to database
@@ -32,6 +33,8 @@ Add signature collections to database
 \examples{
 
 \dontrun{
+
+library(OmicSignature)
 
 # Create a connection handler
 conn_handler <- SigRepo::newConnHandler(
@@ -58,7 +61,7 @@ omic_collection <- OmicSignature::OmicSignatureCollection$new(
   metadata = metadata
 )
 
-# Add collection
+# Add collection to database
 SigRepo::addCollection(
   conn_handler = conn_handler,
   omic_collection  = omic_collection,

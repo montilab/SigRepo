@@ -10,7 +10,8 @@ addOrganism(conn_handler, organism_tbl, verbose = TRUE)
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
 \item{organism_tbl}{A Data Frame; Must contain the following column names: 
-organism (required)}
+organism, biomart_db, biomart_dataset, biomart_description, biomart_version, 
+prot_organism_code, prot_organism_taxid (required)}
 
 \item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
 }
@@ -18,16 +19,36 @@ organism (required)}
 Add organisms to database
 }
 \examples{
+
 \dontrun{
-# example code
 
-organism_tbl <- data.frame(
-organism = c("organism_1", "organism_2"))
+# Create organisms table
+organism_tbl <- base::data.frame(
+  organism = "Homo sapiens",
+  biomart_db = "genes", 
+  biomart_dataset = "hsapiens_gene_ensembl", 
+  biomart_description = "Human genes (GRCh38.p14)", 
+  biomart_version = 114, 
+  prot_organism_code = "Human", 
+  prot_organism_taxid = 9606
+)
 
-SigRepo::addOrganism(conn_handler = conn_handler,
-                     organism_tbl = organism_tbl,
-                     verbose = TRUE)
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Add organisms to database
+SigRepo::addOrganism(
+  conn_handler = conn_handler,
+  organism_tbl = organism_tbl,
+  verbose = TRUE
+)
+
 }
    
-
 }

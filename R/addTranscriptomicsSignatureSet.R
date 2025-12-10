@@ -5,9 +5,8 @@
 #' @param organism_id  Database ID of the organism (required) 
 #' @param signature_set A Data Frame; Must contain the following column names:
 #' feature_name, probe_id, score, group_label (required) 
-#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
-#' 
-#' @keywords internal
+#' @param verbose Logical; whether to print diagnostic messages. 
+#' Defaults to 'TRUE'.
 #' 
 #' @export
 addTranscriptomicsSignatureSet <- function(

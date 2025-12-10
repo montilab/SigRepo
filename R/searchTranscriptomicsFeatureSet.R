@@ -5,14 +5,30 @@
 #' Defaults to 'NULL',  which will return all of the feature names in the database.
 #' @param organism A list of organism to look up.
 #' Defaults to  'NULL' which will return all of the organisms in the database.
-#' @param verbose Logical; whether or not to print the
-#' diagnostic messages. Defaults to 'TRUE'.
+#' @param verbose Logical; whether or not to print the diagnostic messages. 
+#' Defaults to 'TRUE'.
+#' 
 #' @examples
+#' 
 #' \dontrun{
-#' SigRepo::searchTranscriptomicsFeatureSet(conn_handler = conn_handler,
-#'                                           feature_name = "test_feature_name",
-#'                                           organism = "Mus musculus",
-#'                                           verbose = TRUE)
+#' 
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
+#' )
+#' 
+#' # Search for a list of transcriptomics features in the database
+#' SigRepo::searchTranscriptomicsFeatureSet(
+#'   conn_handler = conn_handler, 
+#'   feature_name = "test_feature_name", 
+#'   organism = "Mus musculus", 
+#'   verbose = TRUE
+#' )
+#' 
 #' }
 #' 
 #' 

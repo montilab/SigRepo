@@ -9,8 +9,8 @@ getAPIKey(conn_handler, verbose = TRUE)
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{verbose}{Logical; whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether or not to print the diagnostic messages. 
+Default is \code{TRUE}.}
 }
 \description{
 Get API Key of a specific user in the database

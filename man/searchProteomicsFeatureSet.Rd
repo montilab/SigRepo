@@ -20,19 +20,32 @@ Defaults to 'NULL',  which will return all of the feature names in the database.
 \item{organism}{A list of organism to look up.
 Default to 'NULL' which will return all of the organisms in the database.}
 
-\item{verbose}{Logical; whether or not to print the
-diagnostic messages. Defaults to 'TRUE'.}
+\item{verbose}{Logical; whether or not to print the diagnostic messages. 
+Defaults to 'TRUE'.}
 }
 \description{
 Search for a list of proteomics features in the database
 }
 \examples{
-\dontrun{
-SigRepo::searchProteomicsFeatureSet(conn_handler = conn_handler,
-                                    feature_name = "test_feature",
-                                    organism = "Homo sapiens"
-                                    )
-}
 
+\dontrun{
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Search for a list of proteomics features in the database
+SigRepo::searchProteomicsFeatureSet(
+  conn_handler = conn_handler,
+  feature_name = "test_feature",
+  organism = "Homo sapiens"
+)
+
+}
 
 }

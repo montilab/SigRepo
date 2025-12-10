@@ -7,11 +7,14 @@
 #' and accessible to others, Defaults to 'FALSE'
 #' @param return_collection_id Logical; whether to return the ID of the uploaded collection
 #' Defaults to 'FALSE'
-#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
+#' @param verbose Logical; whether to print diagnostic messages. 
+#' Defaults to 'TRUE'.
 #' 
 #' @examples
 #' 
 #' \dontrun{
+#' 
+#' library(OmicSignature)
 #' 
 #' # Create a connection handler
 #' conn_handler <- SigRepo::newConnHandler(
@@ -38,7 +41,7 @@
 #'   metadata = metadata
 #' )
 #' 
-#' # Add collection
+#' # Add collection to database
 #' SigRepo::addCollection(
 #'   conn_handler = conn_handler,
 #'   omic_collection  = omic_collection,
@@ -126,14 +129,12 @@ addCollection <- function(
     
     # Show message
     SigRepo::verbose(
-      base::sprintf("\tYou already uploaded a collection with the name = '%s' to the SigRepo database.\n", metadata_tbl$collection_name),
-      base::sprintf("\tID of the uploaded collection: %s\n", collection_tbl$collection_id)
+      base::sprintf("\tYou already uploaded a collection with the name = '%s' to the database.\n", metadata_tbl$collection_nam[1]),
+      base::sprintf("\tID of the uploaded collection: %s\n", collection_tbl$collection_id[1])
     )
     
     # Return collection id
-    if(return_collection_id == TRUE){
-      return(collection_tbl$collection_id[1])
-    }
+    if(return_collection_id == TRUE) return(collection_tbl$collection_id[1])
     
   }else{
     

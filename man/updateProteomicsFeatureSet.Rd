@@ -9,12 +9,12 @@ updateProteomicsFeatureSet(conn_handler, organism, verbose = TRUE)
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{organism}{An organism to extract the dataset and update its features (required)}
+\item{organism}{An organism to extract and update its features (required)}
 
-\item{verbose}{A logical value of whether to print diagnostic messages. Defaults to 'TRUE'}
+\item{verbose}{A logical value of whether to print diagnostic messages. 
+Defaults to 'TRUE'}
 }
 \description{
-Function to dynamically retrieve the ftp uniprot data from NCBI 
-and update the proteomics feature set in the database
+Retrieve FTP UniProt data from NCBI and update proteomics 
+feature set in the database
 }
-\keyword{internal}

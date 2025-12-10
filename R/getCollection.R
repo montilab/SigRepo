@@ -3,8 +3,8 @@
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param collection_name Name of collection to be returned (required)
 #' @param collection_id Database ID of collection to be returned (required)
-#' @param verbose Logical; whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether or not to print the diagnostic messages. 
+#' Default is \code{TRUE}.
 #'  
 #' @export
 getCollection <- function(

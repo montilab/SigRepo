@@ -22,18 +22,32 @@ updateSignature(
 \item{visibility}{A logical value indicates whether or not to allow others
 to view and access one's uploaded signature. Defaults to 'FALSE'.}
 
-\item{verbose}{Logical;  whether or not to print the
-diagnostic messages. Defaults to 'TRUE'.}
+\item{verbose}{Logical;  whether or not to print the diagnostic messages. 
+Defaults to 'TRUE'.}
 }
 \description{
 Update a signature in the database
 }
 \examples{
-\dontrun{
-SigRepo::updateSignature(conn_handler = conn_handler,
-                         signature_id = 20,
-                         omic_signature = test_omic_signature)
-}
 
+\dontrun{
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Update a signature in the database
+SigRepo::updateSignature(
+  conn_handler = conn_handler, 
+  signature_id = 20, 
+  omic_signature = test_omic_signature
+)
+
+}
 
 }

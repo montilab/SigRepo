@@ -3,7 +3,8 @@
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param omic_signature An OmicSignature R6 object from the
 #' OmicSignature package (required).
-#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
+#' @param verbose Logical; whether to print diagnostic messages. 
+#' Defaults to 'TRUE'.
 #' 
 #' @keywords internal
 #'

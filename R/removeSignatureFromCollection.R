@@ -4,15 +4,30 @@
 #' @param collection_id Database ID of the collection (required)
 #' @param signature_id A list of signature database IDs to be removed from a collection 
 #' in the database (required)
-#' @param verbose Logical; whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether or not to print the diagnostic messages. 
+#' Default is \code{TRUE}.
+#' 
 #' @examples
+#' 
 #' \dontrun{
-#' SigRepo::removeSignatureFromCollection(conn_handler = conn_handler
-#'                                        collection_id = 60,
-#'                                        signature_id = c(59,70),
-#'                                        verbose = TRUE
-#'                                        )
+#' 
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
+#' )
+#' 
+#' # Delete a list of signatures from a collection
+#' SigRepo::removeSignatureFromCollection(
+#'   conn_handler = conn_handler, 
+#'   collection_id = 60,
+#'   signature_id = c(59, 70),
+#'   verbose = TRUE
+#' )
+#' 
 #' }
 #'   
 #' 

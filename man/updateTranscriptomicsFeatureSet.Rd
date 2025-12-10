@@ -4,23 +4,17 @@
 \alias{updateTranscriptomicsFeatureSet}
 \title{updateTranscriptomicsFeatureSet}
 \usage{
-updateTranscriptomicsFeatureSet(
-  conn_handler,
-  organism,
-  force = FALSE,
-  verbose = TRUE
-)
+updateTranscriptomicsFeatureSet(conn_handler, organism, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{organism}{An organism to extract the dataset and update its features (required)}
+\item{organism}{An organism to extract and update its features (required)}
 
-\item{force}{A logical value of whether to force an update. Defaults to 'FALSE'.}
-
-\item{verbose}{A logical value of whether to print diagnostic messages. Defaults to 'TRUE'.}
+\item{verbose}{A logical value of whether to print diagnostic messages. 
+Defaults to 'TRUE'.}
 }
 \description{
-Function to dynamically transform the ftp uniprot data into the SigRepo dictionary structure
+Extract data from biomaRt package and update transcriptomics 
+feature set in the database.
 }
-\keyword{internal}

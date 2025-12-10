@@ -33,17 +33,32 @@ searchSignature(
 
 \item{platform_name}{The platform name to be looked up by.}
 
-\item{verbose}{Logical; whether or not to print the
-diagnostic messages. Defaults to 'TRUE'.}
+\item{verbose}{Logical; whether or not to print the diagnostic messages. 
+Defaults to 'TRUE'.}
 }
 \description{
 Search for a list of signatures in the database
 }
 \examples{
+
 \dontrun{
-SigRepo::searchSignature(conn_handler = conn_handler,
-                         signature_id = "test_signature",
-                         user_name = "John_Doe")
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Search for a list of signatures in the database
+SigRepo::searchSignature(
+  conn_handler = conn_handler,
+  signature_id = "test_signature",
+  user_name = "John_Doe"
+)
+
 }
  
 

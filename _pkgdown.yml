@@ -103,7 +103,7 @@ reference:
 navbar:
   title: SigRepo
   structure:
-    left: [signature, collection, reference, change_log]
+    left: [home, signature, collection, reference, change_log]
     right: [search, github, lightswitch]
   components:
     signature:

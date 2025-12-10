@@ -27,4 +27,3 @@ feature_name, probe_id, score, group_label (required)}
 \description{
 Add proteomics signature feature set to database
 }
-\keyword{internal}

@@ -46,9 +46,9 @@ createOmicSignature <- function(
   }else if(assay_type == "methylomics"){
     SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
     #ref_table <- "methylomics_features"
-  }else if(assay_type == "SNPs"){
+  }else if(assay_type == "snps"){
     SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
-    #ref_table <- "SNPs_features"
+    #ref_table <- "snps_features"
   }
   
   # Create metadata

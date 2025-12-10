@@ -2,14 +2,30 @@
 #' @description Remove sample types from database
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required)
 #' @param sample_type A list of sample types to be removed (required)
-#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
-#' @examples
-#' \dontrun{
-#' SigRepo::deleteSampleType(conn_handler = conn_handler,
-#'                           sample_type = "sample_type",
-#'                           verbose = TRUE)
-#' }
+#' @param verbose Logical; whether to print diagnostic messages. 
+#' Defaults to 'TRUE'.
 #' 
+#' @examples
+#' 
+#' \dontrun{
+#' 
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
+#' )
+#' 
+#' # Delete a list of sample types from database
+#' SigRepo::deleteSampleType(
+#'   conn_handler = conn_handler,
+#'   sample_type = "3T3-L1 cell",
+#'   verbose = TRUE
+#' )
+#' 
+#' }
 #' 
 #' @export
 deleteSampleType <- function(

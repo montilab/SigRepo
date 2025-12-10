@@ -1,3 +1,4 @@
+
 <br>
 
 # <img src="man/figures/logo.png" align="left" width="190" /> SigRepo: An R package for storing and processing omic signatures
@@ -15,9 +16,9 @@ storage and management of biological signatures and their components.
 SigRepo (the `client`) works alongside `SigRepo_Server`, its `server`
 counterpart. While SigRepo enables you to store, search, and retrieve
 signatures and signature collections, these operations rely on a running
-SigRepo\_Server instance.
+SigRepo_Server instance.
 
-Interested in setting up your own SigRepo\_Server? Check out the
+Interested in setting up your own SigRepo_Server? Check out the
 installation instructions
 <a target="_blank" href="https://montilab.github.io/SigRepo_Server/articles/install_sigrepo.html" >here</a>.
 
@@ -29,15 +30,15 @@ can create these objects using our proprietary package,
 
 Click on each link below for more information:
 
--   <a
-    href="https://montilab.github.io/OmicSignature/articles/ObjectStructure.html"
-    target="_blank">Overview of the object structure</a>
--   <a
-    href="https://montilab.github.io/OmicSignature/articles/CreateOmS.html"
-    target="_blank">Create an OmicSignature (OmS)</a>
--   <a
-    href="https://montilab.github.io/OmicSignature/articles/CreateOmSC.html"
-    target="_blank">Create an OmicSignatureCollection (OmSC)</a>
+- <a
+  href="https://montilab.github.io/OmicSignature/articles/ObjectStructure.html"
+  target="_blank">Overview of the object structure</a>
+- <a
+  href="https://montilab.github.io/OmicSignature/articles/CreateOmS.html"
+  target="_blank">Create an OmicSignature (OmS)</a>
+- <a
+  href="https://montilab.github.io/OmicSignature/articles/CreateOmSC.html"
+  target="_blank">Create an OmicSignatureCollection (OmSC)</a>
 
 Below, we walk you through few essential steps to install the `SigRepo`
 package, and to store, retrieve, and interact with a list of signatures
@@ -46,7 +47,7 @@ deployed SigRepo server</a>.
 
 # Installation
 
--   Using `devtools` package
+- Using `devtools` package
 
 <!-- -->
 
@@ -110,6 +111,7 @@ which contains user credentials to establish connection to our database.
 
 # Guides
 
--   \[Uploading Signature Tutorial\]
--   [Uploading Signature Collection
-    Tutorial](https://montilab.github.io/SigRepo/articles/collection-tutorials.html)
+- [Uploading Signature
+  Tutorial](https://montilab.github.io/SigRepo/articles/signature-tutorials.html)
+- [Uploading Signature Collection
+  Tutorial](https://montilab.github.io/SigRepo/articles/collection-tutorials.html)

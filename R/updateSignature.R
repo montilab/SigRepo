@@ -5,15 +5,30 @@
 #' @param omic_signature An R6 class object from the OmicSignature package (required)
 #' @param visibility A logical value indicates whether or not to allow others  
 #' to view and access one's uploaded signature. Defaults to 'FALSE'.
-#' @param verbose Logical;  whether or not to print the
-#' diagnostic messages. Defaults to 'TRUE'.
-#' @examples
-#' \dontrun{
-#' SigRepo::updateSignature(conn_handler = conn_handler,
-#'                          signature_id = 20,
-#'                          omic_signature = test_omic_signature)
-#'}
+#' @param verbose Logical;  whether or not to print the diagnostic messages. 
+#' Defaults to 'TRUE'.
 #' 
+#' @examples
+#' 
+#' \dontrun{
+#' 
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
+#' )
+#' 
+#' # Update a signature in the database
+#' SigRepo::updateSignature(
+#'   conn_handler = conn_handler, 
+#'   signature_id = 20, 
+#'   omic_signature = test_omic_signature
+#' )
+#' 
+#'}
 #' 
 #' @export
 updateSignature <- function(

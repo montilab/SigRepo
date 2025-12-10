@@ -42,8 +42,6 @@ verbose <- function(...){
 #' 
 #' @keywords internal 
 #' 
-#' 
-#' 
 #' @export
 checkPermissions <- function(
     conn,
@@ -178,8 +176,6 @@ checkDBTable <- function(
 #' @param check_db_table Check whether table exists in the database. Default = TRUE.
 #' 
 #' @keywords internal
-#' 
-#' @import tidyr
 #'
 #' @export
 checkTableInput <- function(
@@ -717,8 +713,10 @@ getDBColNames <- function(
     base::stop(e, "\n")
   })
   
+  # Get table column names
   col_names <- base::colnames(db_table)
   
+  # Exclude column names from table
   if(!base::is.null(exclude_coln_names)) {
     col_names <- base::setdiff(col_names, exclude_coln_names)
   }

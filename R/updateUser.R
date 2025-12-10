@@ -10,8 +10,8 @@
 #' @param role Role of a user to be updated. Choices are admin/editor/viewer.
 #' @param active Whether to make a user TRUE (active) or FALSE (inactive). 
 #' Default is NULL.
-#' @param verbose Logical; whether or not to print the
-#' diagnostic messages. Defaults to 'TRUE'
+#' @param verbose Logical; whether or not to print the diagnostic messages. 
+#' Defaults to 'TRUE'
 #' 
 #' @export
 updateUser <- function(
@@ -66,13 +66,10 @@ updateUser <- function(
   
   # If user does not have permission, throw an error message
   if(base::nrow(user_tbl) == 0){
-    
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn)) 
-    
     # Show message
     base::stop(base::sprintf("\nCannot update user = '%s' as user does not exist in the 'users' table of the database.\n", user_name))
-    
   }
   
   # Check role ####

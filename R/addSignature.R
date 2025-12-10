@@ -15,16 +15,28 @@
 #' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' 
 #' @examples
+#' 
 #' \dontrun{
-#' # SigRepo::addSignature(
-#' # requried
-#' conn_handler = conn_handler,
-#' omic_signature = omc_signature_1,
-#' # optional
-#' visibility = FALSE, # default is false
-#' add_users = c("John", "Jane"),
-#' return_signature_id = TRUE,
-#' verbose = TRUE)
+#' 
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
+#' )
+#' 
+#' # Add signatures to database
+#' SigRepo::addSignature(
+#'   conn_handler = conn_handler,
+#'   omic_signature = omc_signature_1,
+#'   visibility = FALSE, # default is false
+#'   add_users = c("John", "Jane"),
+#'   return_signature_id = TRUE,
+#'   verbose = TRUE
+#' )
+#' 
 #' }
 #' 
 #' 
@@ -67,8 +79,8 @@ addSignature <- function(
   # If visibility is public (==1), add_users will be ignored
   if(visibility == 1){ 
     
-    if (!base::is.null(add_users))
-      base::warning("By setting visibility = 1, the signature will be set as public and visible to all users, thus 'add_users' will be ignored.")
+    if(!base::is.null(add_users))
+      base::warning("By setting visibility = 1, the signature will be set as public and visible to all users, thus 'add_users' will be ignored.\n")
     
     add_users <- base::data.frame(NULL)
     
@@ -77,7 +89,10 @@ addSignature <- function(
     if(base::is.null(add_users)){
       add_users <- base::data.frame(NULL)
     }else if(!base::is.data.frame(add_users) || !base::all(c("user_name", "access") %in% base::colnames(add_users))){
-      base::stop("<add_users> must be a data frame with the required column names: 'user_name' and 'access'")
+      # Disconnect from database ####
+      base::suppressWarnings(DBI::dbDisconnect(conn))
+      # Show error message
+      base::stop("<add_users> must be a data frame with the required column names: 'user_name' and 'access'.\n")
     }else{
       # Validate user_name exists in the database
       valid_users <- SigRepo::searchUser(
@@ -87,8 +102,12 @@ addSignature <- function(
       # Get list of user names not found
       missing_users <- base::setdiff(add_users$user_name, valid_users$user_name)
       # Check for any missing users
-      if(base::length(missing_users) > 0)
-        base::stop(base::sprintf("The following users do not exist in the database: %s", base::paste0(missing_users, collapse = ", ")))
+      if(base::length(missing_users) > 0){
+        # Disconnect from database ####
+        base::suppressWarnings(DBI::dbDisconnect(conn))
+        # Show error message
+        base::stop(base::sprintf("The following users do not exist in the database: %s.\n", base::paste0(missing_users, collapse = ", ")))
+      }
     }
     
   }
@@ -139,16 +158,14 @@ addSignature <- function(
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn))
     
-    # Show message, changed it so it will not use verbose flag for actual error messages.
-
-    base::warning(base::sprintf(
-      "You already uploaded a signature with the name = '%s' (ID: '%s') to the SigRepo Database.",
-      signature_tbl$signature_name[1], signature_tbl$signature_id[1]
-    ))
+    # Show message
+    SigRepo::verbose(
+      base::sprintf("\tYou already uploaded a signature with the name = '%s' to the database.\n", signature_tbl$signature_name[1]),
+      base::sprintf("\tID of the uploaded signature: %s\n", signature_tbl$signature_id[1])
+    )
     
     # Return signature id
-    if(return_signature_id == TRUE)
-      return(signature_tbl$signature_id[1])
+    if(return_signature_id == TRUE) return(signature_tbl$signature_id[1])
     
   }else{
     
@@ -232,10 +249,9 @@ addSignature <- function(
         verbose = FALSE
       )
       
+      # Add additional users to the access table
       if(base::nrow(add_users) > 0){
-        
-        SigRepo::verbose(base::sprintf("Adding additional users: %s to the signature access table of the database.", base::paste(add_users$user_name, collapse = ", ")))
-        
+        SigRepo::verbose(base::sprintf("Adding additional users: %s to the signature access table of the database.\n", base::paste(add_users$user_name, collapse = ", ")))
         SigRepo::addUserToSignature(
           conn_handler = conn_handler,
           signature_id = signature_tbl$signature_id[1],
@@ -243,7 +259,6 @@ addSignature <- function(
           access_type = add_users$access,
           verbose = FALSE
         )
-        
       }        
       
     }, error = function(e){
@@ -252,7 +267,7 @@ addSignature <- function(
       # Disconnect from database ####
       base::suppressWarnings(DBI::dbDisconnect(conn))  
       # Return error message
-      base::stop(e, "\n")
+      base::stop(base::as.character(e), "\n")
     }) 
     
     # Reset options
@@ -283,7 +298,7 @@ addSignature <- function(
         # Disconnect from database ####
         base::suppressWarnings(DBI::dbDisconnect(conn))  
         # Return error message
-        base::stop(e, "\n")
+        base::stop(base::as.character(e), "\n")
       }) 
       
       # Check if warning table is returned
@@ -317,7 +332,7 @@ addSignature <- function(
         # Disconnect from database ####
         base::suppressWarnings(DBI::dbDisconnect(conn))  
         # Return error message
-        base::stop(e, "\n")
+        base::stop(base::as.character(e), "\n")
       }) 
       
       # Check if warning table is returned
@@ -337,71 +352,15 @@ addSignature <- function(
     }else if(assay_type == "metabolomics"){
       
       SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
-      
-      # # If there is a error during the process, remove the signature and output the message
-      # warn_tbl <- base::tryCatch({
-      #   SigRepo::addMetabolomicsSignatureSet(
-      #     conn_handler = conn_handler,
-      #     signature_id = signature_tbl$signature_id[1],
-      #     organism_id = signature_tbl$organism_id[1],
-      #     signature_set = omic_signature$signature,
-      #     verbose = verbose
-      #   )
-      # }, error = function(e){
-      #   # Delete signature
-      #   SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = signature_tbl$signature_id[1], verbose = FALSE)
-      #   # Disconnect from database ####
-      #   base::suppressWarnings(DBI::dbDisconnect(conn))  
-      #   # Return error message
-      #   base::stop(e, "\n")
-      # }) 
-      # 
-      # # Check if warning table is returned
-      # if(is(warn_tbl, "data.frame") && nrow(warn_tbl) > 0){
-      #   # Delete signature
-      #   SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = signature_tbl$signature_id[1], verbose = FALSE)
-      #   # Return warning table
-      #   return(warn_tbl)
-      # }
-      
+
     }else if(assay_type == "methylomics"){
       
       SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
-      
-      # # If there is a error during the process, remove the signature and output the message
-      # warn_tbl <- base::tryCatch({
-      #   SigRepo::addMethylomicsSignatureSet(
-      #     conn_handler = conn_handler,
-      #     signature_id = signature_tbl$signature_id[1],
-      #     organism_id = signature_tbl$organism_id[1],
-      #     signature_set = omic_signature$signature,
-      #     verbose = verbose
-      #   )
-      # }, error = function(e){
-      #   # Delete signature
-      #   SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = signature_tbl$signature_id[1], verbose = FALSE)
-      #   # Disconnect from database ####
-      #   base::suppressWarnings(DBI::dbDisconnect(conn))  
-      #   # Return error message
-      #   base::stop(e, "\n")
-      # }) 
-      # 
-      # # Check if warning table is returned
-      # if(is(warn_tbl, "data.frame") && nrow(warn_tbl) > 0){
-      #   # Delete signature
-      #   SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = signature_tbl$signature_id[1], verbose = FALSE)
-      #   # Return warning table
-      #   return(warn_tbl)
-      # }
-      
-      
-      
-    }else if(assay_type == "SNPs"){
+
+    }else if(assay_type == "snps"){
       
       SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
-      
-      
-      
+
     }
  
     # Reset options

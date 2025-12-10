@@ -66,14 +66,8 @@ library(OmicSignature)
 # Create a handler to connect to SigRepo Database
 
 ```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
-# Create a connection handler
-conn_handler <- SigRepo::newConnHandler(
-  dbname = "sigrepo", 
-  host = "sigrepo.org", 
-  port = 3306, 
-  user = "montilab", 
-  password = "sigrepo"
-)
+# Get the test connection handler
+conn_handler <- SigRepo:::global_var[["test_conn_handler"]]
 ```
 
 ```

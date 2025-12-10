@@ -4,14 +4,32 @@
 #' @param keyword_tbl A Data Frame; Must contain the following column names: 
 #' keyword (required) 
 #' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
-#' @examples
-#' \dontrun{
-#' # example code
-#' keyword_tbl <- data.frame(keyword = c("keyword_1","keyword_2"))
 #' 
-#' SigRepo::addKeyword(conn_handler = conn_handler,
-#'                     keyword_tbl = keyword_tbl,
-#'                     verbose = TRUE)
+#' @examples
+#' 
+#' \dontrun{
+#' 
+#' # Create keywords table
+#' keyword_tbl <- base::data.frame(
+#'   keyword = c("keyword_1", "keyword_2")
+#' )
+#' 
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
+#' )
+#' 
+#' # Add keywords to database
+#' SigRepo::addKeyword(
+#'   conn_handler = conn_handler,
+#'   keyword_tbl = keyword_tbl,
+#'   verbose = TRUE
+#' )
+#' 
 #' }
 #' 
 #' @export

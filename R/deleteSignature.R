@@ -2,15 +2,30 @@
 #' @description Delete a signature from the signatures table of the database
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required)
 #' @param signature_id Database ID of signature to be removed from the database (required)
-#' @param verbose Logical; whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether or not to print the diagnostic messages. 
+#' Default is \code{TRUE}.
+#' 
 #' @examples
+#' 
 #' \dontrun{
-#' SigRepo::deleteSignature(conn_handler = conn_handler,
-#'                          signature_id = 58,
-#'                          verbose = FALSE)
+#' 
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
+#' )
+#' 
+#' # Delete signature from database
+#' SigRepo::deleteSignature(
+#'   conn_handler = conn_handler,
+#'   signature_id = 56,
+#'   verbose = TRUE
+#' )
+#' 
 #' }
-#'
 #' 
 #' @export
 deleteSignature <- function(

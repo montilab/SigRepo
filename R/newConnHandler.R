@@ -16,7 +16,7 @@
 #' # Create a connection handler
 #' SigRepo::newConnHandler(
 #'   dbname = "sigrepo",
-#'   host = "sigrepo.org,
+#'   host = "sigrepo.org",
 #'   port = 3306,
 #'   user = <your_username>, 
 #'   password = <your_password>,

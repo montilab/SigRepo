@@ -6,8 +6,6 @@
 #' @param signature_set A Data Frame; must contain the following column names:
 #' feature_name, probe_id, score, group_label (required) 
 #' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
-#'  
-#' @keywords internal
 #' 
 #' @export
 addProteomicsSignatureSet <- function(
@@ -181,7 +179,7 @@ addProteomicsSignatureSet <- function(
     table <- SigRepo::createHashKey(
       table = table,
       hash_var = "sig_feature_hashkey",
-      hash_columns = c("signature_id", "feature_id", "assay_type"),
+      hash_columns = c("signature_id", "feature_id", "assay_type", "score"),
       hash_method = "md5"
     )
     

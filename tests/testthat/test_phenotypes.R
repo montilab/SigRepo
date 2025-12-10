@@ -1,7 +1,7 @@
 # testing script for the phenotypes functions in the SigRepo package
 
 test_that("searchPhenotype returns a data frame", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo:::global_var[["test_conn_handler"]]
   
   phenotype_table <- SigRepo::searchPhenotype(
     conn_handler = test_conn
@@ -11,7 +11,7 @@ test_that("searchPhenotype returns a data frame", {
 })
 
 test_that("searchPhenotype returns expected columns", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo:::global_var[["test_conn_handler"]]
   
   phenotype_table <- SigRepo::searchPhenotype(
     conn_handler = test_conn
@@ -25,7 +25,7 @@ test_that("searchPhenotype returns expected columns", {
 })
 
 test_that("searchPhenotype handles specific phenotype search", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo:::global_var[["test_conn_handler"]]
   
   # Test searching for a specific phenotype (adjust if your function has filter parameters)
   phenotype_table <- SigRepo::searchPhenotype(
@@ -44,7 +44,7 @@ test_that("searchPhenotype handles NULL connection handler", {
 })
 
 test_that("searchPhenotype data types are correct", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo:::global_var[["test_conn_handler"]]
   
   phenotype_table <- SigRepo::searchPhenotype(
     conn_handler = test_conn
@@ -60,7 +60,7 @@ test_that("searchPhenotype data types are correct", {
 })
 
 test_that("searchPhenotype returns consistent results", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo:::global_var[["test_conn_handler"]]
   
   # Run search twice
   result1 <- SigRepo::searchPhenotype(conn_handler = test_conn)

@@ -14,16 +14,32 @@
 #' given them access to.
 #' \code{viewer} has ONLY Read access to signatures that other users were 
 #' given them access to.
-#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
+#' @param verbose Logical; whether to print diagnostic messages. 
+#' Defaults to 'TRUE'.
 #' 
 #' @examples
+#' 
 #' \dontrun{
-#' # example code
-#' SigRepo::addUserToSignature(conn_handler = conn_handler,
-#'                              signature_id = 60,
-#'                              user_name = "john smith",
-#'                              access_type = "editor")
+#' 
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
+#' )
+#' 
+#' # Add users to signature
+#' SigRepo::addUserToSignature(
+#'   conn_handler = conn_handler,
+#'   collection_id = 67,
+#'   user_name = "john smith",
+#'   access_type = "editor"
+#' )
+#' 
 #' }
+#' 
 #' @export
 addUserToSignature <- function(
     conn_handler,
