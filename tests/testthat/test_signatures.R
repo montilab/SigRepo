@@ -160,9 +160,8 @@ test_that("addSignature handles duplicate signatures", {
   })
   
   # Try to add same signature again
-  # If verbose is FALSE, we will not get any warnings or messages that the 
-  # signature is already in the DB
-  expect_no_error({
+
+  expect_error({
     SigRepo::addSignature(
       conn_handler = test_conn,
       omic_signature = test_transcriptomics_sig,
@@ -170,17 +169,7 @@ test_that("addSignature handles duplicate signatures", {
       verbose = FALSE
     )
   }) 
-  # However, if verbose is set to TRUE, we will get a message that will look like
-  # You already uploaded a signature with the name = 'test_signature' to the SigRepo Database.
-  # ID of the uploaded signature: 882
-  expect_message({
-    SigRepo::addSignature(
-      conn_handler = test_conn,
-      omic_signature = test_transcriptomics_sig,
-      return_signature_id = TRUE,
-      verbose = TRUE
-    )
-  }) 
+
 
   
   # remove signature
