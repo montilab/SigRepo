@@ -11,7 +11,7 @@ addOrganism(conn_handler, organism_tbl, verbose = TRUE)
 
 \item{organism_tbl}{A Data Frame; Must contain the following column names: 
 organism, biomart_db, biomart_dataset, biomart_description, biomart_version, 
-prot_organism_code, prot_organism_taxid (required)}
+biomart_updated_date, prot_organism_code, prot_organism_taxid, prot_updated_date (required)}
 
 \item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
 }
@@ -29,8 +29,10 @@ organism_tbl <- base::data.frame(
   biomart_dataset = "hsapiens_gene_ensembl", 
   biomart_description = "Human genes (GRCh38.p14)", 
   biomart_version = 114, 
+  biomart_updated_date = base::as.Date(base::Sys.Date(), format = "\%Y-\%m-\%d"),
   prot_organism_code = "Human", 
-  prot_organism_taxid = 9606
+  prot_organism_taxid = 9606,
+  prot_updated_date = base::as.Date(base::Sys.Date(), format = "\%Y-\%m-\%d")
 )
 
 # Create a connection handler

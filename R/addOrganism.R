@@ -3,7 +3,7 @@
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param organism_tbl A Data Frame; Must contain the following column names: 
 #' organism, biomart_db, biomart_dataset, biomart_description, biomart_version, 
-#' prot_organism_code, prot_organism_taxid (required) 
+#' biomart_updated_date, prot_organism_code, prot_organism_taxid, prot_updated_date (required) 
 #' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' 
 #' @examples
@@ -17,8 +17,10 @@
 #'   biomart_dataset = "hsapiens_gene_ensembl", 
 #'   biomart_description = "Human genes (GRCh38.p14)", 
 #'   biomart_version = 114, 
+#'   biomart_updated_date = base::as.Date(base::Sys.Date(), format = "%Y-%m-%d"),
 #'   prot_organism_code = "Human", 
-#'   prot_organism_taxid = 9606
+#'   prot_organism_taxid = 9606,
+#'   prot_updated_date = base::as.Date(base::Sys.Date(), format = "%Y-%m-%d")
 #' )
 #' 
 #' # Create a connection handler
@@ -85,7 +87,7 @@ addOrganism <- function(
     conn = conn, 
     db_table_name = db_table_name,
     table = table, 
-    exclude_coln_names = c("organism_id", "biomart_updated_date", "prot_updated_date"),
+    exclude_coln_names = c("organism_id", "biomart_db", "biomart_dataset", "biomart_description", "biomart_version", "biomart_updated_date", "prot_organism_code", "prot_organism_taxid", "prot_updated_date"),
     check_db_table = TRUE
   )
   
