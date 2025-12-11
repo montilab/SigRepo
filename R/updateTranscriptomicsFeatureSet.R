@@ -140,6 +140,14 @@ updateTranscriptomicsFeatureSet <- function(
     
     # Get the overlapping features and gene symbols
     overlapping_features <- transcriptomics_tbl |> dplyr::inner_join(feature_tbl)
+    
+    # Check if there is a need to update
+    if(base::nrow(overlapping_features) == base::nrow(feature_tbl) && base::nrow(overlapping_features) == base::nrow(transcriptomics_tbl)){
+      # Disconnect from database ####
+      base::suppressWarnings(DBI::dbDisconnect(conn)) 
+      # Return error message
+      base::stop("All features are up to date. No further updates needed.\n")      
+    }
       
     # Show message
     SigRepo::verbose(base::sprintf("Updating features to latest version...\n"))

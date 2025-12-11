@@ -34,3 +34,4 @@
 ^_pkgdown\.yml$
 ^README\.Rmd$
 ^refCheck\.R$
+^\.Rproj\.user$
