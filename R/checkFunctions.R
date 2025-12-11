@@ -369,7 +369,7 @@ checkDirectionType <- function(
 ){
   
   # Get direction type options
-  direction_type_options <- SigRepo:::global_var[["direction_type"]] %>% base::tolower() %>% base::trimws()
+  direction_type_options <- SigRepo:::global_var[["direction_type"]] |> base::tolower() |> base::trimws()
   
   # Return message
   if(!base::trimws(base::tolower(direction_type[1])) %in% direction_type_options)
@@ -446,7 +446,7 @@ checkOmicSignature <- function(
   if(metadata$direction_type[1] %in% c("bi-directional", "categorical") && !"group_label" %in% base::colnames(signature)){
     base::stop(base::sprintf("'signature' in OmicSignature object requires a 'group_label' variable as the direction of the signature is 'bi-directional' or 'categorical'"))
   }else if(metadata$direction_type[1] %in% c("uni-directional") && !"group_label" %in% base::colnames(signature)){
-    signature <- signature %>% dplyr::mutate(group_label = "")
+    signature <- signature |> dplyr::mutate(group_label = "")
   }
   
   # Make sure required column fields do not have any empty values ####
@@ -476,7 +476,7 @@ checkOmicSignature <- function(
   if(!base::is.null(difexp) && metadata$direction_type[1] %in% c("bi-directional", "categorical") && !"group_label" %in% base::colnames(difexp)){
     base::stop(base::sprintf("When the direction of the signature is bi-directional or categorical, 'difexp' in OmicSignature requires a 'group_label' variable."))
   }else if(!base::is.null(difexp) && metadata$direction_type[1] %in% c("uni-directional") && !"group_label" %in% base::colnames(difexp)){
-    difexp <- difexp %>% dplyr::mutate(group_label = "")
+    difexp <- difexp |> dplyr::mutate(group_label = "")
   }
   
   # Make sure required column fields do not have any empty values ####
@@ -893,7 +893,7 @@ createHashKey <- function(
     dplyr::mutate(
       hash_key = base::paste0(!!!rlang::syms(hash_columns)) |> base::tolower() |> digest::digest(algo = "md5", serialize = FALSE)
     ) |> 
-    dplyr::rename(all_of(renamed_key_var)) |> 
+    dplyr::rename(dplyr::all_of(renamed_key_var)) |> 
     dplyr::ungroup()
   
   # Return table

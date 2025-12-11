@@ -100,8 +100,8 @@ updateProteomicsFeatureSet <- function(
       dplyr::transmute(
         feature_name = base::trimws(base::tolower(.data$feature_name)),
         gene_symbol = base::trimws(base::tolower(.data$gene_symbol)),
-        orig_feature_name = feature_name,
-        orig_gene_symbol = gene_symbol,
+        orig_feature_name = .data$feature_name,
+        orig_gene_symbol = .data$gene_symbol,
         organism_id = .data$organism_id,
         is_current = .data$is_current,
         version = .data$version
@@ -145,7 +145,7 @@ updateProteomicsFeatureSet <- function(
     overlapping_features <- proteomics_tbl |> dplyr::inner_join(feature_tbl)
     
     # Check if there is a need to update
-    if(base::nrow(overlapping_features) == base::nrow(feature_tbl) && base::nrow(overlapping_features) == base::nrow(transcriptomics_tbl)){
+    if(base::nrow(overlapping_features) == base::nrow(feature_tbl) && base::nrow(overlapping_features) == base::nrow(proteomics_tbl)){
       # Disconnect from database ####
       base::suppressWarnings(DBI::dbDisconnect(conn)) 
       # Return error message
@@ -156,7 +156,7 @@ updateProteomicsFeatureSet <- function(
     SigRepo::verbose(base::sprintf("Updating features to latest version...\n"))
     
     # Only update when the length of the overlapping features is different
-    if(base::nrow(overlapping_features) > 0 && base::nrow(overlapping_features) != base::nrow(transcriptomics_tbl)){
+    if(base::nrow(overlapping_features) > 0 && base::nrow(overlapping_features) != base::nrow(proteomics_tbl)){
 
       # Update table with 1000 records each time
       n_feature_ingest <- 1000
@@ -186,7 +186,7 @@ updateProteomicsFeatureSet <- function(
             UPDATE transcriptomics_features
             SET version = %s, is_current = 1
             WHERE feature_name IN (%s) AND organism_id = %s;
-            ", current_ensembl_version$version[1], feature_list, organism_tbl$organism_id[1]
+            ", base::as.Date(base::Sys.Date(), format = "%Y-%m-%d"), feature_list, organism_tbl$organism_id[1]
           )
           
           # Run SQL
@@ -205,7 +205,7 @@ updateProteomicsFeatureSet <- function(
     # Update features with new gene symbols
     update_features <- feature_tbl |> 
       dplyr::anti_join(overlapping_features |> dplyr::transmute(feature_name = .data$feature_name)) |> 
-      dplyr::inner_join(transcriptomics_tbl |> dplyr::transmute(feature_name = .data$feature_name, orig_feature_name = .data$orig_feature_name))
+      dplyr::inner_join(proteomics_tbl |> dplyr::transmute(feature_name = .data$feature_name, orig_feature_name = .data$orig_feature_name))
     
     # Update each record individually
     purrr::walk(
@@ -244,7 +244,7 @@ updateProteomicsFeatureSet <- function(
     }
     
     # Archive the previous features as they are not existed in the new version anymore
-    archive_features <- transcriptomics_tbl |> 
+    archive_features <- proteomics_tbl |> 
       dplyr::anti_join(overlapping_features |> dplyr::transmute(feature_name = .data$feature_name)) |> 
       dplyr::anti_join(update_features |> dplyr::transmute(feature_name = .data$feature_name))
     

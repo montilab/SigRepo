@@ -60,8 +60,8 @@ updateTranscriptomicsFeatureSet <- function(
     # Show message
     SigRepo::verbose(base::sprintf("Getting the latest version available in the biomaRt...\n"))
     
-    current_ensembl_version <- biomaRt::listEnsembl() %>% 
-      dplyr::mutate(version = base::gsub("(.*?)([1-9]{1,})", "\\2", .data$version)) %>% 
+    current_ensembl_version <- biomaRt::listEnsembl() |> 
+      dplyr::mutate(version = base::gsub("(.*?)([1-9]{1,})", "\\2", .data$version)) |> 
       dplyr::filter(.data$biomart %in% "genes")
     
     # Show message
@@ -98,8 +98,8 @@ updateTranscriptomicsFeatureSet <- function(
       dplyr::transmute(
         feature_name = base::trimws(base::tolower(.data$feature_name)),
         gene_symbol = base::trimws(base::tolower(.data$gene_symbol)),
-        orig_feature_name = feature_name,
-        orig_gene_symbol = gene_symbol,
+        orig_feature_name = .data$feature_name,
+        orig_gene_symbol = .data$gene_symbol,
         organism_id = .data$organism_id,
         is_current = .data$is_current,
         version = .data$version
