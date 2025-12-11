@@ -53,7 +53,7 @@ deleteSampleType <- function(
     db_table_name = "sample_types",
     delete_coln_var = "sample_type",
     delete_coln_val = base::unique(sample_type),
-    check_db_table = FALSE
+    check_db_table = TRUE
   )
   
   # Disconnect from database ####

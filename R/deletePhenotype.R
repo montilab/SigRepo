@@ -53,7 +53,7 @@ deletePhenotype <- function(
     db_table_name = "phenotypes",
     delete_coln_var = "phenotype",
     delete_coln_val = base::unique(phenotype),
-    check_db_table = FALSE
+    check_db_table = TRUE
   )
   
   # Disconnect from database ####

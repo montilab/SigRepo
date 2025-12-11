@@ -64,7 +64,7 @@ deleteUser <- function(
     return_var = "*",
     filter_coln_var = "user_name", 
     filter_coln_val = base::list("user_name" = user_name),
-    check_db_table = FALSE
+    check_db_table = TRUE
   )
 
   # Check if user exists in the database
@@ -81,7 +81,7 @@ deleteUser <- function(
     db_table_name = "users",
     delete_coln_var = "user_name",
     delete_coln_val = user_name,
-    check_db_table = TRUE
+    check_db_table = FALSE
   )
   
   # Reset message options

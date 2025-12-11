@@ -53,7 +53,7 @@ deletePlatform <- function(
     db_table_name = "platforms",
     delete_coln_var = "platform_name",
     delete_coln_val = base::unique(platform_name),
-    check_db_table = FALSE
+    check_db_table = TRUE
   )
   
   # Disconnect from database ####

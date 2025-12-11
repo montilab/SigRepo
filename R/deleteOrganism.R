@@ -53,7 +53,7 @@ deleteOrganism <- function(
     db_table_name = "organisms",
     delete_coln_var = "organism",
     delete_coln_val = base::unique(organism),
-    check_db_table = FALSE
+    check_db_table = TRUE
   )
   
   # Disconnect from database ####
