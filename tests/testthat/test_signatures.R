@@ -161,15 +161,18 @@ test_that("addSignature handles duplicate signatures", {
   
   # Try to add same signature again
 
-  expect_error({
+  expect_message(
     SigRepo::addSignature(
       conn_handler = test_conn,
       omic_signature = test_transcriptomics_sig,
       return_signature_id = TRUE,
-      verbose = FALSE
-    )
-  }) 
-
+      verbose = TRUE
+    ),
+    regexp = "You already uploaded a signature with the name = 'test_signature'"
+  )
+  
+  
+  
 
   
   # remove signature

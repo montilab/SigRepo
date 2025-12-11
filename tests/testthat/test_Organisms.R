@@ -61,7 +61,7 @@ test_that("searchOrganism handles invalid connection gracefully", {
   # Expect error or empty result when connection fails
   expect_error(
     SigRepo::searchOrganism(conn_handler = invalid_conn),
-    regexp = "Invalid connection"  # Any error message
+    regexp = "Please check your host, username, password, and network connection."  # Any error message
   )
 })
 
