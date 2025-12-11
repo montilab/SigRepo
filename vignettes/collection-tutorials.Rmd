@@ -67,7 +67,7 @@ library(OmicSignature)
 
 ```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 # Get the test connection handler
-conn_handler <- SigRepo:::global_var[["test_conn_handler"]]
+conn_handler <- SigRepo::test_conn_handler
 ```
 
 ```

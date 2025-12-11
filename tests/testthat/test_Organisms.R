@@ -5,7 +5,7 @@
 # testing script for the organisms functions in the SigRepo package
 
 test_that("searchOrganism returns a data frame", {
-  test_conn <- SigRepo:::global_var[["test_conn_handler"]]
+  test_conn <- SigRepo::test_conn_handler
   
   organism_table <- SigRepo::searchOrganism(
     conn_handler = test_conn
@@ -15,7 +15,7 @@ test_that("searchOrganism returns a data frame", {
 })
 
 test_that("searchOrganism returns expected columns", {
-  test_conn <- SigRepo:::global_var[["test_conn_handler"]]
+  test_conn <- SigRepo::test_conn_handler
   
   organism_table <- SigRepo::searchOrganism(
     conn_handler = test_conn
@@ -30,7 +30,7 @@ test_that("searchOrganism returns expected columns", {
 })
 
 test_that("searchOrganism handles specific organism search", {
-  test_conn <- SigRepo:::global_var[["test_conn_handler"]]
+  test_conn <- SigRepo::test_conn_handler
   
   # Test searching for a specific organism (adjust organism name as needed)
   organism_table <- SigRepo::searchOrganism(
@@ -72,7 +72,7 @@ test_that("searchOrganism handles NULL connection handler", {
 })
 
 test_that("searchOrganism returns unique organisms", {
-  test_conn <- SigRepo:::global_var[["test_conn_handler"]]
+  test_conn <- SigRepo::test_conn_handler
   
   organism_table <- SigRepo::searchOrganism(
     conn_handler = test_conn
@@ -88,7 +88,7 @@ test_that("searchOrganism returns unique organisms", {
 })
 
 test_that("searchOrganism data types are correct", {
-  test_conn <- SigRepo:::global_var[["test_conn_handler"]]
+  test_conn <- SigRepo::test_conn_handler
   
   organism_table <- SigRepo::searchOrganism(
     conn_handler = test_conn
@@ -102,7 +102,7 @@ test_that("searchOrganism data types are correct", {
 })
 
 test_that("searchOrganism handles case-insensitive search", {
-  test_conn <- SigRepo:::global_var[["test_conn_handler"]]
+  test_conn <- SigRepo::test_conn_handler
   
   # Test with different cases (if your function supports this)
   result_lower <- SigRepo::searchOrganism(

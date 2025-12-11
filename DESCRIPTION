@@ -31,8 +31,7 @@ Imports:
   purrr,
   readr,
   rlang,
-  RMySQL,
-  tidyr
+  RMySQL
 Remotes:
   montilab/OmicSignature
 Suggests:

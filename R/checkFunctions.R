@@ -342,7 +342,7 @@ checkAssayType <- function(
 ){
   
   # Get assay tbl
-  assay_tbl <- SigRepo:::global_var[["assay_tbl"]]
+  assay_tbl <- SigRepo::assay_tbl
   
   # Check if assay is available
   check_tbl <- assay_tbl |> 
@@ -369,7 +369,7 @@ checkDirectionType <- function(
 ){
   
   # Get direction type options
-  direction_type_options <- SigRepo:::global_var[["direction_type"]] |> base::tolower() |> base::trimws()
+  direction_type_options <- SigRepo::direction_types |> base::tolower() |> base::trimws()
   
   # Return message
   if(!base::trimws(base::tolower(direction_type[1])) %in% direction_type_options)

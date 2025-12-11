@@ -31,7 +31,7 @@ searchAssayType <- function(
 ){
   
   # Get assay tbl
-  assay_tbl <- SigRepo:::global_var[["assay_tbl"]]
+  assay_tbl <- SigRepo::assay_tbl
   
   # Look up assay_type
   if(base::length(assay_type) == 0 || base::all(assay_type %in% c("", NA))){
