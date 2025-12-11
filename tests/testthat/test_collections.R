@@ -32,11 +32,20 @@ test_that("addCollection correctly adds a signature into the database", {
       verbose = TRUE
     )
     
+    
+    expect_no_error({
+      id_1 <- searchSignature(conn_handler = test_conn,
+                              signature_name = "sig_for_collection_1")$signature_id
+      id_2 <- searchSignature(conn_handler = test_conn, 
+                              signature_name = "sig_for_collection_2" )$signature_id
+    })
+    
+    
     # remove signatures
     expect_no_error({
       SigRepo::deleteSignature(
         conn_handler = test_conn,
-        signature_name = "sig_for_collection_1",
+        signature_id = id_1,
         verbose = TRUE
       )
     })
@@ -44,7 +53,7 @@ test_that("addCollection correctly adds a signature into the database", {
     expect_no_error({
       SigRepo::deleteSignature(
         conn_handler = test_conn,
-        signature_name = "sig_for_collection_2",
+        signature_id = id_2,
         verbose = TRUE
       )
     })
@@ -89,20 +98,28 @@ test_that("searchSignature correctly searches for the desired signature",{
     )
   })
   
+  expect_no_error({
+    id_1 <- searchSignature(conn_handler = test_conn,
+                            signature_name = "sig_for_collection_1")$signature_id
+    id_2 <- searchSignature(conn_handler = test_conn, 
+                            signature_name = "sig_for_collection_2" )$signature_id
+  })
+  
+  
   # remove signatures
   expect_no_error({
     SigRepo::deleteSignature(
       conn_handler = test_conn,
-      signature_name = "sig_for_collection_1",
-      verbose = FALSE
+      signature_id = id_1,
+      verbose = TRUE
     )
   })
   
   expect_no_error({
     SigRepo::deleteSignature(
       conn_handler = test_conn,
-      signature_name = "sig_for_collection_2",
-      verbose = FALSE
+      signature_id = id_2,
+      verbose = TRUE
     )
   })
 })
