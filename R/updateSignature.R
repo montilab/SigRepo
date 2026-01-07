@@ -377,7 +377,7 @@ updateSignature <- function(
         
         SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
         
-      }else if(assay_type == "SNPs"){
+      }else if(assay_type == "GeneticVariants"){
         
         SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
         

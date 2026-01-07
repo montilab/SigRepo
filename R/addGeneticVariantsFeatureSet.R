@@ -1,5 +1,5 @@
-#' @title addSMPsFeatureSet
-#' @description Add snps feature set to database
+#' @title addGeneticVariantsFeatureSet
+#' @description Add GeneticVariants feature set to database
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param feature_set A Data Frame; must contain the following column names: 
 #' feature_name, organism, gene_symbol, is_current, version (required)
@@ -9,7 +9,7 @@
 #' @keywords internal
 #' 
 #' @export
-addSNPsFeatureSet <- function(
+addGeneticVariantsFeatureSet <- function(
     conn_handler,
     feature_set,
     verbose = TRUE
@@ -30,7 +30,7 @@ addSNPsFeatureSet <- function(
   
   # Create a list of variables to check database ####
   required_column_fields <- c("feature_name", "organism", "is_current")
-  db_table_name <- "SNPs_features"
+  db_table_name <- "genetic_variants_features"
   table <- feature_set
   
   # Check required column fields
@@ -38,7 +38,7 @@ addSNPsFeatureSet <- function(
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn))     
     # Show message
-    base::stop(base::sprintf("\n'snps features' table is missing the following required column names: %s.\n", base::paste0(required_column_fields[which(!required_column_fields %in% base::colnames(table))], collapse = ", ")))
+    base::stop(base::sprintf("\n'GeneticVariants features' table is missing the following required column names: %s.\n", base::paste0(required_column_fields[which(!required_column_fields %in% base::colnames(table))], collapse = ", ")))
   }
   
   # Make sure required column fields do not have any empty values ####
@@ -46,7 +46,7 @@ addSNPsFeatureSet <- function(
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn))     
     # Show message
-    base::stop(base::sprintf("\nAll required column names in 'snps features' table: %s cannot contain any empty values.\n", base::paste0(required_column_fields, collapse = ", ")))
+    base::stop(base::sprintf("\nAll required column names in 'GeneticVariants features' table: %s cannot contain any empty values.\n", base::paste0(required_column_fields, collapse = ", ")))
   }
   
   # Get organism id ####

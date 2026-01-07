@@ -1,5 +1,5 @@
-#' @title searchSNPsFeatureSet
-#' @description Search for a list of snps features in the database
+#' @title searchGeneticVariantsFeatureSet
+#' @description Search for a list of GeneticVariants features in the database
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param feature_name A list of feature names to look up. 
 #' Defaults to 'NULL',  which will return all of the feature names in the database.
@@ -9,7 +9,7 @@
 #' diagnostic messages. Defaults to 'TRUE'.
 #' @examples
 #' \dontrun{
-#' SigRepo::searchSNPsFeatureSet(conn_handler = conn_handler,
+#' SigRepo::searchGeneticVariantsFeatureSet(conn_handler = conn_handler,
 #'                                     feature_name = "test_feature",
 #'                                     organism = "Homo sapiens"
 #'                                     )
@@ -17,7 +17,7 @@
 #' 
 #' 
 #' @export
-searchSNPsFeatureSet <- function(
+searchGeneticVariantsFeatureSet <- function(
     conn_handler,
     feature_name = NULL,
     organism = NULL,
@@ -38,7 +38,7 @@ searchSNPsFeatureSet <- function(
   )
   
   # Get reference table
-  ref_table <- "SNPs_features"
+  ref_table <- "genetic_variants_features"
   
   # Look up features by organism
   if(base::length(feature_name) == 0 || base::all(feature_name %in% c("", NA))){

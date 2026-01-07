@@ -113,14 +113,14 @@ showProteomicsErrorMessage <- function(
 #' @keywords internal
 #' 
 #' @export 
-showSNPsErrorMessage <- function(
+showGeneticVariantsErrorMessage <- function(
     db_table_name,
     unknown_values
 ){
   
   base::warning(
     base::sprintf("\nThe following features do not existed in the '%s' table of the database:\n%s\n", db_table_name, base::paste0("'", unknown_values, "'", collapse = "\n")), 
-    base::sprintf("\nYou can use 'searchSNPsFeatureSet()' to see a list of available features.\n"),
+    base::sprintf("\nYou can use 'searchGeneticVariantsFeatureSet()' to see a list of available features.\n"),
     base::sprintf("\nTo add these features to our database, please contact our admin for support.\n")
   )
   
