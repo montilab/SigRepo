@@ -48,7 +48,7 @@ addGeneticVariantsSignatureSet <- function(
   
   # Validate signature_set ####
   required_fields <- c('feature_name', 'probe_id', 'score', 'group_label')
-  if(!is(signature_set, "data.frame") || nrow(signature_set) == 0){
+  if(!methods::is(signature_set, "data.frame") || nrow(signature_set) == 0){
     suppressWarnings(DBI::dbDisconnect(conn)) 
     stop("\n'signature_set' must be a data frame and cannot be empty.\n")
   }
@@ -139,6 +139,10 @@ addGeneticVariantsSignatureSet <- function(
       )
     }
   }
+  
+  
+  # Look up feature id by its hash key
+  lookup_hashkey <- base::unique(table$feature_hashkey)
   
   # Step 6: Lookup feature IDs ####
   lookup_feature_id_tbl <- SigRepo::lookup_table_sql(
