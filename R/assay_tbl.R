@@ -11,14 +11,14 @@ assay_tbl <- base::data.frame(
     "proteomics",
     "metabolomics",
     "methylomics",
-    "snps"
+    "genetic_variants"
   ),
   status = c(
     "Available",
     "Available",
     "Unavailable",
     "Unavailable",
-    "Unavailable"
+    "Available"
   ),
   stringsAsFactors = FALSE
 )
