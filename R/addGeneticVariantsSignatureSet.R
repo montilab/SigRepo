@@ -17,7 +17,7 @@ addGeneticVariantsSignatureSet <- function(
     signature_set,
     verbose = TRUE
 ){
-  library(data.table)
+
 
   # Whether to print the diagnostic messages
   SigRepo::print_messages(verbose = verbose)
