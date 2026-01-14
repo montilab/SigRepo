@@ -42,6 +42,7 @@ reference:
       - '`searchSampleType`'
       - '`searchSignature`'
       - '`searchTranscriptomicsFeatureSet`'
+      - '`searchGeneticVariantsFeatureSet`'
       - '`searchUser`'
     
   - title: Retrieve Data from Database
@@ -76,7 +77,9 @@ reference:
       - '`updateCollectionMetadata`'
       - '`updateSignature`'
       - '`updateUser`'
-  
+      - '`updateProteomicsFeatureSet`'
+      - '`updateTranscriptomicsFeatureSet`'
+ 
   - title: Delete Data from Database
     desc: ~
     contents:
