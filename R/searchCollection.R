@@ -6,16 +6,29 @@
 #' @param signature_name Signature name of the signatures to be looked up by.
 #' @param signature_id Database ID of the signatures to be looked up by.
 #' @param user_name Name of users that the collection belongs to.
-#' @param verbose Logical; whether or not to print the
-#' diagnostic messages. Defaults to 'TRUE'.
+#' @param verbose Logical; whether or not to print the diagnostic messages. 
+#' Defaults to 'TRUE'.
+#' 
 #' @examples
+#' 
 #' \dontrun{
-#' SigRepo::searchCollection(conn_handler = conn_handler,
-#'                            #optional search params, 
-#'                            #just using the connection handler will retrieve all signatures' metadata
-#'                            collection_name = "test_collection", 
-#'                            collection_id = "67",
-#'                            )
+#' 
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
+#' )
+#' 
+#' # Delete a list of organisms from database
+#' SigRepo::searchCollection(
+#'   conn_handler = conn_handler, 
+#'   collection_name = "test_collection", 
+#'   collection_id = "67"
+#' )
+#' 
 #' }
 #'  
 #' 

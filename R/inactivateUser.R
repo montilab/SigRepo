@@ -2,8 +2,8 @@
 #' @description Inactivate a user in the database
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param user_name Name of the user to be inactivated (required).
-#' @param verbose Logical; whether or not to print the
-#' diagnostic messages. Default is \code{TRUE}.
+#' @param verbose Logical; whether or not to print the diagnostic messages. 
+#' Default is \code{TRUE}.
 #' 
 #' @export
 inActivateUser <- function(

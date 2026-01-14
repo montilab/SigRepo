@@ -13,16 +13,31 @@ searchPhenotype(conn_handler, phenotype = NULL, verbose = TRUE)
 Default is NULL which will return all of the phenotypes in the database}
 
 \item{verbose}{Logical; whether or not to print the
-diagnostic messages. Defaults to 'TRUE'}
+diagnostic messages. Defaults to 'TRUE'.}
 }
 \description{
 Search for a phenotype in the database
 }
 \examples{
+
 \dontrun{
-SigRepo::searchPhenotype(conn_handler = conn_handler,
-                         phenotype = "test_phenotype",
-                         verbose = TRUE)
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Search for a list of phenotypes in the database
+SigRepo::searchPhenotype(
+  conn_handler = conn_handler,
+  phenotype = "test_phenotype",
+  verbose = TRUE
+)
+
 }
 
 }

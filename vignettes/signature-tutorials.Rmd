@@ -33,13 +33,63 @@ library("OmicSignature")
 
 ```
 
-## Intro
+This tutorial will go over how to interact with the core functions of the **SigRepo** package. 
+Please navigate to the [README](https://github.com/montilab/SigRepo) on our GitHub repo to setup an account and create your connection handler in R-Studio.
 
-This tutorial will go over how to interect with the core of the SigRepo package. 
-If you have not established a connection handler, please navigate to the 
-[readme](https://github.com/montilab/SigRepo) on github to setup an account and create your connection handler in R-Studio.
+## Installation
 
+- Using `devtools` package
 
+```
+# Load devtools package
+library(devtools)
+
+# Install SigRepo
+devtools::install_github(repo = 'montilab/SigRepo')
+
+# Install OmicSignature
+devtools::install_github(repo = 'montilab/OmicSignature')
+
+# Load tidyverse package
+library(tidyverse)
+
+# Load SigRepo package
+library(SigRepo)
+
+# Load OmicSignature package
+library(OmicSignature)
+```
+
+## Load packages 
+
+```
+# Load tidyverse package
+library(tidyverse)
+
+# Load SigRepo package
+library(SigRepo)
+
+# Load OmicSignature package
+library(OmicSignature)
+```
+
+## Create connection handler
+
+```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+# Get the test connection handler
+conn_handler <- SigRepo::test_conn_handler
+```
+
+```
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+``` 
 
 ## Load Signatures
 
@@ -50,11 +100,8 @@ Here, we provide two signature objects that comes with the package for demonstra
 
 ```{r, warning=FALSE, echo=FALSE, message=FALSE}
 # Read in the signature objects
-
-
-data("LLFS_Aging_Gene_2023", package = "SigRepo")
-
-data("Myc_reduce_mice_liver_24m", package = "SigRepo")
+utils::data("LLFS_Aging_Gene_2023", package = "SigRepo")
+utils::data("Myc_reduce_mice_liver_24m", package = "SigRepo")
 ```
 
 ## Upload a signature

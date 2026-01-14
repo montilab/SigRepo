@@ -5,12 +5,12 @@
 # whereas the unanchored regular expression notes will match any file name containing “notes”, e.g. R/notes.R, man/important-notes.R, data/endnotes.Rdata, etc.
 
 # Ignore folders
-^\.Rproj\.user/
-^\.git/
-^\.github/
-^docs/
-^pkgdown/
-^tests/testthat/_snaps/
+^\.Rproj\.user
+^\.git
+^\.github
+^docs
+^pkgdown
+^tests/testthat/_snaps
 
 # Ignore extensions
 ^.*\.Rproj$
@@ -33,5 +33,5 @@
 ^uninstall_sigrepo\.sh$
 ^_pkgdown\.yml$
 ^README\.Rmd$
-^\.Rproj\.user$
 ^refCheck\.R$
+^\.Rproj\.user$

@@ -42,8 +42,6 @@ verbose <- function(...){
 #' 
 #' @keywords internal 
 #' 
-#' 
-#' 
 #' @export
 checkPermissions <- function(
     conn,
@@ -178,8 +176,6 @@ checkDBTable <- function(
 #' @param check_db_table Check whether table exists in the database. Default = TRUE.
 #' 
 #' @keywords internal
-#' 
-#' @import tidyr
 #'
 #' @export
 checkTableInput <- function(
@@ -334,6 +330,53 @@ checkDuplicatedEmails <- function(
   }
 }
 
+#' @title checkAssayType
+#' @description Check if assay type is a valid type in the database
+#' @param assay_type An assay type of the signature
+#' 
+#' @keywords internal 
+#' 
+#' @export
+checkAssayType <- function(
+    assay_type
+){
+  
+  # Get assay tbl
+  assay_tbl <- SigRepo::assay_tbl
+  
+  # Check if assay is available
+  check_tbl <- assay_tbl |> 
+    dplyr::filter(base::trimws(base::tolower(.data$assay_type)) %in% base::trimws(base::tolower(!!assay_type)))
+  
+  # Return message
+  if(base::nrow(check_tbl) == 0){
+    base::stop(base::sprintf("Invalid assay type. 'assay_type' must be one of the following options: %s", base::paste0(assay_tbl$assay_type, collapse = "/")))
+  }else if(check_tbl$status[1] == "Unavailable"){
+    base::stop(base::sprintf("\nAssay type = '%s' is not implemented in the database yet.", base::paste0(check_tbl$assay_type[1])))
+  }
+  
+}
+
+#' @title checkDirectionType
+#' @description Check if direction type is a valid type in the database
+#' @param direction_type A direction type of the signature
+#' 
+#' @keywords internal 
+#' 
+#' @export
+checkDirectionType <- function(
+    direction_type
+){
+  
+  # Get direction type options
+  direction_type_options <- SigRepo::direction_types |> base::tolower() |> base::trimws()
+  
+  # Return message
+  if(!base::trimws(base::tolower(direction_type[1])) %in% direction_type_options)
+    base::stop(base::sprintf("'direction_type' must be one of the following options: %s", base::paste0(direction_type_options, collapse = "/")))
+
+}
+
 #' @title checkOmicSignature
 #' @description Check if omic_signature is a valid R6 object
 #' @param omic_signature An OmicSignature object from OmicSignature package
@@ -378,17 +421,11 @@ checkOmicSignature <- function(
     base::stop("'organism' in OmicSignature's metadata object is required and cannot be empty.")
   
   # Check direction_type (required) ####
-  direction_type_options <- c("uni-directional", "bi-directional", "categorical")
-  
-  if(!metadata$direction_type[1] %in% direction_type_options)
-    base::stop(base::sprintf("'direction_type' in OmicSignature's metadata object must be one of the following options: %s", base::paste0(direction_type_options, collapse = "/")))
+  SigRepo::checkDirectionType(direction_type = metadata$direction_type[1])
   
   # Check assay_type (required) ####
-  assay_type_options <- c("transcriptomics", "proteomics", "metabolomics", "methylomics", "SNPs")
-  
-  if(!metadata$assay_type[1] %in% assay_type_options)
-    base::stop(base::sprintf("'assay_type' in OmicSignature's metadata object must be one of the following options: %s", base::paste0(assay_type_options, collapse = "/")))
-  
+  SigRepo::checkAssayType(assay_type = metadata$assay_type[1])
+
   # Check phenotype (required) #####
   if(base::length(metadata$phenotype[1]) == 0 || metadata$phenotype[1] %in% c(NA, ""))
     base::stop("'phenotype' in OmicSignature's metadata object is required and cannot be empty.")
@@ -409,7 +446,7 @@ checkOmicSignature <- function(
   if(metadata$direction_type[1] %in% c("bi-directional", "categorical") && !"group_label" %in% base::colnames(signature)){
     base::stop(base::sprintf("'signature' in OmicSignature object requires a 'group_label' variable as the direction of the signature is 'bi-directional' or 'categorical'"))
   }else if(metadata$direction_type[1] %in% c("uni-directional") && !"group_label" %in% base::colnames(signature)){
-    signature <- signature %>% dplyr::mutate(group_label = "")
+    signature <- signature |> dplyr::mutate(group_label = "")
   }
   
   # Make sure required column fields do not have any empty values ####
@@ -439,7 +476,7 @@ checkOmicSignature <- function(
   if(!base::is.null(difexp) && metadata$direction_type[1] %in% c("bi-directional", "categorical") && !"group_label" %in% base::colnames(difexp)){
     base::stop(base::sprintf("When the direction of the signature is bi-directional or categorical, 'difexp' in OmicSignature requires a 'group_label' variable."))
   }else if(!base::is.null(difexp) && metadata$direction_type[1] %in% c("uni-directional") && !"group_label" %in% base::colnames(difexp)){
-    difexp <- difexp %>% dplyr::mutate(group_label = "")
+    difexp <- difexp |> dplyr::mutate(group_label = "")
   }
   
   # Make sure required column fields do not have any empty values ####
@@ -676,8 +713,10 @@ getDBColNames <- function(
     base::stop(e, "\n")
   })
   
+  # Get table column names
   col_names <- base::colnames(db_table)
   
+  # Exclude column names from table
   if(!base::is.null(exclude_coln_names)) {
     col_names <- base::setdiff(col_names, exclude_coln_names)
   }
@@ -854,7 +893,7 @@ createHashKey <- function(
     dplyr::mutate(
       hash_key = base::paste0(!!!rlang::syms(hash_columns)) |> base::tolower() |> digest::digest(algo = "md5", serialize = FALSE)
     ) |> 
-    dplyr::rename(all_of(renamed_key_var)) |> 
+    dplyr::rename(dplyr::all_of(renamed_key_var)) |> 
     dplyr::ungroup()
   
   # Return table

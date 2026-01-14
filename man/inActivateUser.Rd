@@ -11,8 +11,8 @@ inActivateUser(conn_handler, user_name, verbose = TRUE)
 
 \item{user_name}{Name of the user to be inactivated (required).}
 
-\item{verbose}{Logical; whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether or not to print the diagnostic messages. 
+Default is \code{TRUE}.}
 }
 \description{
 Inactivate a user in the database

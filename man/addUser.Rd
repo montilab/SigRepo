@@ -21,16 +21,32 @@ Add a list of users to the database
 \examples{
 
 \dontrun{
-user_tbl <- data.frame(user_name = "joe12343",
-                       user_password = "ffgfd",
-                       user_email = "joejoe@gmail.com",
-                       user_first = "joe",
-                       user_last = "joe",
-                       user_affiliation = "Imaginary Tester")
-                       
-SigRepo::addUser(conn_handler = conn_handler,
-                 user_tbl = user_tbl,
-                 verbose = FALSE)
+
+# Create users table
+user_tbl <- base::data.frame(
+  user_name = "joe12343",
+  user_password = "ffgfd",
+  user_email = "joejoe@gmail.com",
+  user_first = "joe",
+  user_last = "joe",
+  user_affiliation = "Imaginary Tester"
+)
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Add users to database                      
+SigRepo::addUser(
+  conn_handler = conn_handler,
+  user_tbl = user_tbl,
+  verbose = FALSE
+)
 
 }
 

@@ -3,10 +3,8 @@
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param feature_set A Data Frame; Must contain the following column names: 
 #' feature_name, organism, gene_symbol, is_current, version (required)
-#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
-#'
-#' 
-#' @keywords internal
+#' @param verbose Logical; whether to print diagnostic messages. 
+#' Defaults to 'TRUE'.
 #' 
 #' @export
 addTranscriptomicsFeatureSet <- function(

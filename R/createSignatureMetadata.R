@@ -3,7 +3,8 @@
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param omic_signature An OmicSignature R6 object from the
 #' OmicSignature package (required).
-#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
+#' @param verbose Logical; whether to print diagnostic messages. 
+#' Defaults to 'TRUE'.
 #' 
 #' @keywords internal
 #'
@@ -55,7 +56,7 @@ createSignatureMetadata <- function(
   assay_type <- metadata$assay_type[1]
   
   # Check if assay type if valid
-  if(assay_type %in% c("metabolomics", "SNPs", "methylomics")){
+  if(assay_type %in% c("metabolomics", "GeneticVariants", "methylomics")){
     # If assay_type is not valid, throw an error message
     base::suppressWarnings(DBI::dbDisconnect(conn))
     SigRepo::showAssayTypeErrorMessage(

@@ -27,20 +27,32 @@ searchCollection(
 
 \item{user_name}{Name of users that the collection belongs to.}
 
-\item{verbose}{Logical; whether or not to print the
-diagnostic messages. Defaults to 'TRUE'.}
+\item{verbose}{Logical; whether or not to print the diagnostic messages. 
+Defaults to 'TRUE'.}
 }
 \description{
 Search for a list of collection in the database
 }
 \examples{
+
 \dontrun{
-SigRepo::searchCollection(conn_handler = conn_handler,
-                           #optional search params, 
-                           #just using the connection handler will retrieve all signatures' metadata
-                           collection_name = "test_collection", 
-                           collection_id = "67",
-                           )
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Delete a list of organisms from database
+SigRepo::searchCollection(
+  conn_handler = conn_handler, 
+  collection_name = "test_collection", 
+  collection_id = "67"
+)
+
 }
  
 

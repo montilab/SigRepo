@@ -38,7 +38,7 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="active nav-item"><a class="nav-link" href="index.html">Upload Signature</a></li>
+<li class="nav-item"><a class="nav-link" href="articles/signature-tutorials.html">Upload Signature</a></li>
 <li class="nav-item"><a class="nav-link" href="articles/collection-tutorials.html">Upload Collection</a></li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Change Log</a></li>
@@ -110,6 +110,11 @@
 </h2>
 <p>Please navigate to our <a href="https://sigrepo.org" target="_blank" class="external-link">sigrepo.org</a> portal to create your account. On the login page, click <code>"Register here!"</code> and fill out the registration form to create an account. You will receive an email when your account has been activated. Due to SQL constraints, having multiple users on the same testing account, like running the tutorial in the readme, will fail to connect. Each user using their own account is ideal.</p>
 </div>
+<div class="section level2">
+<h2 id="visibility">Visibility<a class="anchor" aria-label="anchor" href="#visibility"></a>
+</h2>
+<p>The SigRepo Project is a project that holds various sensitive signatures. Because of this, visibility of certain signatures is taken into account. What this means is that in order to retrieve certain signatures with the visibility of private(visibility = 0), standard accounts will not be able to access that signature and you will need permission from the signature author to access it. Conversely, a signature with the visibility of public (visibility = 1, this is also the DEFAULT) will be available to everyone with an account. Please note, viewing a signature with searchSignature() is different than using getSignature(), searchSignature() only shows the metadata of the signature and this is shown to everyone. getSignature takes into account the visibilty of the signatures.</p>
+</div>
 </div>
 <div class="section level1">
 <h1 id="connect-to-sigrepo-database">Connect to SigRepo Database<a class="anchor" aria-label="anchor" href="#connect-to-sigrepo-database"></a>
@@ -130,7 +135,7 @@
 <h1 id="guides">Guides<a class="anchor" aria-label="anchor" href="#guides"></a>
 </h1>
 <ul>
-<li>[Uploading Signature Tutorial]</li>
+<li><a href="https://montilab.github.io/SigRepo/articles/signature-tutorials.html">Uploading Signature Tutorial</a></li>
 <li><a href="https://montilab.github.io/SigRepo/articles/collection-tutorials.html">Uploading Signature Collection Tutorial</a></li>
 </ul>
 </div>

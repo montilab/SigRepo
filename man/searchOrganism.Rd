@@ -12,17 +12,32 @@ searchOrganism(conn_handler, organism = NULL, verbose = TRUE)
 \item{organism}{an organism, or  list of organisms to search by. 
 Default is NULL which will return all of the organisms in the database.}
 
-\item{verbose}{Logical; whether or not to print the
-diagnostic messages. Defaults to 'TRUE'}
+\item{verbose}{Logical; whether or not to print the diagnostic messages. 
+Defaults to 'TRUE'.}
 }
 \description{
 Search for an organism in the database, can handle a singular organism or list
 }
 \examples{
+
 \dontrun{
-SigRepo::searchCollection(conn_handler = conn_handler,
-                          organism = "Mus musculus",
-                          verbose = TRUE)
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Search for a list of organims in the database 
+SigRepo::searchOrganism(
+  conn_handler = conn_handler,
+  organism = "Mus musculus",
+  verbose = TRUE
+)
+
 }
     
 

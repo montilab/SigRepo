@@ -2,22 +2,45 @@
 #' @description Add organisms to database
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param organism_tbl A Data Frame; Must contain the following column names: 
-#' organism (required) 
+#' organism, biomart_db, biomart_dataset, biomart_description, biomart_version, 
+#' biomart_updated_date, prot_organism_code, prot_organism_taxid, prot_updated_date (required) 
 #' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' 
 #' @examples
+#' 
 #' \dontrun{
-#' # example code
 #' 
-#' organism_tbl <- data.frame(
-#' organism = c("organism_1", "organism_2"))
+#' # Create organisms table
+#' organism_tbl <- base::data.frame(
+#'   organism = "Homo sapiens",
+#'   biomart_db = "genes", 
+#'   biomart_dataset = "hsapiens_gene_ensembl", 
+#'   biomart_description = "Human genes (GRCh38.p14)", 
+#'   biomart_version = 114, 
+#'   biomart_updated_date = base::as.Date(base::Sys.Date(), format = "%Y-%m-%d"),
+#'   prot_organism_code = "Human", 
+#'   prot_organism_taxid = 9606,
+#'   prot_updated_date = base::as.Date(base::Sys.Date(), format = "%Y-%m-%d")
+#' )
 #' 
-#' SigRepo::addOrganism(conn_handler = conn_handler,
-#'                      organism_tbl = organism_tbl,
-#'                      verbose = TRUE)
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
+#' )
+#' 
+#' # Add organisms to database
+#' SigRepo::addOrganism(
+#'   conn_handler = conn_handler,
+#'   organism_tbl = organism_tbl,
+#'   verbose = TRUE
+#' )
+#' 
 #'}
 #'    
-#' 
 #' @export
 addOrganism <- function(
     conn_handler,
@@ -64,7 +87,7 @@ addOrganism <- function(
     conn = conn, 
     db_table_name = db_table_name,
     table = table, 
-    exclude_coln_names = "organism_id",
+    exclude_coln_names = c("organism_id", "biomart_db", "biomart_dataset", "biomart_description", "biomart_version", "biomart_updated_date", "prot_organism_code", "prot_organism_taxid", "prot_updated_date"),
     check_db_table = TRUE
   )
   

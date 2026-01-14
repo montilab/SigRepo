@@ -7,20 +7,49 @@
 #' and accessible to others, Defaults to 'FALSE'
 #' @param return_collection_id Logical; whether to return the ID of the uploaded collection
 #' Defaults to 'FALSE'
-#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
+#' @param verbose Logical; whether to print diagnostic messages. 
+#' Defaults to 'TRUE'.
 #' 
 #' @examples
-#' \dontrun{
-#' SigRepo::addCollection(
-#' # required
-#' conn_handler = conn_handler,
-#' omic_collection  = omic_collection_1,
 #' 
-#' # optional
-#' visibility = FALSE,
-#' return_collection_id = TRUE,
-#' verbose = TRUE
+#' \dontrun{
+#' 
+#' library(OmicSignature)
+#' 
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
 #' )
+#' 
+#' # Load signature objects
+#' utils::data("omic_signature_1", package = "SigRepo")
+#' utils::data("omic_signature_2", package = "SigRepo")
+#' 
+#' # Create a metadata object for the collection
+#' metadata <- base::list(
+#'   "collection_name" = "my_collection",
+#'   "description" = "An example of signature collection"
+#' )
+#' 
+#' # Create an omic collection using OmicSignatureCollection() from OmicSignature package
+#' omic_collection <- OmicSignature::OmicSignatureCollection$new(
+#'   OmicSigList = base::list(omic_signature_1, omic_signature_2),
+#'   metadata = metadata
+#' )
+#' 
+#' # Add collection to database
+#' SigRepo::addCollection(
+#'   conn_handler = conn_handler,
+#'   omic_collection  = omic_collection,
+#'   visibility = FALSE,
+#'   return_collection_id = TRUE,
+#'   verbose = TRUE
+#' )
+#' 
 #' }
 #' 
 #' 
@@ -100,14 +129,12 @@ addCollection <- function(
     
     # Show message
     SigRepo::verbose(
-      base::sprintf("\tYou already uploaded a collection with the name = '%s' to the SigRepo database.\n", metadata_tbl$collection_name),
-      base::sprintf("\tID of the uploaded collection: %s\n", collection_tbl$collection_id)
+      base::sprintf("\tYou already uploaded a collection with the name = '%s' to the database.\n", metadata_tbl$collection_nam[1]),
+      base::sprintf("\tID of the uploaded collection: %s\n", collection_tbl$collection_id[1])
     )
     
     # Return collection id
-    if(return_collection_id == TRUE){
-      return(collection_tbl$collection_id[1])
-    }
+    if(return_collection_id == TRUE) return(collection_tbl$collection_id[1])
     
   }else{
     

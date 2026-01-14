@@ -12,17 +12,32 @@ searchPlatform(conn_handler, platform_name = NULL, verbose = TRUE)
 \item{platform_name}{A platform, or a list of platform names to be looked up. Defaults to
 'NULL', which will return all of the platforms in the database.}
 
-\item{verbose}{Logical; whether or not to print the
-diagnostic messages. Defaults to 'TRUE'.}
+\item{verbose}{Logical; whether or not to print the diagnostic messages. 
+Defaults to 'TRUE'.}
 }
 \description{
 Search for platform in the database
 }
 \examples{
+
 \dontrun{
-SigRepo::searchPlatform(conn_handler = conn_handler,
-                        platform_name = "test_platform",
-                        verbose = TRUE)
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Search for a list of platforms in the database
+SigRepo::searchPlatform(
+  conn_handler = conn_handler, 
+  platform_name = "test_platform", 
+  verbose = TRUE
+)
+
 }
       
 }

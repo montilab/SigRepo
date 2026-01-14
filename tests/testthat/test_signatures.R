@@ -3,7 +3,7 @@
 # searchSignature
 
 test_that("addSignature correctly adds a signature into the database", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   # Create test signature data
   expect_no_error({test_transcriptomics_sig <- base::readRDS(testthat::test_path("test_data", "test_data_transcriptomics.rds"))})
@@ -34,7 +34,7 @@ test_that("addSignature correctly adds a signature into the database", {
 })
 
 test_that("searchSignature correctly searches for the desired signature", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   # Create test signature data
   expect_no_error({test_transcriptomics_sig <- base::readRDS(testthat::test_path("test_data", "test_data_transcriptomics.rds"))})
@@ -75,7 +75,7 @@ test_that("searchSignature correctly searches for the desired signature", {
 })
 
 test_that("searchSignature returns all signatures when no filters provided", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   all_signatures <- SigRepo::searchSignature(
     conn_handler = test_conn,
@@ -89,7 +89,7 @@ test_that("searchSignature returns all signatures when no filters provided", {
 })
 
 test_that("searchSignature filters by organism", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   organism_search <- SigRepo::searchSignature(
     conn_handler = test_conn,
@@ -105,8 +105,8 @@ test_that("searchSignature filters by organism", {
 })
 
 test_that("searchSignature filters by phenotype", {
-  test_conn <- create_test_conn()
-
+  test_conn <- SigRepo::test_conn_handler
+  
   phenotype_search <- SigRepo::searchSignature(
     conn_handler = test_conn,
     phenotype = "Aging",
@@ -118,8 +118,8 @@ test_that("searchSignature filters by phenotype", {
 })
 
 test_that("searchSignature filters by platform", {
-  test_conn <- create_test_conn()
-
+  test_conn <- SigRepo::test_conn_handler
+  
   platform_search <- SigRepo::searchSignature(
     conn_handler = test_conn,
     platform = "transcriptomics by array",
@@ -131,7 +131,7 @@ test_that("searchSignature filters by platform", {
 })
 
 test_that("searchSignature returns empty result for non-existent signature", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   signature_search <- SigRepo::searchSignature(
     conn_handler = test_conn,
@@ -144,7 +144,7 @@ test_that("searchSignature returns empty result for non-existent signature", {
 })
 
 test_that("addSignature handles duplicate signatures", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   # Create test signature data
   expect_no_error({test_transcriptomics_sig <- base::readRDS(testthat::test_path("test_data", "test_data_transcriptomics.rds"))})
@@ -161,15 +161,18 @@ test_that("addSignature handles duplicate signatures", {
   
   # Try to add same signature again
 
-  expect_error({
+  expect_message(
     SigRepo::addSignature(
       conn_handler = test_conn,
       omic_signature = test_transcriptomics_sig,
       return_signature_id = TRUE,
-      verbose = FALSE
-    )
-  }) 
-
+      verbose = TRUE
+    ),
+    regexp = "You already uploaded a signature with the name = 'test_signature'"
+  )
+  
+  
+  
 
   
   # remove signature
@@ -185,7 +188,7 @@ test_that("addSignature handles duplicate signatures", {
 })
 
 test_that("addSignature validates input data frame", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   # Test with NULL
   expect_error({
@@ -225,8 +228,8 @@ test_that("addSignature handles NULL connection handler", {
 })
 
 test_that("searchSignature with multiple filters works correctly", {
-  test_conn <- create_test_conn()
-
+  test_conn <- SigRepo::test_conn_handler
+  
   multi_filter_search <- SigRepo::searchSignature(
     conn_handler = test_conn,
     organism = "Homo sapiens",
@@ -241,7 +244,7 @@ test_that("searchSignature with multiple filters works correctly", {
 })
 
 test_that("searchSignature returns consistent results", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   # Run search twice with same parameters
   result1 <- SigRepo::searchSignature(

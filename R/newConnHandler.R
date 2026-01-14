@@ -10,15 +10,20 @@
 #' @return A list object that contains all the items that are passed in the arguments used for database connection. 
 #' 
 #' @examples
+#' 
 #' \dontrun{
-#' SigRepo::newConnHandler(dbname = "sigrepo",
-#'                         host = "sigrepo.org,
-#'                         port = 3306,
-#'                         user = ted_williams,
-#'                         password = "ted_will_123,
-#'                         api_host = "sigrepo.org",
-#'                         api_port = 8020
-#'                         )
+#' 
+#' # Create a connection handler
+#' SigRepo::newConnHandler(
+#'   dbname = "sigrepo",
+#'   host = "sigrepo.org",
+#'   port = 3306,
+#'   user = <your_username>, 
+#'   password = <your_password>,
+#'   api_host = "sigrepo.org",
+#'   api_port = 8020
+#' )
+#' 
 #' }
 #' 
 #' @export
@@ -108,9 +113,8 @@ conn_init <- function(conn_handler){
   }, error = function(e){
     base::stop(
       "Failed to connect to the database.\n",
-      "Please check your host, username, password, and network connection.\n\n",
-      "Technical details: ", conditionMessage(e),
-      call. = FALSE
+      "Please check your host, username, password, and network connection.\n",
+      "Technical details: ", base::as.character(e)
     )
   })
   

@@ -3,7 +3,7 @@
 # searchPlatform
 
 test_that("addPlatform correctly adds the platform into the database", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   # Create platform data for this test
   platform_table <- base::data.frame(
@@ -20,7 +20,7 @@ test_that("addPlatform correctly adds the platform into the database", {
 })
 
 test_that("searchPlatform correctly searches for the desired platform", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   platform_search <- SigRepo::searchPlatform(
     conn_handler = test_conn,
@@ -34,7 +34,7 @@ test_that("searchPlatform correctly searches for the desired platform", {
 })
 
 test_that("addPlatform handles duplicate platforms", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   # Create platform data for this test
   platform_table <- base::data.frame(
@@ -67,7 +67,7 @@ test_that("addPlatform handles duplicate platforms", {
 })
 
 test_that("searchPlatform returns empty result for non-existent platform", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   platform_search <- SigRepo::searchPlatform(
     conn_handler = test_conn,
@@ -80,7 +80,7 @@ test_that("searchPlatform returns empty result for non-existent platform", {
 })
 
 test_that("searchPlatform without specific platform returns all platforms", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   all_platforms <- SigRepo::searchPlatform(
     conn_handler = test_conn,
@@ -92,7 +92,7 @@ test_that("searchPlatform without specific platform returns all platforms", {
 })
 
 test_that("addPlatform validates input data frame", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   # Test with NULL
   expect_error({

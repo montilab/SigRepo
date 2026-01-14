@@ -12,7 +12,8 @@ createSignatureMetadata(conn_handler, omic_signature, verbose = FALSE)
 \item{omic_signature}{An OmicSignature R6 object from the
 OmicSignature package (required).}
 
-\item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
+\item{verbose}{Logical; whether to print diagnostic messages. 
+Defaults to 'TRUE'.}
 }
 \description{
 Create a metadata object for a signature
