@@ -11,6 +11,8 @@
 <url><loc>https://montilab.github.io/SigRepo/reference/LLFS_Aging_Gene_2023.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/Myc_reduce_mice_liver_24m.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/addCollection.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/addGeneticVariantsFeatureSet.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/addGeneticVariantsSignatureSet.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/addKeyword.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/addOrganism.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/addPhenotype.html</loc></url>
@@ -26,7 +28,10 @@
 <url><loc>https://montilab.github.io/SigRepo/reference/addUser.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/addUserToCollection.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/addUserToSignature.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/assay_tbl.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/checkAssayType.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/checkDBTable.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/checkDirectionType.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/checkDuplicatedEmails.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/checkOmicCollection.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/checkOmicSignature.html</loc></url>
@@ -46,6 +51,7 @@
 <url><loc>https://montilab.github.io/SigRepo/reference/deleteSignature.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/deleteUser.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/delete_table_sql.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/direction_types.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/getAPIKey.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/getCollection.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/getDBColNames.html</loc></url>
@@ -67,6 +73,7 @@
 <url><loc>https://montilab.github.io/SigRepo/reference/removeSignatureFromCollection.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/searchAssayType.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/searchCollection.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/searchGeneticVariantsFeatureSet.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/searchKeyword.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/searchOrganism.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/searchPhenotype.html</loc></url>
@@ -77,13 +84,17 @@
 <url><loc>https://montilab.github.io/SigRepo/reference/searchTranscriptomicsFeatureSet.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/searchUser.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/showAssayTypeErrorMessage.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/showGeneticVariantsErrorMessage.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/showOrganismErrorMessage.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/showPlatformErrorMessage.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/showProteomicsErrorMessage.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/showSampleTypeErrorMessage.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/showTranscriptomicsErrorMessage.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/test_conn_handler.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/updateCollectionMetadata.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/updateProteomicsFeatureSet.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/updateSignature.html</loc></url>
+<url><loc>https://montilab.github.io/SigRepo/reference/updateTranscriptomicsFeatureSet.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/updateUser.html</loc></url>
 <url><loc>https://montilab.github.io/SigRepo/reference/verbose.html</loc></url>
 </urlset>

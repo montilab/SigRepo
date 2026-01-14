@@ -79,6 +79,21 @@ having multiple users on the same testing account, like running the
 tutorial in the readme, will fail to connect. Each user using their own
 account is ideal.
 
+## Visibility
+
+The SigRepo Project is a project that holds various sensitive
+signatures. Because of this, visibility of certain signatures is taken
+into account. What this means is that in order to retrieve certain
+signatures with the visibility of private(visibility = 0), standard
+accounts will not be able to access that signature and you will need
+permission from the signature author to access it. Conversely, a
+signature with the visibility of public (visibility = 1, this is also
+the DEFAULT) will be available to everyone with an account. Please note,
+viewing a signature with searchSignature() is different than using
+getSignature(), searchSignature() only shows the metadata of the
+signature and this is shown to everyone. getSignature takes into account
+the visibilty of the signatures.
+
 # Connect to SigRepo Database
 
 We adopt a MySQL database structure for efficiently storing, searching,
@@ -110,6 +125,7 @@ which contains user credentials to establish connection to our database.
 
 # Guides
 
--   \[Uploading Signature Tutorial\]
+-   [Uploading Signature
+    Tutorial](https://montilab.github.io/SigRepo/articles/signature-tutorials.html)
 -   [Uploading Signature Collection
     Tutorial](https://montilab.github.io/SigRepo/articles/collection-tutorials.html)

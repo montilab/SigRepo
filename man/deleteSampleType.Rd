@@ -11,17 +11,32 @@ deleteSampleType(conn_handler, sample_type, verbose = TRUE)
 
 \item{sample_type}{A list of sample types to be removed (required)}
 
-\item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
+\item{verbose}{Logical; whether to print diagnostic messages. 
+Defaults to 'TRUE'.}
 }
 \description{
 Remove sample types from database
 }
 \examples{
-\dontrun{
-SigRepo::deleteSampleType(conn_handler = conn_handler,
-                          sample_type = "sample_type",
-                          verbose = TRUE)
-}
 
+\dontrun{
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Delete a list of sample types from database
+SigRepo::deleteSampleType(
+  conn_handler = conn_handler,
+  sample_type = "3T3-L1 cell",
+  verbose = TRUE
+)
+
+}
 
 }

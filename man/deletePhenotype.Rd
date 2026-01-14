@@ -11,17 +11,32 @@ deletePhenotype(conn_handler, phenotype, verbose = TRUE)
 
 \item{phenotype}{A list of phenotypes to be removed (required)}
 
-\item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
+\item{verbose}{Logical; whether to print diagnostic messages. 
+Defaults to 'TRUE'.}
 }
 \description{
 Remove phenotypes from database
 }
 \examples{
+
 \dontrun{
-# example code
-SigRepo::deletePhenotype(conn_handler = conn_handler,
-                        phenotype = "test_phenotype",
-                        verbose = TRUE)
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Delete a list of phenotypes from database
+SigRepo::deletePhenotype(
+  conn_handler = conn_handler,
+  phenotype = "aging",
+  verbose = TRUE
+)
+
 }
 
 }

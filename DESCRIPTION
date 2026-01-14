@@ -20,6 +20,7 @@ Encoding: UTF-8
 RoxygenNote: 7.3.3
 LazyData: true 
 Imports:
+  biomaRt,
   DBI,
   digest,
   dplyr,
@@ -30,8 +31,7 @@ Imports:
   purrr,
   readr,
   rlang,
-  RMySQL,
-  tidyr
+  RMySQL
 Remotes:
   montilab/OmicSignature
 Suggests:

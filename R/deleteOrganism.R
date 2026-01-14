@@ -2,13 +2,29 @@
 #' @description Remove organisms from database
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param organism A list of organisms to be removed (required) 
-#' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
+#' @param verbose Logical; whether to print diagnostic messages. 
+#' Defaults to 'TRUE'.
+#' 
 #' @examples
+#' 
 #' \dontrun{
-#' # example code
-#' SigRepo::deleteCollection(conn_handler = conn_handler,
-#'                           organism = 'test_organism',
-#'                           verbose = TRUE)
+#' 
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
+#' )
+#' 
+#' # Delete a list of organisms from database
+#' SigRepo::deleteOrganism(
+#'   conn_handler = conn_handler,
+#'   organism = "homo sapiens",
+#'   verbose = TRUE
+#' )
+#' 
 #' }
 #' 
 #' @export
@@ -37,7 +53,7 @@ deleteOrganism <- function(
     db_table_name = "organisms",
     delete_coln_var = "organism",
     delete_coln_val = base::unique(organism),
-    check_db_table = FALSE
+    check_db_table = TRUE
   )
   
   # Disconnect from database ####

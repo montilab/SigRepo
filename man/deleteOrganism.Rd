@@ -11,17 +11,32 @@ deleteOrganism(conn_handler, organism, verbose = TRUE)
 
 \item{organism}{A list of organisms to be removed (required)}
 
-\item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
+\item{verbose}{Logical; whether to print diagnostic messages. 
+Defaults to 'TRUE'.}
 }
 \description{
 Remove organisms from database
 }
 \examples{
+
 \dontrun{
-# example code
-SigRepo::deleteCollection(conn_handler = conn_handler,
-                          organism = 'test_organism',
-                          verbose = TRUE)
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Delete a list of organisms from database
+SigRepo::deleteOrganism(
+  conn_handler = conn_handler,
+  organism = "homo sapiens",
+  verbose = TRUE
+)
+
 }
 
 }

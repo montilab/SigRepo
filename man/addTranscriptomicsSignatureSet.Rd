@@ -22,9 +22,9 @@ addTranscriptomicsSignatureSet(
 \item{signature_set}{A Data Frame; Must contain the following column names:
 feature_name, probe_id, score, group_label (required)}
 
-\item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
+\item{verbose}{Logical; whether to print diagnostic messages. 
+Defaults to 'TRUE'.}
 }
 \description{
 Add a signature feature set to database
 }
-\keyword{internal}

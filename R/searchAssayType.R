@@ -12,35 +12,26 @@
 #' \code{"Unavailable"} means the assay type isn't existed in the database yet,
 #' and users cannot upload signatures or collections that are specifically
 #' associated with this assay type.
+#' 
 #' @examples
+#' 
 #' \dontrun{
-#' SigRepo::searchAssayType(assay_type = "transcriptomics")
+#' 
+#' # Search a list of assay types in the database 
+#' SigRepo::searchAssayType(
+#'   assay_type = "transcriptomics"
+#' )
+#' 
 #' }
 #' 
 #' 
 #' @export
 searchAssayType <- function(
     assay_type = NULL
-) {
+){
   
-  # Create the table of assay types and their availability
-  assay_tbl <- base::data.frame(
-    assay_type = c(
-      "transcriptomics",
-      "proteomics",
-      "metabolomics",
-      "methylomics",
-      "SNPs"
-    ),
-    status = c(
-      "Available",
-      "Available",
-      "Unavailable",
-      "Unavailable",
-      "Unavailable"
-    ),
-    stringsAsFactors = FALSE
-  )
+  # Get assay tbl
+  assay_tbl <- SigRepo::assay_tbl
   
   # Look up assay_type
   if(base::length(assay_type) == 0 || base::all(assay_type %in% c("", NA))){
@@ -49,13 +40,15 @@ searchAssayType <- function(
     
   }else{
     
-    # Normalize the input
-    assay_type <- base::trimws(base::tolower(assay_type))
+    # Check if assay is available
+    tbl <- assay_tbl |> dplyr::filter(base::trimws(base::tolower(.data$assay_type)) %in% base::trimws(base::tolower(!!assay_type)))
     
-    tbl <- assay_tbl |> 
-      dplyr::filter(.data$assay_type %in% base::trimws(base::tolower(!!assay_type)))
+    # Return message
+    if(base::nrow(tbl) == 0)
+      base::stop(base::sprintf("Invalid assay type. 'assay_type' must be one of the following options: %s", base::paste0(assay_tbl$assay_type, collapse = "/")))
       
-    return(tbl) 
+    # Return table
+    return(tbl)
     
   }
   

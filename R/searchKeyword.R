@@ -3,13 +3,29 @@
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param keyword A list of keywords to be looked up. 
 #' Default is NULL which will return all of the keywords in the database.
-#' @param verbose Logical; whether or not to print the
-#' diagnostic messages. Default to 'TRUE'
+#' @param verbose Logical; whether or not to print the diagnostic messages. 
+#' Default to 'TRUE'.
+#' 
 #' @examples
+#' 
 #' \dontrun{
-#' SigRepo::searchKeyword(conn_handler = conn_handler,
-#'                        keyword = "test_keyord",
-#'                        verbose = TRUE)
+#' 
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
+#' )
+#' 
+#' # Search for a list of keywords in the database
+#' SigRepo::searchKeyword(
+#'   conn_handler = conn_handler, 
+#'   keyword = "test_keyword",
+#'   verbose = TRUE
+#' )
+#' 
 #' }
 #' 
 #' @export

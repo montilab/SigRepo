@@ -18,8 +18,8 @@ getCollection(
 
 \item{collection_id}{Database ID of collection to be returned (required)}
 
-\item{verbose}{Logical; whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether or not to print the diagnostic messages. 
+Default is \code{TRUE}.}
 }
 \description{
 Get a list of collection uploaded by a specified user in the database.

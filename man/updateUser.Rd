@@ -37,8 +37,8 @@ updateUser(
 \item{active}{Whether to make a user TRUE (active) or FALSE (inactive). 
 Default is NULL.}
 
-\item{verbose}{Logical; whether or not to print the
-diagnostic messages. Defaults to 'TRUE'}
+\item{verbose}{Logical; whether or not to print the diagnostic messages. 
+Defaults to 'TRUE'}
 }
 \description{
 Update a user in the database

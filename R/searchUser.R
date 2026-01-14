@@ -3,14 +3,29 @@
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param user_name A list of user names to search by. Defaults to 'NULL', which
 #' will return all of the users in the database
-#' @param verbose Logical; whether or not to print the
-#' diagnostic messages. Defaults to 'TRUE'.
-#' @examples
-#' \dontrun{
-#' SigRepo::searchUser(conn_handler = conn_handler,
-#'                     user_namne = "John_Doe")
-#' }
+#' @param verbose Logical; whether or not to print the diagnostic messages. 
+#' Defaults to 'TRUE'.
 #' 
+#' @examples
+#' 
+#' \dontrun{
+#' 
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
+#' )
+#' 
+#' # Search for a list of users in the database
+#' SigRepo::searchUser(
+#'   conn_handler = conn_handler, 
+#'   user_namne = "John_Doe"
+#' )
+#' 
+#' }
 #' 
 #' @export
 searchUser <- function(

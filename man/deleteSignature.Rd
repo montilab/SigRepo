@@ -4,32 +4,39 @@
 \alias{deleteSignature}
 \title{deleteSignature}
 \usage{
-deleteSignature(
-  conn_handler,
-  signature_id = NULL,
-  signature_name = NULL,
-  verbose = TRUE
-)
+deleteSignature(conn_handler, signature_id = NULL, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{signature_id}{Database ID of signature to be removed from the database (signature id OR signature name required, both is also an option)}
+\item{signature_id}{Database ID of signature to be removed from the database (required)}
 
-\item{signature_name}{Name of the signature to be removed from the database ( signature id OR signature name required, both is also an option)}
-
-\item{verbose}{Logical; whether or not to print the
-diagnostic messages. Default is \code{TRUE}.}
+\item{verbose}{Logical; whether or not to print the diagnostic messages. 
+Default is \code{TRUE}.}
 }
 \description{
 Delete a signature from the signatures table of the database
 }
 \examples{
-\dontrun{
-SigRepo::deleteSignature(conn_handler = conn_handler,
-                         signature_id = 58,
-                         verbose = FALSE)
-}
 
+\dontrun{
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Delete signature from database
+SigRepo::deleteSignature(
+  conn_handler = conn_handler,
+  signature_id = 56,
+  verbose = TRUE
+)
+
+}
 
 }

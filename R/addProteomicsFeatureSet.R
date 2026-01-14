@@ -5,9 +5,6 @@
 #' feature_name, organism, gene_symbol, is_current, version (required)
 #' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' 
-#' 
-#' @keywords internal
-#' 
 #' @export
 addProteomicsFeatureSet <- function(
     conn_handler,

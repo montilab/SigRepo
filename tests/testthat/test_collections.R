@@ -3,7 +3,7 @@
 
 test_that("addCollection correctly adds a signature into the database", {
   
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   expect_no_error({
     test_collection_sig <- base::readRDS(
@@ -32,11 +32,20 @@ test_that("addCollection correctly adds a signature into the database", {
       verbose = TRUE
     )
     
+    
+    expect_no_error({
+      id_1 <- searchSignature(conn_handler = test_conn,
+                              signature_name = "sig_for_collection_1")$signature_id
+      id_2 <- searchSignature(conn_handler = test_conn, 
+                              signature_name = "sig_for_collection_2" )$signature_id
+    })
+    
+    
     # remove signatures
     expect_no_error({
       SigRepo::deleteSignature(
         conn_handler = test_conn,
-        signature_name = "sig_for_collection_1",
+        signature_id = id_1,
         verbose = TRUE
       )
     })
@@ -44,7 +53,7 @@ test_that("addCollection correctly adds a signature into the database", {
     expect_no_error({
       SigRepo::deleteSignature(
         conn_handler = test_conn,
-        signature_name = "sig_for_collection_2",
+        signature_id = id_2,
         verbose = TRUE
       )
     })
@@ -54,7 +63,7 @@ test_that("addCollection correctly adds a signature into the database", {
 
 test_that("searchSignature correctly searches for the desired signature",{
   
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   # create the test collection
   
@@ -89,20 +98,28 @@ test_that("searchSignature correctly searches for the desired signature",{
     )
   })
   
+  expect_no_error({
+    id_1 <- searchSignature(conn_handler = test_conn,
+                            signature_name = "sig_for_collection_1")$signature_id
+    id_2 <- searchSignature(conn_handler = test_conn, 
+                            signature_name = "sig_for_collection_2" )$signature_id
+  })
+  
+  
   # remove signatures
   expect_no_error({
     SigRepo::deleteSignature(
       conn_handler = test_conn,
-      signature_name = "sig_for_collection_1",
-      verbose = FALSE
+      signature_id = id_1,
+      verbose = TRUE
     )
   })
   
   expect_no_error({
     SigRepo::deleteSignature(
       conn_handler = test_conn,
-      signature_name = "sig_for_collection_2",
-      verbose = FALSE
+      signature_id = id_2,
+      verbose = TRUE
     )
   })
 })
@@ -111,7 +128,7 @@ test_that("searchSignature correctly searches for the desired signature",{
 # searchCollection correctly returns all collections when no filters are provided.
 
 test_that("searchCollection returns all signatures when no filters provided",{
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   all_collections <- SigRepo::searchCollection(
     conn_handler = test_conn,
@@ -127,7 +144,7 @@ test_that("searchCollection returns all signatures when no filters provided",{
  
 
 test_that("searchCollection returns empty result for non-existent signature", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   collection_search <- SigRepo::searchCollection(
     conn_handler = test_conn,
@@ -140,7 +157,7 @@ test_that("searchCollection returns empty result for non-existent signature", {
 })
 
 # test_that("addCollection handles duplicate signatures", {
-#   test_conn <- create_test_conn()
+#   test_conn <- SigRepo::test_conn_handler
 #   
 #   # Create test signature data
 #   expect_no_error({test_collection_sig <- base::readRDS(testthat::test_path("test_data", "test_data_collection.rds"))})
@@ -220,7 +237,7 @@ test_that("addCollection handles NULL connection handler", {
 
 
 test_that("searchCollection returns consistent results", {
-  test_conn <- create_test_conn()
+  test_conn <- SigRepo::test_conn_handler
   
   # Run search twice with same parameters
   result1 <- SigRepo::searchSignature(

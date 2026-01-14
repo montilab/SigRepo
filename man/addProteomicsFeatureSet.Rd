@@ -17,4 +17,3 @@ feature_name, organism, gene_symbol, is_current, version (required)}
 \description{
 Add proteomics feature set to database
 }
-\keyword{internal}

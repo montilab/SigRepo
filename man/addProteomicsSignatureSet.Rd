@@ -22,9 +22,9 @@ addProteomicsSignatureSet(
 \item{signature_set}{A Data Frame; must contain the following column names:
 feature_name, probe_id, score, group_label (required)}
 
-\item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
+\item{verbose}{Logical; whether to print diagnostic messages. 
+Defaults to 'TRUE'.}
 }
 \description{
 Add proteomics signature feature set to database
 }
-\keyword{internal}

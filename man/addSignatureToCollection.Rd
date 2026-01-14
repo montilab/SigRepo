@@ -27,11 +27,24 @@ Add a list of signatures to a collection in the database
 \examples{
 
 \dontrun{
-SigRepo::AddSignatureToCollection(
-conn_handler = conn_handler,
-collection_id = collection_id,
-signature_id = c(1,67,80,5)),
-verbose = FALSE
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Add a list of signatures to a collection
+SigRepo::addSignatureToCollection(
+  conn_handler = conn_handler,
+  collection_id = 1,
+  signature_id = c(1, 67, 80, 5),
+  verbose = FALSE
+)
+
 }
 
 

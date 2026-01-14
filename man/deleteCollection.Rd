@@ -17,9 +17,25 @@ deleteCollection(conn_handler, collection_id, verbose = TRUE)
 Delete a collection from the collection table of the database
 }
 \examples{
+
 \dontrun{
-#' SigRepo::deleteCollection(conn_handler = conn_handler,
-                          collection_id = 56,
-                          verbose = TRUE)
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Delete collection from database
+SigRepo::deleteCollection(
+  conn_handler = conn_handler,
+  collection_id = 56,
+  verbose = TRUE
+)
+
 }
+
 }

@@ -269,7 +269,7 @@ lookup_table_sql <- function(
   
   # Whether to exclude selected column names from the returned table
   if(base::length(exclude_return_var) > 0){
-    table <- table %>% dplyr::select(dplyr::all_of(base::colnames(table)[base::which(!base::colnames(table) %in% exclude_return_var)]))
+    table <- table |> dplyr::select(dplyr::all_of(base::colnames(table)[base::which(!base::colnames(table) %in% exclude_return_var)]))
   }
   
   # Return table

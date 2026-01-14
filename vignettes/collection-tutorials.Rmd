@@ -66,14 +66,8 @@ library(OmicSignature)
 # Create a handler to connect to SigRepo Database
 
 ```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
-# Create a connection handler
-conn_handler <- SigRepo::newConnHandler(
-  dbname = "sigrepo", 
-  host = "sigrepo.org", 
-  port = 3306, 
-  user = "montilab", 
-  password = "sigrepo"
-)
+# Get the test connection handler
+conn_handler <- SigRepo::test_conn_handler
 ```
 
 ```
@@ -98,10 +92,10 @@ Here, we provided 4 signature objects that came with the package for demonstrati
 
 ```{r}
 # Read in the signature objects
-data("omic_signature_1", package = "SigRepo")
-data("omic_signature_2", package = "SigRepo")
-data("omic_signature_3", package = "SigRepo")
-data("omic_signature_4", package = "SigRepo")
+utils::data("omic_signature_1", package = "SigRepo")
+utils::data("omic_signature_2", package = "SigRepo")
+utils::data("omic_signature_3", package = "SigRepo")
+utils::data("omic_signature_4", package = "SigRepo")
 ```
 
 # Create an omic collection 

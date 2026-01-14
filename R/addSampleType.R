@@ -6,13 +6,31 @@
 #' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' 
 #' @examples
-#' \dontrun{
-#' # example code
-#' sample_type_tbl <- data.frame(c("sample_1","sample_2"))
 #' 
-#' SigRepo::addSampleType(conn_handler = conn_handler,
-#'                        sample_type_tbl = sample_type_tbl,
-#'                        verbose = FALSE)
+#' \dontrun{
+#' 
+#' # Create sample types table
+#' sample_type_tbl <- base::data.frame(
+#'   sample_type = c("sample_1","sample_2"),
+#'   brenda_accession = c("accession_1", "accession_2")
+#' )
+#' 
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
+#' )
+#' 
+#' # Add sample types to database
+#' SigRepo::addSampleType(
+#'   conn_handler = conn_handler,
+#'   sample_type_tbl = sample_type_tbl,
+#'   verbose = FALSE
+#' )
+#' 
 #' }
 #' 
 #' @export

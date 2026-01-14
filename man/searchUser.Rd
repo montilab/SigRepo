@@ -12,17 +12,31 @@ searchUser(conn_handler, user_name = NULL, verbose = TRUE)
 \item{user_name}{A list of user names to search by. Defaults to 'NULL', which
 will return all of the users in the database}
 
-\item{verbose}{Logical; whether or not to print the
-diagnostic messages. Defaults to 'TRUE'.}
+\item{verbose}{Logical; whether or not to print the diagnostic messages. 
+Defaults to 'TRUE'.}
 }
 \description{
 Get phenotypes in the database
 }
 \examples{
-\dontrun{
-SigRepo::searchUser(conn_handler = conn_handler,
-                    user_namne = "John_Doe")
-}
 
+\dontrun{
+
+# Create a connection handler
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo", 
+  host = "sigrepo.org", 
+  port = 3306, 
+  user = <your_username>, 
+  password = <your_password>
+)
+
+# Search for a list of users in the database
+SigRepo::searchUser(
+  conn_handler = conn_handler, 
+  user_namne = "John_Doe"
+)
+
+}
 
 }

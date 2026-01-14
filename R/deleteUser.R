@@ -5,10 +5,25 @@
 #' @param verbose Logical; whether or not to print the
 #' diagnostic messages. Default is \code{TRUE}.
 #' @examples
+#' 
 #' \dontrun{
-#' SigRepo::deleteUser(conn_handler = conn_handler,
-#'                     user_name = "John_Doe",
-#'                     verbose = TRUE)
+#' 
+#' # Create a connection handler
+#' conn_handler <- SigRepo::newConnHandler(
+#'   dbname = "sigrepo", 
+#'   host = "sigrepo.org", 
+#'   port = 3306, 
+#'   user = <your_username>, 
+#'   password = <your_password>
+#' )
+#' 
+#' # Delete a list of users from database
+#' SigRepo::deleteUser(
+#'   conn_handler = conn_handler,
+#'   user_name = "John_Doe",
+#'   verbose = TRUE
+#' )
+#' 
 #' }
 #'     
 #' @export
@@ -49,7 +64,7 @@ deleteUser <- function(
     return_var = "*",
     filter_coln_var = "user_name", 
     filter_coln_val = base::list("user_name" = user_name),
-    check_db_table = FALSE
+    check_db_table = TRUE
   )
 
   # Check if user exists in the database
@@ -66,7 +81,7 @@ deleteUser <- function(
     db_table_name = "users",
     delete_coln_var = "user_name",
     delete_coln_val = user_name,
-    check_db_table = TRUE
+    check_db_table = FALSE
   )
   
   # Reset message options
