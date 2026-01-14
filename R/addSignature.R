@@ -351,37 +351,7 @@ addSignature <- function(
 
     }else if(assay_type == "metabolomics"){
       
-      # If there is a error during the process, remove the signature and output the message
-      warn_tbl <- base::tryCatch({
-        SigRepo::addMetabolomicsSignatureSet(
-          conn_handler = conn_handler,
-          signature_id = signature_tbl$signature_id[1],
-          organism_id = signature_tbl$organism_id[1],
-          signature_set = omic_signature$signature,
-          verbose = verbose
-        )
-      }, error = function(e){
-        # Delete signature
-        SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = signature_tbl$signature_id[1], verbose = FALSE)
-        # Disconnect from database ####
-        base::suppressWarnings(DBI::dbDisconnect(conn))  
-        # Return error message
-        base::stop(base::as.character(e), "\n")
-      }) 
-      
-      # Check if warning table is returned
-      if(methods::is(warn_tbl, "data.frame") && base::nrow(warn_tbl) > 0){
-        # Delete signature
-        SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = signature_tbl$signature_id[1], verbose = FALSE)
-        # Disconnect from database ####
-        base::suppressWarnings(DBI::dbDisconnect(conn))  
-        # Return warning table
-        if(return_missing_features == TRUE){
-          return(warn_tbl)
-        }else{
-          return(base::invisible())
-        }
-      }
+      SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
       
     
 
