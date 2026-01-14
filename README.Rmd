@@ -98,15 +98,8 @@ There are three types of user accounts:<br>
 Once you have a valid account, to connect to our SigRepo database, one can use the `SigRepo::newConnHandler()` function to create a handler which contains user credentials to establish connection to our database. 
 
 ```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
-conn_handler <- SigRepo::newConnHandler(
-  dbname = base::Sys.getenv("DB_NAME"),
-  host = base::Sys.getenv("DB_HOST"),
-  port = base::as.integer(Sys.getenv("DB_PORT")),
-  user = base::Sys.getenv("DB_USER"),
-  password = base::Sys.getenv("DB_PASSWORD"),
-  api_host = base::Sys.getenv("API_HOST"),
-  api_port = base::Sys.getenv("API_PORT")
-)
+# Get the test connection handler
+conn_handler <- SigRepo::test_conn_handler
 ```
 
 ```
