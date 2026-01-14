@@ -4,7 +4,7 @@ on:
   push:
     branches: [gh-pages]
     paths: 
-      - '.github/workflows/pkgdown.yaml'
+      - '.github/workflows/gh-pages-pkgdown.yaml'
       - 'vignettes/**'
       - 'man/**.Rd'
       - 'README.md'
