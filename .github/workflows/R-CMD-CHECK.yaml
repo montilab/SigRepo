@@ -4,6 +4,11 @@ on:
   push:
     branches: [master]
     paths-ignore:
+      - '.github/workflows/document.yaml'
+      - '.github/workflows/gh-pages-pkgdown.yaml'
+      - '.github/workflows/pkgdown.yaml'
+      - '.github/workflows/render-news-rmd.yaml'
+      - '.github/workflows/render-render-rmd.yaml'
       - '**.Rmd'
       - 'R/**'
       - '.gitignore'
