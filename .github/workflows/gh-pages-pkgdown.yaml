@@ -24,10 +24,10 @@ permissions:
   pages: write
   id-token: write
       
-name: pkgdown
+name: gh-pages-pkgdown
 
 jobs:
-  pkgdown:
+  gh-pages-pkgdown:
     runs-on: ubuntu-latest
     # Only restrict concurrency for non-PR jobs
     concurrency:
