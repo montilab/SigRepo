@@ -48,18 +48,17 @@ jobs:
         with:
           use-public-rspm: true
           
-      - name: Remove string from .gitignore
-        run: |
-          sed -i '/docs\//d' .gitignore
-          echo "Removed 'docs/' from .gitignore"
-          
-      - name: Remove docs from gitignore file and push changes to gh-pages
+      - name: Merge gh-pages with master, then remove docs from gitignore and push changes to gh-pages
         run: |
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git add .
-          git commit -m "Pushing changes to gh-pages" 
           git checkout gh-pages
           git merge origin/master --allow-unrelated-histories || true
+          sed -i '/docs\//d' .gitignore
+          echo "Removed 'docs/' from .gitignore"
+          git add .
+          git commit -m "Pushing changes to gh-pages" 
           git push origin gh-pages
-
+          
+          
+          
