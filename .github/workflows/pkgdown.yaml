@@ -1,0 +1,65 @@
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+on:
+  push:
+    branches: [master]
+    paths: 
+      - '.github/workflows/pkgdown.yaml'
+      - '.github/workflows/gh-pages-pkgdown.yaml'
+      - 'vignettes/**'
+      - 'man/**.Rd'
+      - 'README.md'
+      - 'DESCRIPTION'
+      - 'LICENSE'      
+      - 'NEWS.md'
+      - '_pkgdown.yml'
+  pull_request:
+    branches: [master]
+  release:
+    types: [published]
+  workflow_dispatch:
+  
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+      
+name: pkgdown
+
+jobs:
+  pkgdown:
+    runs-on: ubuntu-latest
+    # Only restrict concurrency for non-PR jobs
+    concurrency:
+      group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
+      cancel-in-progress: true
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_DOCS }}
+          
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+          
+      - name: Remove string from .gitignore
+        run: |
+          sed -i '/docs\//d' .gitignore
+          echo "Removed 'docs/' from .gitignore"
+          
+      - name: Remove docs from gitignore file and push changes to gh-pages
+        run: |
+          git config --local user.name "$GITHUB_ACTOR"
+          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git add .
+          git commit -m "Pushing changes to gh-pages" 
+          git checkout gh-pages
+          git merge origin/master --allow-unrelated-histories || true
+          git push origin gh-pages
+
