@@ -33,5 +33,6 @@
 ^uninstall_sigrepo\.sh$
 ^_pkgdown\.yml$
 ^README\.Rmd$
+^NEWS\.Rmd$
 ^refCheck\.R$
 ^\.Rproj\.user$
