@@ -58,5 +58,7 @@ jobs:
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git add .
           git commit -m "Pushing changes to gh-pages" 
+          git checkout gh-pages
+          git merge origin/master || true
           git push origin gh-pages
 
