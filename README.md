@@ -90,25 +90,19 @@ Note that searchSignature() and getSignature() behave differently:
 
 - getSignature() retrieves the full signature and enforces visibility restrictions.
 
-# Connect to SigRepo Database
+# Connect to the SigRepo Database
 
-We adopt a MySQL database structure for efficiently storing, searching,
-and retrieving the biological signatures and its constituents. To access
-the signatures stored in our database,
-<a target="_blank" href="https://sigrepo.org/">VISIT OUR WEBSITE</a> to
-create an account or <a href="mailto:sigrepo@bu.edu">CONTACT US</a> to
-be added.
+SigRepo uses a MySQL database to efficiently store, search, and retrieve biological signatures and their associated components. To access the database, you must create an account via our website or contact us to be added.
 
-There are three types of user accounts:<br> - `admin` has <b>READ</b>
-and <b>WRITE</b> access to all signatures in the database.<br> -
-`editor` has <b>READ</b> and <b>WRITE</b> access to ONLY their own
-uploaded signatures in the database.<br> - `viewer` has <b>ONLY READ</b>
-access to see a list of signatures that are publicly available in the
-database but <b>DO NOT HAVE WRITE</b> access to the database.<br>
+There are three user account types:
 
-Once you have a valid account, to connect to our SigRepo database, one
-can use the `SigRepo::newConnHandler()` function to create a handler
-which contains user credentials to establish connection to our database.
+- admin: Read and write access to all signatures.
+
+- editor: Read and write access only to signatures they have uploaded.
+
+- viewer: Read-only access to publicly available signatures.
+
+Once you have a valid account, you can connect to the SigRepo database using the SigRepo::newConnHandler() function, which creates a connection handler containing your credentials.
 
     # Create a connection handler
     conn_handler <- SigRepo::newConnHandler(
