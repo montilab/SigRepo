@@ -10,21 +10,19 @@ size](https://img.shields.io/docker/image-size/montilab/sigrepo)
 ![GitHub last
 commit](https://img.shields.io/github/last-commit/montilab/SigRepo)
 
-The `SigRepo` package provides a comprehensive set of functions for easy
-storage and management of biological signatures and their components.
-SigRepo (the `client`) works alongside `SigRepo_Server`, its `server`
-counterpart. While SigRepo enables you to store, search, and retrieve
-signatures and signature collections, these operations rely on a running
-SigRepo\_Server instance.
+The SigRepo package provides a comprehensive set of functions for storing,
+managing, and interacting with biological signatures and their components. 
+SigRepo (the client) works in tandem with SigRepo_Server, its server-side counterpart. 
+While SigRepo allows you to store, search, and retrieve signatures and signature collections, 
+all such operations require access to a running SigRepo_Server instance.
 
 Interested in setting up your own SigRepo\_Server? Check out the
 installation instructions
 <a target="_blank" href="https://montilab.github.io/SigRepo_Server/articles/install_sigrepo.html" >here</a>.
 
-To upload and download signatures — and to fully utilize the
-functionalities offered by the SigRepo package — signatures and
-signature collections must be represented as specific R6 objects. You
-can create these objects using our proprietary package,
+To upload and download signatures—and to fully leverage the functionality of the SigRepo package—signatures
+and signature collections must be represented as specific R6 objects. 
+These objects are created using our companion package,
 <a target="_blank" href="https://github.com/montilab/OmicSignature">OmicSignature</a>.
 
 Click on each link below for more information:
@@ -70,29 +68,27 @@ deployed SigRepo server</a>.
 
 ## Before you begin
 
-Please navigate to our
-<a href="https://sigrepo.org" target="_blank">sigrepo.org</a> portal to
-create your account. On the login page, click `"Register here!"` and
-fill out the registration form to create an account. You will receive an
-email when your account has been activated. Due to SQL constraints,
-having multiple users on the same testing account, like running the
-tutorial in the readme, will fail to connect. Each user using their own
-account is ideal.
+Please visit
+<a href="https://sigrepo.org" target="_blank">sigrepo.org</a> to create an account.
+On the login page, click “Register here!” and complete the registration form. 
+You will receive an email once your account has been activated.
+
+Due to SQL constraints, multiple users sharing the same testing account (for example, when following the README tutorial) 
+may encounter connection failures. We strongly recommend that each user create and use their own account.
 
 ## Visibility
 
-The SigRepo Project is a project that holds various sensitive
-signatures. Because of this, visibility of certain signatures is taken
-into account. What this means is that in order to retrieve certain
-signatures with the visibility of private(visibility = 0), standard
-accounts will not be able to access that signature and you will need
-permission from the signature author to access it. Conversely, a
-signature with the visibility of public (visibility = 1, this is also
-the DEFAULT) will be available to everyone with an account. Please note,
-viewing a signature with searchSignature() is different than using
-getSignature(), searchSignature() only shows the metadata of the
-signature and this is shown to everyone. getSignature takes into account
-the visibilty of the signatures.
+SigRepo hosts a collection of potentially sensitive biological signatures, so access control is enforced through visibility settings.
+
+- Private signatures (visibility = 0) are accessible only to the signature author and users who have been granted explicit permission.
+
+- Public signatures (visibility = 1, the default) are accessible to all registered users.
+
+Note that searchSignature() and getSignature() behave differently:
+
+- searchSignature() returns metadata only and is visible to all users, regardless of signature visibility.
+
+- getSignature() retrieves the full signature and enforces visibility restrictions.
 
 # Connect to SigRepo Database
 
