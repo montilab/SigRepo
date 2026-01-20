@@ -10,21 +10,19 @@ size](https://img.shields.io/docker/image-size/montilab/sigrepo)
 ![GitHub last
 commit](https://img.shields.io/github/last-commit/montilab/SigRepo)
 
-The `SigRepo` package provides a comprehensive set of functions for easy
-storage and management of biological signatures and their components.
-SigRepo (the `client`) works alongside `SigRepo_Server`, its `server`
-counterpart. While SigRepo enables you to store, search, and retrieve
-signatures and signature collections, these operations rely on a running
-SigRepo\_Server instance.
+The SigRepo package provides a comprehensive set of functions for storing,
+managing, and interacting with biological signatures and their components. 
+SigRepo (the client) works in tandem with SigRepo_Server, its server-side counterpart. 
+While SigRepo allows you to store, search, and retrieve signatures and signature collections, 
+all such operations require access to a running SigRepo_Server instance.
 
 Interested in setting up your own SigRepo\_Server? Check out the
 installation instructions
 <a target="_blank" href="https://montilab.github.io/SigRepo_Server/articles/install_sigrepo.html" >here</a>.
 
-To upload and download signatures — and to fully utilize the
-functionalities offered by the SigRepo package — signatures and
-signature collections must be represented as specific R6 objects. You
-can create these objects using our proprietary package,
+To upload and download signatures—and to fully leverage the functionality of the SigRepo package—signatures
+and signature collections must be represented as specific R6 objects. 
+These objects are created using our companion package,
 <a target="_blank" href="https://github.com/montilab/OmicSignature">OmicSignature</a>.
 
 Click on each link below for more information:
@@ -70,49 +68,41 @@ deployed SigRepo server</a>.
 
 ## Before you begin
 
-Please navigate to our
-<a href="https://sigrepo.org" target="_blank">sigrepo.org</a> portal to
-create your account. On the login page, click `"Register here!"` and
-fill out the registration form to create an account. You will receive an
-email when your account has been activated. Due to SQL constraints,
-having multiple users on the same testing account, like running the
-tutorial in the readme, will fail to connect. Each user using their own
-account is ideal.
+Please visit
+<a href="https://sigrepo.org" target="_blank">sigrepo.org</a> to create an account.
+On the login page, click “Register here!” and complete the registration form. 
+You will receive an email once your account has been activated.
+
+Due to SQL constraints, multiple users sharing the same testing account (for example, when following the README tutorial) 
+may encounter connection failures. We strongly recommend that each user create and use their own account.
 
 ## Visibility
 
-The SigRepo Project is a project that holds various sensitive
-signatures. Because of this, visibility of certain signatures is taken
-into account. What this means is that in order to retrieve certain
-signatures with the visibility of private(visibility = 0), standard
-accounts will not be able to access that signature and you will need
-permission from the signature author to access it. Conversely, a
-signature with the visibility of public (visibility = 1, this is also
-the DEFAULT) will be available to everyone with an account. Please note,
-viewing a signature with searchSignature() is different than using
-getSignature(), searchSignature() only shows the metadata of the
-signature and this is shown to everyone. getSignature takes into account
-the visibilty of the signatures.
+SigRepo hosts a collection of potentially sensitive biological signatures, so access control is enforced through visibility settings.
 
-# Connect to SigRepo Database
+- Private signatures (visibility = 0) are accessible only to the signature author and users who have been granted explicit permission.
 
-We adopt a MySQL database structure for efficiently storing, searching,
-and retrieving the biological signatures and its constituents. To access
-the signatures stored in our database,
-<a target="_blank" href="https://sigrepo.org/">VISIT OUR WEBSITE</a> to
-create an account or <a href="mailto:sigrepo@bu.edu">CONTACT US</a> to
-be added.
+- Public signatures (visibility = 1, the default) are accessible to all registered users.
 
-There are three types of user accounts:<br> - `admin` has <b>READ</b>
-and <b>WRITE</b> access to all signatures in the database.<br> -
-`editor` has <b>READ</b> and <b>WRITE</b> access to ONLY their own
-uploaded signatures in the database.<br> - `viewer` has <b>ONLY READ</b>
-access to see a list of signatures that are publicly available in the
-database but <b>DO NOT HAVE WRITE</b> access to the database.<br>
+Note that searchSignature() and getSignature() behave differently:
 
-Once you have a valid account, to connect to our SigRepo database, one
-can use the `SigRepo::newConnHandler()` function to create a handler
-which contains user credentials to establish connection to our database.
+- searchSignature() returns metadata only and is visible to all users, regardless of signature visibility.
+
+- getSignature() retrieves the full signature and enforces visibility restrictions.
+
+# Connect to the SigRepo Database
+
+SigRepo uses a MySQL database to efficiently store, search, and retrieve biological signatures and their associated components. To access the database, you must create an account via our website or contact us to be added.
+
+There are three user account types:
+
+- admin: Read and write access to all signatures.
+
+- editor: Read and write access only to signatures they have uploaded.
+
+- viewer: Read-only access to publicly available signatures.
+
+Once you have a valid account, you can connect to the SigRepo database using the SigRepo::newConnHandler() function, which creates a connection handler containing your credentials.
 
     # Create a connection handler
     conn_handler <- SigRepo::newConnHandler(
