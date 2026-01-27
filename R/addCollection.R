@@ -149,6 +149,7 @@ addCollection <- function(
     
     for(c in base::seq_along(omic_sig_list)){
       #c=1;
+      SigRepo::verbose("Uploading Signature: ", base::names(omic_sig_list[c]))
       signature_id <- base::tryCatch({
         SigRepo::addSignature(
           omic_signature = omic_sig_list[[c]],
