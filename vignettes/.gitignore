@@ -7,3 +7,4 @@
 # Ignore extensions
 *.html
 *.R
+*.rds

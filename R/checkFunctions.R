@@ -438,10 +438,13 @@ checkOmicSignature <- function(
     base::stop("'signature' in OmicSignature object must be a data frame and cannot be empty.")
   
   # Check required signature fields ####
-  signature_fields <- c('feature_name', 'probe_id', 'score')
+  signature_fields <- c('feature_name', 'probe_id')
   
   if(base::any(!signature_fields %in% base::colnames(signature)))
     base::stop(base::sprintf("'signature' in OmicSignature object must have the following column names: %s", base::paste0(signature_fields, collapse = ", ")))
+
+  if(!"score" %in% base::colnames(signature))
+    signature <- signature |> dplyr::mutate(score = "")
   
   if(metadata$direction_type[1] %in% c("bi-directional", "categorical") && !"group_label" %in% base::colnames(signature)){
     base::stop(base::sprintf("'signature' in OmicSignature object requires a 'group_label' variable as the direction of the signature is 'bi-directional' or 'categorical'"))
@@ -617,6 +620,7 @@ checkOmicCollection <- function(
   # Check required signature fields ####
   for(c in base::seq_along(omic_sig_list)){
     #c=1;
+    SigRepo::verbose("Checking Signature: ", base::names(omic_sig_list[c]))
     omic_signature <- SigRepo::checkOmicSignature(
       omic_signature = omic_sig_list[[c]]
     )
