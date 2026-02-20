@@ -5,7 +5,7 @@
 \title{addSignatureWithID}
 \usage{
 addSignatureWithID(
-  conn_handler,
+  conn_handler = NULL,
   omic_signature,
   assign_signature_id,
   assign_user_name,

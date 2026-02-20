@@ -5,7 +5,7 @@
 \title{searchCollection}
 \usage{
 searchCollection(
-  conn_handler,
+  conn_handler = NULL,
   collection_id = NULL,
   collection_name = NULL,
   signature_name = NULL,

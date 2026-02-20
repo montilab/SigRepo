@@ -4,7 +4,7 @@
 \alias{createSignatureMetadata}
 \title{createSignatureMetadata}
 \usage{
-createSignatureMetadata(conn_handler, omic_signature, verbose = FALSE)
+createSignatureMetadata(conn_handler = NULL, omic_signature, verbose = FALSE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

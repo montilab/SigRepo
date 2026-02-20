@@ -37,11 +37,7 @@ test_that("searchPhenotype handles specific phenotype search", {
   expect_true(nrow(phenotype_table) >= 0)
 })
 
-test_that("searchPhenotype handles NULL connection handler", {
-  expect_error(
-    SigRepo::searchPhenotype(conn_handler = NULL)
-  )
-})
+
 
 test_that("searchPhenotype data types are correct", {
   test_conn <- SigRepo::test_conn_handler

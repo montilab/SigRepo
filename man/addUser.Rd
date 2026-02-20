@@ -4,7 +4,7 @@
 \alias{addUser}
 \title{addUser}
 \usage{
-addUser(conn_handler, user_tbl, verbose = TRUE)
+addUser(conn_handler = NULL, user_tbl, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

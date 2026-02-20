@@ -5,7 +5,7 @@
 \title{searchSampleType}
 \usage{
 searchSampleType(
-  conn_handler,
+  conn_handler = NULL,
   sample_type = NULL,
   brenda_accession = NULL,
   verbose = TRUE

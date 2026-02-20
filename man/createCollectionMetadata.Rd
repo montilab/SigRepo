@@ -4,7 +4,7 @@
 \alias{createCollectionMetadata}
 \title{createCollectionMetadata}
 \usage{
-createCollectionMetadata(conn_handler, omic_collection)
+createCollectionMetadata(conn_handler = NULL, omic_collection)
 }
 \arguments{
 \item{conn_handler}{A handler uses to establish connection to the database 

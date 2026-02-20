@@ -4,7 +4,7 @@
 \alias{createOmicSignature}
 \title{createOmicSignature}
 \usage{
-createOmicSignature(conn_handler, db_signature_tbl)
+createOmicSignature(conn_handler = NULL, db_signature_tbl)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

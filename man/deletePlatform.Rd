@@ -4,7 +4,7 @@
 \alias{deletePlatform}
 \title{deletePlatform}
 \usage{
-deletePlatform(conn_handler, platform_name, verbose = TRUE)
+deletePlatform(conn_handler = NULL, platform_name, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

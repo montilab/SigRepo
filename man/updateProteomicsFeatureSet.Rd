@@ -4,7 +4,7 @@
 \alias{updateProteomicsFeatureSet}
 \title{updateProteomicsFeatureSet}
 \usage{
-updateProteomicsFeatureSet(conn_handler, organism, verbose = TRUE)
+updateProteomicsFeatureSet(conn_handler = NULL, organism, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

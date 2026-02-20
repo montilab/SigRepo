@@ -5,7 +5,7 @@
 \title{addGeneticVariantsSignatureSet}
 \usage{
 addGeneticVariantsSignatureSet(
-  conn_handler,
+  conn_handler = NULL,
   signature_id,
   organism_id,
   signature_set,

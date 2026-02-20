@@ -10,12 +10,12 @@
 #' 
 #' @export
 createOmicSignature <- function(
-    conn_handler,
+    conn_handler = NULL,
     db_signature_tbl
 ){
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init(conn_handler = conn_handler)
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permission ####
   conn_info <- SigRepo::checkPermissions(

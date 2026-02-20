@@ -11,7 +11,7 @@
 #' 
 #' @export
 updateCollectionMetadata <- function(
-    conn_handler,
+    conn_handler = NULL,
     collection_id,
     collection_name = NULL,
     description = NULL,
@@ -23,7 +23,7 @@ updateCollectionMetadata <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init(conn_handler = conn_handler)
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permission ####
   conn_info <- SigRepo::checkPermissions(

@@ -15,7 +15,7 @@
 #' 
 #' @export
 updateUser <- function(
-    conn_handler,
+    conn_handler = NULL,
     user_name,
     password = NULL,
     email = NULL,
@@ -31,7 +31,7 @@ updateUser <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init(conn_handler = conn_handler)
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permission ####
   conn_info <- SigRepo::checkPermissions(

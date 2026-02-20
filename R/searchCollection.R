@@ -34,7 +34,7 @@
 #' 
 #' @export
 searchCollection <- function(
-    conn_handler,
+    conn_handler = NULL,
     collection_id = NULL,
     collection_name = NULL,
     signature_name = NULL,
@@ -47,7 +47,7 @@ searchCollection <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init(conn_handler = conn_handler)
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permissions ####
   conn_info <- SigRepo::checkPermissions(

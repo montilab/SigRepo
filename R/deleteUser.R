@@ -28,7 +28,7 @@
 #'     
 #' @export
 deleteUser <- function(
-    conn_handler,
+    conn_handler = NULL,
     user_name,
     verbose = TRUE
 ){
@@ -37,7 +37,7 @@ deleteUser <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init(conn_handler = conn_handler)
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permission ####
   conn_info <- SigRepo::checkPermissions(

@@ -42,7 +42,7 @@
 #' 
 #' @export
 addSignature <- function(
-    conn_handler,
+    conn_handler = NULL,
     omic_signature,
     visibility = TRUE,
     add_users = NULL,
@@ -55,7 +55,7 @@ addSignature <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init(conn_handler = conn_handler)
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permission ####
   conn_info <- SigRepo::checkPermissions(

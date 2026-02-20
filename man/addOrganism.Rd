@@ -4,7 +4,7 @@
 \alias{addOrganism}
 \title{addOrganism}
 \usage{
-addOrganism(conn_handler, organism_tbl, verbose = TRUE)
+addOrganism(conn_handler = NULL, organism_tbl, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

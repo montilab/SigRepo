@@ -36,7 +36,7 @@
 #' 
 #' @export
 searchSignature <- function(
-    conn_handler,
+    conn_handler = NULL,
     signature_id = NULL,
     signature_name = NULL,
     user_name = NULL,
@@ -50,8 +50,9 @@ searchSignature <- function(
   # Whether to print the diagnostic messages
   SigRepo::print_messages(verbose = verbose)
   
+  
   # Establish user connection ###
-  conn <- SigRepo::conn_init(conn_handler = conn_handler)
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permissions ####
   conn_info <- SigRepo::checkPermissions(

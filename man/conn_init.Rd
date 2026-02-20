@@ -4,16 +4,15 @@
 \alias{conn_init}
 \title{conn_init}
 \usage{
-conn_init(conn_handler)
+conn_init(conn_handler = NULL)
 }
 \arguments{
-\item{conn_handler}{A handler uses to establish connection to a remote database 
-obtained from SigRepo::newConnHandler() (required)}
+\item{conn_handler}{Optional handler from newConnHandler().
+If NULL, will use stored internal handle.}
 }
 \value{
-a MySQL connection class object.
+A MySQL connection object.
 }
 \description{
 Initiate a remote database connection
 }
-\keyword{internal}

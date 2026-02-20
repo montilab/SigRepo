@@ -4,7 +4,7 @@
 \alias{searchKeyword}
 \title{searchKeyword}
 \usage{
-searchKeyword(conn_handler, keyword = NULL, verbose = TRUE)
+searchKeyword(conn_handler = NULL, keyword = NULL, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

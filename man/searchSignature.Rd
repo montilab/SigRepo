@@ -5,7 +5,7 @@
 \title{searchSignature}
 \usage{
 searchSignature(
-  conn_handler,
+  conn_handler = NULL,
   signature_id = NULL,
   signature_name = NULL,
   user_name = NULL,

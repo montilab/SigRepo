@@ -5,7 +5,7 @@
 \title{addUserToSignature}
 \usage{
 addUserToSignature(
-  conn_handler,
+  conn_handler = NULL,
   signature_id,
   user_name,
   access_type = c("owner", "editor", "viewer"),

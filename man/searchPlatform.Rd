@@ -4,7 +4,7 @@
 \alias{searchPlatform}
 \title{searchPlatform}
 \usage{
-searchPlatform(conn_handler, platform_name = NULL, verbose = TRUE)
+searchPlatform(conn_handler = NULL, platform_name = NULL, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

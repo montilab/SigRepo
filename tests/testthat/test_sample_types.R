@@ -37,11 +37,7 @@ test_that("searchSampleType handles specific sample type search", {
   expect_true(methods::is(sample_type_table, "data.frame"))
 })
 
-test_that("searchSampleType handles NULL connection handler", {
-  expect_error(
-    SigRepo::searchSampleType(conn_handler = NULL)
-  )
-})
+
 
 test_that("searchSampleType returns consistent results", {
   test_conn <- SigRepo::test_conn_handler

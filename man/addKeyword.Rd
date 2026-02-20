@@ -4,7 +4,7 @@
 \alias{addKeyword}
 \title{addKeyword}
 \usage{
-addKeyword(conn_handler, keyword_tbl, verbose = TRUE)
+addKeyword(conn_handler = NULL, keyword_tbl, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

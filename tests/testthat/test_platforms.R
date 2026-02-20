@@ -122,16 +122,5 @@ test_that("addPlatform validates input data frame", {
   # })
 })
 
-test_that("searchPlatform handles NULL connection handler", {
-  expect_error(
-    SigRepo::searchPlatform(conn_handler = NULL, platform = "test")
-  )
-})
 
-test_that("addPlatform handles NULL connection handler", {
-  platform_table <- data.frame(platform = "test", platform_type = "test_type")
-  
-  expect_error(
-    SigRepo::addPlatform(conn_handler = NULL, platform_tbl = platform_table)
-  )
-})
+

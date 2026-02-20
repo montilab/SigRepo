@@ -5,7 +5,7 @@
 \title{getSignature}
 \usage{
 getSignature(
-  conn_handler,
+  conn_handler = NULL,
   signature_name = NULL,
   signature_id = NULL,
   verbose = TRUE

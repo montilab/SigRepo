@@ -5,7 +5,7 @@
 \title{updateUser}
 \usage{
 updateUser(
-  conn_handler,
+  conn_handler = NULL,
   user_name,
   password = NULL,
   email = NULL,

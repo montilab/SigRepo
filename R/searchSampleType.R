@@ -32,7 +32,7 @@
 #'
 #' @export
 searchSampleType <- function(
-    conn_handler,
+    conn_handler = NULL,
     sample_type = NULL,
     brenda_accession = NULL,
     verbose = TRUE
@@ -42,7 +42,7 @@ searchSampleType <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init(conn_handler = conn_handler)
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permissions ####
   conn_info <- SigRepo::checkPermissions(

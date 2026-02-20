@@ -5,7 +5,7 @@
 \title{searchGeneticVariantsFeatureSet}
 \usage{
 searchGeneticVariantsFeatureSet(
-  conn_handler,
+  conn_handler = NULL,
   feature_name = NULL,
   organism = NULL,
   verbose = TRUE

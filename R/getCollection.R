@@ -8,7 +8,7 @@
 #'  
 #' @export
 getCollection <- function(
-    conn_handler,
+    conn_handler = NULL,
     collection_name = NULL,
     collection_id = NULL,
     verbose = TRUE
@@ -18,7 +18,7 @@ getCollection <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init(conn_handler = conn_handler)
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permissions ####
   conn_info <- SigRepo::checkPermissions(

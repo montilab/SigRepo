@@ -5,7 +5,7 @@
 \title{addCollection}
 \usage{
 addCollection(
-  conn_handler,
+  conn_handler = NULL,
   omic_collection,
   visibility = FALSE,
   return_collection_id = FALSE,

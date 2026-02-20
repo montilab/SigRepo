@@ -4,7 +4,7 @@
 \alias{deleteCollection}
 \title{deleteCollection}
 \usage{
-deleteCollection(conn_handler, collection_id, verbose = TRUE)
+deleteCollection(conn_handler = NULL, collection_id, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

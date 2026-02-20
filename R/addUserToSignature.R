@@ -42,7 +42,7 @@
 #' 
 #' @export
 addUserToSignature <- function(
-    conn_handler,
+    conn_handler = NULL,
     signature_id,
     user_name,
     access_type = c("owner", "editor", "viewer"),
@@ -53,7 +53,7 @@ addUserToSignature <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init(conn_handler = conn_handler)
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permission ####
   conn_info <- SigRepo::checkPermissions(

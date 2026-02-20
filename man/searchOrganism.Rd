@@ -4,7 +4,7 @@
 \alias{searchOrganism}
 \title{searchOrganism}
 \usage{
-searchOrganism(conn_handler, organism = NULL, verbose = TRUE)
+searchOrganism(conn_handler = NULL, organism = NULL, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

@@ -5,7 +5,7 @@
 \title{addSignature}
 \usage{
 addSignature(
-  conn_handler,
+  conn_handler = NULL,
   omic_signature,
   visibility = TRUE,
   add_users = NULL,
