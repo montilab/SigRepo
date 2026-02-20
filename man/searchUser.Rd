@@ -4,7 +4,7 @@
 \alias{searchUser}
 \title{searchUser}
 \usage{
-searchUser(conn_handler, user_name = NULL, verbose = TRUE)
+searchUser(conn_handler = NULL, user_name = NULL, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

@@ -5,7 +5,7 @@
 \title{getCollection}
 \usage{
 getCollection(
-  conn_handler,
+  conn_handler = NULL,
   collection_name = NULL,
   collection_id = NULL,
   verbose = TRUE

@@ -4,7 +4,7 @@
 \alias{addSampleType}
 \title{addSampleType}
 \usage{
-addSampleType(conn_handler, sample_type_tbl, verbose = TRUE)
+addSampleType(conn_handler = NULL, sample_type_tbl, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

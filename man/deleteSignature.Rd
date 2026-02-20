@@ -4,7 +4,7 @@
 \alias{deleteSignature}
 \title{deleteSignature}
 \usage{
-deleteSignature(conn_handler, signature_id = NULL, verbose = TRUE)
+deleteSignature(conn_handler = NULL, signature_id = NULL, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

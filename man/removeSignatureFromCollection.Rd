@@ -5,7 +5,7 @@
 \title{removeSignatureFromCollection}
 \usage{
 removeSignatureFromCollection(
-  conn_handler,
+  conn_handler = NULL,
   collection_id,
   signature_id,
   verbose = TRUE

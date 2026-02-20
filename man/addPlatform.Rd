@@ -4,7 +4,7 @@
 \alias{addPlatform}
 \title{addPlatform}
 \usage{
-addPlatform(conn_handler, platform_tbl, verbose = TRUE)
+addPlatform(conn_handler = NULL, platform_tbl, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

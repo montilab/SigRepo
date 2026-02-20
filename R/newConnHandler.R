@@ -119,11 +119,15 @@ clear_handle <- function(){
 
 conn_init <- function(conn_handler = NULL){
   
-  # Use stored handle if not provided
-  if (is.null(conn_handler)) {
-    conn_handler <- get_handle()
-  } else {
+  if (!is.null(conn_handler)) {
+    # Optional: update stored handle
     init_handle(conn_handler)
+  } else {
+    conn_handler <- get_handle()
+  }
+  
+  if (is.null(conn_handler)) {
+    stop("No active handle for the database connection found.")
   }
   
   dbname <- conn_handler$dbname

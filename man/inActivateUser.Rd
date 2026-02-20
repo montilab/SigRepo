@@ -4,7 +4,7 @@
 \alias{inActivateUser}
 \title{inActivateUser}
 \usage{
-inActivateUser(conn_handler, user_name, verbose = TRUE)
+inActivateUser(conn_handler = NULL, user_name, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

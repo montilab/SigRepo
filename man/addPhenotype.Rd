@@ -4,7 +4,7 @@
 \alias{addPhenotype}
 \title{addPhenotype}
 \usage{
-addPhenotype(conn_handler, phenotype_tbl, verbose = TRUE)
+addPhenotype(conn_handler = NULL, phenotype_tbl, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

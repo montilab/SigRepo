@@ -30,7 +30,7 @@
 #' 
 #' @export
 searchPhenotype <- function(
-    conn_handler,
+    conn_handler = NULL,
     phenotype = NULL,
     verbose = TRUE
 ){
@@ -39,7 +39,7 @@ searchPhenotype <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init()
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permissions ####
   conn_info <- SigRepo::checkPermissions(

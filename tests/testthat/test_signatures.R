@@ -210,22 +210,7 @@ test_that("addSignature validates input data frame", {
   
 })
 
-test_that("searchSignature handles NULL connection handler", {
-  expect_error(
-    SigRepo::searchSignature(conn_handler = NULL)
-  )
-})
 
-test_that("addSignature handles NULL connection handler", {
-  signature_table <- data.frame(
-    signature_name = "test",
-    pmid = "12345678"
-  )
-  
-  expect_error(
-    SigRepo::addSignature(conn_handler = NULL, signature_tbl = signature_table)
-  )
-})
 
 test_that("searchSignature with multiple filters works correctly", {
   test_conn <- SigRepo::test_conn_handler

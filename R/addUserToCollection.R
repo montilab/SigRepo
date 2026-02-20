@@ -42,7 +42,7 @@
 #' 
 #' @export
 addUserToCollection <- function(
-    conn_handler,
+    conn_handler = NULL,
     collection_id,
     user_name,
     access_type = c("owner", "editor", "viewer"),
@@ -53,7 +53,7 @@ addUserToCollection <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init()
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permission ####
   conn_info <- SigRepo::checkPermissions(

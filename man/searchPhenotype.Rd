@@ -4,7 +4,7 @@
 \alias{searchPhenotype}
 \title{searchPhenotype}
 \usage{
-searchPhenotype(conn_handler, phenotype = NULL, verbose = TRUE)
+searchPhenotype(conn_handler = NULL, phenotype = NULL, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

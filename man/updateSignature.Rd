@@ -5,7 +5,7 @@
 \title{updateSignature}
 \usage{
 updateSignature(
-  conn_handler,
+  conn_handler = NULL,
   signature_id,
   omic_signature,
   visibility = NULL,

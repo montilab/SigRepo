@@ -4,7 +4,7 @@
 \alias{deletePhenotype}
 \title{deletePhenotype}
 \usage{
-deletePhenotype(conn_handler, phenotype, verbose = TRUE)
+deletePhenotype(conn_handler = NULL, phenotype, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

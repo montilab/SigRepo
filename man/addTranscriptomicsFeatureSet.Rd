@@ -4,7 +4,7 @@
 \alias{addTranscriptomicsFeatureSet}
 \title{addTranscriptomicsFeatureSet}
 \usage{
-addTranscriptomicsFeatureSet(conn_handler, feature_set, verbose = TRUE)
+addTranscriptomicsFeatureSet(conn_handler = NULL, feature_set, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

@@ -4,7 +4,7 @@
 \alias{createOmicCollection}
 \title{createOmicCollection}
 \usage{
-createOmicCollection(conn_handler, db_collection_tbl)
+createOmicCollection(conn_handler = NULL, db_collection_tbl)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

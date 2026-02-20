@@ -5,7 +5,7 @@
 \title{searchProteomicsFeatureSet}
 \usage{
 searchProteomicsFeatureSet(
-  conn_handler,
+  conn_handler = NULL,
   feature_name = NULL,
   organism = NULL,
   verbose = TRUE

@@ -17,7 +17,7 @@
 #' }
 #'       
 getSignature <- function(
-    conn_handler,
+    conn_handler = NULL,
     signature_name = NULL,
     signature_id = NULL,
     verbose = TRUE
@@ -27,7 +27,7 @@ getSignature <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init()
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permissions ####
   conn_info <- SigRepo::checkPermissions(

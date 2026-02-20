@@ -4,7 +4,7 @@
 \alias{deleteOrganism}
 \title{deleteOrganism}
 \usage{
-deleteOrganism(conn_handler, organism, verbose = TRUE)
+deleteOrganism(conn_handler = NULL, organism, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

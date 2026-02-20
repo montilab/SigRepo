@@ -5,7 +5,7 @@
 \title{updateCollectionMetadata}
 \usage{
 updateCollectionMetadata(
-  conn_handler,
+  conn_handler = NULL,
   collection_id,
   collection_name = NULL,
   description = NULL,

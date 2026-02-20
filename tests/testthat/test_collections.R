@@ -217,22 +217,6 @@ test_that("searchCollection returns empty result for non-existent signature", {
 
 
 
-test_that("searchCollection handles NULL connection handler", {
-  expect_error(
-    SigRepo::searchCollection(conn_handler = NULL)
-  )
-})
-
-test_that("addCollection handles NULL connection handler", {
-  signature_table <- data.frame(
-    signature_name = "test",
-    pmid = "12345678"
-  )
-  
-  expect_error(
-    SigRepo::addCollection(conn_handler = NULL, omic_collection = signature_table)
-  )
-})
 
 
 

@@ -43,7 +43,7 @@
 #'    
 #' @export
 addOrganism <- function(
-    conn_handler,
+    conn_handler = NULL,
     organism_tbl,
     verbose = TRUE
 ){
@@ -52,7 +52,7 @@ addOrganism <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init()
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permission ####
   conn_info <- SigRepo::checkPermissions(

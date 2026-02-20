@@ -5,7 +5,7 @@
 \title{addTranscriptomicsSignatureSet}
 \usage{
 addTranscriptomicsSignatureSet(
-  conn_handler,
+  conn_handler = NULL,
   signature_id,
   organism_id,
   signature_set,

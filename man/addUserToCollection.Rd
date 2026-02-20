@@ -5,7 +5,7 @@
 \title{addUserToCollection}
 \usage{
 addUserToCollection(
-  conn_handler,
+  conn_handler = NULL,
   collection_id,
   user_name,
   access_type = c("owner", "editor", "viewer"),

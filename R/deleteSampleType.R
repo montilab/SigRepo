@@ -29,7 +29,7 @@
 #' 
 #' @export
 deleteSampleType <- function(
-    conn_handler,
+    conn_handler = NULL,
     sample_type,
     verbose = TRUE
 ){
@@ -38,7 +38,7 @@ deleteSampleType <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init()
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permission ####
   conn_info <- SigRepo::checkPermissions(

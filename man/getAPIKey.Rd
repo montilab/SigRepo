@@ -4,7 +4,7 @@
 \alias{getAPIKey}
 \title{getAPIKey}
 \usage{
-getAPIKey(conn_handler, verbose = TRUE)
+getAPIKey(conn_handler = NULL, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

@@ -4,7 +4,7 @@
 \alias{deleteSampleType}
 \title{deleteSampleType}
 \usage{
-deleteSampleType(conn_handler, sample_type, verbose = TRUE)
+deleteSampleType(conn_handler = NULL, sample_type, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}

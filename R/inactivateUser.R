@@ -7,7 +7,7 @@
 #' 
 #' @export
 inActivateUser <- function(
-    conn_handler,
+    conn_handler = NULL,
     user_name,
     verbose = TRUE
 ){
@@ -16,7 +16,7 @@ inActivateUser <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init()
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permission ####
   conn_info <- SigRepo::checkPermissions(
