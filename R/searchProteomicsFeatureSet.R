@@ -42,7 +42,7 @@ searchProteomicsFeatureSet <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init(conn_handler = conn_handler)
+  conn <- SigRepo::conn_init()
   
   # Check user connection and permissions ####
   conn_info <- SigRepo::checkPermissions(

@@ -30,26 +30,8 @@ newConnHandler(
 \item{api_port}{Port on the server to access the API (required)}
 }
 \value{
-A list object that contains all the items that are passed in the arguments used for database connection.
+A list object containing connection parameters.
 }
 \description{
 Create a handler to connect to a remote database.
-}
-\examples{
-
-\dontrun{
-
-# Create a connection handler
-SigRepo::newConnHandler(
-  dbname = "sigrepo",
-  host = "sigrepo.org",
-  port = 3306,
-  user = <your_username>, 
-  password = <your_password>,
-  api_host = "sigrepo.org",
-  api_port = 8020
-)
-
-}
-
 }

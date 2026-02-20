@@ -15,7 +15,7 @@ createOmicCollection <- function(
 ){
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init(conn_handler = conn_handler)
+  conn <- SigRepo::conn_init()
   
   # Check if table is a data frame object and not empty
   if(!methods::is(db_collection_tbl, "data.frame") || base::length(db_collection_tbl) == 0){
