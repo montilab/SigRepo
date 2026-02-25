@@ -158,6 +158,8 @@ addGeneticVariantsSignatureSet <- function(
   table <- table |>
     dplyr::left_join(
       lookup_feature_id_tbl |> dplyr::select(feature_hashkey, feature_id),
+      lookup_feature_id_tbl |>
+        dplyr::select(dplyr::all_of(c("feature_hashkey", "feature_id"))),
       by = "feature_hashkey"
     )
   
