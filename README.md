@@ -92,17 +92,17 @@ Note that searchSignature() and getSignature() behave differently:
 
 # Connect to the SigRepo Database
 
-SigRepo uses a MySQL database to efficiently store, search, and retrieve biological signatures and their associated components. To access the database, you must create an account via our website or contact us to be added.
+SigRepo uses a MySQL database to store, search, and retrieve biological signatures and their components. To access signatures in our database, visit <a target="_blank" href="https://sigrepo.org/">sigrepo.org</a> to create an account or <a href="mailto:sigrepo@bu.edu">contact us</a> to be added.
 
 There are three user account types:
 
 - admin: Read and write access to all signatures.
 
-- editor: Read and write access only to signatures they have uploaded.
+- editor: Read and write access only to signatures they uploaded.
 
-- viewer: Read-only access to publicly available signatures.
+- viewer: Read-only access to publicly available signatures in the database.
 
-Once you have a valid account, you can connect to the SigRepo database using the SigRepo::newConnHandler() function, which creates a connection handler containing your credentials.
+Once you have a valid account, use `SigRepo::newConnHandler()` to create a handler with your credentials.
 
     # Create a connection handler
     conn_handler <- SigRepo::newConnHandler(
@@ -111,6 +111,23 @@ Once you have a valid account, you can connect to the SigRepo database using the
       port = 3306, 
       user = <your_username>, 
       password = <your_password>
+    )
+
+After you call `newConnHandler()`, SigRepo stores that handler internally for the current R session.  
+Because of that, most SigRepo functions can be called in either of these ways:
+
+1. Explicitly pass `conn_handler` in each call.
+2. Omit `conn_handler` and use the internally stored handler.
+
+    # Option 1: explicit connection handler
+    SigRepo::searchSignature(
+      conn_handler = conn_handler,
+      signature_name = "example_signature"
+    )
+    
+    # Option 2: use stored handler from newConnHandler()
+    SigRepo::searchSignature(
+      signature_name = "example_signature"
     )
 
 # Guides

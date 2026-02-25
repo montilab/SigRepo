@@ -88,14 +88,14 @@ The SigRepo Project is a project that holds various sensitive signatures. Becaus
 
 # Connect to SigRepo Database
 
-We adopt a MySQL database structure for efficiently storing, searching, and retrieving the biological signatures and its constituents. To access the signatures stored in our database, <a target="_blank" href="https://sigrepo.org/">VISIT OUR WEBSITE</a> to create an account or <a href="mailto:sigrepo@bu.edu">CONTACT US</a> to be added.
+SigRepo uses a MySQL database to store, search, and retrieve biological signatures and their components. To access signatures in our database, <a target="_blank" href="https://sigrepo.org/">VISIT OUR WEBSITE</a> to create an account or <a href="mailto:sigrepo@bu.edu">CONTACT US</a> to be added.
 
 There are three types of user accounts:<br>
 - `admin` has <b>READ</b> and <b>WRITE</b> access to all signatures in the database.<br>
-- `editor` has <b>READ</b> and <b>WRITE</b> access to ONLY their own uploaded signatures in the database.<br>
-- `viewer` has <b>ONLY READ</b> access to see a list of signatures that are publicly available in the database but <b>DO NOT HAVE WRITE</b> access to the database.<br>
+- `editor` has <b>READ</b> and <b>WRITE</b> access to only their own uploaded signatures in the database.<br>
+- `viewer` has <b>READ-ONLY</b> access to publicly available signatures in the database.<br>
 
-Once you have a valid account, to connect to our SigRepo database, one can use the `SigRepo::newConnHandler()` function to create a handler which contains user credentials to establish connection to our database. 
+Once you have a valid account, use `SigRepo::newConnHandler()` to create a handler with your credentials.
 
 ```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 # Get the test connection handler
@@ -112,6 +112,25 @@ conn_handler <- SigRepo::newConnHandler(
   password = <your_password>
 )
 ``` 
+
+After you call `newConnHandler()`, SigRepo stores that handler internally for the current R session.  
+Because of that, most SigRepo functions can be called in either of these ways:
+
+1. Explicitly pass `conn_handler` in each call.
+2. Omit `conn_handler` and use the internally stored handler.
+
+```
+# Option 1: explicit connection handler
+SigRepo::searchSignature(
+  conn_handler = conn_handler,
+  signature_name = "example_signature"
+)
+
+# Option 2: use stored handler from newConnHandler()
+SigRepo::searchSignature(
+  signature_name = "example_signature"
+)
+```
 
 #  Guides
 - [Uploading Signature Tutorial](https://montilab.github.io/SigRepo/articles/signature-tutorials.html)
