@@ -370,8 +370,57 @@ updateSignature <- function(
         }
         
       }else if(assay_type == "metabolomics"){
-        
-        SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
+        # If there is a error during the process, restore the signature to its origin structure and output the messages
+        warn_tbl <- base::tryCatch({
+          SigRepo::addMetabolomicsSignatureSet(
+            conn_handler = conn_handler,
+            signature_id = metadata_tbl$signature_id[1],
+            organism_id = metadata_tbl$organism_id[1],
+            signature_set = omic_signature$signature,
+            verbose = FALSE
+          )
+        }, error = function(e){
+          # Delete signature
+          SigRepo::deleteSignature(
+            conn_handler = conn_handler,
+            signature_id = signature_tbl$signature_id[1],
+            verbose = FALSE
+          )
+          # Put signature back to its original form
+          SigRepo::addSignatureWithID(
+            conn_handler = conn_handler,
+            omic_signature = orig_omic_signature,
+            assign_signature_id = signature_tbl$signature_id[1],
+            assign_user_name = signature_tbl$user_name,
+            visibility = signature_tbl$visibility[1]
+          )
+          # Disconnect from database ####
+          base::suppressWarnings(DBI::dbDisconnect(conn))
+          # Return error message
+          base::stop(base::paste0(e, "\n"))
+        })
+
+        # Check if warning table is returned
+        if(methods::is(warn_tbl, "data.frame") && base::nrow(warn_tbl) > 0){
+          # Delete signature
+          SigRepo::deleteSignature(
+            conn_handler = conn_handler,
+            signature_id = signature_tbl$signature_id[1],
+            verbose = FALSE
+          )
+          # Put signature back to its original form
+          SigRepo::addSignatureWithID(
+            conn_handler = conn_handler,
+            omic_signature = orig_omic_signature,
+            assign_signature_id = signature_tbl$signature_id[1],
+            assign_user_name = signature_tbl$user_name,
+            visibility = signature_tbl$visibility[1]
+          )
+          # Disconnect from database ####
+          base::suppressWarnings(DBI::dbDisconnect(conn))
+          # Return warning table
+          return(warn_tbl)
+        }
         
       }else if(assay_type == "methylomics"){
         

@@ -56,7 +56,7 @@ createSignatureMetadata <- function(
   assay_type <- metadata$assay_type[1]
   
   # Check if assay type if valid
-  if(assay_type %in% c("metabolomics", "GeneticVariants", "methylomics")){
+  if(assay_type %in% c("methylomics")){
     # If assay_type is not valid, throw an error message
     base::suppressWarnings(DBI::dbDisconnect(conn))
     SigRepo::showAssayTypeErrorMessage(
@@ -347,7 +347,6 @@ createSignatureMetadata <- function(
   return(metadata_tbl)
   
 }
-
 
 
 

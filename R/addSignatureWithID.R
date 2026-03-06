@@ -133,13 +133,44 @@ addSignatureWithID <- function(
   }
   
   # Put signature set back to its original form
-  SigRepo::addTranscriptomicsSignatureSet(
-    conn_handler = conn_handler,
-    signature_id = metadata_tbl$signature_id[1],
-    organism_id = metadata_tbl$organism_id[1],
-    signature_set = omic_signature$signature,
-    verbose = verbose
-  )
+  assay_type <- metadata_tbl$assay_type[1]
+  if(assay_type == "transcriptomics"){
+    SigRepo::addTranscriptomicsSignatureSet(
+      conn_handler = conn_handler,
+      signature_id = metadata_tbl$signature_id[1],
+      organism_id = metadata_tbl$organism_id[1],
+      signature_set = omic_signature$signature,
+      verbose = verbose
+    )
+  }else if(assay_type == "proteomics"){
+    SigRepo::addProteomicsSignatureSet(
+      conn_handler = conn_handler,
+      signature_id = metadata_tbl$signature_id[1],
+      organism_id = metadata_tbl$organism_id[1],
+      signature_set = omic_signature$signature,
+      verbose = verbose
+    )
+  }else if(assay_type == "metabolomics"){
+    SigRepo::addMetabolomicsSignatureSet(
+      conn_handler = conn_handler,
+      signature_id = metadata_tbl$signature_id[1],
+      organism_id = metadata_tbl$organism_id[1],
+      signature_set = omic_signature$signature,
+      verbose = verbose
+    )
+  }else if(assay_type == "genetic_variants"){
+    SigRepo::addGeneticVariantsSignatureSet(
+      conn_handler = conn_handler,
+      signature_id = metadata_tbl$signature_id[1],
+      organism_id = metadata_tbl$organism_id[1],
+      signature_set = omic_signature$signature,
+      verbose = verbose
+    )
+  }else{
+    # Disconnect from database ####
+    base::suppressWarnings(DBI::dbDisconnect(conn))
+    SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
+  }
   
   # Add user to signature access table after signature
   SigRepo::addUserToSignature(
@@ -157,6 +188,5 @@ addSignatureWithID <- function(
   return(base::invisible())
   
 }  
-
 
 

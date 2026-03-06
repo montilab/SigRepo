@@ -105,6 +105,27 @@ showProteomicsErrorMessage <- function(
   
 }
 
+#' @title showMetabolomicsErrorMessage
+#' @description Error message for trying to add unknown metabolomics features to the database
+#' @param db_table_name The table name in database
+#' @param unknown_values The unknown values
+#'
+#' @keywords internal
+#'
+#' @export
+showMetabolomicsErrorMessage <- function(
+    db_table_name,
+    unknown_values
+){
+
+  base::warning(
+    base::sprintf("\nThe following features do not existed in the '%s' table of the database:\n%s\n", db_table_name, base::paste0("'", unknown_values, "'", collapse = "\n")),
+    base::sprintf("\nYou can use 'searchMetabolomicsFeatureSet()' to see a list of available features.\n"),
+    base::sprintf("\nTo add these features to our database, please contact our admin for support.\n")
+  )
+
+}
+
 #' @title showTranscriptomicsErrorMessage
 #' @description Error message for trying to add unknown Transcriptomics Features to the database
 #' @param db_table_name The table name in database
@@ -142,4 +163,3 @@ showAssayTypeErrorMessage <- function(
   )
   
 }
-
