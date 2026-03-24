@@ -32,25 +32,6 @@ createOmicSignature <- function(
     base::stop(base::sprintf("\n'db_signature_tbl' must be a data frame and cannot be empty.\n"))
   }
   
-  # Get assay_type
-  assay_type <- db_signature_tbl$assay_type[1]  
-  
-  # Get reference table
-  if(assay_type == "transcriptomics"){
-    ref_table <- "transcriptomics_features"
-  }else if(assay_type == "proteomics"){
-    ref_table <- "proteomics_features"
-  }else if(assay_type == "metabolomics"){
-    SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
-    #ref_table <- "metabolomics_features"
-  }else if(assay_type == "methylomics"){
-    SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
-    #ref_table <- "methylomics_features"
-  }else if(assay_type == "genetic_variants"){
-  
-    ref_table <- "genetic_variants_features"
-  }
-  
   # Create metadata
   metadata <- db_signature_tbl |>
     dplyr::mutate(PMID = base::as.character(.data$PMID)) |>
@@ -67,6 +48,23 @@ createOmicSignature <- function(
         base::names(list_obj) <- list_name
         return(list_obj)
       }) 
+  }
+
+  # Get assay_type
+  assay_type <- db_signature_tbl$assay_type[1]
+
+  # Get reference table
+  if(assay_type == "transcriptomics"){
+    ref_table <- "transcriptomics_features"
+  }else if(assay_type == "proteomics"){
+    ref_table <- "proteomics_features"
+  }else if(assay_type == "metabolomics"){
+    metadata <- normalizeMetabolomicsMetadata(metadata)
+    ref_table <- resolveMetabolomicsFeatureConfig(metadata = metadata)$db_table_name
+  }else if(assay_type == "methylomics"){
+    SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
+  }else if(assay_type == "genetic_variants"){
+    ref_table <- "genetic_variants_features"
   }
   
   # If signature has difexp, get a copy by its signature hash key ####
@@ -153,7 +151,6 @@ createOmicSignature <- function(
   return(OmS)
   
 }
-
 
 
 

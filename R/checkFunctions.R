@@ -426,6 +426,10 @@ checkOmicSignature <- function(
   # Check assay_type (required) ####
   SigRepo::checkAssayType(assay_type = metadata$assay_type[1])
 
+  if (metadata$assay_type[1] == "metabolomics") {
+    metadata <- normalizeMetabolomicsMetadata(metadata)
+  }
+
   # Check phenotype (required) #####
   if(base::length(metadata$phenotype[1]) == 0 || metadata$phenotype[1] %in% c(NA, ""))
     base::stop("'phenotype' in OmicSignature's metadata object is required and cannot be empty.")

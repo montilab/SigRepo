@@ -133,13 +133,42 @@ addSignatureWithID <- function(
   }
   
   # Put signature set back to its original form
-  SigRepo::addTranscriptomicsSignatureSet(
-    conn_handler = conn_handler,
-    signature_id = metadata_tbl$signature_id[1],
-    organism_id = metadata_tbl$organism_id[1],
-    signature_set = omic_signature$signature,
-    verbose = verbose
-  )
+  if (metadata_tbl$assay_type[1] == "transcriptomics") {
+    SigRepo::addTranscriptomicsSignatureSet(
+      conn_handler = conn_handler,
+      signature_id = metadata_tbl$signature_id[1],
+      organism_id = metadata_tbl$organism_id[1],
+      signature_set = omic_signature$signature,
+      verbose = verbose
+    )
+  } else if (metadata_tbl$assay_type[1] == "proteomics") {
+    SigRepo::addProteomicsSignatureSet(
+      conn_handler = conn_handler,
+      signature_id = metadata_tbl$signature_id[1],
+      organism_id = metadata_tbl$organism_id[1],
+      signature_set = omic_signature$signature,
+      verbose = verbose
+    )
+  } else if (metadata_tbl$assay_type[1] == "metabolomics") {
+    SigRepo::addMetabolomicsSignatureSet(
+      conn_handler = conn_handler,
+      signature_id = metadata_tbl$signature_id[1],
+      signature_set = omic_signature$signature,
+      feature_database = resolveMetabolomicsFeatureConfig(metadata = omic_signature$metadata)$feature_database,
+      verbose = verbose
+    )
+  } else if (metadata_tbl$assay_type[1] == "genetic_variants") {
+    SigRepo::addGeneticVariantsSignatureSet(
+      conn_handler = conn_handler,
+      signature_id = metadata_tbl$signature_id[1],
+      organism_id = metadata_tbl$organism_id[1],
+      signature_set = omic_signature$signature,
+      verbose = verbose
+    )
+  } else {
+    base::suppressWarnings(DBI::dbDisconnect(conn))
+    SigRepo::showAssayTypeErrorMessage(unknown_values = metadata_tbl$assay_type[1])
+  }
   
   # Add user to signature access table after signature
   SigRepo::addUserToSignature(
@@ -157,6 +186,5 @@ addSignatureWithID <- function(
   return(base::invisible())
   
 }  
-
 
 

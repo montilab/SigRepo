@@ -350,8 +350,29 @@ addSignature <- function(
       }
 
     }else if(assay_type == "metabolomics"){
-      
-      SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
+      warn_tbl <- base::tryCatch({
+        SigRepo::addMetabolomicsSignatureSet(
+          conn_handler = conn_handler,
+          signature_id = signature_tbl$signature_id[1],
+          signature_set = omic_signature$signature,
+          feature_database = resolveMetabolomicsFeatureConfig(metadata = omic_signature$metadata)$feature_database,
+          verbose = verbose
+        )
+      }, error = function(e){
+        SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = signature_tbl$signature_id[1], verbose = FALSE)
+        base::suppressWarnings(DBI::dbDisconnect(conn))
+        base::stop(base::as.character(e), "\n")
+      })
+
+      if(methods::is(warn_tbl, "data.frame") && base::nrow(warn_tbl) > 0){
+        SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = signature_tbl$signature_id[1], verbose = FALSE)
+        base::suppressWarnings(DBI::dbDisconnect(conn))
+        if(return_missing_features == TRUE){
+          return(warn_tbl)
+        }else{
+          return(base::invisible())
+        }
+      }
       
     
 
@@ -411,6 +432,5 @@ addSignature <- function(
 
   } 
 }  
-
 
 
