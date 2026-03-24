@@ -1,13 +1,14 @@
 #' @title addProteomicsFeatureSet
 #' @description Add proteomics feature set to database
-#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
+#' @param conn_handler Optional R object obtained from SigRepo::newConnhandler().
+#' If NULL, the stored internal handle is used.
 #' @param feature_set A Data Frame; must contain the following column names: 
 #' feature_name, organism, gene_symbol, is_current, version (required)
 #' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #' 
 #' @export
 addProteomicsFeatureSet <- function(
-    conn_handler,
+    conn_handler = NULL,
     feature_set,
     verbose = TRUE
 ){
@@ -16,7 +17,7 @@ addProteomicsFeatureSet <- function(
   SigRepo::print_messages(verbose = verbose)
   
   # Establish user connection ###
-  conn <- SigRepo::conn_init()
+  conn <- SigRepo::conn_init(conn_handler)
   
   # Check user connection and permission ####
   conn_info <- SigRepo::checkPermissions(
@@ -125,5 +126,3 @@ addProteomicsFeatureSet <- function(
   SigRepo::verbose("Finished uploading.\n")
   
 }
-
-
