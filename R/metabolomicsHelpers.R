@@ -19,13 +19,17 @@ resolveMetabolomicsFeatureConfig <- function(
     feature_database = NULL,
     metadata = NULL
 ){
-
-  get_from_metadata <- function(metadata, field_name) {
-    if (base::is.null(metadata) || !field_name %in% base::names(metadata)) {
+  get_from_others <- function(metadata, field_name) {
+    if (base::is.null(metadata) || !"others" %in% base::names(metadata)) {
       return(NULL)
     }
 
-    value <- metadata[[field_name]]
+    others <- metadata$others
+    if (!methods::is(others, "list") || !field_name %in% base::names(others)) {
+      return(NULL)
+    }
+
+    value <- others[[field_name]]
     if (base::length(value) == 0 || base::all(value %in% c("", NA))) {
       return(NULL)
     }
@@ -33,57 +37,14 @@ resolveMetabolomicsFeatureConfig <- function(
     value[1]
   }
 
-  infer_from_platform <- function(platform_name) {
-    if (base::length(platform_name) == 0 || base::all(platform_name %in% c("", NA))) {
-      return(NULL)
-    }
-
-    platform_name <- base::trimws(base::tolower(platform_name[1]))
-
-    for (db_name in metabolomics_feature_tables$feature_database) {
-      if (base::grepl(db_name, platform_name, fixed = TRUE)) {
-        return(db_name)
-      }
-    }
-
-    NULL
-  }
-
   if (base::length(feature_database) == 0 || base::all(feature_database %in% c("", NA))) {
-    feature_database <- get_from_metadata(metadata, "metabolomics_database")
-  }
-
-  if (base::length(feature_database) == 0 || base::all(feature_database %in% c("", NA))) {
-    feature_database <- get_from_metadata(metadata, "feature_database")
-  }
-
-  if (base::length(feature_database) == 0 || base::all(feature_database %in% c("", NA))) {
-    feature_database <- get_from_metadata(metadata, "metabolite_dictionary")
-  }
-
-  if (base::length(feature_database) == 0 || base::all(feature_database %in% c("", NA))) {
-    others <- get_from_metadata(metadata, "others")
-
-    if (methods::is(others, "list")) {
-      if ("metabolomics_database" %in% base::names(others)) {
-        feature_database <- others$metabolomics_database[1]
-      } else if ("feature_database" %in% base::names(others)) {
-        feature_database <- others$feature_database[1]
-      } else if ("metabolite_dictionary" %in% base::names(others)) {
-        feature_database <- others$metabolite_dictionary[1]
-      }
-    }
-  }
-
-  if (base::length(feature_database) == 0 || base::all(feature_database %in% c("", NA))) {
-    feature_database <- infer_from_platform(get_from_metadata(metadata, "platform"))
+    feature_database <- get_from_others(metadata, "metabolomics_nomenclature")
   }
 
   if (base::length(feature_database) == 0 || base::all(feature_database %in% c("", NA))) {
     base::stop(
       "Metabolomics signatures require a metabolite dictionary. ",
-      "Set one of metadata$metabolomics_database, metadata$feature_database, ",
-      "or metadata$metabolite_dictionary to one of: ",
+      "Provide 'metabolomics_nomenclature' when adding or updating a metabolomics signature, using one of: ",
       base::paste0(metabolomics_feature_tables$feature_database, collapse = "/"),
       "."
     )
@@ -105,16 +66,18 @@ resolveMetabolomicsFeatureConfig <- function(
   base::as.list(config[1, , drop = FALSE])
 }
 
-#' @title normalizeMetabolomicsMetadata
-#' @description Normalize metabolomics metadata and persist dictionary in `others`.
+#' @title addMetabolomicsNomenclature
+#' @description Persist metabolomics nomenclature in metadata `others`.
 #' @param metadata OmicSignature metadata list.
+#' @param metabolomics_nomenclature Metabolomics dictionary name.
 #'
 #' @keywords internal
-normalizeMetabolomicsMetadata <- function(metadata) {
+addMetabolomicsNomenclature <- function(
+    metadata,
+    metabolomics_nomenclature
+) {
 
-  config <- resolveMetabolomicsFeatureConfig(metadata = metadata)
-
-  metadata$metabolomics_database <- config$feature_database
+  config <- resolveMetabolomicsFeatureConfig(feature_database = metabolomics_nomenclature)
 
   if (!"others" %in% base::names(metadata) ||
       base::is.null(metadata$others) ||
@@ -126,7 +89,7 @@ normalizeMetabolomicsMetadata <- function(metadata) {
     base::stop("'others' in OmicSignature metadata must be a list when used with metabolomics.")
   }
 
-  metadata$others$metabolomics_database <- config$feature_database
+  metadata$others$metabolomics_nomenclature <- config$feature_database
 
   metadata
 }

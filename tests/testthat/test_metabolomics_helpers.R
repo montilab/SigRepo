@@ -9,26 +9,23 @@ test_that("metabolomics helper resolves configured dictionaries", {
   expect_identical(hmdb_cfg$db_table_name, "hmdb_features")
   expect_identical(hmdb_cfg$maintenance_model, "curated")
   
-  smiles_cfg <- helper_env$resolveMetabolomicsFeatureConfig(
-    metadata = list(platform = "Untargeted SMILES panel")
-  )
+  smiles_cfg <- helper_env$resolveMetabolomicsFeatureConfig(feature_database = "smiles")
   expect_identical(smiles_cfg$feature_database, "smiles")
   expect_identical(smiles_cfg$maintenance_model, "growing")
 })
 
-test_that("metabolomics metadata normalization persists dictionary in others", {
+test_that("metabolomics nomenclature is persisted in others", {
   helper_env <- new.env(parent = baseenv())
   sys.source(testthat::test_path("..", "..", "R", "metabolomicsHelpers.R"), envir = helper_env)
   
-  metadata <- helper_env$normalizeMetabolomicsMetadata(
+  metadata <- helper_env$addMetabolomicsNomenclature(
     list(
       assay_type = "metabolomics",
-      metabolomics_database = "refmet",
       others = list(existing = "value")
-    )
+    ),
+    metabolomics_nomenclature = "refmet"
   )
   
-  expect_identical(metadata$metabolomics_database, "refmet")
-  expect_identical(metadata$others$metabolomics_database, "refmet")
+  expect_identical(metadata$others$metabolomics_nomenclature, "refmet")
   expect_identical(metadata$others$existing, "value")
 })

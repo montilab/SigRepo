@@ -8,6 +8,8 @@
 #' @param add_users A Data Frame; must contain the following column names:
 #' 'user_name', 'access'. Access types are owner, viewer, or editor.This argument is only relevant when 
 #' visibility is set to 'FALSE'. 
+#' @param metabolomics_nomenclature Optional metabolite dictionary for
+#' metabolomics signatures. One of refmet, hmdb, smiles, or inchikey.
 #' @param return_signature_id Logical; if 'TRUE', the function will 
 #' return the ID generated for the newly uploaded signature. Defaults to 'FALSE'.
 #' @param return_missing_features Logical; if set to 
@@ -46,6 +48,7 @@ addSignature <- function(
     omic_signature,
     visibility = TRUE,
     add_users = NULL,
+    metabolomics_nomenclature = NULL,
     return_signature_id = FALSE,
     return_missing_features = FALSE,
     verbose = TRUE
@@ -116,6 +119,18 @@ addSignature <- function(
   omic_signature <- SigRepo::checkOmicSignature(
     omic_signature = omic_signature
   )
+
+  if (omic_signature$metadata$assay_type[1] == "metabolomics") {
+    metadata <- addMetabolomicsNomenclature(
+      metadata = omic_signature$metadata,
+      metabolomics_nomenclature = metabolomics_nomenclature
+    )
+    omic_signature <- OmicSignature::OmicSignature$new(
+      metadata = metadata,
+      signature = omic_signature$signature,
+      difexp = omic_signature$difexp
+    )
+  }
 
   # Create signature metadata table ####
   metadata_tbl <- SigRepo::createSignatureMetadata(
@@ -355,7 +370,7 @@ addSignature <- function(
           conn_handler = conn_handler,
           signature_id = signature_tbl$signature_id[1],
           signature_set = omic_signature$signature,
-          feature_database = resolveMetabolomicsFeatureConfig(metadata = omic_signature$metadata)$feature_database,
+          feature_database = metabolomics_nomenclature,
           verbose = verbose
         )
       }, error = function(e){
@@ -432,5 +447,4 @@ addSignature <- function(
 
   } 
 }  
-
 

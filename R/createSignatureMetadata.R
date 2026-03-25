@@ -64,10 +64,6 @@ createSignatureMetadata <- function(
     )
   }
 
-  if (assay_type == "metabolomics") {
-    metadata <- normalizeMetabolomicsMetadata(metadata)
-  }
-  
   # Look up organism id (required) ####
   lookup_organism <- metadata$organism[1]
   
@@ -351,7 +347,6 @@ createSignatureMetadata <- function(
   return(metadata_tbl)
   
 }
-
 
 
 

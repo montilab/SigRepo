@@ -59,7 +59,6 @@ createOmicSignature <- function(
   }else if(assay_type == "proteomics"){
     ref_table <- "proteomics_features"
   }else if(assay_type == "metabolomics"){
-    metadata <- normalizeMetabolomicsMetadata(metadata)
     ref_table <- resolveMetabolomicsFeatureConfig(metadata = metadata)$db_table_name
   }else if(assay_type == "methylomics"){
     SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
@@ -151,7 +150,6 @@ createOmicSignature <- function(
   return(OmS)
   
 }
-
 
 
 

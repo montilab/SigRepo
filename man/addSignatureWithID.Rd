@@ -10,6 +10,7 @@ addSignatureWithID(
   assign_signature_id,
   assign_user_name,
   visibility = FALSE,
+  metabolomics_nomenclature = NULL,
   check_difexp = TRUE,
   verbose = FALSE
 )
@@ -26,6 +27,9 @@ OmicSignature package (required).}
 
 \item{visibility}{Logical; whether the uploaded collection should be visible 
 and accessible to others, Defaults to 'FALSE'}
+
+\item{metabolomics_nomenclature}{Optional metabolite dictionary for
+metabolomics signatures. One of refmet, hmdb, smiles, or inchikey.}
 
 \item{check_difexp}{Logical; whether or not to check difexp
 table in the database. Defaults to 'TRUE'}

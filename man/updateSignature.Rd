@@ -9,6 +9,7 @@ updateSignature(
   signature_id,
   omic_signature,
   visibility = NULL,
+  metabolomics_nomenclature = NULL,
   verbose = TRUE
 )
 }
@@ -21,6 +22,9 @@ updateSignature(
 
 \item{visibility}{A logical value indicates whether or not to allow others
 to view and access one's uploaded signature. Defaults to 'FALSE'.}
+
+\item{metabolomics_nomenclature}{Optional metabolite dictionary for
+metabolomics signatures. One of refmet, hmdb, smiles, or inchikey.}
 
 \item{verbose}{Logical;  whether or not to print the diagnostic messages. 
 Defaults to 'TRUE'.}
