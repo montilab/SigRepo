@@ -248,7 +248,14 @@ updateSignature <- function(
       # 3. If signature has difexp, remove it ####
       if(signature_tbl$has_difexp[1] == 1){
         # Get API URL
-        api_url <- base::sprintf("http://%s:%s/delete_difexp?api_key=%s&signature_hashkey=%s", conn_handler$api_host[1], conn_handler$api_port[1], conn_info$api_key[1], signature_tbl$signature_hashkey[1])
+        api_url <- SigRepo::build_api_url(
+          conn_handler = conn_handler,
+          endpoint = "delete_difexp",
+          query = base::list(
+            api_key = conn_info$api_key[1],
+            signature_hashkey = signature_tbl$signature_hashkey[1]
+          )
+        )
         # Delete difexp from database
         res <- httr::DELETE(url = api_url)
         # Check status code
@@ -495,7 +502,14 @@ updateSignature <- function(
         data_path <- base::tempdir()
         base::saveRDS(difexp, file = base::file.path(data_path, base::paste0(metadata_tbl$signature_hashkey[1], ".RDS")))
         # Get API URL
-        api_url <- base::sprintf("http://%s:%s/store_difexp?api_key=%s&signature_hashkey=%s", conn_handler$api_host[1], conn_handler$api_port[1], conn_info$api_key[1], metadata_tbl$signature_hashkey[1])
+        api_url <- SigRepo::build_api_url(
+          conn_handler = conn_handler,
+          endpoint = "store_difexp",
+          query = base::list(
+            api_key = conn_info$api_key[1],
+            signature_hashkey = metadata_tbl$signature_hashkey[1]
+          )
+        )
         # Store difexp in database
         res <- 
           httr::POST(
