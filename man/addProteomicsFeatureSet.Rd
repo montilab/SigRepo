@@ -4,10 +4,11 @@
 \alias{addProteomicsFeatureSet}
 \title{addProteomicsFeatureSet}
 \usage{
-addProteomicsFeatureSet(conn_handler, feature_set, verbose = TRUE)
+addProteomicsFeatureSet(conn_handler = NULL, feature_set, verbose = TRUE)
 }
 \arguments{
-\item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
+\item{conn_handler}{Optional R object obtained from SigRepo::newConnhandler().
+If NULL, the stored internal handle is used.}
 
 \item{feature_set}{A Data Frame; must contain the following column names: 
 feature_name, organism, gene_symbol, is_current, version (required)}

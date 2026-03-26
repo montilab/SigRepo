@@ -111,7 +111,14 @@ addSignatureWithID <- function(
     data_path <- base::tempdir()
     base::saveRDS(difexp, file = base::file.path(data_path, base::paste0(metadata_tbl$signature_hashkey[1], ".RDS")))
     # Get API URL
-    api_url <- base::sprintf("http://%s:%s/store_difexp?api_key=%s&signature_hashkey=%s", conn_handler$api_host[1], conn_handler$api_port[1], conn_info$api_key[1], metadata_tbl$signature_hashkey[1])
+    api_url <- SigRepo::build_api_url(
+      conn_handler = conn_handler,
+      endpoint = "store_difexp",
+      query = base::list(
+        api_key = conn_info$api_key[1],
+        signature_hashkey = metadata_tbl$signature_hashkey[1]
+      )
+    )
     # Store difexp in database
     res <- 
       httr::POST(
@@ -157,6 +164,5 @@ addSignatureWithID <- function(
   return(base::invisible())
   
 }  
-
 
 
