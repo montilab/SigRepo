@@ -44,15 +44,25 @@ insert_table_sql <- function(
     coln_val <- base::seq_len(base::nrow(table)) |> 
       purrr::map_chr(
         function(r){
-          #r=1;
-          values <- base::paste0("'", table[r, tbl_col_names], "'", collapse = ", ")
+          row_values <- purrr::map_chr(
+            tbl_col_names,
+            function(col_name) {
+              cell_value <- table[r, col_name][[1]]
+              if (cell_value %in% c("'NULL'", "NULL")) {
+                return("NULL")
+              }
+              as.character(DBI::dbQuoteString(conn, as.character(cell_value)))
+            }
+          )
+
+          values <- base::paste0(row_values, collapse = ", ")
           if(r < base::nrow(table)){
             values <- base::paste0("(", values, "),\n")
           }else{
             values <- base::paste0("(", values, ");\n")
           }
         }
-      ) |> base::paste0(collapse = "") |> purrr::map_chr(function(x){ base::gsub("'NULL'", "NULL", x) })
+      ) |> base::paste0(collapse = "")
     
     # Create a SQL query to insert table into database
     statement <- base::sprintf(
@@ -60,8 +70,7 @@ insert_table_sql <- function(
       INSERT INTO %s %s
       VALUES %s
       ", db_table_name, coln_var, coln_val
-    ) |> 
-      purrr::map_chr(function(x){ base::gsub("'NULL'", "NULL", x) })
+    )
     
     # Export the sql statement to a sql file
     #base::writeLines(statement, base::file.path("~/SigRepo/inst/data/sql_schemas", base::paste0(db_table_name, ".sql")))
@@ -276,4 +285,3 @@ lookup_table_sql <- function(
   return(table)
   
 }
-

@@ -7,6 +7,8 @@
 #' @param assign_user_name Assign an unique user name to the uploaded signature (required) 
 #' @param visibility Logical; whether the uploaded collection should be visible 
 #' and accessible to others, Defaults to 'FALSE'
+#' @param metabolomics_nomenclature Optional metabolite dictionary for
+#' metabolomics signatures. One of refmet, hmdb, smiles, or inchikey.
 #' @param check_difexp Logical; whether or not to check difexp
 #' table in the database. Defaults to 'TRUE'
 #' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
@@ -20,6 +22,7 @@ addSignatureWithID <- function(
     assign_signature_id,
     assign_user_name,
     visibility = FALSE,
+    metabolomics_nomenclature = NULL,
     check_difexp = TRUE,
     verbose = FALSE
 ){
@@ -61,6 +64,24 @@ addSignatureWithID <- function(
     base::stop("'assign_user_name' must have a length of 1 and cannot be empty.\n")
   }else{
     user_name <- assign_user_name
+  }
+
+  if (omic_signature$metadata$assay_type[1] == "metabolomics") {
+    if (base::length(metabolomics_nomenclature) == 0 || base::all(metabolomics_nomenclature %in% c("", NA))) {
+      metabolomics_nomenclature <- resolveMetabolomicsFeatureConfig(
+        metadata = omic_signature$metadata
+      )$feature_database
+    }
+
+    metadata <- addMetabolomicsNomenclature(
+      metadata = omic_signature$metadata,
+      metabolomics_nomenclature = metabolomics_nomenclature
+    )
+    omic_signature <- OmicSignature::OmicSignature$new(
+      metadata = metadata,
+      signature = omic_signature$signature,
+      difexp = omic_signature$difexp
+    )
   }
   
   # Check and create signature metadata table ####
@@ -140,13 +161,42 @@ addSignatureWithID <- function(
   }
   
   # Put signature set back to its original form
-  SigRepo::addTranscriptomicsSignatureSet(
-    conn_handler = conn_handler,
-    signature_id = metadata_tbl$signature_id[1],
-    organism_id = metadata_tbl$organism_id[1],
-    signature_set = omic_signature$signature,
-    verbose = verbose
-  )
+  if (metadata_tbl$assay_type[1] == "transcriptomics") {
+    SigRepo::addTranscriptomicsSignatureSet(
+      conn_handler = conn_handler,
+      signature_id = metadata_tbl$signature_id[1],
+      organism_id = metadata_tbl$organism_id[1],
+      signature_set = omic_signature$signature,
+      verbose = verbose
+    )
+  } else if (metadata_tbl$assay_type[1] == "proteomics") {
+    SigRepo::addProteomicsSignatureSet(
+      conn_handler = conn_handler,
+      signature_id = metadata_tbl$signature_id[1],
+      organism_id = metadata_tbl$organism_id[1],
+      signature_set = omic_signature$signature,
+      verbose = verbose
+    )
+  } else if (metadata_tbl$assay_type[1] == "metabolomics") {
+    SigRepo::addMetabolomicsSignatureSet(
+      conn_handler = conn_handler,
+      signature_id = metadata_tbl$signature_id[1],
+      signature_set = omic_signature$signature,
+      feature_database = metabolomics_nomenclature,
+      verbose = verbose
+    )
+  } else if (metadata_tbl$assay_type[1] == "genetic_variants") {
+    SigRepo::addGeneticVariantsSignatureSet(
+      conn_handler = conn_handler,
+      signature_id = metadata_tbl$signature_id[1],
+      organism_id = metadata_tbl$organism_id[1],
+      signature_set = omic_signature$signature,
+      verbose = verbose
+    )
+  } else {
+    base::suppressWarnings(DBI::dbDisconnect(conn))
+    SigRepo::showAssayTypeErrorMessage(unknown_values = metadata_tbl$assay_type[1])
+  }
   
   # Add user to signature access table after signature
   SigRepo::addUserToSignature(
@@ -164,5 +214,3 @@ addSignatureWithID <- function(
   return(base::invisible())
   
 }  
-
-

@@ -126,7 +126,9 @@ addTranscriptomicsSignatureSet <- function(
       dplyr::mutate(
         signature_id = signature_id,
         organism_id = organism_id,
-        assay_type = "transcriptomics"
+        assay_type = "transcriptomics",
+        nomenclature_type = "ensembl",
+        match_status = "resolved"
       ) 
     
     # Create a hash key to look up feature id in the transcriptomics reference table ####
@@ -217,4 +219,3 @@ addTranscriptomicsSignatureSet <- function(
     
   }  
 }
-

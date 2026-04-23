@@ -9,6 +9,7 @@ addSignature(
   omic_signature,
   visibility = TRUE,
   add_users = NULL,
+  metabolomics_nomenclature = NULL,
   return_signature_id = FALSE,
   return_missing_features = FALSE,
   verbose = TRUE
@@ -26,6 +27,9 @@ and accessible to others, Defaults to 'FALSE'}
 \item{add_users}{A Data Frame; must contain the following column names:
 'user_name', 'access'. Access types are owner, viewer, or editor.This argument is only relevant when 
 visibility is set to 'FALSE'.}
+
+\item{metabolomics_nomenclature}{Optional metabolite dictionary for
+metabolomics signatures. One of refmet, hmdb, smiles, or inchikey.}
 
 \item{return_signature_id}{Logical; if 'TRUE', the function will 
 return the ID generated for the newly uploaded signature. Defaults to 'FALSE'.}

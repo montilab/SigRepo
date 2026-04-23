@@ -5,6 +5,8 @@
 #' @param omic_signature An R6 class object from the OmicSignature package (required)
 #' @param visibility A logical value indicates whether or not to allow others  
 #' to view and access one's uploaded signature. Defaults to 'FALSE'.
+#' @param metabolomics_nomenclature Optional metabolite dictionary for
+#' metabolomics signatures. One of refmet, hmdb, smiles, or inchikey.
 #' @param verbose Logical;  whether or not to print the diagnostic messages. 
 #' Defaults to 'TRUE'.
 #' 
@@ -36,6 +38,7 @@ updateSignature <- function(
     signature_id,
     omic_signature,
     visibility = NULL,
+    metabolomics_nomenclature = NULL,
     verbose = TRUE
 ){
   
@@ -139,6 +142,23 @@ updateSignature <- function(
     SigRepo::print_messages(verbose = verbose)
     
     # 1. Create metadata with new omic_signature object ####
+    if (omic_signature$metadata$assay_type[1] == "metabolomics") {
+      if (base::length(metabolomics_nomenclature) == 0 || base::all(metabolomics_nomenclature %in% c("", NA))) {
+        metabolomics_nomenclature <- resolveMetabolomicsFeatureConfig(
+          metadata = orig_omic_signature$metadata
+        )$feature_database
+      }
+
+      metadata <- addMetabolomicsNomenclature(
+        metadata = omic_signature$metadata,
+        metabolomics_nomenclature = metabolomics_nomenclature
+      )
+      omic_signature <- OmicSignature::OmicSignature$new(
+        metadata = metadata,
+        signature = omic_signature$signature,
+        difexp = omic_signature$difexp
+      )
+    }
     
     # Check and create signature metadata table ####
     metadata_tbl <- SigRepo::createSignatureMetadata(
@@ -377,16 +397,95 @@ updateSignature <- function(
         }
         
       }else if(assay_type == "metabolomics"){
-        
-        SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
+        warn_tbl <- base::tryCatch({
+          SigRepo::addMetabolomicsSignatureSet(
+            conn_handler = conn_handler,
+            signature_id = metadata_tbl$signature_id[1],
+            signature_set = omic_signature$signature,
+            feature_database = metabolomics_nomenclature,
+            verbose = FALSE
+          )
+        }, error = function(e){
+          SigRepo::deleteSignature(
+            conn_handler = conn_handler,
+            signature_id = signature_tbl$signature_id[1],
+            verbose = FALSE
+          )
+          SigRepo::addSignatureWithID(
+            conn_handler = conn_handler,
+            omic_signature = orig_omic_signature,
+            assign_signature_id = signature_tbl$signature_id[1],
+            assign_user_name = signature_tbl$user_name,
+            visibility = signature_tbl$visibility[1]
+          )
+          base::suppressWarnings(DBI::dbDisconnect(conn))
+          base::stop(base::paste0(e, "\n"))
+        })
+
+        if(methods::is(warn_tbl, "data.frame") && base::nrow(warn_tbl) > 0){
+          SigRepo::deleteSignature(
+            conn_handler = conn_handler,
+            signature_id = signature_tbl$signature_id[1],
+            verbose = FALSE
+          )
+          SigRepo::addSignatureWithID(
+            conn_handler = conn_handler,
+            omic_signature = orig_omic_signature,
+            assign_signature_id = signature_tbl$signature_id[1],
+            assign_user_name = signature_tbl$user_name,
+            visibility = signature_tbl$visibility[1]
+          )
+          base::suppressWarnings(DBI::dbDisconnect(conn))
+          return(warn_tbl)
+        }
         
       }else if(assay_type == "methylomics"){
         
         SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
         
-      }else if(assay_type == "GeneticVariants"){
+      }else if(assay_type == "genetic_variants"){
         
-        SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
+        warn_tbl <- base::tryCatch({
+          SigRepo::addGeneticVariantsSignatureSet(
+            conn_handler = conn_handler,
+            signature_id = metadata_tbl$signature_id[1],
+            organism_id = metadata_tbl$organism_id[1],
+            signature_set = omic_signature$signature,
+            verbose = FALSE
+          )
+        }, error = function(e){
+          SigRepo::deleteSignature(
+            conn_handler = conn_handler,
+            signature_id = signature_tbl$signature_id[1],
+            verbose = FALSE
+          )
+          SigRepo::addSignatureWithID(
+            conn_handler = conn_handler,
+            omic_signature = orig_omic_signature,
+            assign_signature_id = signature_tbl$signature_id[1],
+            assign_user_name = signature_tbl$user_name,
+            visibility = signature_tbl$visibility[1]
+          )
+          base::suppressWarnings(DBI::dbDisconnect(conn))
+          base::stop(base::paste0(e, "\n"))
+        })
+
+        if(methods::is(warn_tbl, "data.frame") && base::nrow(warn_tbl) > 0){
+          SigRepo::deleteSignature(
+            conn_handler = conn_handler,
+            signature_id = signature_tbl$signature_id[1],
+            verbose = FALSE
+          )
+          SigRepo::addSignatureWithID(
+            conn_handler = conn_handler,
+            omic_signature = orig_omic_signature,
+            assign_signature_id = signature_tbl$signature_id[1],
+            assign_user_name = signature_tbl$user_name,
+            visibility = signature_tbl$visibility[1]
+          )
+          base::suppressWarnings(DBI::dbDisconnect(conn))
+          return(warn_tbl)
+        }
         
       }
       

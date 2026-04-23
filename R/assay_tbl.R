@@ -16,7 +16,7 @@ assay_tbl <- base::data.frame(
   status = c(
     "Available",
     "Available",
-    "Unavailable",
+    "Available",
     "Unavailable",
     "Available"
   ),
