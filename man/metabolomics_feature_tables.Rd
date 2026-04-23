@@ -5,7 +5,7 @@
 \alias{metabolomics_feature_tables}
 \title{metabolomics_feature_tables}
 \format{
-An object of class \code{data.frame} with 4 rows and 3 columns.
+An object of class \code{data.frame} with 4 rows and 7 columns.
 }
 \usage{
 metabolomics_feature_tables

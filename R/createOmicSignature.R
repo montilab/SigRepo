@@ -59,7 +59,8 @@ createOmicSignature <- function(
   }else if(assay_type == "proteomics"){
     ref_table <- "proteomics_features"
   }else if(assay_type == "metabolomics"){
-    ref_table <- resolveMetabolomicsFeatureConfig(metadata = metadata)$db_table_name
+    metabolomics_config <- resolveMetabolomicsFeatureConfig(metadata = metadata)
+    ref_table <- metabolomics_config$reference_table
   }else if(assay_type == "methylomics"){
     SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
   }else if(assay_type == "genetic_variants"){
@@ -103,16 +104,65 @@ createOmicSignature <- function(
   )
   
   # Look up feature_id ####
-  lookup_feature_id <- base::unique(signature$feature_id)
+  lookup_feature_id <- base::unique(signature$feature_id[!base::is.na(signature$feature_id)])
   
-  feature_id_tbl <- SigRepo::lookup_table_sql(
-    conn = conn, 
-    db_table_name = ref_table, 
-    return_var = c("feature_id", "feature_name"), 
-    filter_coln_var = "feature_id", 
-    filter_coln_val = list("feature_id" = lookup_feature_id),
-    check_db_table = TRUE
-  ) 
+  if (assay_type == "metabolomics" && base::length(lookup_feature_id) > 0) {
+    feature_id_tbl <- SigRepo::lookup_table_sql(
+      conn = conn,
+      db_table_name = ref_table,
+      return_var = c("metabolite_id", "chemical_name", "refmet_name", "inchikey", "smiles"),
+      filter_coln_var = "metabolite_id",
+      filter_coln_val = list("metabolite_id" = lookup_feature_id),
+      check_db_table = TRUE
+    ) |>
+      dplyr::rename(feature_id = .data$metabolite_id)
+
+    if ("feature_name" %in% base::colnames(signature) && base::any(!signature$feature_name %in% c(NA, "", "NULL"))) {
+      feature_id_tbl <- feature_id_tbl |>
+        dplyr::mutate(resolved_feature_name = NA_character_)
+    } else if (metabolomics_config$feature_database == "refmet") {
+      feature_id_tbl <- feature_id_tbl |>
+        dplyr::mutate(resolved_feature_name = .data$refmet_name)
+    } else {
+      xref_tbl <- SigRepo::lookup_table_sql(
+        conn = conn,
+        db_table_name = metabolomics_config$xref_table,
+        return_var = c("metabolite_id", "source_db", "source_value", "is_primary"),
+        filter_coln_var = c("source_db", "metabolite_id"),
+        filter_coln_val = list("source_db" = metabolomics_config$xref_source_db, "metabolite_id" = lookup_feature_id),
+        filter_var_by = "AND",
+        check_db_table = TRUE
+      ) |>
+        dplyr::arrange(dplyr::desc(.data$is_primary), .data$source_value) |>
+        dplyr::group_by(.data$metabolite_id) |>
+        dplyr::summarise(
+          resolved_feature_name = base::paste0(base::unique(.data$source_value), collapse = ","),
+          .groups = "drop"
+        ) |>
+        dplyr::rename(feature_id = .data$metabolite_id)
+
+      feature_id_tbl <- feature_id_tbl |>
+        dplyr::left_join(
+          xref_tbl,
+          by = "feature_id"
+        )
+    }
+  } else if (assay_type != "metabolomics") {
+    feature_id_tbl <- SigRepo::lookup_table_sql(
+      conn = conn, 
+      db_table_name = ref_table, 
+      return_var = c("feature_id", "feature_name"), 
+      filter_coln_var = "feature_id", 
+      filter_coln_val = list("feature_id" = lookup_feature_id),
+      check_db_table = TRUE
+    )
+  } else {
+    feature_id_tbl <- base::data.frame(
+      feature_id = numeric(),
+      resolved_feature_name = character(),
+      stringsAsFactors = FALSE
+    )
+  }
   
   # Add variables to table
   signature <- signature |> 
@@ -120,10 +170,78 @@ createOmicSignature <- function(
       feature_id_tbl,
       by = "feature_id"
     )
+
+  if (assay_type == "metabolomics") {
+    ambiguity_lookup_tbl <- base::data.frame(
+      sig_feature_hashkey = character(),
+      ambiguity_feature_name = character(),
+      stringsAsFactors = FALSE
+    )
+
+    all_tables <- base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = "show tables;"))
+    if ("signature_feature_set_ambiguity" %in% all_tables[[1]] &&
+        "sig_feature_hashkey" %in% base::colnames(signature)) {
+      ambiguity_hashkeys <- base::unique(signature$sig_feature_hashkey[
+        base::is.na(signature$feature_id) & !base::is.na(signature$sig_feature_hashkey)
+      ])
+
+      if (base::length(ambiguity_hashkeys) > 0) {
+        ambiguity_lookup_tbl <- SigRepo::lookup_table_sql(
+          conn = conn,
+          db_table_name = "signature_feature_set_ambiguity",
+          return_var = c("sig_feature_hashkey", "candidate_metabolite_id"),
+          filter_coln_var = "sig_feature_hashkey",
+          filter_coln_val = base::list("sig_feature_hashkey" = ambiguity_hashkeys),
+          check_db_table = FALSE
+        ) |>
+          dplyr::group_by(.data$sig_feature_hashkey) |>
+          dplyr::summarise(
+            ambiguity_feature_name = base::paste0(
+              "ambiguous_metabolite_ids:",
+              base::paste0(base::unique(.data$candidate_metabolite_id), collapse = ",")
+            ),
+            .groups = "drop"
+          )
+      }
+    }
+
+    signature <- signature |>
+      dplyr::left_join(
+        ambiguity_lookup_tbl,
+        by = "sig_feature_hashkey"
+      )
+
+    if ("feature_name" %in% base::colnames(signature)) {
+      signature <- signature |>
+        dplyr::mutate(
+          feature_name = dplyr::if_else(
+            base::is.na(.data$feature_name) | .data$feature_name %in% c("", "NULL"),
+            dplyr::coalesce(.data$resolved_feature_name, .data$ambiguity_feature_name),
+            .data$feature_name
+          )
+        )
+    } else {
+      signature <- signature |>
+        dplyr::mutate(feature_name = dplyr::coalesce(.data$resolved_feature_name, .data$ambiguity_feature_name))
+    }
+  }
   
   # Rename table with appropriate column names 
-  coln_names <- base::colnames(signature) |> 
-    base::replace(base::match("feature_id", base::colnames(signature)), "feature_name")
+  if (assay_type == "metabolomics") {
+    if ("feature_name" %in% base::colnames(signature)) {
+      coln_names <- base::setdiff(
+        base::colnames(signature),
+        c("feature_id", "chemical_name", "refmet_name", "inchikey", "smiles", "resolved_feature_name", "ambiguity_feature_name")
+      )
+    } else {
+      coln_names <- base::colnames(signature) |>
+        base::replace(base::match("feature_id", base::colnames(signature)), "feature_name")
+      coln_names <- coln_names[!coln_names %in% c("chemical_name", "refmet_name", "inchikey", "smiles", "resolved_feature_name", "ambiguity_feature_name")]
+    }
+  } else {
+    coln_names <- base::colnames(signature) |> 
+      base::replace(base::match("feature_id", base::colnames(signature)), "feature_name")
+  }
   
   # Extract the table with appropriate column names ####
   signature <- signature |> 

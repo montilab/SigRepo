@@ -99,7 +99,9 @@ addGeneticVariantsSignatureSet <- function(
     dplyr::mutate(
       signature_id = signature_id,
       organism_id = organism_id,
-      assay_type = "genetic_variants"
+      assay_type = "genetic_variants",
+      nomenclature_type = "genetic_variant",
+      match_status = "resolved"
     )
   
   # Step 2: Create feature hashkey ####

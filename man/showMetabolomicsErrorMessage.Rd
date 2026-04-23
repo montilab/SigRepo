@@ -4,12 +4,21 @@
 \alias{showMetabolomicsErrorMessage}
 \title{showMetabolomicsErrorMessage}
 \usage{
-showMetabolomicsErrorMessage(db_table_name, unknown_values)
+showMetabolomicsErrorMessage(
+  db_table_name,
+  unknown_values,
+  feature_database = NULL,
+  attempted_growth = FALSE
+)
 }
 \arguments{
 \item{db_table_name}{The table name in database}
 
 \item{unknown_values}{The unknown values}
+
+\item{feature_database}{Optional metabolomics nomenclature name}
+
+\item{attempted_growth}{Logical; whether growth was attempted during import}
 }
 \description{
 Error message for trying to add unknown Metabolomics Features to the database

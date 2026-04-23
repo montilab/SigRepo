@@ -29,12 +29,53 @@ searchMetabolomicsFeatureSet <- function(
 
   config <- resolveMetabolomicsFeatureConfig(feature_database = feature_database)
 
-  tbl <- SigRepo::lookup_table_sql(
+  reference_tbl <- SigRepo::lookup_table_sql(
     conn = conn,
-    db_table_name = config$db_table_name,
+    db_table_name = config$reference_table,
     return_var = "*",
     check_db_table = TRUE
   )
+
+  if (config$feature_database == "refmet") {
+    tbl <- reference_tbl |>
+      dplyr::transmute(
+        metabolite_id = .data$metabolite_id,
+        feature_name = .data$refmet_name,
+        chemical_name = .data$chemical_name,
+        refmet_name = .data$refmet_name,
+        inchikey = .data$inchikey,
+        smiles = .data$smiles,
+        is_current = .data$is_current,
+        version = .data$version
+      )
+  } else {
+    xref_tbl <- SigRepo::lookup_table_sql(
+      conn = conn,
+      db_table_name = config$xref_table,
+      return_var = c("metabolite_id", "source_db", "source_value", "is_primary"),
+      filter_coln_var = "source_db",
+      filter_coln_val = list("source_db" = config$xref_source_db),
+      check_db_table = TRUE
+    )
+
+    tbl <- xref_tbl |>
+      dplyr::left_join(
+        reference_tbl |>
+          dplyr::select(c("metabolite_id", "chemical_name", "refmet_name", "inchikey", "smiles", "is_current", "version")),
+        by = "metabolite_id"
+      ) |>
+      dplyr::transmute(
+        metabolite_id = .data$metabolite_id,
+        feature_name = .data$source_value,
+        chemical_name = .data$chemical_name,
+        refmet_name = .data$refmet_name,
+        inchikey = .data$inchikey,
+        smiles = .data$smiles,
+        is_primary = .data$is_primary,
+        is_current = .data$is_current,
+        version = .data$version
+      )
+  }
 
   filter_var_list <- base::list(
     "feature_name" = base::unique(feature_name),

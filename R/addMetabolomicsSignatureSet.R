@@ -54,7 +54,7 @@ addMetabolomicsSignatureSet <- function(
 
   config <- resolveMetabolomicsFeatureConfig(feature_database = feature_database)
   db_table_name <- "signature_feature_set"
-  ref_table <- config$db_table_name
+  attempted_growth <- FALSE
 
   if (user_role != "admin") {
     signature_tbl <- SigRepo::lookup_table_sql(
@@ -85,99 +85,113 @@ addMetabolomicsSignatureSet <- function(
   table <- signature_set |>
     dplyr::mutate(
       signature_id = signature_id,
-      assay_type = "metabolomics"
+      assay_type = "metabolomics",
+      nomenclature_type = config$feature_database,
+      match_status = "resolved"
     )
 
   if (!"chemical_name" %in% base::colnames(table)) {
     table <- table |> dplyr::mutate(chemical_name = NA_character_)
   }
 
-  table <- SigRepo::createHashKey(
-    table = table,
-    hash_var = "feature_hashkey",
-    hash_columns = "feature_name",
-    hash_method = "md5"
-  )
-
-  lookup_hashkey <- base::unique(table$feature_hashkey)
-
-  lookup_feature_id_tbl <- SigRepo::lookup_table_sql(
+  lookup_tbl <- resolveMetabolomicsSignatureMatches(
     conn = conn,
-    db_table_name = ref_table,
-    return_var = c("feature_id", "feature_name", "feature_hashkey"),
-    filter_coln_var = "feature_hashkey",
-    filter_coln_val = list("feature_hashkey" = lookup_hashkey),
-    check_db_table = TRUE
+    feature_database = config$feature_database,
+    feature_values = table$feature_name
   )
 
   if (config$maintenance_model == "growing") {
-    missing_feature_tbl <- table |>
-      dplyr::filter(!.data$feature_hashkey %in% lookup_feature_id_tbl$feature_hashkey) |>
-      dplyr::distinct(.data$feature_name, .data$chemical_name, .keep_all = TRUE) |>
-      dplyr::mutate(
-        is_current = 1,
-        version = as.integer(base::format(base::Sys.Date(), "%m%d%Y"))
-      ) |>
-      dplyr::select(c("feature_name", "chemical_name", "is_current", "feature_hashkey", "version"))
+    missing_values <- base::setdiff(base::unique(table$feature_name), base::unique(lookup_tbl$input_feature_name))
 
-    if (base::nrow(missing_feature_tbl) > 0) {
-      missing_feature_tbl <- SigRepo::checkTableInput(
-        conn = conn,
-        db_table_name = ref_table,
-        table = missing_feature_tbl,
-        exclude_coln_names = "feature_id",
-        check_db_table = FALSE
+    if (base::length(missing_values) > 0) {
+      attempted_growth <- TRUE
+      missing_feature_tbl <- table |>
+        dplyr::filter(.data$feature_name %in% missing_values) |>
+        dplyr::distinct(.data$feature_name, .data$chemical_name, .keep_all = TRUE) |>
+        dplyr::mutate(
+          is_current = 1,
+          version = as.integer(base::format(base::Sys.Date(), "%m%d%Y"))
+        )
+
+      SigRepo::addMetabolomicsFeatureSet(
+        conn_handler = conn_handler,
+        feature_set = missing_feature_tbl,
+        feature_database = config$feature_database,
+        verbose = FALSE
       )
 
-      missing_feature_tbl <- SigRepo::removeDuplicates(
+      lookup_tbl <- resolveMetabolomicsSignatureMatches(
         conn = conn,
-        db_table_name = ref_table,
-        table = missing_feature_tbl,
-        coln_var = "feature_hashkey",
-        check_db_table = FALSE
-      )
-
-      SigRepo::insert_table_sql(
-        conn = conn,
-        db_table_name = ref_table,
-        table = missing_feature_tbl,
-        check_db_table = FALSE
-      )
-
-      lookup_feature_id_tbl <- SigRepo::lookup_table_sql(
-        conn = conn,
-        db_table_name = ref_table,
-        return_var = c("feature_id", "feature_name", "feature_hashkey"),
-        filter_coln_var = "feature_hashkey",
-        filter_coln_val = list("feature_hashkey" = lookup_hashkey),
-        check_db_table = FALSE
+        feature_database = config$feature_database,
+        feature_values = table$feature_name
       )
     }
   }
 
-  if (base::nrow(lookup_feature_id_tbl) != base::length(lookup_hashkey)) {
+  if (base::nrow(lookup_tbl) == 0) {
     base::suppressWarnings(DBI::dbDisconnect(conn))
 
-    unknown_values <- table$feature_name[base::which(!table$feature_hashkey %in% lookup_feature_id_tbl$feature_hashkey)]
+    unknown_values <- base::setdiff(base::unique(table$feature_name), base::unique(lookup_tbl$input_feature_name))
 
     SigRepo::showMetabolomicsErrorMessage(
-      db_table_name = ref_table,
-      unknown_values = unknown_values
+      db_table_name = config$lookup_table,
+      unknown_values = unknown_values,
+      feature_database = config$feature_database,
+      attempted_growth = attempted_growth
     )
 
-    return(base::data.frame(table = ref_table, unknown_values = unknown_values))
+    return(base::data.frame(table = config$lookup_table, unknown_values = unknown_values))
   }
+
+  match_summary_tbl <- lookup_tbl |>
+    dplyr::distinct(.data$input_feature_name, .data$metabolite_id) |>
+    dplyr::count(.data$input_feature_name, name = "n_matches")
+
+  unresolved_values <- base::setdiff(base::unique(table$feature_name), base::unique(lookup_tbl$input_feature_name))
+  if (base::length(unresolved_values) > 0) {
+    base::suppressWarnings(DBI::dbDisconnect(conn))
+
+    SigRepo::showMetabolomicsErrorMessage(
+      db_table_name = config$lookup_table,
+      unknown_values = unresolved_values,
+      feature_database = config$feature_database,
+      attempted_growth = attempted_growth
+    )
+
+    return(base::data.frame(table = config$lookup_table, unknown_values = unresolved_values))
+  }
+
+  resolved_lookup_tbl <- lookup_tbl |>
+    dplyr::distinct(.data$input_feature_name, .data$metabolite_id) |>
+    dplyr::inner_join(
+      match_summary_tbl |>
+        dplyr::filter(.data$n_matches == 1) |>
+        dplyr::select(.data$input_feature_name),
+      by = "input_feature_name"
+    )
+
+  ambiguity_report <- buildMetabolomicsAmbiguityReport(
+    lookup_tbl = lookup_tbl |>
+      dplyr::filter(.data$input_feature_name %in% (match_summary_tbl |>
+        dplyr::filter(.data$n_matches > 1) |>
+        dplyr::pull(.data$input_feature_name)))
+  )
 
   table <- table |>
     dplyr::left_join(
-      lookup_feature_id_tbl |> dplyr::select(c("feature_hashkey", "feature_id")),
-      by = "feature_hashkey"
-    )
+      resolved_lookup_tbl,
+      by = c("feature_name" = "input_feature_name")
+    ) |>
+    dplyr::mutate(
+      feature_id = .data$metabolite_id,
+      match_status = dplyr::if_else(base::is.na(.data$feature_id), "ambiguous", "resolved")
+    ) |>
+    dplyr::select(-.data$metabolite_id)
 
   table <- SigRepo::createHashKey(
     table = table,
     hash_var = "sig_feature_hashkey",
-    hash_columns = c("signature_id", "feature_id", "assay_type", "probe_id"),
+    hash_columns = c("signature_id", "assay_type", "nomenclature_type", "probe_id", "feature_name"),
     hash_method = "md5"
   )
 
@@ -202,6 +216,29 @@ addMetabolomicsSignatureSet <- function(
     table = table,
     check_db_table = FALSE
   )
+
+  if (base::nrow(ambiguity_report) > 0) {
+    ambiguity_rows <- table |>
+      dplyr::filter(.data$match_status == "ambiguous") |>
+      dplyr::select(.data$feature_name, .data$sig_feature_hashkey) |>
+      dplyr::distinct() |>
+      dplyr::left_join(
+        lookup_tbl |>
+          dplyr::distinct(.data$input_feature_name, .data$metabolite_id),
+        by = c("feature_name" = "input_feature_name")
+      ) |>
+      dplyr::transmute(
+        sig_feature_hashkey = .data$sig_feature_hashkey,
+        candidate_metabolite_id = .data$metabolite_id
+      )
+
+    insertMetabolomicsAmbiguityRows(
+      conn = conn,
+      ambiguity_tbl = ambiguity_rows
+    )
+
+    SigRepo::showMetabolomicsAmbiguityMessage(ambiguity_tbl = ambiguity_report)
+  }
 
   base::suppressWarnings(DBI::dbDisconnect(conn))
 

@@ -23,5 +23,5 @@ refmet, hmdb, smiles, or inchikey.}
 \item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
 }
 \description{
-Add metabolomics feature set to a selected metabolite dictionary.
+Add metabolomics feature set to the canonical reference and xref tables.
 }
