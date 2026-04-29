@@ -9,7 +9,7 @@
 #' 'user_name', 'access'. Access types are owner, viewer, or editor.This argument is only relevant when 
 #' visibility is set to 'FALSE'. 
 #' @param metabolomics_nomenclature Optional metabolite dictionary for
-#' metabolomics signatures. One of refmet, hmdb, smiles, or inchikey.
+#' metabolomics signatures. One of refmet_id, refmet, hmdb, smiles, or inchikey.
 #' @param return_signature_id Logical; if 'TRUE', the function will 
 #' return the ID generated for the newly uploaded signature. Defaults to 'FALSE'.
 #' @param return_missing_features Logical; if set to 

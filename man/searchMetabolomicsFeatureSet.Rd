@@ -8,7 +8,6 @@ searchMetabolomicsFeatureSet(
   conn_handler = NULL,
   feature_database,
   feature_name = NULL,
-  chemical_name = NULL,
   verbose = TRUE
 )
 }
@@ -16,15 +15,15 @@ searchMetabolomicsFeatureSet(
 \item{conn_handler}{Optional R object obtained from SigRepo::newConnhandler().
 If NULL, the stored internal handle is used.}
 
-\item{feature_database}{Metabolomics dictionary to search. One of
-refmet, hmdb, smiles, or inchikey.}
+\item{feature_database}{Metabolomics dictionary to search against. One of
+refmet_id, refmet, hmdb, smiles, or inchikey. This
+chooses which identifier namespace should be matched in the mapping table.}
 
 \item{feature_name}{A feature, or list of features, to look up.}
-
-\item{chemical_name}{A chemical name, or list of chemical names, to look up.}
 
 \item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
 }
 \description{
-Search for metabolomics features in a selected metabolite dictionary.
+Search metabolomics features through a selected identifier
+namespace.
 }

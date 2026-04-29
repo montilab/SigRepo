@@ -8,7 +8,7 @@
 #' @param visibility Logical; whether the uploaded collection should be visible 
 #' and accessible to others, Defaults to 'FALSE'
 #' @param metabolomics_nomenclature Optional metabolite dictionary for
-#' metabolomics signatures. One of refmet, hmdb, smiles, or inchikey.
+#' metabolomics signatures. One of refmet_id, refmet, hmdb, smiles, or inchikey.
 #' @param check_difexp Logical; whether or not to check difexp
 #' table in the database. Defaults to 'TRUE'
 #' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'

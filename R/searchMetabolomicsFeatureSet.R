@@ -1,11 +1,12 @@
 #' @title searchMetabolomicsFeatureSet
-#' @description Search for metabolomics features in a selected metabolite dictionary.
+#' @description Search metabolomics features through a selected identifier
+#' namespace.
 #' @param conn_handler Optional R object obtained from SigRepo::newConnhandler().
 #' If NULL, the stored internal handle is used.
-#' @param feature_database Metabolomics dictionary to search. One of
-#' refmet, hmdb, smiles, or inchikey.
+#' @param feature_database Metabolomics dictionary to search against. One of
+#' refmet_id, refmet, hmdb, smiles, or inchikey. This
+#' chooses which identifier namespace should be matched in the mapping table.
 #' @param feature_name A feature, or list of features, to look up.
-#' @param chemical_name A chemical name, or list of chemical names, to look up.
 #' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #'
 #' @export
@@ -13,7 +14,6 @@ searchMetabolomicsFeatureSet <- function(
     conn_handler = NULL,
     feature_database,
     feature_name = NULL,
-    chemical_name = NULL,
     verbose = TRUE
 ){
 
@@ -41,10 +41,11 @@ searchMetabolomicsFeatureSet <- function(
       dplyr::transmute(
         metabolite_id = .data$metabolite_id,
         feature_name = .data$refmet_name,
-        chemical_name = .data$chemical_name,
+        refmet_id = .data$refmet_id,
         refmet_name = .data$refmet_name,
-        inchikey = .data$inchikey,
+        hmdb_id = .data$hmdb_id,
         smiles = .data$smiles,
+        inchikey = .data$inchikey,
         is_current = .data$is_current,
         version = .data$version
       )
@@ -61,16 +62,20 @@ searchMetabolomicsFeatureSet <- function(
     tbl <- xref_tbl |>
       dplyr::left_join(
         reference_tbl |>
-          dplyr::select(c("metabolite_id", "chemical_name", "refmet_name", "inchikey", "smiles", "is_current", "version")),
+          dplyr::select(c(
+            "metabolite_id", "refmet_id", "refmet_name", "hmdb_id",
+            "smiles", "inchikey", "is_current", "version"
+          )),
         by = "metabolite_id"
       ) |>
       dplyr::transmute(
         metabolite_id = .data$metabolite_id,
         feature_name = .data$source_value,
-        chemical_name = .data$chemical_name,
+        refmet_id = .data$refmet_id,
         refmet_name = .data$refmet_name,
-        inchikey = .data$inchikey,
+        hmdb_id = .data$hmdb_id,
         smiles = .data$smiles,
+        inchikey = .data$inchikey,
         is_primary = .data$is_primary,
         is_current = .data$is_current,
         version = .data$version
@@ -78,8 +83,7 @@ searchMetabolomicsFeatureSet <- function(
   }
 
   filter_var_list <- base::list(
-    "feature_name" = base::unique(feature_name),
-    "chemical_name" = base::unique(chemical_name)
+    "feature_name" = base::unique(feature_name)
   )
 
   for (r in base::seq_along(filter_var_list)) {

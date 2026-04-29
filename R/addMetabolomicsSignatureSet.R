@@ -5,8 +5,11 @@
 #' @param signature_id Database ID of the signature (required)
 #' @param signature_set A Data Frame; must contain the following column names:
 #' feature_name, probe_id, score, group_label (required)
-#' @param feature_database Metabolomics dictionary to target. One of
-#' refmet, hmdb, smiles, or inchikey.
+#' @param feature_database Metabolomics dictionary used by the incoming
+#' signature's \code{feature_name} column. One of refmet_id, refmet, hmdb,
+#' smiles, or inchikey. If \code{feature_database = "refmet"} and
+#' \code{signature_set} also contains \code{refmet_id}, those IDs are preferred
+#' for lookup over \code{feature_name}.
 #' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #'
 #' @export
@@ -90,25 +93,30 @@ addMetabolomicsSignatureSet <- function(
       match_status = "resolved"
     )
 
-  if (!"chemical_name" %in% base::colnames(table)) {
-    table <- table |> dplyr::mutate(chemical_name = NA_character_)
-  }
+  lookup_spec <- resolveMetabolomicsSignatureLookupSpec(
+    signature_set = table,
+    feature_database = config$feature_database
+  )
+
+  table <- table |>
+    dplyr::mutate(lookup_feature_value = lookup_spec$feature_values)
 
   lookup_tbl <- resolveMetabolomicsSignatureMatches(
     conn = conn,
-    feature_database = config$feature_database,
-    feature_values = table$feature_name
+    feature_database = lookup_spec$feature_database,
+    feature_values = table$lookup_feature_value
   )
 
   if (config$maintenance_model == "growing") {
-    missing_values <- base::setdiff(base::unique(table$feature_name), base::unique(lookup_tbl$input_feature_name))
+    missing_values <- base::setdiff(base::unique(table$lookup_feature_value), base::unique(lookup_tbl$input_feature_name))
 
     if (base::length(missing_values) > 0) {
       attempted_growth <- TRUE
       missing_feature_tbl <- table |>
-        dplyr::filter(.data$feature_name %in% missing_values) |>
-        dplyr::distinct(.data$feature_name, .data$chemical_name, .keep_all = TRUE) |>
+        dplyr::filter(.data$lookup_feature_value %in% missing_values) |>
+        dplyr::distinct(.data$lookup_feature_value, .keep_all = TRUE) |>
         dplyr::mutate(
+          feature_name = .data$lookup_feature_value,
           is_current = 1,
           version = as.integer(base::format(base::Sys.Date(), "%m%d%Y"))
         )
@@ -122,8 +130,8 @@ addMetabolomicsSignatureSet <- function(
 
       lookup_tbl <- resolveMetabolomicsSignatureMatches(
         conn = conn,
-        feature_database = config$feature_database,
-        feature_values = table$feature_name
+        feature_database = lookup_spec$feature_database,
+        feature_values = table$lookup_feature_value
       )
     }
   }
@@ -131,7 +139,7 @@ addMetabolomicsSignatureSet <- function(
   if (base::nrow(lookup_tbl) == 0) {
     base::suppressWarnings(DBI::dbDisconnect(conn))
 
-    unknown_values <- base::setdiff(base::unique(table$feature_name), base::unique(lookup_tbl$input_feature_name))
+    unknown_values <- base::setdiff(base::unique(table$lookup_feature_value), base::unique(lookup_tbl$input_feature_name))
 
     SigRepo::showMetabolomicsErrorMessage(
       db_table_name = config$lookup_table,
@@ -147,7 +155,7 @@ addMetabolomicsSignatureSet <- function(
     dplyr::distinct(.data$input_feature_name, .data$metabolite_id) |>
     dplyr::count(.data$input_feature_name, name = "n_matches")
 
-  unresolved_values <- base::setdiff(base::unique(table$feature_name), base::unique(lookup_tbl$input_feature_name))
+  unresolved_values <- base::setdiff(base::unique(table$lookup_feature_value), base::unique(lookup_tbl$input_feature_name))
   if (base::length(unresolved_values) > 0) {
     base::suppressWarnings(DBI::dbDisconnect(conn))
 
@@ -180,7 +188,7 @@ addMetabolomicsSignatureSet <- function(
   table <- table |>
     dplyr::left_join(
       resolved_lookup_tbl,
-      by = c("feature_name" = "input_feature_name")
+      by = c("lookup_feature_value" = "input_feature_name")
     ) |>
     dplyr::mutate(
       feature_id = .data$metabolite_id,
@@ -198,7 +206,7 @@ addMetabolomicsSignatureSet <- function(
   table <- SigRepo::checkTableInput(
     conn = conn,
     db_table_name = db_table_name,
-    table = table,
+    table = table |> dplyr::select(-.data$lookup_feature_value),
     check_db_table = TRUE
   )
 
