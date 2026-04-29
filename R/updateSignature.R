@@ -6,7 +6,7 @@
 #' @param visibility A logical value indicates whether or not to allow others  
 #' to view and access one's uploaded signature. Defaults to 'FALSE'.
 #' @param metabolomics_nomenclature Optional metabolite dictionary for
-#' metabolomics signatures. One of refmet, hmdb, smiles, or inchikey.
+#' metabolomics signatures. One of refmet_id, refmet, hmdb, smiles, or inchikey.
 #' @param verbose Logical;  whether or not to print the diagnostic messages. 
 #' Defaults to 'TRUE'.
 #' 

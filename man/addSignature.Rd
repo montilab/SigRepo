@@ -29,7 +29,7 @@ and accessible to others, Defaults to 'FALSE'}
 visibility is set to 'FALSE'.}
 
 \item{metabolomics_nomenclature}{Optional metabolite dictionary for
-metabolomics signatures. One of refmet, hmdb, smiles, or inchikey.}
+metabolomics signatures. One of refmet_id, refmet, hmdb, smiles, or inchikey.}
 
 \item{return_signature_id}{Logical; if 'TRUE', the function will 
 return the ID generated for the newly uploaded signature. Defaults to 'FALSE'.}

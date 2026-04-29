@@ -8,8 +8,10 @@
 #' @export
 #' @keywords internal
 print_messages <- function(verbose){
-  
-  base::options(warning.length = 2000L, show.error.messages	= TRUE, verbose = verbose)
+
+  verbose <- base::isTRUE(verbose)
+
+  base::options(warning.length = 2000L, show.error.messages = TRUE, verbose = verbose)
   
 }
 
@@ -22,7 +24,7 @@ print_messages <- function(verbose){
 verbose <- function(...){
   
   # Fetch verbose option
-  opt <- base::getOption("verbose")
+  opt <- base::isTRUE(base::getOption("verbose"))
   
   # If opt is FALSE
   if(!opt) return(base::invisible(NULL))

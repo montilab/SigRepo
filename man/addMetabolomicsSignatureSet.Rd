@@ -21,8 +21,11 @@ If NULL, the stored internal handle is used.}
 \item{signature_set}{A Data Frame; must contain the following column names:
 feature_name, probe_id, score, group_label (required)}
 
-\item{feature_database}{Metabolomics dictionary to target. One of
-refmet, hmdb, smiles, or inchikey.}
+\item{feature_database}{Metabolomics dictionary used by the incoming
+signature's \code{feature_name} column. One of refmet_id, refmet, hmdb,
+smiles, or inchikey. If \code{feature_database = "refmet"} and
+\code{signature_set} also contains \code{refmet_id}, those IDs are preferred
+for lookup over \code{feature_name}.}
 
 \item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
 }

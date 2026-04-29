@@ -4,6 +4,8 @@
 #' @param conn An established database connection
 #' @param db_table_name Name of a table in the database
 #' @param table A table in the database
+#' @param batch_size Optional number of rows per INSERT statement. Default NULL,
+#' which inserts the whole table in one statement.
 #' @param check_db_table whether to check database table. Default = TRUE.
 #' 
 #' @keywords internal
@@ -13,6 +15,7 @@ insert_table_sql <- function(
     conn, 
     db_table_name, 
     table,
+    batch_size = NULL,
     check_db_table = TRUE
 ){
   
@@ -40,50 +43,59 @@ insert_table_sql <- function(
     # Join column variables
     coln_var <- paste0("(", base::paste0(tbl_col_names, collapse = ", "), ")")    
     
-    # Get values of each row
-    coln_val <- base::seq_len(base::nrow(table)) |> 
-      purrr::map_chr(
-        function(r){
-          row_values <- purrr::map_chr(
-            tbl_col_names,
-            function(col_name) {
-              cell_value <- table[r, col_name][[1]]
-              if (cell_value %in% c("'NULL'", "NULL")) {
-                return("NULL")
-              }
-              as.character(DBI::dbQuoteString(conn, as.character(cell_value)))
-            }
-          )
+    if (base::is.null(batch_size) || !base::is.numeric(batch_size) || batch_size <= 0) {
+      batch_size <- base::nrow(table)
+    }
+    batch_size <- base::as.integer(batch_size[1])
 
-          values <- base::paste0(row_values, collapse = ", ")
-          if(r < base::nrow(table)){
-            values <- base::paste0("(", values, "),\n")
-          }else{
-            values <- base::paste0("(", values, ");\n")
-          }
-        }
-      ) |> base::paste0(collapse = "")
-    
-    # Create a SQL query to insert table into database
-    statement <- base::sprintf(
-      "
-      INSERT INTO %s %s
-      VALUES %s
-      ", db_table_name, coln_var, coln_val
+    row_batches <- base::split(
+      base::seq_len(base::nrow(table)),
+      ceiling(base::seq_len(base::nrow(table)) / batch_size)
     )
-    
-    # Export the sql statement to a sql file
-    #base::writeLines(statement, base::file.path("~/SigRepo/inst/data/sql_schemas", base::paste0(db_table_name, ".sql")))
-    
-    # Insert table into database
-    base::tryCatch({
-      base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = statement))
-    }, error = function(e){
-      # Disconnect from database ####
-      base::suppressWarnings(DBI::dbDisconnect(conn))  
-      # Return error message
-      base::stop(e, "\n")
-    })
+
+    purrr::walk(
+      row_batches,
+      function(batch_rows) {
+        batch_tbl <- table[batch_rows, , drop = FALSE]
+
+        coln_val <- base::seq_len(base::nrow(batch_tbl)) |>
+          purrr::map_chr(
+            function(r){
+              row_values <- purrr::map_chr(
+                tbl_col_names,
+                function(col_name) {
+                  cell_value <- batch_tbl[r, col_name][[1]]
+                  if (cell_value %in% c("'NULL'", "NULL")) {
+                    return("NULL")
+                  }
+                  as.character(DBI::dbQuoteString(conn, as.character(cell_value)))
+                }
+              )
+
+              values <- base::paste0(row_values, collapse = ", ")
+              if(r < base::nrow(batch_tbl)){
+                values <- base::paste0("(", values, "),\n")
+              }else{
+                values <- base::paste0("(", values, ");\n")
+              }
+            }
+          ) |> base::paste0(collapse = "")
+
+        statement <- base::sprintf(
+          "
+          INSERT INTO %s %s
+          VALUES %s
+          ", db_table_name, coln_var, coln_val
+        )
+
+        base::tryCatch({
+          base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = statement))
+        }, error = function(e){
+          base::suppressWarnings(DBI::dbDisconnect(conn))
+          base::stop(e, "\n")
+        })
+      }
+    )
     
   }
 }

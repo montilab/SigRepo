@@ -4,7 +4,13 @@
 \alias{insert_table_sql}
 \title{insert_table_sql}
 \usage{
-insert_table_sql(conn, db_table_name, table, check_db_table = TRUE)
+insert_table_sql(
+  conn,
+  db_table_name,
+  table,
+  batch_size = NULL,
+  check_db_table = TRUE
+)
 }
 \arguments{
 \item{conn}{An established database connection}
@@ -12,6 +18,9 @@ insert_table_sql(conn, db_table_name, table, check_db_table = TRUE)
 \item{db_table_name}{Name of a table in the database}
 
 \item{table}{A table in the database}
+
+\item{batch_size}{Optional number of rows per INSERT statement. Default NULL,
+which inserts the whole table in one statement.}
 
 \item{check_db_table}{whether to check database table. Default = TRUE.}
 }

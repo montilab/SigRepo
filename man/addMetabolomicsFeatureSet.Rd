@@ -7,7 +7,7 @@
 addMetabolomicsFeatureSet(
   conn_handler = NULL,
   feature_set,
-  feature_database,
+  feature_database = NULL,
   verbose = TRUE
 )
 }
@@ -15,13 +15,41 @@ addMetabolomicsFeatureSet(
 \item{conn_handler}{Optional R object obtained from SigRepo::newConnhandler().
 If NULL, the stored internal handle is used.}
 
-\item{feature_set}{A data frame containing metabolomics features.}
+\item{feature_set}{A data frame containing metabolite reference rows. Typical
+columns include \code{refmet_id}, \code{refmet_name}, \code{hmdb_id},
+\code{smiles}, \code{inchikey} (or \code{inchi_key}), \code{is_current},
+and \code{version}.}
 
-\item{feature_database}{Metabolomics dictionary to target. One of
-refmet, hmdb, smiles, or inchikey.}
+\item{feature_database}{Optional metabolomics identifier type used to interpret
+\code{feature_name}, when \code{feature_name} is supplied instead of a
+dedicated identifier column. One of refmet_id, refmet, hmdb, smiles, or
+inchikey. This argument does \emph{not} limit which
+mappings are inserted; all non-empty identifier columns in \code{feature_set}
+are uploaded to \code{metabolite_xref}. If omitted, SigRepo infers a primary
+identifier type from the non-empty identifier columns in \code{feature_set}.}
 
 \item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
 }
 \description{
-Add metabolomics feature set to the canonical reference and xref tables.
+Add metabolomics features to the canonical metabolite reference
+and mapping tables. Each input row is treated as a metabolite record that may
+contain multiple identifiers at once, and all non-empty identifier columns are
+written to the mapping table.
+}
+\details{
+Use this function to load the metabolite reference and mapping tables
+themselves. In the current API, \code{feature_database} acts only as an input
+hint so the function knows how to interpret \code{feature_name} if that
+generic column is used. It is most relevant when the uploaded table uses
+\code{feature_name} rather than explicit columns such as \code{hmdb_id} or
+\code{smiles}. When omitted, SigRepo infers the primary identifier type
+from the uploaded columns, preferring \code{refmet_id}, then
+\code{refmet_name}, followed by HMDB, SMILES, and InChIKey.
+
+By contrast, \code{feature_database} is semantically important in
+\code{searchMetabolomicsFeatureSet()} and \code{addMetabolomicsSignatureSet()},
+where the caller is explicitly choosing which identifier namespace to search
+or map against.
+
+Large uploads are inserted in batches to avoid oversized SQL statements.
 }

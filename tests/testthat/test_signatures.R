@@ -250,3 +250,43 @@ test_that("searchSignature returns consistent results", {
   
   
 })
+
+test_that("getSignatureFeatureSet returns raw signature_feature_set rows", {
+  test_conn <- SigRepo::test_conn_handler
+
+  expect_no_error({
+    test_transcriptomics_sig <- base::readRDS(
+      testthat::test_path("test_data", "test_data_transcriptomics.rds")
+    )
+  })
+
+  expect_no_error({
+    omic_signature_id <- SigRepo::addSignature(
+      conn_handler = test_conn,
+      omic_signature = test_transcriptomics_sig,
+      return_signature_id = TRUE,
+      verbose = FALSE
+    )
+  })
+
+  expect_no_error({
+    signature_feature_set <- SigRepo::getSignatureFeatureSet(
+      conn_handler = test_conn,
+      signature_id = omic_signature_id,
+      verbose = FALSE
+    )
+  })
+
+  expect_s3_class(signature_feature_set, "data.frame")
+  expect_true(base::nrow(signature_feature_set) > 0)
+  expect_true(base::all(signature_feature_set$signature_id == omic_signature_id))
+  expect_true(base::all(c("signature_id", "sig_feature_hashkey", "score", "group_label") %in% base::colnames(signature_feature_set)))
+
+  expect_no_error({
+    SigRepo::deleteSignature(
+      conn_handler = test_conn,
+      signature_id = omic_signature_id,
+      verbose = FALSE
+    )
+  })
+})

@@ -127,24 +127,11 @@ showMetabolomicsErrorMessage <- function(
     base::sprintf("\nYou can use 'searchMetabolomicsFeatureSet()' to see a list of available features.\n")
   )
 
-  if (feature_database %in% c("hmdb", "refmet")) {
+  if (feature_database %in% c("hmdb", "refmet", "refmet_id", "smiles", "inchikey")) {
     message_text <- c(
       message_text,
-      base::sprintf("\nCurated dictionaries such as HMDB and RefMet must be loaded before importing signatures.\n")
+      base::sprintf("\nCurated dictionaries such as RefMet IDs, RefMet names, HMDB, SMILES, and InChIKey must be loaded before importing signatures.\n")
     )
-  } else if (feature_database %in% c("smiles", "inchikey")) {
-    if (attempted_growth) {
-      message_text <- c(
-        message_text,
-        base::sprintf("\nSigRepo attempted to grow the '%s' dictionary during signature import, but these values were still unresolved.\n", feature_database),
-        base::sprintf("\nThis usually means the inserted values could not be matched back uniquely after import.\n")
-      )
-    } else {
-      message_text <- c(
-        message_text,
-        base::sprintf("\nSMILES and InChIKey dictionaries can grow during signature import when feature names are new.\n")
-      )
-    }
   }
 
   do.call(base::warning, as.list(message_text))
@@ -181,7 +168,7 @@ showMetabolomicsAmbiguityMessage <- function(
   base::warning(
     "\nAmbiguous metabolomics identifier mappings were detected:\n",
     base::paste0(ambiguity_text, collapse = "\n"),
-    "\nResolve these mappings before importing the signature.\n"
+    "\nThe signature was uploaded, but these rows were marked ambiguous.\n"
   )
 }
 

@@ -1,17 +1,45 @@
 #' @title addMetabolomicsFeatureSet
-#' @description Add metabolomics feature set to the canonical reference and xref tables.
+#' @description Add metabolomics features to the canonical metabolite reference
+#' and mapping tables. Each input row is treated as a metabolite record that may
+#' contain multiple identifiers at once, and all non-empty identifier columns are
+#' written to the mapping table.
 #' @param conn_handler Optional R object obtained from SigRepo::newConnhandler().
 #' If NULL, the stored internal handle is used.
-#' @param feature_set A data frame containing metabolomics features.
-#' @param feature_database Metabolomics dictionary to target. One of
-#' refmet, hmdb, smiles, or inchikey.
+#' @param feature_set A data frame containing metabolite reference rows. Typical
+#' columns include \code{refmet_id}, \code{refmet_name}, \code{hmdb_id},
+#' \code{smiles}, \code{inchikey} (or \code{inchi_key}), \code{is_current},
+#' and \code{version}.
+#' @param feature_database Optional metabolomics identifier type used to interpret
+#' \code{feature_name}, when \code{feature_name} is supplied instead of a
+#' dedicated identifier column. One of refmet_id, refmet, hmdb, smiles, or
+#' inchikey. This argument does \emph{not} limit which
+#' mappings are inserted; all non-empty identifier columns in \code{feature_set}
+#' are uploaded to \code{metabolite_xref}. If omitted, SigRepo infers a primary
+#' identifier type from the non-empty identifier columns in \code{feature_set}.
 #' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
+#'
+#' @details
+#' Use this function to load the metabolite reference and mapping tables
+#' themselves. In the current API, \code{feature_database} acts only as an input
+#' hint so the function knows how to interpret \code{feature_name} if that
+#' generic column is used. It is most relevant when the uploaded table uses
+#' \code{feature_name} rather than explicit columns such as \code{hmdb_id} or
+#' \code{smiles}. When omitted, SigRepo infers the primary identifier type
+#' from the uploaded columns, preferring \code{refmet_id}, then
+#' \code{refmet_name}, followed by HMDB, SMILES, and InChIKey.
+#'
+#' By contrast, \code{feature_database} is semantically important in
+#' \code{searchMetabolomicsFeatureSet()} and \code{addMetabolomicsSignatureSet()},
+#' where the caller is explicitly choosing which identifier namespace to search
+#' or map against.
+#'
+#' Large uploads are inserted in batches to avoid oversized SQL statements.
 #'
 #' @export
 addMetabolomicsFeatureSet <- function(
     conn_handler = NULL,
     feature_set,
-    feature_database,
+    feature_database = NULL,
     verbose = TRUE
 ){
 
@@ -25,16 +53,17 @@ addMetabolomicsFeatureSet <- function(
     required_role = "admin"
   )
 
+  if (base::length(feature_database) == 0 || base::all(feature_database %in% c("", NA))) {
+    feature_database <- inferMetabolomicsFeatureDatabase(feature_set = feature_set)
+  }
+
   config <- resolveMetabolomicsFeatureConfig(feature_database = feature_database)
   normalized_tbl <- normalizeMetabolomicsFeatureSet(
     feature_set = feature_set,
     feature_database = config$feature_database
   )
 
-  required_column_fields <- c("feature_name", "is_current", "version")
-  if (config$maintenance_model == "curated") {
-    required_column_fields <- c(required_column_fields, "chemical_name")
-  }
+  required_column_fields <- c("refmet_id", "refmet_name", "is_current", "version")
 
   if (base::any(base::is.na(normalized_tbl[, required_column_fields]) == TRUE)) {
     base::suppressWarnings(DBI::dbDisconnect(conn))
@@ -74,6 +103,7 @@ addMetabolomicsFeatureSet <- function(
       conn = conn,
       db_table_name = config$reference_table,
       table = reference_tbl,
+      batch_size = 500,
       check_db_table = FALSE
     )
   }
@@ -85,6 +115,8 @@ addMetabolomicsFeatureSet <- function(
 
   lookup_reference_tbl <- addMetaboliteHashKey(lookup_reference_tbl)
 
+  metabolite_identity_columns <- c("refmet_id", "refmet_name", "hmdb_id", "smiles", "inchikey")
+
   metabolite_tbl <- SigRepo::lookup_table_sql(
     conn = conn,
     db_table_name = config$reference_table,
@@ -94,14 +126,22 @@ addMetabolomicsFeatureSet <- function(
     check_db_table = FALSE
   )
 
+  xref_hash_lookup_tbl <- buildMetabolomicsXrefRows(
+    feature_set = normalized_tbl,
+    feature_database = config$feature_database
+  ) |>
+    dplyr::select(dplyr::all_of(metabolite_identity_columns)) |>
+    dplyr::distinct() |>
+    addMetaboliteHashKey() |>
+    dplyr::select(dplyr::all_of(c(metabolite_identity_columns, "metabolite_hashkey")))
+
   xref_tbl <- buildMetabolomicsXrefRows(
     feature_set = normalized_tbl,
     feature_database = config$feature_database
   ) |>
     dplyr::left_join(
-      lookup_reference_tbl |>
-        dplyr::select(c("chemical_name", "refmet_name", "inchikey", "smiles", "metabolite_hashkey")),
-      by = c("chemical_name", "refmet_name", "inchikey", "smiles")
+      xref_hash_lookup_tbl,
+      by = metabolite_identity_columns
     ) |>
     dplyr::left_join(
       metabolite_tbl,
@@ -148,6 +188,7 @@ addMetabolomicsFeatureSet <- function(
       conn = conn,
       db_table_name = config$xref_table,
       table = xref_tbl,
+      batch_size = 1000,
       check_db_table = FALSE
     )
   }

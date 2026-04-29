@@ -3,13 +3,13 @@
 #'
 #' @keywords internal
 metabolomics_feature_tables <- base::data.frame(
-  feature_database = c("refmet", "hmdb", "smiles", "inchikey"),
-  reference_table = c("metabolite_reference", "metabolite_reference", "metabolite_reference", "metabolite_reference"),
-  xref_table = c("metabolite_xref", "metabolite_xref", "metabolite_xref", "metabolite_xref"),
-  lookup_table = c("metabolite_reference", "metabolite_xref", "metabolite_xref", "metabolite_xref"),
-  lookup_column = c("refmet_name", "source_value", "source_value", "source_value"),
-  xref_source_db = c("refmet", "hmdb", "smiles", "inchikey"),
-  maintenance_model = c("curated", "curated", "growing", "growing"),
+  feature_database = c("refmet_id", "refmet", "hmdb", "smiles", "inchikey"),
+  reference_table = rep("metabolite_reference", 5),
+  xref_table = rep("metabolite_xref", 5),
+  lookup_table = c("metabolite_xref", "metabolite_reference", "metabolite_xref", "metabolite_xref", "metabolite_xref"),
+  lookup_column = c("source_value", "refmet_name", "source_value", "source_value", "source_value"),
+  xref_source_db = c("refmet_id", "refmet", "hmdb", "smiles", "inchikey"),
+  maintenance_model = c("curated", "curated", "curated", "curated", "curated"),
   stringsAsFactors = FALSE
 )
 
@@ -82,6 +82,87 @@ getMetabolomicsColumn <- function(table, candidates, default = NULL) {
   table[[matched[1]]]
 }
 
+inferMetabolomicsFeatureDatabase <- function(feature_set) {
+  table <- base::as.data.frame(feature_set, stringsAsFactors = FALSE)
+  base::colnames(table) <- base::tolower(base::colnames(table))
+
+  feature_database_candidates <- base::list(
+    "refmet_id" = c("refmet_id", "refmetid"),
+    "refmet" = c("refmet_name", "refmet"),
+    "hmdb" = c("hmdb_id", "hmdb", "hmdb_ids"),
+    "smiles" = c("smiles"),
+    "inchikey" = c("inchikey", "inchi_key")
+  )
+
+  for (feature_database in base::names(feature_database_candidates)) {
+    values <- getMetabolomicsColumn(
+      table = table,
+      candidates = feature_database_candidates[[feature_database]],
+      default = NULL
+    )
+    if (!base::is.null(values) && !isEmptyMetabolomicsValue(values)) {
+      return(feature_database)
+    }
+  }
+
+  if ("feature_name" %in% base::colnames(table)) {
+    return("refmet")
+  }
+
+  base::stop(
+    "'feature_database' is required when 'feature_set' does not contain any recognized identifier columns. ",
+    "Expected one of: refmet_id, refmet_name/refmet, hmdb_id, smiles, or inchikey."
+  )
+}
+
+getMetabolomicsSignatureLookupValues <- function(
+    signature_set,
+    feature_database
+) {
+  table <- base::as.data.frame(signature_set, stringsAsFactors = FALSE)
+  base::colnames(table) <- base::tolower(base::colnames(table))
+
+  if (feature_database == "refmet") {
+    refmet_ids <- getMetabolomicsColumn(table, c("refmet_id", "refmetid"), default = NULL)
+    if (!base::is.null(refmet_ids) && !isEmptyMetabolomicsValue(refmet_ids)) {
+      return(base::as.character(refmet_ids))
+    }
+  }
+
+  feature_name <- getMetabolomicsColumn(table, "feature_name", default = NULL)
+  if (base::is.null(feature_name)) {
+    base::stop("'signature_set' must contain a 'feature_name' column.")
+  }
+
+  base::as.character(feature_name)
+}
+
+resolveMetabolomicsSignatureLookupSpec <- function(
+    signature_set,
+    feature_database
+) {
+  lookup_values <- getMetabolomicsSignatureLookupValues(
+    signature_set = signature_set,
+    feature_database = feature_database
+  )
+
+  resolved_feature_database <- feature_database
+
+  if (feature_database == "refmet") {
+    looks_like_refmet_id <- !base::is.na(lookup_values) &
+      base::grepl("^RM[0-9]+$", base::trimws(base::toupper(base::as.character(lookup_values))))
+
+    if (base::length(lookup_values) > 0 && base::all(looks_like_refmet_id)) {
+      resolved_feature_database <- "refmet_id"
+    }
+  }
+
+  base::list(
+    feature_database = resolved_feature_database,
+    feature_values = lookup_values
+  )
+}
+
 normalizeMetabolomicsFeatureSet <- function(
     feature_set,
     feature_database
@@ -92,28 +173,43 @@ normalizeMetabolomicsFeatureSet <- function(
   normalized_colnames <- base::tolower(original_colnames)
   base::colnames(table) <- normalized_colnames
 
-  feature_name <- getMetabolomicsColumn(table, "feature_name")
-  if (is.null(feature_name)) {
-    base::stop("'feature_set' must contain a 'feature_name' column.")
-  }
-
-  chemical_name <- getMetabolomicsColumn(table, c("chemical_name", "chemicalname"), NA_character_)
+  feature_name <- getMetabolomicsColumn(table, "feature_name", NA_character_)
+  refmet_id <- getMetabolomicsColumn(table, c("refmet_id", "refmetid"), NA_character_)
   refmet_name <- getMetabolomicsColumn(table, c("refmet_name", "refmet"), NA_character_)
-  hmdb <- getMetabolomicsColumn(table, c("hmdb", "hmdb_id", "hmdb_ids"), NA_character_)
+  hmdb_id <- getMetabolomicsColumn(table, c("hmdb_id", "hmdb", "hmdb_ids"), NA_character_)
   smiles <- getMetabolomicsColumn(table, "smiles", NA_character_)
   inchikey <- getMetabolomicsColumn(table, c("inchikey", "inchi_key"), NA_character_)
 
+  if (isEmptyMetabolomicsValue(feature_name)) {
+    feature_name <- switch(
+      feature_database,
+      refmet_id = refmet_id,
+      refmet = refmet_name,
+      hmdb = hmdb_id,
+      smiles = smiles,
+      inchikey = inchikey,
+      refmet_name
+    )
+  }
+
+  if (feature_database == "refmet_id" && isEmptyMetabolomicsValue(refmet_id)) {
+    refmet_id <- feature_name
+  }
   if (feature_database == "refmet" && isEmptyMetabolomicsValue(refmet_name)) {
     refmet_name <- feature_name
   }
-  if (feature_database == "hmdb" && isEmptyMetabolomicsValue(hmdb)) {
-    hmdb <- feature_name
+  if (feature_database == "hmdb" && isEmptyMetabolomicsValue(hmdb_id)) {
+    hmdb_id <- feature_name
   }
   if (feature_database == "smiles" && isEmptyMetabolomicsValue(smiles)) {
     smiles <- feature_name
   }
   if (feature_database == "inchikey" && isEmptyMetabolomicsValue(inchikey)) {
     inchikey <- feature_name
+  }
+
+  if (isEmptyMetabolomicsValue(feature_name)) {
+    base::stop("'feature_set' must contain either 'feature_name' or the selected metabolomics identifier column.")
   }
 
   is_current <- getMetabolomicsColumn(table, "is_current")
@@ -131,9 +227,9 @@ normalizeMetabolomicsFeatureSet <- function(
 
   normalized <- base::data.frame(
     feature_name = base::as.character(feature_name),
-    chemical_name = base::as.character(chemical_name),
+    refmet_id = base::as.character(refmet_id),
     refmet_name = base::as.character(refmet_name),
-    hmdb = base::as.character(hmdb),
+    hmdb_id = base::as.character(hmdb_id),
     smiles = base::as.character(smiles),
     inchikey = base::as.character(inchikey),
     is_current = is_current,
@@ -186,10 +282,11 @@ buildMetabolomicsReferenceRows <- function(feature_set, feature_database) {
 
   table |>
     dplyr::transmute(
-      chemical_name = dplyr::na_if(.data$chemical_name, ""),
+      refmet_id = dplyr::na_if(.data$refmet_id, ""),
       refmet_name = dplyr::na_if(.data$refmet_name, ""),
-      inchikey = dplyr::na_if(.data$inchikey, ""),
+      hmdb_id = dplyr::na_if(.data$hmdb_id, ""),
       smiles = dplyr::na_if(.data$smiles, ""),
+      inchikey = dplyr::na_if(.data$inchikey, ""),
       is_current = .data$is_current,
       version = .data$version
     ) |>
@@ -197,23 +294,7 @@ buildMetabolomicsReferenceRows <- function(feature_set, feature_database) {
 }
 
 addMetaboliteHashKey <- function(reference_tbl) {
-  hash_columns <- c("chemical_name", "refmet_name", "inchikey", "smiles")
-
-  hash_ready_tbl <- reference_tbl |>
-    dplyr::mutate(
-      dplyr::across(
-        dplyr::all_of(hash_columns),
-        ~ dplyr::if_else(base::is.na(.x), "__na__", base::as.character(.x))
-      )
-    )
-
-  hash_tbl <- SigRepo::createHashKey(
-    table = hash_ready_tbl,
-    hash_var = "metabolite_hashkey",
-    hash_columns = hash_columns,
-    hash_method = "md5"
-  ) |>
-    dplyr::select(dplyr::all_of(c(hash_columns, "is_current", "version", "metabolite_hashkey")))
+  hash_columns <- c("refmet_id", "refmet_name", "hmdb_id", "smiles", "inchikey")
 
   reference_tbl |>
     dplyr::mutate(
@@ -222,9 +303,10 @@ addMetaboliteHashKey <- function(reference_tbl) {
         ~ dplyr::if_else(base::is.na(.x), "__na__", base::as.character(.x))
       )
     ) |>
-    dplyr::left_join(
-      hash_tbl,
-      by = c("chemical_name", "refmet_name", "inchikey", "smiles", "is_current", "version")
+    SigRepo::createHashKey(
+      hash_var = "metabolite_hashkey",
+      hash_columns = hash_columns,
+      hash_method = "md5"
     ) |>
     dplyr::mutate(
       dplyr::across(
@@ -240,7 +322,7 @@ buildMetabolomicsXrefRows <- function(feature_set, feature_database) {
     feature_database = feature_database
   )
 
-  source_columns <- c("hmdb", "smiles", "inchikey")
+  source_columns <- c("hmdb_id", "smiles", "inchikey")
   xref_rows <- purrr::map_dfr(
     source_columns,
     function(source_name) {
@@ -253,11 +335,12 @@ buildMetabolomicsXrefRows <- function(feature_set, feature_database) {
           }
 
           base::data.frame(
-            chemical_name = table$chemical_name[r],
+            refmet_id = table$refmet_id[r],
             refmet_name = table$refmet_name[r],
-            inchikey = table$inchikey[r],
+            hmdb_id = table$hmdb_id[r],
             smiles = table$smiles[r],
-            source_db = source_name,
+            inchikey = table$inchikey[r],
+            source_db = base::sub("_id$", "", source_name),
             source_value = values,
             stringsAsFactors = FALSE
           )
@@ -268,13 +351,28 @@ buildMetabolomicsXrefRows <- function(feature_set, feature_database) {
     }
   )
 
+  if (!isEmptyMetabolomicsValue(table$refmet_id)) {
+    refmet_id_rows <- table |>
+      dplyr::transmute(
+        refmet_id = .data$refmet_id,
+        refmet_name = .data$refmet_name,
+        hmdb_id = .data$hmdb_id,
+        smiles = .data$smiles,
+        inchikey = .data$inchikey,
+        source_db = "refmet_id",
+        source_value = .data$refmet_id
+      )
+    xref_rows <- dplyr::bind_rows(xref_rows, refmet_id_rows)
+  }
+
   if (!isEmptyMetabolomicsValue(table$refmet_name)) {
     refmet_rows <- table |>
       dplyr::transmute(
-        chemical_name = .data$chemical_name,
+        refmet_id = .data$refmet_id,
         refmet_name = .data$refmet_name,
-        inchikey = .data$inchikey,
+        hmdb_id = .data$hmdb_id,
         smiles = .data$smiles,
+        inchikey = .data$inchikey,
         source_db = "refmet",
         source_value = .data$refmet_name
       )
@@ -283,10 +381,11 @@ buildMetabolomicsXrefRows <- function(feature_set, feature_database) {
 
   xref_rows |>
     dplyr::mutate(
-      chemical_name = dplyr::na_if(.data$chemical_name, ""),
+      refmet_id = dplyr::na_if(.data$refmet_id, ""),
       refmet_name = dplyr::na_if(.data$refmet_name, ""),
-      inchikey = dplyr::na_if(.data$inchikey, ""),
-      smiles = dplyr::na_if(.data$smiles, "")
+      hmdb_id = dplyr::na_if(.data$hmdb_id, ""),
+      smiles = dplyr::na_if(.data$smiles, ""),
+      inchikey = dplyr::na_if(.data$inchikey, "")
     ) |>
     dplyr::distinct()
 }

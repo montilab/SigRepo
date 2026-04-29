@@ -29,7 +29,7 @@ OmicSignature package (required).}
 and accessible to others, Defaults to 'FALSE'}
 
 \item{metabolomics_nomenclature}{Optional metabolite dictionary for
-metabolomics signatures. One of refmet, hmdb, smiles, or inchikey.}
+metabolomics signatures. One of refmet_id, refmet, hmdb, smiles, or inchikey.}
 
 \item{check_difexp}{Logical; whether or not to check difexp
 table in the database. Defaults to 'TRUE'}
