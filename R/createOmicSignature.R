@@ -85,7 +85,11 @@ createOmicSignature <- function(
       # Disconnect from database ####
       base::suppressWarnings(DBI::dbDisconnect(conn))
       # Show message
-      base::stop("\nSomething went wrong with API. Cannot get difexp table from the SigRepo database. Please contact admin for support.\n")
+      SigRepo::stop_for_api_error(
+        res = res,
+        api_url = api_url,
+        action = "retrieve the difexp table from the SigRepo API"
+      )
     }else{
       difexp <- jsonlite::fromJSON(jsonlite::fromJSON(base::rawToChar(res$content)))
     }

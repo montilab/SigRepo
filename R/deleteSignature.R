@@ -145,7 +145,11 @@ deleteSignature <- function(
         # Disconnect from database ####
         base::suppressWarnings(DBI::dbDisconnect(conn))
         # Show message
-        base::stop("Something went wrong with API. Cannot delete difexp table from the database. Please contact admin for support.\n")
+        SigRepo::stop_for_api_error(
+          res = res,
+          api_url = api_url,
+          action = "delete the difexp table from the SigRepo API"
+        )
       }
     }
     

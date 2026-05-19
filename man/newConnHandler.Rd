@@ -10,7 +10,7 @@ newConnHandler(
   port = 3306,
   user = "guest",
   password = "guest",
-  api_host = "sigrepo.org",
+  api_host = "http://142.93.67.157:8020",
   api_port = 8020
 )
 }
