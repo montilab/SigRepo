@@ -5,6 +5,10 @@
 #' OmicSignature package (required) 
 #' @param visibility Logical; whether the uploaded collection should be visible 
 #' and accessible to others, Defaults to 'FALSE'
+#' @param metabolomics_nomenclature Optional metabolite dictionary for
+#' metabolomics signatures in the collection. One of refmet, hmdb, smiles,
+#' or inchikey. A single value applies to all metabolomics signatures; a
+#' named vector or named list can be used to specify values per signature name.
 #' @param return_collection_id Logical; whether to return the ID of the uploaded collection
 #' Defaults to 'FALSE'
 #' @param verbose Logical; whether to print diagnostic messages. 
@@ -58,6 +62,7 @@ addCollection <- function(
     conn_handler = NULL,
     omic_collection,
     visibility = FALSE,
+    metabolomics_nomenclature = NULL,
     return_collection_id = FALSE,
     verbose = TRUE
 ){
@@ -146,15 +151,65 @@ addCollection <- function(
     
     # Add signature into the database ####
     signature_id_list <- c()
+
+    resolve_collection_metabolomics_nomenclature <- function(
+        metabolomics_nomenclature,
+        omic_signature,
+        signature_name,
+        signature_index
+    ) {
+      if (omic_signature$metadata$assay_type[1] != "metabolomics") {
+        return(NULL)
+      }
+
+      if (base::length(metabolomics_nomenclature) == 0 || base::all(metabolomics_nomenclature %in% c("", NA))) {
+        return(NULL)
+      }
+
+      if (methods::is(metabolomics_nomenclature, "list")) {
+        if (!base::is.null(base::names(metabolomics_nomenclature)) &&
+            signature_name %in% base::names(metabolomics_nomenclature)) {
+          return(metabolomics_nomenclature[[signature_name]])
+        }
+        if (base::length(metabolomics_nomenclature) == 1) {
+          return(metabolomics_nomenclature[[1]])
+        }
+        if (base::length(metabolomics_nomenclature) >= signature_index) {
+          return(metabolomics_nomenclature[[signature_index]])
+        }
+      }
+
+      if (!base::is.null(base::names(metabolomics_nomenclature)) &&
+          signature_name %in% base::names(metabolomics_nomenclature)) {
+        return(metabolomics_nomenclature[[signature_name]])
+      }
+
+      if (base::length(metabolomics_nomenclature) == 1) {
+        return(metabolomics_nomenclature[1])
+      }
+
+      if (base::length(metabolomics_nomenclature) >= signature_index) {
+        return(metabolomics_nomenclature[signature_index])
+      }
+
+      metabolomics_nomenclature
+    }
     
     for(c in base::seq_along(omic_sig_list)){
       #c=1;
       SigRepo::verbose("Uploading Signature: ", base::names(omic_sig_list[c]))
+      sig_metabolomics_nomenclature <- resolve_collection_metabolomics_nomenclature(
+        metabolomics_nomenclature = metabolomics_nomenclature,
+        omic_signature = omic_sig_list[[c]],
+        signature_name = base::names(omic_sig_list[c]),
+        signature_index = c
+      )
       signature_id <- base::tryCatch({
         SigRepo::addSignature(
           omic_signature = omic_sig_list[[c]],
           conn_handler = conn_handler,
           visibility = visibility,
+          metabolomics_nomenclature = sig_metabolomics_nomenclature,
           return_signature_id = TRUE,
           verbose = FALSE
         )
@@ -273,4 +328,3 @@ addCollection <- function(
 
   }
 }
-

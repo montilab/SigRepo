@@ -8,6 +8,7 @@ addCollection(
   conn_handler = NULL,
   omic_collection,
   visibility = FALSE,
+  metabolomics_nomenclature = NULL,
   return_collection_id = FALSE,
   verbose = TRUE
 )
@@ -20,6 +21,11 @@ OmicSignature package (required)}
 
 \item{visibility}{Logical; whether the uploaded collection should be visible 
 and accessible to others, Defaults to 'FALSE'}
+
+\item{metabolomics_nomenclature}{Optional metabolite dictionary for
+metabolomics signatures in the collection. One of refmet, hmdb, smiles,
+or inchikey. A single value applies to all metabolomics signatures; a
+named vector or named list can be used to specify values per signature name.}
 
 \item{return_collection_id}{Logical; whether to return the ID of the uploaded collection
 Defaults to 'FALSE'}

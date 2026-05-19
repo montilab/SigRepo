@@ -22,7 +22,7 @@ newConnHandler <- function(
     port = 3306,
     user = "guest",
     password = "guest",
-    api_host = "sigrepo.org",
+    api_host = "http://142.93.67.157:8020",
     api_port = 8020
 ){
   
@@ -156,6 +156,18 @@ build_api_url <- function(
     stop("'endpoint' must have length 1 and not be empty.")
   }
 
+  base_url <- api_handle$api_host[1]
+
+  if (!grepl("^https?://", base_url, perl = TRUE)) {
+    base_url <- paste0("http://", base_url)
+  }
+
+  base_url <- sub("/+$", "", base_url)
+
+  if (!grepl(":[0-9]+$", base_url, perl = TRUE)) {
+    base_url <- sprintf("%s:%s", base_url, api_handle$api_port[1])
+  }
+
   query_string <- ""
   if (length(query) > 0) {
     query_string <- paste0(
@@ -169,12 +181,46 @@ build_api_url <- function(
     )
   }
 
-  sprintf(
-    "http://%s:%s/%s%s",
-    api_handle$api_host[1],
-    api_handle$api_port[1],
-    sub("^/+", "", endpoint),
-    query_string
+  sprintf("%s/%s%s", base_url, sub("^/+", "", endpoint), query_string)
+}
+
+
+#' @title stop_for_api_error
+#' @description Raise a more informative API error from an httr response.
+#' @param res httr response object.
+#' @param api_url Request URL.
+#' @param action Human-readable action description.
+#' @keywords internal
+#' @export
+stop_for_api_error <- function(
+    res,
+    api_url,
+    action
+){
+
+  response_text <- base::tryCatch(
+    httr::content(res, as = "text", encoding = "UTF-8"),
+    error = function(e) ""
+  )
+
+  response_text <- base::trimws(response_text)
+  if (base::nchar(response_text) > 300) {
+    response_text <- base::paste0(base::substr(response_text, 1, 300), "...")
+  }
+
+  base::stop(
+    base::sprintf(
+      "\nAPI request failed while trying to %s.\nStatus code: %s\nURL: %s\n",
+      action,
+      res$status_code,
+      api_url
+    ),
+    if (base::nchar(response_text) > 0) {
+      base::sprintf("Response body: %s\n", response_text)
+    } else {
+      ""
+    },
+    "Please check your API host/port and whether the SigRepo API is running.\n"
   )
 }
 

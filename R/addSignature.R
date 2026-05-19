@@ -249,7 +249,11 @@ addSignature <- function(
         # Disconnect from database ####
         base::suppressWarnings(DBI::dbDisconnect(conn))
         # Show message
-        base::stop(base::sprintf("\tSomething went wrong with API. Cannot upload the difexp table to the SigRepo database. Please contact admin for support.\n"))
+        SigRepo::stop_for_api_error(
+          res = res,
+          api_url = api_url,
+          action = "upload the difexp table to the SigRepo API"
+        )
       }else{
         # Remove files from file system
         base::unlink(base::file.path(data_path, base::paste0(metadata_tbl$signature_hashkey[1], ".RDS")))
