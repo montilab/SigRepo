@@ -16,8 +16,8 @@
 #'   dbname = "sigrepo", 
 #'   host = "sigrepo.org", 
 #'   port = 3306, 
-#'   user = <your_username>, 
-#'   password = <your_password>
+#'   user = "your_username", 
+#'   password = "your_password"
 #' )
 #' 
 #' # Delete a list of signatures from a collection
