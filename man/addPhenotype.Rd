@@ -31,8 +31,8 @@ conn_handler <- SigRepo::newConnHandler(
   dbname = "sigrepo", 
   host = "sigrepo.org", 
   port = 3306, 
-  user = <your_username>, 
-  password = <your_password>
+  user = "your_username", 
+  password = "your_password"
 )
 
 # Add phenotypes to database

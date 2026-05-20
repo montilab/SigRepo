@@ -28,6 +28,10 @@ reference:
     desc: ~
     contents:
       - '`newConnHandler`'
+      - '`conn_init`'
+      - '`init_handle`'
+      - '`get_handle`'
+      - '`clear_handle`'
   
   - title: Search Data in Database
     desc: ~
@@ -43,6 +47,7 @@ reference:
       - '`searchSignature`'
       - '`searchTranscriptomicsFeatureSet`'
       - '`searchGeneticVariantsFeatureSet`'
+      - '`searchMetabolomicsFeatureSet`'
       - '`searchUser`'
     
   - title: Retrieve Data from Database
@@ -51,6 +56,7 @@ reference:
       - '`getAPIKey`'
       - '`getCollection`'
       - '`getSignature`'
+      - '`getSignatureFeatureSet`'
 
   - title: Import Data to Database
     desc: ~
@@ -62,6 +68,8 @@ reference:
       - '`addPlatform`'
       - '`addProteomicsFeatureSet`'
       - '`addProteomicsSignatureSet`'
+      - '`addMetabolomicsFeatureSet`'
+      - '`addMetabolomicsSignatureSet`'
       - '`addSampleType`'
       - '`addSignature`'
       - '`addSignatureToCollection`'
@@ -92,6 +100,14 @@ reference:
       - '`deleteUser`'
       - '`inActivateUser`'
       - '`removeSignatureFromCollection`'
+
+  - title: Compare Signatures
+    desc: ~
+    contents:
+      - '`compareSignatureFeatures`'
+      - '`compareSignatureScores`'
+      - '`plotSignatureOverlap`'
+      - '`signatureSetKsTest`'
       
   - title: Example Data
     desc: Example signatures included in the package

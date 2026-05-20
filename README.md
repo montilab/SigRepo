@@ -3,7 +3,7 @@
 # <img src="man/figures/logo.png" align="left" width="190" /> SigRepo: An R package for storing and processing omic signatures
 
 ![build](https://github.com/montilab/SigRepo/workflows/rcmdcheck/badge.svg)
-![pkgdown](https://github.com/montilab/SigRepo/workflows/gh-pages-pkgdown/badge.svg)
+![pkgdown](https://github.com/montilab/SigRepo/workflows/pkgdown/badge.svg)
 ![Docker pulls](https://img.shields.io/docker/pulls/montilab/sigrepo)
 ![Docker image
 size](https://img.shields.io/docker/image-size/montilab/sigrepo)
