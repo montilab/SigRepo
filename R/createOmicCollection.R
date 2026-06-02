@@ -120,7 +120,7 @@ createOmicCollection <- function(
     db_signature_tbl <- db_signature_tbl |> dplyr::select(dplyr::all_of(coln_names))
     
     # Create an OmicSignature object
-    omic_signature <- SigRepo::createOmicSignature(
+    omic_signature <- createOmicSignature(
       conn_handler = conn_handler,
       db_signature_tbl = db_signature_tbl
     )
@@ -152,7 +152,6 @@ createOmicCollection <- function(
   return(OmicCol)
   
 }
-
 
 
 

@@ -74,6 +74,90 @@ test_that("searchSignature correctly searches for the desired signature", {
   
 })
 
+test_that("getSignature returns the user-facing OmicSignature shape", {
+  test_conn <- SigRepo::test_conn_handler
+
+  expect_no_error({
+    test_transcriptomics_sig <- base::readRDS(
+      testthat::test_path("test_data", "test_data_transcriptomics.rds")
+    )
+  })
+
+  expect_no_error({
+    omic_signature_id <- SigRepo::addSignature(
+      conn_handler = test_conn,
+      omic_signature = test_transcriptomics_sig,
+      return_signature_id = TRUE,
+      verbose = FALSE
+    )
+  })
+
+  expect_no_error({
+    retrieved_signature <- SigRepo::getSignature(
+      conn_handler = test_conn,
+      signature_id = omic_signature_id,
+      verbose = FALSE
+    )[[1]]
+  })
+
+  internal_metadata_fields <- c(
+    "signature_id", "signature_hashkey", "organism_id", "phenotype_id",
+    "platform_id", "sample_type_id", "user_name", "visibility",
+    "date_created", "has_difexp", "num_of_difexp", "num_up_regulated",
+    "num_down_regulated", "platform_name"
+  )
+  expect_false(any(internal_metadata_fields %in% base::names(retrieved_signature$metadata)))
+  expect_equal(
+    base::sort(base::names(retrieved_signature$metadata)),
+    base::sort(base::names(test_transcriptomics_sig$metadata))
+  )
+  expect_equal(retrieved_signature$metadata$covariates, "none")
+  expect_equal(retrieved_signature$metadata$keywords, "Myc,KO,longevity")
+  expect_equal(retrieved_signature$metadata$PMID, "25619689")
+  expect_equal(retrieved_signature$metadata$year, "2015")
+
+  internal_signature_fields <- c(
+    "signature_id", "feature_id", "assay_type", "nomenclature_type",
+    "match_status", "feature_hashkey", "sig_feature_hashkey"
+  )
+  expect_false(any(internal_signature_fields %in% base::colnames(retrieved_signature$signature)))
+  expect_equal(
+    base::colnames(retrieved_signature$signature),
+    base::colnames(test_transcriptomics_sig$signature)
+  )
+
+  expected_signature_tbl <- test_transcriptomics_sig$signature |>
+    dplyr::arrange(.data$probe_id) |>
+    dplyr::mutate(group_label = base::as.character(.data$group_label))
+
+  retrieved_signature_tbl <- retrieved_signature$signature |>
+    dplyr::arrange(.data$probe_id) |>
+    dplyr::mutate(group_label = base::as.character(.data$group_label))
+
+  metadata_fields_to_match <- base::setdiff(
+    base::names(test_transcriptomics_sig$metadata),
+    c("covariates", "keywords", "PMID", "year")
+  )
+  purrr::walk(
+    metadata_fields_to_match,
+    function(field_name){
+      expect_equal(
+        retrieved_signature$metadata[[field_name]],
+        test_transcriptomics_sig$metadata[[field_name]]
+      )
+    }
+  )
+  expect_equal(retrieved_signature_tbl, expected_signature_tbl)
+
+  expect_no_error({
+    SigRepo::deleteSignature(
+      conn_handler = test_conn,
+      signature_id = omic_signature_id,
+      verbose = FALSE
+    )
+  })
+})
+
 test_that("searchSignature returns all signatures when no filters provided", {
   test_conn <- SigRepo::test_conn_handler
   

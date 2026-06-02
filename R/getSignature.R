@@ -175,7 +175,7 @@ getSignature <- function(
       db_signature_tbl <- signature_tbl |> dplyr::slice(r) 
       
       # Create an OmicSignature object
-      omic_signature <- SigRepo::createOmicSignature(
+      omic_signature <- createOmicSignature(
         conn_handler = conn_handler,
         db_signature_tbl = db_signature_tbl
       )
