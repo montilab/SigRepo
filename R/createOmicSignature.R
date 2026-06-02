@@ -1,3 +1,147 @@
+# Internal helpers for reconstructing user-facing OmicSignature objects.
+parseRetrievedMetadataList <- function(value, split_values = TRUE){
+  if(base::length(value) == 0 || base::all(value %in% c(NA, "", "NULL"))){
+    return(NULL)
+  }
+
+  if(!split_values){
+    return(utils::type.convert(base::as.character(value[1]), as.is = TRUE))
+  }
+
+  parsed_value <- base::strsplit(base::as.character(value[1]), split = ",", fixed = TRUE) |>
+    base::unlist() |>
+    base::trimws()
+
+  parsed_value <- parsed_value[!parsed_value %in% c(NA, "", "NULL")]
+
+  if(base::length(parsed_value) == 0){
+    return(NULL)
+  }
+
+  utils::type.convert(parsed_value, as.is = TRUE)
+}
+
+parseRetrievedScalarString <- function(value){
+  if(base::length(value) == 0 || base::all(value %in% c(NA, "", "NULL"))){
+    return(NULL)
+  }
+
+  base::as.character(value[1])
+}
+
+parseRetrievedOthers <- function(value){
+  if(base::length(value) == 0 || base::all(value %in% c(NA, "", "NULL"))){
+    return(NULL)
+  }
+
+  others_entries <- base::strsplit(base::as.character(value[1]), split = ";", perl = TRUE) |>
+    base::unlist() |>
+    base::trimws()
+
+  others_entries <- others_entries[others_entries != ""]
+
+  if(base::length(others_entries) == 0){
+    return(NULL)
+  }
+
+  others <- purrr::map(
+    others_entries,
+    function(entry){
+      entry_name <- base::sub(":.*$", "", entry, perl = TRUE) |> base::trimws()
+      entry_values <- base::sub("^[^:]+:\\s*", "", entry, perl = TRUE) |>
+        base::strsplit(split = ",", fixed = TRUE) |>
+        base::unlist() |>
+        base::trimws() |>
+        base::gsub(pattern = "^<|>$", replacement = "", x = _, perl = TRUE)
+
+      entry_values <- entry_values[entry_values != ""]
+
+      if(base::length(entry_values) == 0){
+        return(NULL)
+      }
+
+      utils::type.convert(entry_values, as.is = TRUE)
+    }
+  )
+
+  base::names(others) <- purrr::map_chr(
+    others_entries,
+    function(entry){
+      base::sub(":.*$", "", entry, perl = TRUE) |> base::trimws()
+    }
+  )
+
+  others <- others[!purrr::map_lgl(others, base::is.null)]
+
+  if(base::length(others) == 0){
+    return(NULL)
+  }
+
+  others
+}
+
+buildRetrievedMetadata <- function(db_signature_tbl){
+  metadata <- base::list(
+    signature_name = db_signature_tbl$signature_name[1],
+    organism = db_signature_tbl$organism[1],
+    direction_type = db_signature_tbl$direction_type[1],
+    assay_type = db_signature_tbl$assay_type[1],
+    phenotype = db_signature_tbl$phenotype[1]
+  )
+
+  optional_metadata <- base::list(
+    platform = parseRetrievedMetadataList(db_signature_tbl$platform_name, split_values = FALSE),
+    sample_type = parseRetrievedMetadataList(db_signature_tbl$sample_type, split_values = FALSE),
+    covariates = parseRetrievedScalarString(db_signature_tbl$covariates),
+    description = parseRetrievedMetadataList(db_signature_tbl$description, split_values = FALSE),
+    score_cutoff = parseRetrievedMetadataList(db_signature_tbl$score_cutoff, split_values = FALSE),
+    logfc_cutoff = parseRetrievedMetadataList(db_signature_tbl$logfc_cutoff, split_values = FALSE),
+    p_value_cutoff = parseRetrievedMetadataList(db_signature_tbl$p_value_cutoff, split_values = FALSE),
+    adj_p_cutoff = parseRetrievedMetadataList(db_signature_tbl$adj_p_cutoff, split_values = FALSE),
+    cutoff_description = parseRetrievedMetadataList(db_signature_tbl$cutoff_description, split_values = FALSE),
+    keywords = parseRetrievedScalarString(db_signature_tbl$keywords),
+    PMID = parseRetrievedScalarString(db_signature_tbl$PMID),
+    year = parseRetrievedScalarString(db_signature_tbl$year),
+    others = parseRetrievedOthers(db_signature_tbl$others)
+  )
+
+  optional_metadata <- optional_metadata[!purrr::map_lgl(optional_metadata, base::is.null)]
+
+  if("others" %in% base::names(optional_metadata) &&
+     "metabolomics_nomenclature" %in% base::names(optional_metadata$others)){
+    optional_metadata$others$metabolomics_nomenclature <- NULL
+
+    if(base::length(optional_metadata$others) == 0){
+      optional_metadata$others <- NULL
+      optional_metadata <- optional_metadata[!purrr::map_lgl(optional_metadata, base::is.null)]
+    }
+  }
+
+  c(metadata, optional_metadata)
+}
+
+sanitizeRetrievedSignature <- function(signature, direction_type){
+  signature_columns <- c("probe_id", "feature_name", "score", "group_label")
+  keep_columns <- signature_columns[signature_columns %in% base::colnames(signature)]
+
+  signature <- signature |>
+    dplyr::select(dplyr::all_of(keep_columns))
+
+  if("group_label" %in% base::colnames(signature) &&
+     direction_type %in% c("bi-directional", "categorical")){
+    signature <- signature |>
+      dplyr::mutate(
+        group_label = base::factor(
+          .data$group_label,
+          levels = base::unique(.data$group_label),
+          labels = base::unique(.data$group_label)
+        )
+      )
+  }
+
+  signature
+}
+
 #' @title createOmicSignature
 #' @description Get the signature set uploaded by a specific user in the database.
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
@@ -8,7 +152,6 @@
 #' 
 #' @keywords internal
 #' 
-#' @export
 createOmicSignature <- function(
     conn_handler = NULL,
     db_signature_tbl
@@ -33,22 +176,9 @@ createOmicSignature <- function(
   }
   
   # Create metadata
-  metadata <- db_signature_tbl |>
-    dplyr::mutate(PMID = base::as.character(.data$PMID)) |>
-    dplyr::mutate_if(base::is.character, function(x){ base::ifelse(base::is.na(x), "", x) }) |>
-    base::as.list()
-  
-  # Clean-up others ###
-  if(base::length(metadata$others) > 0 & base::all(!metadata$others %in% c("", NA))){
-    metadata$others <- base::strsplit(metadata$others, split = ";", perl = TRUE) |> base::unlist() |> base::trimws() |> 
-      purrr::lmap(function(x){ 
-        list_name <- base::gsub(pattern = "(.*?):(.*?)<(.*?)>", "\\1", x, perl = TRUE) |> base::trimws()
-        list_value <- base::gsub(pattern = "(.*?):(.*?)<(.*?)>", "\\3", x, perl = TRUE) |> base::strsplit(split = ",", fixed = TRUE) |> base::unlist() |> base::trimws()
-        list_obj <- base::list(object = list_value)
-        base::names(list_obj) <- list_name
-        return(list_obj)
-      }) 
-  }
+  metadata <- buildRetrievedMetadata(db_signature_tbl = db_signature_tbl)
+  metadata_lookup <- metadata
+  metadata_lookup$others <- parseRetrievedOthers(db_signature_tbl$others)
 
   # Get assay_type
   assay_type <- db_signature_tbl$assay_type[1]
@@ -59,7 +189,7 @@ createOmicSignature <- function(
   }else if(assay_type == "proteomics"){
     ref_table <- "proteomics_features"
   }else if(assay_type == "metabolomics"){
-    metabolomics_config <- resolveMetabolomicsFeatureConfig(metadata = metadata)
+    metabolomics_config <- resolveMetabolomicsFeatureConfig(metadata = metadata_lookup)
     ref_table <- metabolomics_config$reference_table
   }else if(assay_type == "methylomics"){
     SigRepo::showAssayTypeErrorMessage(unknown_values = assay_type)
@@ -254,26 +384,15 @@ createOmicSignature <- function(
   }
   
   # Rename table with appropriate column names 
-  if (assay_type == "metabolomics") {
-    if ("feature_name" %in% base::colnames(signature)) {
-      coln_names <- base::setdiff(
-        base::colnames(signature),
-        c("feature_id", "refmet_id", "refmet_name", "hmdb_id", "smiles", "inchikey", "resolved_feature_name", "ambiguity_feature_name")
-      )
-    } else {
-      coln_names <- base::colnames(signature) |>
-        base::replace(base::match("feature_id", base::colnames(signature)), "feature_name")
-      coln_names <- coln_names[!coln_names %in% c("refmet_id", "refmet_name", "hmdb_id", "smiles", "inchikey", "resolved_feature_name", "ambiguity_feature_name")]
-    }
-  } else {
-    coln_names <- base::colnames(signature) |> 
-      base::replace(base::match("feature_id", base::colnames(signature)), "feature_name")
+  if(!"feature_name" %in% base::colnames(signature) && "feature_id" %in% base::colnames(signature)){
+    base::colnames(signature)[base::match("feature_id", base::colnames(signature))] <- "feature_name"
   }
-  
-  # Extract the table with appropriate column names ####
-  signature <- signature |> 
-    dplyr::select(dplyr::all_of(coln_names)) |>
-    dplyr::mutate(group_label = if(metadata$direction_type[1] %in% c("bi-directional", "categorical")){ base::factor(.data$group_label, levels=base::unique(.data$group_label), labels=base::unique(.data$group_label)) }else{ .data$group_label })
+
+  # Extract the user-facing table ####
+  signature <- sanitizeRetrievedSignature(
+    signature = signature,
+    direction_type = metadata$direction_type[1]
+  )
   
   # Extract difexp with appropriate column names ####
   if(db_signature_tbl$has_difexp[1] == TRUE){
