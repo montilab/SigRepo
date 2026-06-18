@@ -37,6 +37,7 @@ Remotes:
 Suggests:
   BiocManager,
   devtools,
+  hypeR,
   knitr,
   pkgdown,
   rmarkdown,
