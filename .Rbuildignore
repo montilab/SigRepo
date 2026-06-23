@@ -36,3 +36,7 @@
 ^NEWS\.Rmd$
 ^refCheck\.R$
 ^\.Rproj\.user$
+^artifacts$
+^reference_files$
+^test_scripts$
+^R/hypeR_examples\.R$
