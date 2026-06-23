@@ -138,3 +138,52 @@ test_that("runHypeR handles multiple signatures and returns multihyp", {
   expect_equal(base::sort(base::names(hyp_res$signatures)), c("first_sig", "second_sig"))
   expect_equal(base::sort(base::unique(hyp_res$metadata$signature_name)), c("first_sig", "second_sig"))
 })
+
+test_that("runHypeR accepts hypeR gsets objects directly", {
+  testthat::skip_if_not_installed("hypeR")
+
+  utils::data("LLFS_Aging_Gene_2023", package = "SigRepo", envir = environment())
+
+  feature_hits <- base::unique(utils::head(LLFS_Aging_Gene_2023$signature$feature_name, 10))
+  genesets <- hypeR::gsets$new(
+    genesets = base::list(
+      hit_set = feature_hits,
+      miss_set = base::paste0("missing_", base::seq_len(10))
+    ),
+    name = "test_sets",
+    version = "v1",
+    quiet = TRUE
+  )
+
+  hyp_res <- SigRepo::runHypeR(
+    omic_signature = LLFS_Aging_Gene_2023,
+    genesets = genesets,
+    method = "hypergeo",
+    plotting = FALSE,
+    quiet = TRUE,
+    verbose = FALSE
+  )
+
+  expect_true("hyp" %in% class(hyp_res$result))
+})
+
+test_that("runHypeR can retrieve MSigDB genesets automatically", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("msigdbr")
+
+  utils::data("LLFS_Aging_Gene_2023", package = "SigRepo", envir = environment())
+
+  hyp_res <- base::suppressWarnings(
+    SigRepo::runHypeR(
+      omic_signature = LLFS_Aging_Gene_2023,
+      msigdb_collection = "H",
+      method = "hypergeo",
+      plotting = FALSE,
+      quiet = TRUE,
+      verbose = FALSE
+    )
+  )
+
+  expect_true("hyp" %in% class(hyp_res$result))
+  expect_true(base::grepl("H", hyp_res$result$info[["Genesets"]], fixed = TRUE))
+})

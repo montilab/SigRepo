@@ -110,6 +110,87 @@ resolveHypeRSignatureLabels <- function(omic_signatures) {
   base::make.unique(labels)
 }
 
+resolveHypeRGenesets <- function(
+    genesets = NULL,
+    msigdb_species = NULL,
+    msigdb_collection = NULL,
+    msigdb_subcollection = NULL,
+    msigdb_clean = FALSE
+) {
+  msigdb_requested <- !base::is.null(msigdb_collection) &&
+    base::length(msigdb_collection) > 0 &&
+    !base::all(msigdb_collection %in% c("", NA))
+
+  if (!base::is.null(genesets) && msigdb_requested) {
+    base::stop(
+      "\nSupply either 'genesets' or 'msigdb_collection', but not both.\n"
+    )
+  }
+
+  if (msigdb_requested) {
+    if (!requireNamespace("hypeR", quietly = TRUE)) {
+      base::stop(
+        "\nPackage 'hypeR' is required to retrieve MSigDB genesets. Please install it first.\n"
+      )
+    }
+
+    msigdb_species <- if (
+      base::is.null(msigdb_species) ||
+      base::length(msigdb_species) == 0 ||
+      base::all(msigdb_species %in% c("", NA))
+    ) {
+      "Homo sapiens"
+    } else {
+      base::as.character(msigdb_species[[1]])
+    }
+
+    msigdb_collection <- base::as.character(msigdb_collection[[1]])
+    msigdb_subcollection <- if (
+      base::is.null(msigdb_subcollection) ||
+      base::length(msigdb_subcollection) == 0 ||
+      base::all(msigdb_subcollection %in% c("", NA))
+    ) {
+      NULL
+    } else {
+      base::as.character(msigdb_subcollection[[1]])
+    }
+
+    return(
+      hypeR::msigdb_gsets(
+        species = msigdb_species,
+        collection = msigdb_collection,
+        subcollection = msigdb_subcollection,
+        clean = msigdb_clean
+      )
+    )
+  }
+
+  if (base::is.null(genesets)) {
+    base::stop(
+      "\nProvide either 'genesets' or specify an MSigDB collection with 'msigdb_collection'.\n"
+    )
+  }
+
+  if (
+    methods::is(genesets, "gsets") ||
+    methods::is(genesets, "rgsets")
+  ) {
+    return(genesets)
+  }
+
+  if (!methods::is(genesets, "list") || base::length(genesets) == 0) {
+    base::stop(
+      "\n'genesets' must be a non-empty named list, a hypeR gsets object, or a hypeR rgsets object.\n"
+    )
+  }
+
+  if (base::is.null(base::names(genesets)) || base::any(base::names(genesets) %in% c("", NA))) {
+    base::stop("\n'genesets' must be named.\n")
+  }
+
+  genesets
+}
+
 #' Build hypeR-ready signature vectors from SigRepo signatures
 #'
 #' @description Converts one or more SigRepo signatures into the query-vector
@@ -394,7 +475,19 @@ prepareHypeRSignatures <- function(
 #' @param signature_name One or more SigRepo signature names.
 #' @param omic_signature A single \code{OmicSignature} object or a list of
 #' \code{OmicSignature} objects.
-#' @param genesets A named list of genesets supplied to \code{hypeR}.
+#' @param genesets A named list of genesets, a \code{hypeR} \code{gsets}
+#' object, or a \code{hypeR} \code{rgsets} object supplied to \code{hypeR}.
+#' Alternatively, leave this as \code{NULL} and specify
+#' \code{msigdb_collection} to fetch genesets from MSigDB automatically.
+#' @param msigdb_species Species passed to \code{hypeR::msigdb_gsets()} when
+#' \code{msigdb_collection} is supplied. Defaults to \code{"Homo sapiens"}.
+#' @param msigdb_collection MSigDB collection identifier, such as \code{"H"}
+#' or \code{"C2"}. When supplied, \code{runHypeR()} retrieves genesets
+#' automatically via \code{hypeR::msigdb_gsets()}.
+#' @param msigdb_subcollection Optional MSigDB subcollection identifier, such as
+#' \code{"CP:KEGG_LEGACY"}.
+#' @param msigdb_clean Logical; whether to clean MSigDB geneset labels using
+#' \code{hypeR::msigdb_gsets(clean = ...)}. Defaults to \code{FALSE}.
 #' @param method One of \code{"hypergeo"}, \code{"kstest"}, or \code{"gsea"}.
 #' @param feature_col Column containing feature identifiers. Defaults to
 #' \code{"feature_name"}.
@@ -430,15 +523,10 @@ prepareHypeRSignatures <- function(
 #'
 #' @examples
 #' \dontrun{
-#' genesets <- list(
-#'   pathway_a = c("ENSG000001", "ENSG000002"),
-#'   pathway_b = c("ENSG000003", "ENSG000004")
-#' )
-#'
 #' hyp_res <- SigRepo::runHypeR(
 #'   conn_handler = conn_handler,
 #'   signature_name = "example_signature",
-#'   genesets = genesets,
+#'   msigdb_collection = "H",
 #'   method = "hypergeo",
 #'   background = 20000
 #' )
@@ -450,7 +538,11 @@ runHypeR <- function(
     signature_id = NULL,
     signature_name = NULL,
     omic_signature = NULL,
-    genesets,
+    genesets = NULL,
+    msigdb_species = "Homo sapiens",
+    msigdb_collection = NULL,
+    msigdb_subcollection = NULL,
+    msigdb_clean = FALSE,
     method = c("hypergeo", "kstest", "gsea"),
     feature_col = "feature_name",
     score_col = "score",
@@ -472,13 +564,16 @@ runHypeR <- function(
     )
   }
 
-  if (!methods::is(genesets, "list") || base::length(genesets) == 0) {
-    base::stop("\n'genesets' must be a non-empty named list.\n")
-  }
-
   method <- base::match.arg(method)
   hype_test <- if (identical(method, "hypergeo")) "hypergeometric" else "ks"
   extra_args <- base::list(...)
+  resolved_genesets <- resolveHypeRGenesets(
+    genesets = genesets,
+    msigdb_species = msigdb_species,
+    msigdb_collection = msigdb_collection,
+    msigdb_subcollection = msigdb_subcollection,
+    msigdb_clean = msigdb_clean
+  )
 
   reserved_args <- c("signature", "genesets", "test")
   duplicate_reserved <- base::intersect(base::names(extra_args), reserved_args)
@@ -514,7 +609,7 @@ runHypeR <- function(
 
   hype_args <- base::list(
     signature = hype_signature,
-    genesets = genesets,
+    genesets = resolved_genesets,
     test = hype_test,
     fdr = fdr,
     plotting = plotting,

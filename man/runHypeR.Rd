@@ -9,7 +9,11 @@ runHypeR(
   signature_id = NULL,
   signature_name = NULL,
   omic_signature = NULL,
-  genesets,
+  genesets = NULL,
+  msigdb_species = "Homo sapiens",
+  msigdb_collection = NULL,
+  msigdb_subcollection = NULL,
+  msigdb_clean = FALSE,
   method = c("hypergeo", "kstest", "gsea"),
   feature_col = "feature_name",
   score_col = "score",
@@ -36,7 +40,23 @@ Required unless \code{omic_signature} is supplied.}
 \item{omic_signature}{A single \code{OmicSignature} object or a list of
 \code{OmicSignature} objects.}
 
-\item{genesets}{A named list of genesets supplied to \code{hypeR}.}
+\item{genesets}{A named list of genesets, a \code{hypeR} \code{gsets}
+object, or a \code{hypeR} \code{rgsets} object supplied to \code{hypeR}.
+Alternatively, leave this as \code{NULL} and specify
+\code{msigdb_collection} to fetch genesets from MSigDB automatically.}
+
+\item{msigdb_species}{Species passed to \code{hypeR::msigdb_gsets()} when
+\code{msigdb_collection} is supplied. Defaults to \code{"Homo sapiens"}.}
+
+\item{msigdb_collection}{MSigDB collection identifier, such as \code{"H"}
+or \code{"C2"}. When supplied, \code{runHypeR()} retrieves genesets
+automatically via \code{hypeR::msigdb_gsets()}.}
+
+\item{msigdb_subcollection}{Optional MSigDB subcollection identifier, such as
+\code{"CP:KEGG_LEGACY"}.}
+
+\item{msigdb_clean}{Logical; whether to clean MSigDB geneset labels using
+\code{hypeR::msigdb_gsets(clean = ...)}. Defaults to \code{FALSE}.}
 
 \item{method}{One of \code{"hypergeo"}, \code{"kstest"}, or \code{"gsea"}.}
 
@@ -91,15 +111,10 @@ Resolves one or more signatures from SigRepo and runs
 }
 \examples{
 \dontrun{
-genesets <- list(
-  pathway_a = c("ENSG000001", "ENSG000002"),
-  pathway_b = c("ENSG000003", "ENSG000004")
-)
-
 hyp_res <- SigRepo::runHypeR(
   conn_handler = conn_handler,
   signature_name = "example_signature",
-  genesets = genesets,
+  msigdb_collection = "H",
   method = "hypergeo",
   background = 20000
 )
