@@ -49,6 +49,8 @@ reference:
       - '`searchGeneticVariantsFeatureSet`'
       - '`searchMetabolomicsFeatureSet`'
       - '`searchUser`'
+      - '`searchGenesetEntry`'
+      - '`searchGenesetResource`'
     
   - title: Retrieve Data from Database
     desc: ~
@@ -78,6 +80,8 @@ reference:
       - '`addUser`'
       - '`addUserToSignature`'
       - '`addUserToCollection`'
+      - '`addGenesetEntry`'
+      - '`addGenesetResource`'
   
   - title: Update Data in Database
     desc: ~
