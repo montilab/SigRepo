@@ -15,10 +15,10 @@
 
 # Ignore file extensions
 *.env
+.env.local-validation
 *.RData
 *.Rproj
 
 # Ignore folders
 .Rproj.user/
 docs/
-

@@ -32,11 +32,13 @@ Imports:
   rlang,
   RMySQL
 Remotes:
-  montilab/OmicSignature
+  montilab/OmicSignature,
+  montilab/hypeR-GEM
 Suggests:
   BiocManager,
   devtools,
   hypeR,
+  hypeR.GEM,
   knitr,
   pkgdown,
   rmarkdown,
