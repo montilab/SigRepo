@@ -118,6 +118,7 @@ reference:
     contents:
       - '`prepareHypeRSignatures`'
       - '`runHypeR`'
+      - '`runHyperGEM`'
       
   - title: Example Data
     desc: Example signatures included in the package
