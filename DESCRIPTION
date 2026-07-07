@@ -37,6 +37,7 @@ Suggests:
   BiocManager,
   devtools,
   hypeR,
+  hypeR.GEM,
   knitr,
   pkgdown,
   rmarkdown,

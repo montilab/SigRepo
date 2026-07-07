@@ -99,11 +99,26 @@ addCollection <- function(
   
   # Extract metadata from omic_collection ####
   metadata <- omic_collection$metadata
+
+  # Validate collection metadata fields ####
+  if (base::length(metadata$collection_name) != 1 ||
+      base::is.na(metadata$collection_name[1]) ||
+      !base::nzchar(base::trimws(base::as.character(metadata$collection_name[1])))) {
+    base::suppressWarnings(DBI::dbDisconnect(conn))
+    base::stop("'collection_name' in OmicSignatureCollection metadata must be a single non-empty value.\n")
+  }
+
+  if (base::length(metadata$description) != 1 ||
+      base::is.na(metadata$description[1]) ||
+      !base::nzchar(base::trimws(base::as.character(metadata$description[1])))) {
+    base::suppressWarnings(DBI::dbDisconnect(conn))
+    base::stop("'description' in OmicSignatureCollection metadata must be a single non-empty value.\n")
+  }
   
   # Add additional variables in collection metadata table ####
   metadata_tbl <- base::data.frame(
-    collection_name = metadata$collection_name,
-    description = metadata$description,
+    collection_name = base::trimws(base::as.character(metadata$collection_name[1])),
+    description = base::trimws(base::as.character(metadata$description[1])),
     user_name = user_name,
     visibility = visibility
   )
