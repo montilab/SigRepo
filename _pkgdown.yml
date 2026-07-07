@@ -49,6 +49,8 @@ reference:
       - '`searchGeneticVariantsFeatureSet`'
       - '`searchMetabolomicsFeatureSet`'
       - '`searchUser`'
+      - '`searchGenesetEntry`'
+      - '`searchGenesetResource`'
     
   - title: Retrieve Data from Database
     desc: ~
@@ -78,6 +80,8 @@ reference:
       - '`addUser`'
       - '`addUserToSignature`'
       - '`addUserToCollection`'
+      - '`addGenesetEntry`'
+      - '`addGenesetResource`'
   
   - title: Update Data in Database
     desc: ~
@@ -108,6 +112,12 @@ reference:
       - '`compareSignatureScores`'
       - '`plotSignatureOverlap`'
       - '`signatureSetKsTest`'
+
+  - title: Enrichment Analysis
+    desc: ~
+    contents:
+      - '`prepareHypeRSignatures`'
+      - '`runHypeR`'
       
   - title: Example Data
     desc: Example signatures included in the package

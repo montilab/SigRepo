@@ -17,7 +17,6 @@ Depends: R (>= 4.4.0)
 License: GPL-3 + file LICENSE
 URL: https://github.com/montilab/SigRepo/
 Encoding: UTF-8
-RoxygenNote: 7.3.3
 LazyData: true 
 Imports:
   biomaRt,
@@ -37,6 +36,7 @@ Remotes:
 Suggests:
   BiocManager,
   devtools,
+  hypeR,
   knitr,
   pkgdown,
   rmarkdown,
@@ -47,3 +47,4 @@ Config/testthat/edition: 3
 biocViews: Software, FeatureExtraction
 VignetteBuilder: knitr
 BugReports: https://github.com/montilab/SigRepo/issues
+Config/roxygen2/version: 8.0.0

@@ -10,7 +10,6 @@ on:
       - '.github/workflows/render-news-rmd.yaml'
       - '.github/workflows/render-render-rmd.yaml'
       - '**.Rmd'
-      - 'R/**'
       - '.gitignore'
   pull_request:
     branches: [master]
@@ -45,7 +44,6 @@ jobs:
           needs: check
 
       - name: Run R-CMD-CHECK
-        if: github.event_name != 'pull_request'
         uses: r-lib/actions/check-r-package@v2
         with:
           args: 'c("--no-manual", "--as-cran", "--no-tests", "--no-examples")'
