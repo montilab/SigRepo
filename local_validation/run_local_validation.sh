@@ -16,5 +16,8 @@ fi
 echo "[local-validation] running API smoke checks"
 "${SCRIPT_DIR}/check_api.sh"
 
+echo "[local-validation] running MCP server smoke checks"
+"${SCRIPT_DIR}/check_mcp.sh"
+
 echo "[local-validation] running R validation modules"
 Rscript "${SCRIPT_DIR}/run_local_validation.R"
