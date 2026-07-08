@@ -395,11 +395,43 @@ createOmicSignature <- function(
   )
   
   # Extract difexp with appropriate column names ####
+  # Mirrors sanitizeRetrievedSignature()'s guard above: only touch group_label
+  # when it's both present (uni-directional difexp rows may not have it) and
+  # semantically meaningful for this signature's direction_type. Referencing
+  # .data$group_label unconditionally errors ("Column not found") for
+  # uni-directional signatures whose difexp table never got a group_label
+  # column in the first place.
   if(db_signature_tbl$has_difexp[1] == TRUE){
-    difexp <- difexp |> 
-      dplyr::mutate(group_label = if(metadata$direction_type[1] %in% c("bi-directional", "categorical")){ base::factor(.data$group_label, levels=base::unique(.data$group_label), labels=base::unique(.data$group_label)) }else{ .data$group_label })
+    if("group_label" %in% base::colnames(difexp) &&
+       metadata$direction_type[1] %in% c("bi-directional", "categorical")){
+      difexp <- difexp |>
+        dplyr::mutate(
+          group_label = base::factor(
+            .data$group_label,
+            levels = base::unique(.data$group_label),
+            labels = base::unique(.data$group_label)
+          )
+        )
+    }
   }
-  
+
+  # Normalize probe_id to a single type across signature and difexp ####
+  # signature$probe_id always comes back as character (the underlying
+  # 'signature_feature_set.probe_id' column is VARCHAR). difexp$probe_id
+  # round-trips through the get_difexp API as JSON, so it keeps whatever
+  # type it was originally uploaded with (e.g. integer). OmicSignature$new()
+  # compares these two columns with %in%, which normally coerces safely, but
+  # only if both sides are coerced the same way; forcing both to character
+  # here removes any dependence on that implicit coercion.
+  if("probe_id" %in% base::colnames(signature)){
+    signature <- signature |>
+      dplyr::mutate(probe_id = base::as.character(.data$probe_id))
+  }
+  if(!base::is.null(difexp) && "probe_id" %in% base::colnames(difexp)){
+    difexp <- difexp |>
+      dplyr::mutate(probe_id = base::as.character(.data$probe_id))
+  }
+
   # Create the OmicSignature object
   OmS <- base::tryCatch({
     OmicSignature::OmicSignature$new(
