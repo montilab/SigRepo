@@ -16,7 +16,10 @@ cp local_validation/.env.local-validation.example local_validation/.env.local-va
 This:
 
 1. runs shell-based API smoke checks with `curl`
-2. runs R-based validation modules for schema, reference data, and client CRUD
+2. runs shell-based MCP server smoke checks with `curl` (skipped if
+   `SIGREPO_LOCAL_MCP_HOST`/`SIGREPO_LOCAL_MCP_PORT` aren't set)
+3. runs R-based validation modules for schema, reference data, client CRUD,
+   and the MCP protocol
 
 The harness loads variables from `local_validation/.env.local-validation` by
 default. You can point to a different file with:
@@ -40,6 +43,13 @@ Shared local stack settings:
 - `SIGREPO_LOCAL_DB_PORT` default: `3306`
 - `SIGREPO_LOCAL_API_HOST` default: `http://127.0.0.1`
 - `SIGREPO_LOCAL_API_PORT` default: `8020`
+
+Optional, for validating SigRepo_Server's MCP server
+(`mcp/run_sigrepo_mcp.R`) -- both the shell smoke check and the R module
+skip (not fail) when these are unset:
+
+- `SIGREPO_LOCAL_MCP_HOST` e.g. `http://127.0.0.1`
+- `SIGREPO_LOCAL_MCP_PORT` e.g. `8021`
 
 Optional raw MySQL/bootstrap credentials:
 
@@ -92,6 +102,13 @@ Each fixture should be an `.rds` file containing an `OmicSignature` object.
 - `03_r_client_read.R`
 - `04_signature_crud.R`
 - `05_collection_crud.R`
+- `06_mcp_protocol.R` -- validates the SigRepo_Server MCP server: `tools/list`
+  advertises the expected tools with no admin/write-capable tools exposed,
+  `list_vocabulary`/`search_signatures` succeed, `get_signature_context`/
+  `compare_signatures` succeed against real signatures discovered via
+  `search_signatures`, and an invalid `api_key` correctly returns an MCP
+  tool error. Requires `SIGREPO_LOCAL_MCP_HOST`/`SIGREPO_LOCAL_MCP_PORT`;
+  skips cleanly if unset.
 
 ## Extending the Harness
 

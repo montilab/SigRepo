@@ -89,6 +89,12 @@ build_local_validation_context <- function(script_dir) {
     db_port = as.numeric(env_value("SIGREPO_LOCAL_DB_PORT", "3306")),
     api_host = env_value("SIGREPO_LOCAL_API_HOST", "http://127.0.0.1"),
     api_port = as.numeric(env_value("SIGREPO_LOCAL_API_PORT", "8020")),
+    # Optional: only set for stacks that also run the SigRepo_Server MCP
+    # server (mcp/run_sigrepo_mcp.R). Left unset by default so this harness
+    # keeps working against stacks without an MCP server running --
+    # run_mcp_protocol_validation() skips (not fails) when mcp_host is empty.
+    mcp_host = env_value("SIGREPO_LOCAL_MCP_HOST", ""),
+    mcp_port = as.numeric(env_value("SIGREPO_LOCAL_MCP_PORT", NA)),
     db_admin_user = env_value("SIGREPO_LOCAL_DB_ADMIN_USER", ""),
     db_admin_password = env_value("SIGREPO_LOCAL_DB_ADMIN_PASSWORD", ""),
     read_user = env_value("SIGREPO_LOCAL_READ_USER", "guest"),
@@ -129,20 +135,31 @@ build_local_validation_context <- function(script_dir) {
     reference_data = run_reference_data_validation,
     r_client_read = run_r_client_read_validation,
     signature_crud = run_signature_crud_validation,
-    collection_crud = run_collection_crud_validation
+    collection_crud = run_collection_crud_validation,
+    mcp_protocol = run_mcp_protocol_validation
   )
 
-  structure(list(
-    config = cfg,
-    db_admin_handler = db_admin_handler,
-    read_handler = read_handler,
-    write_handler = write_handler,
-    fixture_specs = fixture_specs,
-    modules = modules,
-    pass_count = 0L,
-    fail_count = 0L,
-    skip_count = 0L
-  ), class = "sigrepo_local_validation_context")
+  # ctx must be an environment, not a plain list: record_pass()/record_fail()/
+  # record_skip() mutate ctx$pass_count etc. from inside nested module
+  # functions without the caller ever reassigning `ctx <- ...`. A list has
+  # copy-on-modify value semantics, so those mutations would only ever touch
+  # a local copy and silently vanish -- which is exactly what was happening
+  # (the final summary always printed pass=0 fail=0 skip=0 regardless of what
+  # the per-check [pass]/[fail]/[skip] log lines showed). An environment has
+  # reference semantics, so the same `ctx$x <- ctx$x + 1L` pattern works
+  # correctly with no call-site changes needed elsewhere.
+  ctx <- new.env()
+  ctx$config <- cfg
+  ctx$db_admin_handler <- db_admin_handler
+  ctx$read_handler <- read_handler
+  ctx$write_handler <- write_handler
+  ctx$fixture_specs <- fixture_specs
+  ctx$modules <- modules
+  ctx$pass_count <- 0L
+  ctx$fail_count <- 0L
+  ctx$skip_count <- 0L
+  class(ctx) <- "sigrepo_local_validation_context"
+  ctx
 }
 
 record_pass <- function(ctx, text) {

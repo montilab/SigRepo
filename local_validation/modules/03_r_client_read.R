@@ -1,5 +1,5 @@
 run_r_client_read_validation <- function(ctx) {
-  assay_tbl <- SigRepo::searchAssayType(conn_handler = ctx$read_handler, verbose = FALSE)
+  assay_tbl <- SigRepo::searchAssayType()
   assert_true(
     ctx,
     is.data.frame(assay_tbl) && nrow(assay_tbl) > 0,
