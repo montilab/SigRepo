@@ -3,6 +3,12 @@
 This directory contains a modular local validation harness for testing the
 SigRepo R client against a local SigRepo server stack.
 
+**Setting this up for the first time, or starting from a database with no
+schema/data yet?** See [SETUP_GUIDE.md](SETUP_GUIDE.md) for a full
+walkthrough (starting MySQL, booting the API and MCP server, bootstrapping
+the database, and troubleshooting). This README assumes you already have a
+running stack and covers configuration/reference instead.
+
 ## Quick Start
 
 From the `SigRepo` repository root:
