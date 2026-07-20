@@ -51,7 +51,11 @@ run_mcp_protocol_validation <- function(ctx) {
   tools <- list_resp$result$tools
   tool_names <- vapply(tools, function(t) t$name, character(1))
 
-  expected_tools <- c("list_vocabulary", "search_signatures", "get_signature_context", "compare_signatures")
+  expected_tools <- c(
+    "list_vocabulary", "search_signatures", "get_signature_context", "compare_signatures",
+    "search_collections", "search_geneset_resources", "search_geneset_entries",
+    "search_features", "run_enrichment"
+  )
   for (tool_name in expected_tools) {
     assert_true(
       ctx,
@@ -133,6 +137,128 @@ run_mcp_protocol_validation <- function(ctx) {
     )
   } else {
     record_skip(ctx, "compare_signatures tool-call check skipped because fewer than two signatures are available")
+  }
+
+  # search_collections/search_geneset_resources/search_geneset_entries: a
+  # stock /init_db bootstrap doesn't populate collections or the geneset
+  # catalog, so these only assert the call succeeds, not that it returns
+  # rows -- unlike search_features below, which can rely on real reference
+  # data /init_db does load.
+  collections_resp <- mcp_tool_call(base_url, "search_collections", list(api_key = api_key))
+  assert_true(
+    ctx,
+    mcp_tool_call_ok(collections_resp),
+    "search_collections tool call succeeded",
+    sprintf("search_collections tool call failed: %s", collections_resp$error$message %||% "unexpected response shape")
+  )
+
+  geneset_resources_resp <- mcp_tool_call(base_url, "search_geneset_resources", list(api_key = api_key))
+  assert_true(
+    ctx,
+    mcp_tool_call_ok(geneset_resources_resp),
+    "search_geneset_resources tool call succeeded",
+    sprintf("search_geneset_resources tool call failed: %s", geneset_resources_resp$error$message %||% "unexpected response shape")
+  )
+
+  geneset_entries_resp <- mcp_tool_call(base_url, "search_geneset_entries", list(api_key = api_key))
+  assert_true(
+    ctx,
+    mcp_tool_call_ok(geneset_entries_resp),
+    "search_geneset_entries tool call succeeded",
+    sprintf("search_geneset_entries tool call failed: %s", geneset_entries_resp$error$message %||% "unexpected response shape")
+  )
+
+  # search_features -- /init_db loads real transcriptomics_features rows
+  # (unlike collections/genesets above), so this can meaningfully check for
+  # actual results, not just a non-error response.
+  features_resp <- mcp_tool_call(base_url, "search_features", list(api_key = api_key, assay_type = "transcriptomics", limit = 5))
+  assert_true(
+    ctx,
+    mcp_tool_call_ok(features_resp),
+    "search_features tool call succeeded for assay_type = transcriptomics",
+    sprintf("search_features tool call failed: %s", features_resp$error$message %||% "unexpected response shape")
+  )
+  if (mcp_tool_call_ok(features_resp)) {
+    feature_rows <- jsonlite::fromJSON(mcp_tool_call_text(features_resp))
+    if (is.data.frame(feature_rows) && nrow(feature_rows) > 0) {
+      record_pass(ctx, sprintf("search_features returned %d transcriptomics feature row(s)", nrow(feature_rows)))
+    } else {
+      record_skip(ctx, "search_features returned zero transcriptomics rows -- reference data may not be loaded on this stack")
+    }
+  }
+
+  # run_enrichment -- the geneset_resource_id (cache) path needs a real,
+  # locally-readable .rds and a matching geneset_resources row, which
+  # /init_db doesn't provide. Register one temporarily with a unique name
+  # (unique_local_name(), same pattern signature_crud/collection_crud use)
+  # so repeated runs against a persistent local DB don't collide, and clean
+  # it up afterward regardless of outcome.
+  privileged_handler <- ctx$db_admin_handler %||% ctx$write_handler
+  if (is.null(privileged_handler)) {
+    record_skip(ctx, "run_enrichment tool-call check skipped because no db-admin/write credentials are configured to register a temporary geneset resource")
+  } else {
+    unique_name <- unique_local_name("local_validation_geneset")
+    # geneset_resource_hashkey is VARCHAR(32) -- unique_name itself (prefix +
+    # timestamp + random suffix) runs well past that, so hash it down to a
+    # proper 32-char MD5 hex digest, the same convention
+    # SigRepo::createHashKey() uses for every other hashkey column.
+    unique_hashkey <- digest::digest(unique_name, algo = "md5", serialize = FALSE)
+    tmp_rds <- tempfile(fileext = ".rds")
+    saveRDS(list(LOCAL_VALIDATION_SET = c("TP53", "BRCA1", "EGFR", "MYC", "PTEN")), tmp_rds)
+
+    # Insert, tool-call, and delete all share one connection, kept open for
+    # the whole block via on.exit() rather than the earlier
+    # insert-then-immediately-disconnect shape -- that version left the
+    # temporary geneset_resources row permanently orphaned in whatever
+    # database this runs against, harmless against a throwaway local MySQL
+    # but not against a persistent or shared one. on.exit() (not a plain
+    # trailing statement) guarantees the DELETE still runs even if
+    # assert_true() below throws on a failed tool call.
+    conn <- open_db_connection(privileged_handler)
+    on.exit(close_db_connection(conn), add = TRUE)
+    on.exit(unlink(tmp_rds), add = TRUE)
+    on.exit(
+      {
+        DBI::dbExecute(conn, paste(
+          "DELETE FROM geneset_resources WHERE geneset_resource_hashkey =",
+          DBI::dbQuoteLiteral(conn, unique_hashkey)
+        ))
+      },
+      add = TRUE,
+      after = FALSE
+    )
+
+    # dbQuoteLiteral(), not DBI's params= placeholders -- RMySQL (the driver
+    # conn_init() uses) doesn't support "?" placeholders and fails with a
+    # SQL syntax error if you try.
+    insert_sql <- paste(
+      "INSERT INTO geneset_resources",
+      "(source, species, collection, version, format, storage_path, n_genesets, n_features, is_current, geneset_resource_hashkey)",
+      "VALUES ('local-validation', 'Homo sapiens',",
+      DBI::dbQuoteLiteral(conn, unique_name), ", '1.0', 'rds',",
+      DBI::dbQuoteLiteral(conn, tmp_rds), ", 1, 5, 1,",
+      DBI::dbQuoteLiteral(conn, unique_hashkey), ")"
+    )
+    DBI::dbExecute(conn, insert_sql)
+    resource_id <- DBI::dbGetQuery(conn, paste(
+      "SELECT geneset_resource_id FROM geneset_resources WHERE geneset_resource_hashkey =",
+      DBI::dbQuoteLiteral(conn, unique_hashkey)
+    ))$geneset_resource_id[[1]]
+
+    enrich_resp <- mcp_tool_call(base_url, "run_enrichment", list(
+      api_key = api_key,
+      signature_hashkey = hashkeys[[1]],
+      geneset_resource_id = resource_id
+    ))
+    assert_true(
+      ctx,
+      mcp_tool_call_ok(enrich_resp),
+      sprintf("run_enrichment tool call succeeded for %s", hashkeys[[1]]),
+      sprintf(
+        "run_enrichment tool call failed: %s",
+        enrich_resp$error$message %||% mcp_tool_call_text(enrich_resp) %||% "unexpected response shape"
+      )
+    )
   }
 
   # Auth failure path: an invalid api_key must surface as an MCP tool error,
