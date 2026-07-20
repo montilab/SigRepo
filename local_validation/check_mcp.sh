@@ -20,7 +20,8 @@ response=$(curl -fsS -X POST "${BASE_URL}" \
 
 FAILURES=0
 
-for tool in list_vocabulary search_signatures get_signature_context compare_signatures; do
+for tool in list_vocabulary search_signatures get_signature_context compare_signatures \
+  search_collections search_geneset_resources search_geneset_entries search_features run_enrichment; do
   if echo "${response}" | grep -q "\"${tool}\""; then
     echo "[pass] tools/list includes ${tool}"
   else

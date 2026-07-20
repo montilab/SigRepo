@@ -174,26 +174,52 @@ test_that("searchSignature returns all signatures when no filters provided", {
 
 test_that("searchSignature filters by organism", {
   test_conn <- SigRepo::test_conn_handler
-  
+
+  # These filter tests used to rely on a signature already sitting in
+  # whatever database test_conn_handler pointed at (e.g. leftover data on a
+  # long-lived shared instance). That's not true for a freshly initialized
+  # database (nothing but schema + reference tables), so each test now
+  # uploads and cleans up its own matching signature instead of assuming
+  # one exists. Filtering on the fixture's own organism/phenotype/platform
+  # (Mus musculus / Myc_reduce / transcriptomics by array) rather than
+  # substituting different values, since the signature's feature IDs are
+  # organism-specific (ENSMUSG*) and swapping just the metadata organism
+  # would desync it from those feature IDs. ####
+  test_sig <- base::readRDS(testthat::test_path("test_data", "test_data_transcriptomics.rds"))$clone(deep = TRUE)
+  new_metadata <- test_sig$metadata
+  new_metadata$signature_name <- "test_signature_organism_filter"
+  test_sig$metadata <- new_metadata
+
+  sig_id <- SigRepo::addSignature(conn_handler = test_conn, omic_signature = test_sig, return_signature_id = TRUE, verbose = FALSE)
+  on.exit(SigRepo::deleteSignature(conn_handler = test_conn, signature_id = sig_id, verbose = FALSE), add = TRUE)
+
   organism_search <- SigRepo::searchSignature(
     conn_handler = test_conn,
-    organism = "Homo sapiens",
+    organism = "Mus musculus",
     verbose = FALSE
   )
-  
+
   #print(head(organism_search))
-  
+
   expect_true(methods::is(organism_search, "data.frame"))
   expect_true(nrow(organism_search) > 0)
-  
+
 })
 
 test_that("searchSignature filters by phenotype", {
   test_conn <- SigRepo::test_conn_handler
-  
+
+  test_sig <- base::readRDS(testthat::test_path("test_data", "test_data_transcriptomics.rds"))$clone(deep = TRUE)
+  new_metadata <- test_sig$metadata
+  new_metadata$signature_name <- "test_signature_phenotype_filter"
+  test_sig$metadata <- new_metadata
+
+  sig_id <- SigRepo::addSignature(conn_handler = test_conn, omic_signature = test_sig, return_signature_id = TRUE, verbose = FALSE)
+  on.exit(SigRepo::deleteSignature(conn_handler = test_conn, signature_id = sig_id, verbose = FALSE), add = TRUE)
+
   phenotype_search <- SigRepo::searchSignature(
     conn_handler = test_conn,
-    phenotype = "Aging",
+    phenotype = "Myc_reduce",
     verbose = FALSE
   )
 
@@ -203,7 +229,18 @@ test_that("searchSignature filters by phenotype", {
 
 test_that("searchSignature filters by platform", {
   test_conn <- SigRepo::test_conn_handler
-  
+
+  # test_data_transcriptomics.rds already carries platform = "transcriptomics
+  # by array"; it just needs a unique signature_name so it doesn't collide
+  # with fixtures uploaded by other tests in this file. ####
+  test_sig <- base::readRDS(testthat::test_path("test_data", "test_data_transcriptomics.rds"))$clone(deep = TRUE)
+  new_metadata <- test_sig$metadata
+  new_metadata$signature_name <- "test_signature_platform_filter"
+  test_sig$metadata <- new_metadata
+
+  sig_id <- SigRepo::addSignature(conn_handler = test_conn, omic_signature = test_sig, return_signature_id = TRUE, verbose = FALSE)
+  on.exit(SigRepo::deleteSignature(conn_handler = test_conn, signature_id = sig_id, verbose = FALSE), add = TRUE)
+
   platform_search <- SigRepo::searchSignature(
     conn_handler = test_conn,
     platform = "transcriptomics by array",

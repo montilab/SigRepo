@@ -3,6 +3,12 @@
 This directory contains a modular local validation harness for testing the
 SigRepo R client against a local SigRepo server stack.
 
+**Setting this up for the first time, or starting from a database with no
+schema/data yet?** See [SETUP_GUIDE.md](SETUP_GUIDE.md) for a full
+walkthrough (starting MySQL, booting the API and MCP server, bootstrapping
+the database, and troubleshooting). This README assumes you already have a
+running stack and covers configuration/reference instead.
+
 ## Quick Start
 
 From the `SigRepo` repository root:
@@ -103,12 +109,19 @@ Each fixture should be an `.rds` file containing an `OmicSignature` object.
 - `04_signature_crud.R`
 - `05_collection_crud.R`
 - `06_mcp_protocol.R` -- validates the SigRepo_Server MCP server: `tools/list`
-  advertises the expected tools with no admin/write-capable tools exposed,
-  `list_vocabulary`/`search_signatures` succeed, `get_signature_context`/
+  advertises all nine expected tools with no admin/write-capable tools
+  exposed, `list_vocabulary`/`search_signatures` succeed, `get_signature_context`/
   `compare_signatures` succeed against real signatures discovered via
-  `search_signatures`, and an invalid `api_key` correctly returns an MCP
-  tool error. Requires `SIGREPO_LOCAL_MCP_HOST`/`SIGREPO_LOCAL_MCP_PORT`;
-  skips cleanly if unset.
+  `search_signatures`, `search_collections`/`search_geneset_resources`/
+  `search_geneset_entries` succeed (tolerating empty results, since a stock
+  `/init_db` doesn't populate collections or the geneset catalog),
+  `search_features` succeeds and checks for real transcriptomics rows
+  (which `/init_db` does populate), `run_enrichment` succeeds against a
+  temporarily-registered geneset resource (requires
+  `SIGREPO_LOCAL_DB_ADMIN_USER`/`SIGREPO_LOCAL_WRITE_USER`; skips
+  otherwise), and an invalid `api_key` correctly returns an MCP tool error.
+  Requires `SIGREPO_LOCAL_MCP_HOST`/`SIGREPO_LOCAL_MCP_PORT`; skips cleanly
+  if unset.
 
 ## Extending the Harness
 
