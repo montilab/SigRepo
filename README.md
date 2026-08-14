@@ -1,54 +1,82 @@
 <br>
 
-# <img src="man/figures/logo.png" align="left" width="190" /> SigRepo: An R package for storing and processing omic signatures
+# <img src="man/figures/logo.png" align="left" width="190" /> SigRepo: An R package for storing, sharing, and comparing omic signatures
 
 ![build](https://github.com/montilab/SigRepo/workflows/rcmdcheck/badge.svg)
-![pkgdown](https://github.com/montilab/SigRepo/workflows/pkgdown/badge.svg)
+![validation](https://github.com/montilab/SigRepo/workflows/validation/badge.svg)
+![lint](https://github.com/montilab/SigRepo/workflows/lint/badge.svg)
+![pkgdown](https://github.com/montilab/SigRepo/workflows/gh-pages-pkgdown/badge.svg)
 ![Docker pulls](https://img.shields.io/docker/pulls/montilab/sigrepo)
 ![Docker image
 size](https://img.shields.io/docker/image-size/montilab/sigrepo)
 ![GitHub last
 commit](https://img.shields.io/github/last-commit/montilab/SigRepo)
 
-The `SigRepo` package provides a comprehensive set of functions for easy
-storage and management of biological signatures and their components.
-SigRepo (the `client`) works alongside `SigRepo_Server`, its `server`
-counterpart. While SigRepo enables you to store, search, and retrieve
-signatures and signature collections, these operations rely on a running
-SigRepo\_Server instance.
+## What is SigRepo?
 
-Interested in setting up your own SigRepo\_Server? Check out the
-installation instructions
-<a target="_blank" href="https://montilab.github.io/SigRepo_Server/articles/install_sigrepo.html" >here</a>.
+High-throughput studies produce a growing volume of **omic signatures** —
+the ranked or thresholded feature sets that come out of a differential
+analysis. Most of them end up in supplementary tables, with inconsistent
+metadata and no shared representation, so they are rarely reused and
+comparing a new result against prior work stays a manual job.
 
-To upload and download signatures — and to fully utilize the
-functionalities offered by the SigRepo package — signatures and
-signature collections must be represented as specific R6 objects. You
-can create these objects using our proprietary package,
-<a target="_blank" href="https://github.com/montilab/OmicSignature">OmicSignature</a>.
+**SigRepo is a platform that treats signatures as first-class, reusable
+objects**: stored in a common representation with controlled metadata,
+searchable, shareable, and — importantly — analyzable in place rather
+than only downloadable.
 
-Click on each link below for more information:
+This repository is the **R client**. It talks to a running
+[**SigRepo_Server**](https://github.com/montilab/SigRepo_Server)
+instance, which provides the MySQL database, the REST API, the web
+interface, and an MCP server for AI agents. You can use the client
+against <a target="_blank" href="https://sigrepo.org">our deployed
+server</a> or against your own.
+
+Signatures are represented as R6 objects defined by
+<a target="_blank" href="https://github.com/montilab/OmicSignature">**OmicSignature**</a>,
+our in-house package (GPL-3), which pairs a curated feature set with its
+underlying differential-expression table and a controlled metadata
+vocabulary.
 
 -   <a
     href="https://montilab.github.io/OmicSignature/articles/ObjectStructure.html"
     target="_blank">Overview of the object structure</a>
--   <a
-    href="https://montilab.github.io/OmicSignature/articles/CreateOmS.html"
+-   <a href="https://montilab.github.io/OmicSignature/articles/CreateOmS.html"
     target="_blank">Create an OmicSignature (OmS)</a>
--   <a
-    href="https://montilab.github.io/OmicSignature/articles/CreateOmSC.html"
+-   <a href="https://montilab.github.io/OmicSignature/articles/CreateOmSC.html"
     target="_blank">Create an OmicSignatureCollection (OmSC)</a>
 
-Below, we walk you through few essential steps to install the `SigRepo`
-package, and to store, retrieve, and interact with a list of signatures
-stored in an <a target="_blank" href="https://sigrepo.org">already
-deployed SigRepo server</a>.
+## What you can do with the client
 
-# Installation
+**Store and organize**
 
--   Using `devtools` package
+-   Upload signatures (`addSignature()`) and collections
+    (`addCollection()`), update (`updateSignature()`) and remove
+    (`deleteSignature()`) them.
+-   Group related signatures into collections
+    (`addSignatureToCollection()`), and share them with specific users
+    (`addUserToSignature()`, `addUserToCollection()`).
 
-<!-- -->
+**Search and retrieve**
+
+-   Search metadata without pulling whole objects (`searchSignature()`,
+    `searchCollection()`).
+-   Retrieve full signatures and collections, including their difexp
+    tables (`getSignature()`, `getCollection()`,
+    `getSignatureFeatureSet()`).
+-   Browse controlled vocabularies (`searchOrganism()`,
+    `searchPhenotype()`, `searchPlatform()`, `searchSampleType()`,
+    `searchAssayType()`).
+
+**Analyze**
+
+-   Compare any set of signatures (`compareSignatures()`) by feature
+    overlap, rank-based Kolmogorov–Smirnov statistics, or GSEA.
+-   Run gene set enrichment against MSigDB with
+    <a href="https://github.com/montilab/hypeR" target="_blank">hypeR</a>
+    (`runHypeR()`, `prepareHypeRSignatures()`).
+
+## Installation
 
     # Load devtools package
     library(devtools)
@@ -59,76 +87,38 @@ deployed SigRepo server</a>.
     # Install OmicSignature
     devtools::install_github(repo = 'montilab/OmicSignature')
 
-    # Load tidyverse package
+    # Load packages
     library(tidyverse)
-
-    # Load SigRepo package
     library(SigRepo)
-
-    # Load OmicSignature package
     library(OmicSignature)
 
 ## Before you begin
 
-Please navigate to our
-<a href="https://sigrepo.org" target="_blank">sigrepo.org</a> portal to
-create your account. On the login page, click `"Register here!"` and
-fill out the registration form to create an account. You will receive an
-email when your account has been activated. Due to SQL constraints,
-having multiple users on the same testing account, like running the
-tutorial in the readme, will fail to connect. Each user using their own
-account is ideal.
+Navigate to our <a target="_blank" href="https://sigrepo.org">sigrepo.org</a>
+portal to create an account. On the login page, click `"Register here!"`
+and fill out the registration form. You will receive an email when your
+account has been activated.
 
-## Visibility
+Each person should use their own account — due to SQL constraints,
+multiple users sharing one account (for example, several people running
+this tutorial on a shared test login) will fail to connect.
 
-The SigRepo Project is a project that holds various sensitive
-signatures. Because of this, visibility of certain signatures is taken
-into account. What this means is that in order to retrieve certain
-signatures with the visibility of private(visibility = 0), standard
-accounts will not be able to access that signature and you will need
-permission from the signature author to access it. Conversely, a
-signature with the visibility of public (visibility = 1, this is also
-the DEFAULT) will be available to everyone with an account. Please note,
-viewing a signature with searchSignature() is different than using
-getSignature(), searchSignature() only shows the metadata of the
-signature and this is shown to everyone. getSignature takes into account
-the visibilty of the signatures.
+## Connect to the database
 
-# Connect to SigRepo Database
-
-SigRepo uses a MySQL database to store, search, and retrieve biological
-signatures and their components. To access signatures in our database,
-<a target="_blank" href="https://sigrepo.org/">VISIT OUR WEBSITE</a> to
-create an account or <a href="mailto:sigrepo@bu.edu">CONTACT US</a> to
-be added.
-
-There are three types of user accounts:<br> - `admin` has <b>READ</b>
-and <b>WRITE</b> access to all signatures in the database.<br> -
-`editor` has <b>READ</b> and <b>WRITE</b> access to only their own
-uploaded signatures in the database.<br> - `viewer` has <b>READ-ONLY</b>
-access to publicly available signatures in the database.<br>
-
-Once you have a valid account, use `SigRepo::newConnHandler()` to create
-a handler with your credentials.
+Once you have an account, create a connection handler with
+`newConnHandler()`:
 
     # Create a connection handler
     conn_handler <- SigRepo::newConnHandler(
-      dbname = "sigrepo", 
-      host = "sigrepo.org", 
-      port = 3306, 
-      user = <your_username>, 
+      dbname = "sigrepo",
+      host = "sigrepo.org",
+      port = 3306,
+      user = <your_username>,
       password = <your_password>
     )
 
-After you call `newConnHandler()`, SigRepo stores that handler
-internally for the current R session.  
-Because of that, most SigRepo functions can be called in either of these
-ways:
-
-1.  Explicitly pass `conn_handler` in each call.
-2.  Omit `conn_handler` and use the internally stored handler.
-
-<!-- -->
+SigRepo stores that handler internally for the current R session, so
+most functions can be called either way:
 
     # Option 1: explicit connection handler
     SigRepo::searchSignature(
@@ -141,9 +131,99 @@ ways:
       signature_name = "example_signature"
     )
 
-# Guides
+### Accounts and visibility
+
+There are three types of user accounts:
+
+-   `admin` has **READ** and **WRITE** access to all signatures in the
+    database.
+-   `editor` has **READ** and **WRITE** access to only their own
+    uploaded signatures.
+-   `viewer` has **READ-ONLY** access to publicly available signatures.
+
+SigRepo holds unpublished and sensitive signatures, so each signature
+carries a visibility flag:
+
+-   `visibility = 1` (**public**, the default) — available to every
+    account.
+-   `visibility = 0` (**private**) — retrievable only by the owner and
+    users they have granted access to.
+
+Note the difference between the two access paths: `searchSignature()`
+returns **metadata only** and is visible to everyone, while
+`getSignature()` returns the signature itself and **does** enforce
+visibility.
+
+## Comparing signatures
+
+`compareSignatures()` wraps `OmicSignature::compare_omic_signatures()`
+so a set of signatures can be compared directly:
+
+    # Compare several signatures by feature overlap
+    result <- SigRepo::compareSignatures(
+      signature_names = c("signature_a", "signature_b", "signature_c"),
+      method = "overlap"
+    )
+
+    result$comparisons$level1_vs_level1$jaccard
+
+Supported methods:
+
+| Method | What it measures | Needs difexp |
+|---|---|---|
+| `overlap` | Jaccard index + Fisher exact test on the retained feature sets | no |
+| `ks_rank` | where one signature's features fall in another's ranking | yes |
+| `ks_score` | the ranking scores of those features vs. the rest | yes |
+| `gsea` | GSEA enrichment (via `fgsea`), with leading edge | yes |
+
+For bi-directional signatures, comparisons are performed per matched
+group label, so "up vs. up" and "down vs. down" are reported separately.
+
+## AI and agent access
+
+SigRepo runs a **Model Context Protocol (MCP)** server at
+<https://sigrepo.org/mcp/>, so AI assistants can query the repository
+directly — searching signatures, retrieving signature context, comparing
+signatures, browsing gene sets, and running enrichment, all grounded in
+the stored data rather than the model's recollection.
+
+With <a href="https://claude.com/claude-code" target="_blank">Claude
+Code</a>:
+
+    claude mcp add --transport http sigrepo https://sigrepo.org/mcp/
+
+Every tool call takes your SigRepo `api_key` as an argument (the same
+credential the REST API uses); retrieve it with `SigRepo::getAPIKey()`.
+This repository also ships a `connect-sigrepo-mcp` skill under
+`.claude/skills/` that handles the setup.
+
+## In development
+
+The following are active work and **not yet available** in the released
+package:
+
+-   **AI-assisted signature authoring.** The main barrier to
+    contributing is curation, not storage: a depositor has to reshape a
+    differential-expression result, assign controlled metadata, and
+    satisfy the schema. We are building an agent that reads a study's
+    differential-expression output and description, proposes metadata
+    from SigRepo's controlled vocabularies, and emits a validated
+    OmicSignature for the depositor to review — turning contribution
+    from a curation task into a review step.
+-   **A modernized web interface** for browsing, inspecting, and
+    comparing signatures.
+-   **Additional external gene-set resources.** Because analyses are
+    exposed as discrete API endpoints over a common signature
+    representation, new resources can be added without schema changes.
+
+## Guides
 
 -   [Uploading Signature
     Tutorial](https://montilab.github.io/SigRepo/articles/signature-tutorials.html)
 -   [Uploading Signature Collection
     Tutorial](https://montilab.github.io/SigRepo/articles/collection-tutorials.html)
+-   <a href="https://montilab.github.io/SigRepo_Server/articles/install_sigrepo.html"
+    target="_blank">Setting up your own SigRepo_Server</a>
+
+Questions, or want an account?
+<a href="mailto:sigrepo@bu.edu">Contact us</a>.
