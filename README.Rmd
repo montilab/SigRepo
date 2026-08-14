@@ -43,9 +43,9 @@ library(OmicSignature)
 
 ## What is SigRepo?
 
-High-throughput studies produce a growing volume of **omic signatures** — the ranked or thresholded feature sets that come out of a differential analysis. Most of them end up in supplementary tables, with inconsistent metadata and no shared representation, so they are rarely reused and comparing a new result against prior work stays a manual job.
+High-throughput studies produce a growing volume of **omic signatures**. Most of them end up in supplementary tables, with inconsistent metadata and no shared representation, so they are rarely reused and comparing a new result against prior work stays a manual job.
 
-**SigRepo is a platform that treats signatures as first-class, reusable objects**: stored in a common representation with controlled metadata, searchable, shareable, and — importantly — analyzable in place rather than only downloadable.
+**SigRepo is a platform that treats signatures as first-class, reusable objects**: stored in a common representation with controlled metadata, searchable, shareable, and analyzable in place rather than only downloadable.
 
 This repository is the **R client**. It talks to a running [**SigRepo_Server**](https://github.com/montilab/SigRepo_Server) instance, which provides the MySQL database, the REST API, the web interface, and an MCP server for AI agents. You can use the client against [**our deployed server**](https://sigrepo.org){target="_blank"} or against your own.
 
@@ -95,7 +95,7 @@ library(OmicSignature)
 
 Navigate to our [sigrepo.org](https://sigrepo.org){target="_blank"} portal to create an account. On the login page, click `"Register here!"` and fill out the registration form. You will receive an email when your account has been activated.
 
-Each person should use their own account — due to SQL constraints, multiple users sharing one account (for example, several people running this tutorial on a shared test login) will fail to connect.
+Each person should use their own account. Due to SQL constraints, multiple users sharing one account (for example, several people running this tutorial on a shared test login) will fail to connect.
 
 ## Connect to the database
 
