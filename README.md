@@ -1,4 +1,3 @@
-
 <br>
 
 # <img src="man/figures/logo.png" align="left" width="190" /> SigRepo: An R package for storing, sharing, and comparing omic signatures
@@ -26,7 +25,7 @@ searchable, shareable, and analyzable in place rather than only
 downloadable.
 
 This repository is the **R client**. It talks to a running
-[**SigRepo_Server**](https://github.com/montilab/SigRepo_Server)
+[**SigRepo\_Server**](https://github.com/montilab/SigRepo_Server)
 instance, which provides the MySQL database, the REST API, the web
 interface, and an MCP server for AI agents. You can use the client
 against
@@ -173,12 +172,42 @@ so a set of signatures can be compared directly:
 
 Supported methods:
 
-| Method | What it measures | Needs difexp |
-|----|----|----|
-| `overlap` | Jaccard index + Fisher exact test on the retained feature sets | no |
-| `ks_rank` | where one signature’s features fall in another’s ranking | yes |
-| `ks_score` | the ranking scores of those features vs. the rest | yes |
-| `gsea` | GSEA enrichment (via `fgsea`), with leading edge | yes |
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Method</th>
+<th>What it measures</th>
+<th>Needs difexp</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>overlap</code></td>
+<td>Jaccard index + Fisher exact test on the retained feature sets</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>ks_rank</code></td>
+<td>where one signature’s features fall in another’s ranking</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>ks_score</code></td>
+<td>the ranking scores of those features vs. the rest</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>gsea</code></td>
+<td>GSEA enrichment (via <code>fgsea</code>), with leading edge</td>
+<td>yes</td>
+</tr>
+</tbody>
+</table>
 
 For bi-directional signatures, comparisons are performed per matched
 group label, so “up vs. up” and “down vs. down” are reported separately.
