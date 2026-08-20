@@ -1,0 +1,8 @@
+interface:
+  display_name: "SigRepo OmicSignature Ingestion"
+  short_description: "Build and validate evidence-grounded OmicSignature workflows"
+  brand_color: "#2F6B57"
+  default_prompt: "Use the SigRepo OmicSignature ingestion skill. Inspect all supplied study sources and produce the preflight interpretation before editing files."
+
+policy:
+  allow_implicit_invocation: true

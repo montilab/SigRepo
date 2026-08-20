@@ -1,0 +1,2008 @@
+---
+title: "Derivation of tissue-specific proteomic aging signatures from Ding et al. (2025)"
+subtitle: "Age-associated proteins, proteome-transcriptome decoupling, and proteomic aging-clock features"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    theme: united
+    code_folding: show
+    toc: true
+    toc_float: true
+---
+
+```{r global, echo=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+# Paths, packages, and compatibility checks
+
+```{r paths}
+current_input <- knitr::current_input(
+  dir = TRUE
+)
+
+if (
+  length(current_input) == 1L &&
+    !is.na(current_input) &&
+    nzchar(current_input)
+) {
+  RMD_DIR <- dirname(
+    normalizePath(
+      current_input,
+      winslash = "/",
+      mustWork = TRUE
+    )
+  )
+} else {
+  RMD_DIR <- normalizePath(
+    getwd(),
+    winslash = "/",
+    mustWork = TRUE
+  )
+}
+
+REFERENCE_DIR <- file.path(
+  RMD_DIR,
+  "reference_data"
+)
+
+OUTDIR <- file.path(
+  RMD_DIR,
+  "outputs"
+)
+
+S2FILE <- Sys.getenv(
+  "DING2025_S2_FILE",
+  unset = ""
+)
+
+S3FILE <- Sys.getenv(
+  "DING2025_S3_FILE",
+  unset = ""
+)
+
+if (!nzchar(S2FILE)) {
+  stop(
+    paste0(
+      "DING2025_S2_FILE is not set. ",
+      "Set it to the Ding 2025 mmc2 supplementary workbook."
+    ),
+    call. = FALSE
+  )
+}
+
+if (!nzchar(S3FILE)) {
+  stop(
+    paste0(
+      "DING2025_S3_FILE is not set. ",
+      "Set it to the Ding 2025 mmc3 supplementary workbook."
+    ),
+    call. = FALSE
+  )
+}
+
+stopifnot(
+  file.exists(S2FILE),
+  file.exists(S3FILE)
+)
+
+dir.create(
+  REFERENCE_DIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+dir.create(
+  OUTDIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+```
+
+```{r packages}
+library(dplyr)
+library(purrr)
+library(readr)
+library(readxl)
+library(stringr)
+library(tibble)
+library(tidyr)
+
+user_lib <- Sys.getenv(
+  "SIGREPO_R_LIB",
+  unset = ""
+)
+
+if (nzchar(user_lib)) {
+  stopifnot(
+    dir.exists(user_lib)
+  )
+
+  .libPaths(
+    c(
+      user_lib,
+      .libPaths()
+    )
+  )
+}
+
+library(OmicSignature)
+
+find_codex_reference_root <- function(start = getwd()) {
+  current <- normalizePath(
+    start,
+    winslash = "/",
+    mustWork = TRUE
+  )
+
+  repeat {
+    candidate <- file.path(
+      current,
+      "codex_reference"
+    )
+
+    if (dir.exists(candidate)) {
+      return(
+        normalizePath(
+          candidate,
+          winslash = "/",
+          mustWork = TRUE
+        )
+      )
+    }
+
+    parent <- dirname(current)
+
+    if (identical(parent, current)) {
+      stop(
+        "Could not locate the codex_reference directory.",
+        call. = FALSE
+      )
+    }
+
+    current <- parent
+  }
+}
+
+CODEX_REFERENCE_ROOT <- find_codex_reference_root(
+  RMD_DIR
+)
+
+OMIC_HELPER <- file.path(
+  CODEX_REFERENCE_ROOT,
+  "helpers",
+  "omicsignature_compat.R"
+)
+
+stopifnot(
+  file.exists(OMIC_HELPER)
+)
+
+source(
+  OMIC_HELPER,
+  local = TRUE
+)
+
+OMIC_API <- sigrepo_assert_compatible_api()
+print(OMIC_API)
+```
+
+# Preflight interpretation
+
+## Study and source tables
+
+- Study: Ding et al., *Cell*, 2025.
+- PMID: `40713952`.
+- DOI: `10.1016/j.cell.2025.06.047`.
+- Table S2, worksheet `DEPs`: tissue-specific age-associated proteins with
+  study-provided UniProt accessions, Spearman correlations, raw P values, and
+  source direction labels.
+- Table S2, worksheet `Decoupling proteins`: tissue-specific
+  proteome-transcriptome decoupling proteins reported by gene symbol.
+- Table S3, worksheet `Clock importance proteins`: tissue-specific proteins
+  with permutation-importance values from the proteomic aging-clock models.
+
+## Biologically justified objects
+
+1. Thirteen tissue-specific age-associated protein signatures.
+2. Six tissue-specific proteome-transcriptome decoupling signatures.
+3. Thirteen tissue-specific proteomic aging-clock feature signatures.
+4. Three collections, one for each biologically related signature family.
+
+The supplied worksheets contain selected result tables rather than complete
+parent differential-analysis tables. Therefore, `difexp = NULL` for every
+object.
+
+## Study-supported score and membership rules
+
+### Age-associated proteins
+
+The study defines age-dependent proteins using the exact criterion
+`P_value < 0.05`. Positive Spearman correlations indicate increasing protein
+abundance with age; negative correlations indicate decreasing abundance with
+age. The signed Spearman correlation is retained as `score`.
+
+### Proteome-transcriptome decoupling
+
+The study defines decoupling proteins as proteins with positive protein-mRNA
+correlation in young samples and a decrease in correlation during aging. The
+reported change is `R_Old - R_Young`. Because this signature represents the
+magnitude of a non-directional loss of coupling, `score = abs(Diff)` and the
+workflow verifies that `Diff < 0` and agrees numerically with
+`R_Old - R_Young`.
+
+### Proteomic aging-clock features
+
+The study identifies model features using permutation importance. Figure S5A
+uses the exact criterion `Importance > 1`; this workflow applies that same
+strict operator and retains `Importance` as the positive score.
+
+## Covariates
+
+- The age-associated protein analysis uses unadjusted Spearman correlation
+  between chronological age and protein abundance.
+- The decoupling analysis uses group-specific Spearman correlations and does
+  not report adjustment covariates.
+- The aging-clock analysis uses chronological age as the prediction target,
+  not as an adjustment covariate.
+
+Accordingly, `covariates = "none"` is used for all three source families.
+
+## Identifier and probe-ID strategy
+
+- Study-provided UniProt accessions in the DEP worksheet are cleaned and used
+  directly as `feature_name`. No claim is made that these source accessions
+  were revalidated against current UniProt status.
+- Multi-accession DEP cells are expanded into separate rows while preserving
+  the original unsplit cell and source statistics in the mapping audit.
+- Symbol-only decoupling and clock worksheets use a reviewed, frozen
+  source-label-to-UniProt cache.
+- Exact `Protein` labels that also occur in the Table S2 `DEPs` worksheet use
+  the study-provided UniProt accession from that worksheet. The exact
+  study-specific crosswalk takes precedence over generic HGNC mappings because
+  the source distinguishes entries such as `CUX1` versus `CUX1.1`.
+- Source labels absent from the `DEPs` worksheet use the HGNC `2025-04-01`
+  archive `uniprot_ids` field. Direct approved symbols take precedence, with
+  supported unambiguous previous-symbol rescue where necessary.
+- Candidate HGNC one-to-many mappings are not expanded when the study's own
+  exact protein-label crosswalk identifies one measured UniProt entry.
+- No genuine assay probe identifier is supplied in these worksheets. The
+  compatibility helper standardizes each final signature once and assigns the
+  repository-compatible `feature_1`, `feature_2`, ... probe IDs.
+
+# Cleaning helpers
+
+```{r cleaning-helpers}
+clean_uniprot <- function(x) {
+  x <- as.character(x)
+
+  x <- gsub(
+    "[[:space:]\u00A0\u2007\u202F\uFEFF]+",
+    "",
+    x,
+    perl = TRUE
+  )
+
+  x <- gsub(
+    '^"|"$',
+    "",
+    x
+  )
+
+  toupper(x)
+}
+
+is_uniprot_accession <- function(x) {
+  grepl(
+    paste0(
+      "^(?:",
+      "[OPQ][0-9][A-Z0-9]{3}[0-9]",
+      "|",
+      "[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2}",
+      ")(?:-[0-9]+)?$"
+    ),
+    as.character(x),
+    perl = TRUE
+  )
+}
+
+clean_symbol <- function(x) {
+  x <- trimws(
+    as.character(x)
+  )
+
+  toupper(x)
+}
+
+nonempty <- function(x) {
+  !is.na(x) & nzchar(x)
+}
+```
+
+# Import and preserve the source tables
+
+```{r import-source-tables}
+s2_dec_tbl <- readxl::read_excel(
+  path = S2FILE,
+  sheet = "Decoupling proteins",
+  skip = 3,
+  col_names = c(
+    "Tissue",
+    "Protein",
+    "R_Young",
+    "R_Old",
+    "Diff"
+  )
+) |>
+  dplyr::mutate(
+    source_file = basename(S2FILE),
+    source_sheet = "Decoupling proteins",
+    source_row = dplyr::row_number() + 3L,
+    Tissue = trimws(as.character(Tissue)),
+    Protein = clean_symbol(Protein),
+    R_Young = as.numeric(R_Young),
+    R_Old = as.numeric(R_Old),
+    Diff = as.numeric(Diff)
+  ) |>
+  dplyr::filter(
+    nonempty(Tissue),
+    nonempty(Protein)
+  )
+
+s2_dep_tbl <- readxl::read_excel(
+  path = S2FILE,
+  sheet = "DEPs",
+  skip = 3,
+  col_names = c(
+    "Tissue",
+    "Protein",
+    "Uniprot_ID",
+    "Description",
+    "Spearman_r",
+    "P_value",
+    "Type"
+  )
+) |>
+  dplyr::mutate(
+    source_file = basename(S2FILE),
+    source_sheet = "DEPs",
+    source_row = dplyr::row_number() + 3L,
+    Tissue = trimws(as.character(Tissue)),
+    Protein = clean_symbol(Protein),
+    original_uniprot_cell = trimws(
+      as.character(Uniprot_ID)
+    ),
+    Description = as.character(Description),
+    Spearman_r = as.numeric(Spearman_r),
+    P_value = as.numeric(P_value),
+    Type = trimws(as.character(Type)),
+    Uniprot_ID = stringr::str_replace_all(
+      original_uniprot_cell,
+      "\\s*(?:;|\\||,)\\s*",
+      ";"
+    )
+  ) |>
+  dplyr::filter(
+    nonempty(Tissue),
+    nonempty(Protein),
+    nonempty(original_uniprot_cell)
+  ) |>
+  tidyr::separate_rows(
+    Uniprot_ID,
+    sep = ";"
+  ) |>
+  dplyr::mutate(
+    Uniprot_ID = clean_uniprot(Uniprot_ID)
+  ) |>
+  dplyr::filter(
+    nonempty(Uniprot_ID)
+  ) |>
+  dplyr::group_by(
+    source_file,
+    source_sheet,
+    source_row
+  ) |>
+  dplyr::mutate(
+    source_accession_index = dplyr::row_number(),
+    original_feature_name = original_uniprot_cell,
+    feature_name = Uniprot_ID,
+    primary_mapping_key = original_uniprot_cell,
+    rescue_mapping_key = NA_character_,
+    mapping_source = "study-provided UniProt accession",
+    mapping_multiplicity = dplyr::n_distinct(
+      feature_name
+    ),
+    match_status = dplyr::case_when(
+      mapping_multiplicity == 1L ~ "mapped",
+      mapping_multiplicity > 1L ~ "one_to_many",
+      TRUE ~ "unmatched"
+    )
+  ) |>
+  dplyr::ungroup()
+
+s3_clock_tbl <- readxl::read_excel(
+  path = S3FILE,
+  sheet = "Clock importance proteins",
+  skip = 3,
+  col_names = c(
+    "Tissue",
+    "Protein",
+    "Importance_LCL_5",
+    "Importance",
+    "Importance_UCL_95",
+    "Permutation_Error"
+  )
+) |>
+  dplyr::mutate(
+    source_file = basename(S3FILE),
+    source_sheet = "Clock importance proteins",
+    source_row = dplyr::row_number() + 3L,
+    Tissue = trimws(as.character(Tissue)),
+    Protein = clean_symbol(Protein),
+    Importance_LCL_5 = as.numeric(Importance_LCL_5),
+    Importance = as.numeric(Importance),
+    Importance_UCL_95 = as.numeric(Importance_UCL_95),
+    Permutation_Error = as.numeric(Permutation_Error)
+  ) |>
+  dplyr::filter(
+    nonempty(Tissue),
+    nonempty(Protein)
+  )
+
+cat("S2 DEP tissues:\n")
+print(table(s2_dep_tbl$Tissue))
+
+cat("\nS2 decoupling tissues:\n")
+print(table(s2_dec_tbl$Tissue))
+
+cat("\nS3 clock tissues:\n")
+print(table(s3_clock_tbl$Tissue))
+
+EXPECTED_DEP_SOURCE_ROWS <- c(
+  "Aorta" = 3862L,
+  "Spleen" = 2679L,
+  "Adrenal" = 2262L,
+  "Pancreas" = 2262L,
+  "Intestine" = 1464L,
+  "Lymph" = 1171L,
+  "Heart" = 990L,
+  "Skin" = 977L,
+  "Muscle" = 907L,
+  "Liver" = 804L,
+  "Adipose" = 760L,
+  "Lung" = 684L,
+  "Plasma" = 338L
+)
+
+EXPECTED_DECOUPLING_SOURCE_ROWS <- c(
+  "Spleen" = 251L,
+  "Muscle" = 99L,
+  "Lymph" = 347L,
+  "Adipose" = 464L,
+  "Liver" = 1154L,
+  "Adrenal" = 1265L
+)
+
+EXPECTED_CLOCK_SOURCE_ROWS <- c(
+  "Adipose" = 196L,
+  "Adrenal" = 551L,
+  "Aorta" = 275L,
+  "Heart" = 579L,
+  "Intestine" = 325L,
+  "Liver" = 278L,
+  "Lung" = 253L,
+  "Lymph" = 299L,
+  "Muscle" = 199L,
+  "Pancreas" = 515L,
+  "Plasma" = 39L,
+  "Skin" = 56L,
+  "Spleen" = 342L
+)
+
+actual_named_counts <- function(x) {
+  counts <- table(x)
+  stats::setNames(
+    as.integer(counts),
+    names(counts)
+  )
+}
+
+stopifnot(
+  nrow(s2_dep_tbl) == 19160L,
+  nrow(s2_dec_tbl) == 3580L,
+  nrow(s3_clock_tbl) == 3907L,
+  identical(
+    actual_named_counts(s2_dep_tbl$Tissue)[
+      names(EXPECTED_DEP_SOURCE_ROWS)
+    ],
+    EXPECTED_DEP_SOURCE_ROWS
+  ),
+  identical(
+    actual_named_counts(s2_dec_tbl$Tissue)[
+      names(EXPECTED_DECOUPLING_SOURCE_ROWS)
+    ],
+    EXPECTED_DECOUPLING_SOURCE_ROWS
+  ),
+  identical(
+    actual_named_counts(s3_clock_tbl$Tissue)[
+      names(EXPECTED_CLOCK_SOURCE_ROWS)
+    ],
+    EXPECTED_CLOCK_SOURCE_ROWS
+  )
+)
+
+message(
+  "Expected Ding source-table row counts passed."
+)
+```
+
+# Validate source-defined tissues and study rules
+
+```{r source-validation}
+dep_tissues <- c(
+  "Aorta",
+  "Spleen",
+  "Adrenal",
+  "Pancreas",
+  "Intestine",
+  "Lymph",
+  "Heart",
+  "Skin",
+  "Muscle",
+  "Liver",
+  "Adipose",
+  "Lung",
+  "Plasma"
+)
+
+dec_tissues <- c(
+  "Spleen",
+  "Muscle",
+  "Lymph",
+  "Adipose",
+  "Liver",
+  "Adrenal"
+)
+
+clock_tissues <- c(
+  "Adipose",
+  "Adrenal",
+  "Aorta",
+  "Heart",
+  "Intestine",
+  "Liver",
+  "Lung",
+  "Lymph",
+  "Muscle",
+  "Pancreas",
+  "Plasma",
+  "Skin",
+  "Spleen"
+)
+
+stopifnot(
+  setequal(
+    unique(s2_dep_tbl$Tissue),
+    dep_tissues
+  ),
+  setequal(
+    unique(s2_dec_tbl$Tissue),
+    dec_tissues
+  ),
+  setequal(
+    unique(s3_clock_tbl$Tissue),
+    clock_tissues
+  )
+)
+
+stopifnot(
+  all(
+    is.finite(s2_dep_tbl$P_value)
+  ),
+  all(
+    s2_dep_tbl$P_value < 0.05
+  ),
+  all(
+    is.finite(s2_dep_tbl$Spearman_r)
+  ),
+  all(
+    s2_dep_tbl$Spearman_r != 0
+  ),
+  all(
+    s2_dep_tbl$Type[
+      s2_dep_tbl$Spearman_r > 0
+    ] == "Upregulated"
+  ),
+  all(
+    s2_dep_tbl$Type[
+      s2_dep_tbl$Spearman_r < 0
+    ] == "Downregulated"
+  )
+)
+
+decoupling_difference_error <- abs(
+  s2_dec_tbl$Diff -
+    (
+      s2_dec_tbl$R_Old -
+        s2_dec_tbl$R_Young
+    )
+)
+
+stopifnot(
+  all(
+    is.finite(s2_dec_tbl$R_Young)
+  ),
+  all(
+    is.finite(s2_dec_tbl$R_Old)
+  ),
+  all(
+    is.finite(s2_dec_tbl$Diff)
+  ),
+  all(
+    s2_dec_tbl$R_Young > 0
+  ),
+  all(
+    s2_dec_tbl$Diff < 0
+  ),
+  all(
+    decoupling_difference_error < 1e-6
+  )
+)
+
+CLOCK_IMPORTANCE_CUTOFF <- 1
+
+stopifnot(
+  all(
+    is.finite(s3_clock_tbl$Importance)
+  ),
+  any(
+    s3_clock_tbl$Importance >
+      CLOCK_IMPORTANCE_CUTOFF
+  )
+)
+
+message(
+  "Source tissue sets and study-supported selection rules passed."
+)
+```
+
+# Load the frozen reviewed source-label-to-UniProt mapping cache
+
+```{r symbol-mapping}
+MAPPING_CACHE <- file.path(
+  REFERENCE_DIR,
+  "Ding2025_HGNC_to_UniProt_2025-04-01.rds"
+)
+
+if (!file.exists(MAPPING_CACHE)) {
+  stop(
+    paste0(
+      "The reviewed Ding 2025 source-label-to-UniProt mapping cache is missing: ",
+      MAPPING_CACHE,
+      ". Run finalize_ding2025_reviewed_mapping_cache.R after generating the ",
+      "static candidate, then render this Rmd."
+    ),
+    call. = FALSE
+  )
+}
+
+symbol_map <- readRDS(
+  MAPPING_CACHE
+)
+
+required_mapping_columns <- c(
+  "source_symbol",
+  "feature_name",
+  "resolved_hgnc_symbol",
+  "mapping_method",
+  "mapping_source"
+)
+
+stopifnot(
+  is.data.frame(symbol_map),
+  all(
+    required_mapping_columns %in%
+      names(symbol_map)
+  )
+)
+
+symbol_map <- symbol_map |>
+  dplyr::transmute(
+    source_symbol = clean_symbol(source_symbol),
+    feature_name = clean_uniprot(feature_name),
+    resolved_hgnc_symbol = clean_symbol(
+      resolved_hgnc_symbol
+    ),
+    mapping_method = as.character(
+      mapping_method
+    ),
+    mapping_source = as.character(
+      mapping_source
+    )
+  ) |>
+  dplyr::filter(
+    nonempty(source_symbol),
+    nonempty(feature_name),
+    nonempty(resolved_hgnc_symbol),
+    nonempty(mapping_method),
+    nonempty(mapping_source)
+  ) |>
+  dplyr::distinct()
+
+all_symbols_to_map <- sort(
+  unique(
+    c(
+      s2_dec_tbl$Protein,
+      s3_clock_tbl$Protein
+    )
+  )
+)
+
+stopifnot(
+  !anyNA(symbol_map),
+  !anyDuplicated(symbol_map),
+  nrow(symbol_map) == 5370L,
+  dplyr::n_distinct(
+    symbol_map$source_symbol
+  ) == 5370L,
+  !anyDuplicated(
+    symbol_map$source_symbol
+  ),
+  !anyDuplicated(
+    symbol_map[
+      c(
+        "source_symbol",
+        "feature_name"
+      )
+    ]
+  ),
+  setequal(
+    symbol_map$source_symbol,
+    all_symbols_to_map
+  ),
+  sum(
+    symbol_map$mapping_method ==
+      "study_provided_exact_label"
+  ) == 4700L,
+  sum(
+    symbol_map$mapping_method ==
+      "approved_symbol"
+  ) == 667L,
+  sum(
+    symbol_map$mapping_method ==
+      "previous_symbol"
+  ) == 3L,
+  all(
+    is_uniprot_accession(
+      symbol_map$feature_name
+    )
+  )
+)
+
+message(
+  paste0(
+    "Loaded the reviewed Ding 2025 mapping cache: ",
+    nrow(symbol_map),
+    " one-to-one source-label mappings."
+  )
+)
+
+apply_symbol_mapping <- function(df) {
+  df |>
+    dplyr::mutate(
+      source_symbol = clean_symbol(Protein)
+    ) |>
+    dplyr::left_join(
+      symbol_map,
+      by = "source_symbol",
+      relationship = "many-to-many"
+    ) |>
+    dplyr::group_by(
+      source_file,
+      source_sheet,
+      source_row,
+      Tissue,
+      source_symbol
+    ) |>
+    dplyr::mutate(
+      original_feature_name = source_symbol,
+      primary_mapping_key = source_symbol,
+      rescue_mapping_key = dplyr::if_else(
+        !is.na(mapping_method) &
+          mapping_method %in%
+            c(
+              "previous_symbol",
+              "alias_symbol"
+            ),
+        resolved_hgnc_symbol,
+        NA_character_
+      ),
+      mapping_source = dplyr::coalesce(
+        mapping_source,
+        paste0(
+          "HGNC 2025-04-01 archive; ",
+          "no UniProt mapping after supported rescue"
+        )
+      ),
+      mapping_multiplicity = dplyr::n_distinct(
+        feature_name[
+          nonempty(feature_name)
+        ]
+      ),
+      match_status = dplyr::case_when(
+        mapping_multiplicity == 0L ~ "unmatched",
+        mapping_multiplicity == 1L ~ "mapped",
+        mapping_multiplicity > 1L ~ "one_to_many"
+      )
+    ) |>
+    dplyr::ungroup()
+}
+
+s2_dec_mapped <- apply_symbol_mapping(
+  s2_dec_tbl
+)
+
+s3_clock_mapped <- apply_symbol_mapping(
+  s3_clock_tbl
+)
+```
+
+# Mapping QC
+
+```{r mapping-qc}
+cat("\nS2 decoupling mapping status:\n")
+print(
+  table(
+    s2_dec_mapped$match_status,
+    useNA = "ifany"
+  )
+)
+
+cat("\nS3 clock mapping status:\n")
+print(
+  table(
+    s3_clock_mapped$match_status,
+    useNA = "ifany"
+  )
+)
+
+dec_unmatched <- s2_dec_mapped |>
+  dplyr::filter(
+    match_status == "unmatched"
+  ) |>
+  dplyr::distinct(
+    source_symbol
+  )
+
+clock_unmatched <- s3_clock_mapped |>
+  dplyr::filter(
+    match_status == "unmatched"
+  ) |>
+  dplyr::distinct(
+    source_symbol
+  )
+
+dec_one_to_many <- s2_dec_mapped |>
+  dplyr::filter(
+    match_status == "one_to_many"
+  ) |>
+  dplyr::distinct(
+    source_symbol,
+    feature_name,
+    resolved_hgnc_symbol,
+    mapping_method
+  )
+
+clock_one_to_many <- s3_clock_mapped |>
+  dplyr::filter(
+    match_status == "one_to_many"
+  ) |>
+  dplyr::distinct(
+    source_symbol,
+    feature_name,
+    resolved_hgnc_symbol,
+    mapping_method
+  )
+
+cat("\nS2 decoupling unmatched source symbols:\n")
+print(dec_unmatched)
+
+cat("\nS3 clock unmatched source symbols:\n")
+print(clock_unmatched)
+
+cat("\nS2 decoupling one-to-many mappings:\n")
+print(dec_one_to_many)
+
+cat("\nS3 clock one-to-many mappings:\n")
+print(clock_one_to_many)
+
+mapping_summary <- tibble::tibble(
+  source_family = c(
+    "Decoupling",
+    "Clock"
+  ),
+  source_rows = c(
+    nrow(s2_dec_tbl),
+    nrow(s3_clock_tbl)
+  ),
+  mapped_source_symbols = c(
+    dplyr::n_distinct(
+      s2_dec_mapped$source_symbol[
+        s2_dec_mapped$match_status %in%
+          c("mapped", "one_to_many")
+      ]
+    ),
+    dplyr::n_distinct(
+      s3_clock_mapped$source_symbol[
+        s3_clock_mapped$match_status %in%
+          c("mapped", "one_to_many")
+      ]
+    )
+  ),
+  mapped_rows = c(
+    sum(
+      s2_dec_mapped$match_status %in%
+        c("mapped", "one_to_many")
+    ),
+    sum(
+      s3_clock_mapped$match_status %in%
+        c("mapped", "one_to_many")
+    )
+  ),
+  unresolved_source_symbols = c(
+    nrow(dec_unmatched),
+    nrow(clock_unmatched)
+  )
+)
+
+print(mapping_summary)
+
+expected_mapping_summary <- tibble::tibble(
+  source_family = c(
+    "Decoupling",
+    "Clock"
+  ),
+  source_rows = c(
+    3580L,
+    3907L
+  ),
+  mapped_source_symbols = c(
+    3069L,
+    3211L
+  ),
+  mapped_rows = c(
+    3580L,
+    3907L
+  ),
+  unresolved_source_symbols = c(
+    0L,
+    0L
+  )
+)
+
+stopifnot(
+  identical(
+    mapping_summary,
+    expected_mapping_summary
+  ),
+  nrow(dec_unmatched) == 0L,
+  nrow(clock_unmatched) == 0L,
+  nrow(dec_one_to_many) == 0L,
+  nrow(clock_one_to_many) == 0L
+)
+
+message(
+  "Reviewed Ding mapping coverage passed with no unresolved or one-to-many source labels."
+)
+```
+
+```{r optional-audit-write}
+do_write_audit <- FALSE
+
+if (do_write_audit) {
+  readr::write_csv(
+    s2_dep_tbl,
+    file.path(
+      OUTDIR,
+      "Ding2025_DEP_mapping_audit.csv"
+    )
+  )
+
+  readr::write_csv(
+    s2_dec_mapped,
+    file.path(
+      OUTDIR,
+      "Ding2025_decoupling_mapping_audit.csv"
+    )
+  )
+
+  readr::write_csv(
+    s3_clock_mapped,
+    file.path(
+      OUTDIR,
+      "Ding2025_clock_mapping_audit.csv"
+    )
+  )
+}
+```
+
+# Metadata constants
+
+```{r metadata-constants}
+sample_type_map <- c(
+  "Aorta" = "aorta",
+  "Spleen" = "spleen",
+  "Adrenal" = "adrenal gland",
+  "Pancreas" = "pancreas",
+  "Intestine" = "intestine",
+  "Lymph" = "lymph node",
+  "Heart" = "heart",
+  "Skin" = "skin",
+  "Muscle" = "skeletal muscle",
+  "Liver" = "liver",
+  "Adipose" = "white adipose tissue",
+  "Lung" = "lung",
+  "Plasma" = "blood plasma"
+)
+
+name_token_map <- c(
+  "Aorta" = "Aorta",
+  "Spleen" = "Spleen",
+  "Adrenal" = "AdrenalGland",
+  "Pancreas" = "Pancreas",
+  "Intestine" = "Intestine",
+  "Lymph" = "LymphNode",
+  "Heart" = "Heart",
+  "Skin" = "Skin",
+  "Muscle" = "SkeletalMuscle",
+  "Liver" = "Liver",
+  "Adipose" = "WhiteAdiposeTissue",
+  "Lung" = "Lung",
+  "Plasma" = "BloodPlasma"
+)
+
+stopifnot(
+  setequal(
+    names(sample_type_map),
+    dep_tissues
+  ),
+  setequal(
+    names(name_token_map),
+    dep_tissues
+  )
+)
+
+purrr::walk(
+  unname(sample_type_map),
+  sigrepo_assert_sample_type
+)
+
+AUTHOR <- "Yingjie Ding et al."
+PMID_STR <- "40713952"
+YEAR_NUM <- 2025
+PLATFORM_STR <- "proteomics by mass spectrometry"
+ASSAY_STR <- "proteomics"
+COVARIATES_STR <- "none"
+
+sigrepo_assert_platform(
+  PLATFORM_STR
+)
+```
+
+# Shared object validation
+
+```{r validation-helpers}
+validate_signature_table <- function(
+    sig,
+    expected_levels,
+    context,
+    require_exact_level_order = TRUE
+) {
+  level_check <- if (
+    isTRUE(require_exact_level_order)
+  ) {
+    identical(
+      levels(sig$group_label),
+      expected_levels
+    )
+  } else {
+    all(
+      levels(sig$group_label) %in%
+        expected_levels
+    )
+  }
+
+  stopifnot(
+    is.data.frame(sig),
+    all(
+      c(
+        "probe_id",
+        "feature_name",
+        "score",
+        "group_label"
+      ) %in% names(sig)
+    ),
+    nrow(sig) > 0L,
+    is.character(sig$probe_id),
+    all(
+      nonempty(sig$probe_id)
+    ),
+    !anyDuplicated(sig$probe_id),
+    identical(
+      sig$probe_id,
+      paste0(
+        "feature_",
+        seq_len(nrow(sig))
+      )
+    ),
+    all(
+      nonempty(sig$feature_name)
+    ),
+    all(
+      is_uniprot_accession(
+        sig$feature_name
+      )
+    ),
+    is.numeric(sig$score),
+    all(
+      is.finite(sig$score)
+    ),
+    is.factor(sig$group_label),
+    level_check,
+    all(
+      !is.na(sig$group_label)
+    ),
+    all(
+      as.character(
+        sig$group_label
+      ) %in% expected_levels
+    )
+  )
+
+  message(
+    context,
+    ": ",
+    nrow(sig),
+    " validated signature rows."
+  )
+
+  invisible(TRUE)
+}
+
+validate_omic_signature <- function(
+    object,
+    expected_levels,
+    context
+) {
+  stopifnot(
+    !is.null(object$signature),
+    is.data.frame(object$signature),
+    is.null(object$difexp)
+  )
+
+  ## Pre-construction signature tables are required to preserve the
+  ## explicitly defined factor-level order. The OmicSignature constructor
+  ## may reconstruct factors in a different order while retaining the same
+  ## biological labels. Post-construction validation therefore requires
+  ## exact label-set preservation rather than exact factor-level ordering.
+  validate_signature_table(
+    object$signature,
+    expected_levels,
+    context,
+    require_exact_level_order = FALSE
+  )
+
+  invisible(TRUE)
+}
+```
+
+# Build 13 age-associated protein signatures
+
+```{r build-dep-signatures}
+DEP_LEVELS <- c(
+  "Increasing with age",
+  "Decreasing with age"
+)
+
+make_dep_osig <- function(tissue_name) {
+  dep_audit <- s2_dep_tbl |>
+    dplyr::filter(
+      Tissue == tissue_name
+    ) |>
+    dplyr::mutate(
+      feature_name = clean_uniprot(
+        feature_name
+      ),
+      score = as.numeric(
+        Spearman_r
+      ),
+      group_label = factor(
+        dplyr::case_when(
+          score > 0 ~ "Increasing with age",
+          score < 0 ~ "Decreasing with age",
+          TRUE ~ NA_character_
+        ),
+        levels = DEP_LEVELS
+      )
+    )
+
+  stopifnot(
+    nrow(dep_audit) > 0L,
+    all(
+      dep_audit$P_value < 0.05
+    ),
+    all(
+      dep_audit$Type[
+        dep_audit$score > 0
+      ] == "Upregulated"
+    ),
+    all(
+      dep_audit$Type[
+        dep_audit$score < 0
+      ] == "Downregulated"
+    )
+  )
+
+  sig_tbl <- dep_audit |>
+    dplyr::filter(
+      match_status %in%
+        c(
+          "mapped",
+          "one_to_many"
+        ),
+      nonempty(feature_name),
+      is.finite(P_value),
+      P_value < 0.05,
+      is.finite(score),
+      score != 0,
+      !is.na(group_label)
+    ) |>
+    dplyr::arrange(
+      P_value,
+      dplyr::desc(
+        abs(score)
+      ),
+      source_row,
+      source_accession_index
+    ) |>
+    dplyr::transmute(
+      feature_name,
+      score,
+      group_label
+    ) |>
+    as.data.frame()
+
+  sig_tbl <- sigrepo_standardize_signature(
+    sig_tbl,
+    context = paste(
+      tissue_name,
+      "age-associated protein signature"
+    )
+  )
+
+  validate_signature_table(
+    sig_tbl,
+    DEP_LEVELS,
+    paste(
+      tissue_name,
+      "age-associated protein signature"
+    )
+  )
+
+  stopifnot(
+    all(
+      as.character(
+        sig_tbl$group_label[
+          sig_tbl$score > 0
+        ]
+      ) == "Increasing with age"
+    ),
+    all(
+      as.character(
+        sig_tbl$group_label[
+          sig_tbl$score < 0
+        ]
+      ) == "Decreasing with age"
+    )
+  )
+
+  meta <- OmicSignature::createMetadata(
+    signature_name = paste0(
+      "Aging_Hs_",
+      name_token_map[[tissue_name]],
+      "_AgeAssociatedProteins_Ding2025"
+    ),
+    organism = "Homo sapiens",
+    direction_type = "bi-directional",
+    assay_type = ASSAY_STR,
+    phenotype = paste0(
+      "Age-associated proteins in ",
+      tissue_name
+    ),
+    platform = PLATFORM_STR,
+    sample_type = sample_type_map[[tissue_name]],
+    covariates = COVARIATES_STR,
+    p_value_cutoff = 0.05,
+    keywords = sigrepo_keywords(
+      c(
+        "aging",
+        tissue_name,
+        "proteomics",
+        "age-associated proteins"
+      )
+    ),
+    author = AUTHOR,
+    PMID = PMID_STR,
+    year = YEAR_NUM,
+    description = paste0(
+      "Age-associated proteomic signature for human ",
+      tissue_name,
+      " from Table S2 of Ding et al. Cell 2025. Positive Spearman ",
+      "scores indicate increasing abundance with age and negative scores ",
+      "indicate decreasing abundance. Membership uses the exact reported ",
+      "criterion P_value < 0.05. Multi-accession source cells remain ",
+      "expanded. The worksheet is an already selected result table, so ",
+      "difexp is NULL."
+    )
+  )
+
+  OmicSignature::OmicSignature$new(
+    metadata = meta,
+    signature = sig_tbl,
+    difexp = NULL
+  )
+}
+
+dep_oSig_list <- purrr::set_names(
+  dep_tissues
+) |>
+  purrr::map(
+    make_dep_osig
+  )
+
+OmSC_DEP <- OmicSignature::OmicSignatureCollection$new(
+  OmicSigList = dep_oSig_list,
+  metadata = list(
+    collection_name =
+      "Aging_Hs_MultiTissue_AgeAssociatedProteins_Ding2025",
+    description = paste0(
+      "Tissue-specific age-associated proteomic signatures across ",
+      "13 human tissues from Table S2 of Ding et al. Cell 2025."
+    ),
+    author = AUTHOR
+  )
+)
+```
+
+# Build 6 proteome-transcriptome decoupling signatures
+
+```{r build-decoupling-signatures}
+DECOUPLING_LEVELS <-
+  "Age-related proteome-transcriptome decoupling"
+
+make_decoupling_osig <- function(tissue_name) {
+  source_rows <- s2_dec_mapped |>
+    dplyr::filter(
+      Tissue == tissue_name
+    )
+
+  stopifnot(
+    nrow(source_rows) > 0L,
+    all(
+      source_rows$R_Young > 0
+    ),
+    all(
+      source_rows$Diff < 0
+    ),
+    all(
+      abs(
+        source_rows$Diff -
+          (
+            source_rows$R_Old -
+              source_rows$R_Young
+          )
+      ) < 1e-6
+    )
+  )
+
+  sig_tbl <- source_rows |>
+    dplyr::filter(
+      match_status %in%
+        c(
+          "mapped",
+          "one_to_many"
+        ),
+      nonempty(feature_name)
+    ) |>
+    dplyr::mutate(
+      score = abs(
+        as.numeric(Diff)
+      ),
+      group_label = factor(
+        DECOUPLING_LEVELS,
+        levels = DECOUPLING_LEVELS
+      )
+    ) |>
+    dplyr::filter(
+      is.finite(score),
+      score > 0
+    ) |>
+    dplyr::arrange(
+      dplyr::desc(score),
+      source_row,
+      feature_name
+    ) |>
+    dplyr::transmute(
+      feature_name,
+      score,
+      group_label
+    ) |>
+    as.data.frame()
+
+  sig_tbl <- sigrepo_standardize_signature(
+    sig_tbl,
+    context = paste(
+      tissue_name,
+      "proteome-transcriptome decoupling signature"
+    )
+  )
+
+  validate_signature_table(
+    sig_tbl,
+    DECOUPLING_LEVELS,
+    paste(
+      tissue_name,
+      "proteome-transcriptome decoupling signature"
+    )
+  )
+
+  meta <- OmicSignature::createMetadata(
+    signature_name = paste0(
+      "Aging_Hs_",
+      name_token_map[[tissue_name]],
+      "_ProteomeTranscriptomeDecoupling_Ding2025"
+    ),
+    organism = "Homo sapiens",
+    direction_type = "uni-directional",
+    assay_type = ASSAY_STR,
+    phenotype = paste0(
+      "Age-related proteome-transcriptome decoupling in ",
+      tissue_name
+    ),
+    platform = PLATFORM_STR,
+    sample_type = sample_type_map[[tissue_name]],
+    covariates = COVARIATES_STR,
+    keywords = sigrepo_keywords(
+      c(
+        "aging",
+        tissue_name,
+        "proteomics",
+        "proteome-transcriptome decoupling"
+      )
+    ),
+    author = AUTHOR,
+    PMID = PMID_STR,
+    year = YEAR_NUM,
+    description = paste0(
+      "Proteome-transcriptome decoupling signature for human ",
+      tissue_name,
+      " from Table S2 of Ding et al. Cell 2025. The study defines ",
+      "decoupling proteins as proteins with positive protein-mRNA ",
+      "correlation in young samples and reduced correlation during aging. ",
+      "The reported change is R_Old - R_Young and is negative for these ",
+      "rows; score is abs(Diff), representing the magnitude of coupling ",
+      "loss. Valid one-to-many UniProt mappings remain expanded. The ",
+      "worksheet is an already selected result table, so difexp is NULL."
+    )
+  )
+
+  OmicSignature::OmicSignature$new(
+    metadata = meta,
+    signature = sig_tbl,
+    difexp = NULL
+  )
+}
+
+dec_oSig_list <- purrr::set_names(
+  dec_tissues
+) |>
+  purrr::map(
+    make_decoupling_osig
+  )
+
+OmSC_Decoupling <-
+  OmicSignature::OmicSignatureCollection$new(
+    OmicSigList = dec_oSig_list,
+    metadata = list(
+      collection_name =
+        "Aging_Hs_MultiTissue_ProteomeTranscriptomeDecoupling_Ding2025",
+      description = paste0(
+        "Tissue-specific proteome-transcriptome decoupling ",
+        "signatures across 6 human tissues from Table S2 of ",
+        "Ding et al. Cell 2025."
+      ),
+      author = AUTHOR
+    )
+  )
+```
+
+# Build 13 proteomic aging-clock feature signatures
+
+```{r build-clock-signatures}
+CLOCK_LEVELS <-
+  "Proteomic aging clock feature"
+
+make_clock_osig <- function(tissue_name) {
+  source_rows <- s3_clock_mapped |>
+    dplyr::filter(
+      Tissue == tissue_name
+    )
+
+  stopifnot(
+    nrow(source_rows) > 0L,
+    all(
+      is.finite(source_rows$Importance)
+    )
+  )
+
+  sig_tbl <- source_rows |>
+    dplyr::filter(
+      match_status %in%
+        c(
+          "mapped",
+          "one_to_many"
+        ),
+      nonempty(feature_name),
+      Importance >
+        CLOCK_IMPORTANCE_CUTOFF
+    ) |>
+    dplyr::mutate(
+      score = as.numeric(
+        Importance
+      ),
+      group_label = factor(
+        CLOCK_LEVELS,
+        levels = CLOCK_LEVELS
+      )
+    ) |>
+    dplyr::filter(
+      is.finite(score),
+      score >
+        CLOCK_IMPORTANCE_CUTOFF
+    ) |>
+    dplyr::arrange(
+      dplyr::desc(score),
+      source_row,
+      feature_name
+    ) |>
+    dplyr::transmute(
+      feature_name,
+      score,
+      group_label
+    ) |>
+    as.data.frame()
+
+  sig_tbl <- sigrepo_standardize_signature(
+    sig_tbl,
+    context = paste(
+      tissue_name,
+      "proteomic aging-clock signature"
+    )
+  )
+
+  validate_signature_table(
+    sig_tbl,
+    CLOCK_LEVELS,
+    paste(
+      tissue_name,
+      "proteomic aging-clock signature"
+    )
+  )
+
+  stopifnot(
+    all(
+      sig_tbl$score >
+        CLOCK_IMPORTANCE_CUTOFF
+    )
+  )
+
+  meta <- OmicSignature::createMetadata(
+    signature_name = paste0(
+      "Aging_Hs_",
+      name_token_map[[tissue_name]],
+      "_ProteomicClockFeatures_Ding2025"
+    ),
+    organism = "Homo sapiens",
+    direction_type = "uni-directional",
+    assay_type = ASSAY_STR,
+    phenotype = paste0(
+      "Proteomic aging clock features for ",
+      tissue_name
+    ),
+    platform = PLATFORM_STR,
+    sample_type = sample_type_map[[tissue_name]],
+    covariates = COVARIATES_STR,
+    score_cutoff =
+      CLOCK_IMPORTANCE_CUTOFF,
+    keywords = sigrepo_keywords(
+      c(
+        "aging",
+        tissue_name,
+        "proteomics",
+        "proteomic aging clock"
+      )
+    ),
+    author = AUTHOR,
+    PMID = PMID_STR,
+    year = YEAR_NUM,
+    description = paste0(
+      "Proteomic aging-clock feature signature for human ",
+      tissue_name,
+      " from Table S3 of Ding et al. Cell 2025. Features were ",
+      "identified using permutation importance. Membership applies ",
+      "the exact Figure S5A criterion Importance > 1, and the ",
+      "reported Importance value is retained as score. Valid ",
+      "one-to-many UniProt mappings remain expanded. The worksheet ",
+      "is a selected feature-importance table, so difexp is NULL."
+    )
+  )
+
+  OmicSignature::OmicSignature$new(
+    metadata = meta,
+    signature = sig_tbl,
+    difexp = NULL
+  )
+}
+
+clock_oSig_list <- purrr::set_names(
+  clock_tissues
+) |>
+  purrr::map(
+    make_clock_osig
+  )
+
+OmSC_Clock <-
+  OmicSignature::OmicSignatureCollection$new(
+    OmicSigList = clock_oSig_list,
+    metadata = list(
+      collection_name =
+        "Aging_Hs_MultiTissue_ProteomicClockFeatures_Ding2025",
+      description = paste0(
+        "Tissue-specific proteomic aging-clock feature signatures ",
+        "across 13 human tissues from Table S3 of Ding et al. ",
+        "Cell 2025, using permutation importance > 1."
+      ),
+      author = AUTHOR
+    )
+  )
+```
+
+# Final object and collection validation
+
+```{r final-validation}
+stopifnot(
+  length(dep_oSig_list) == 13L,
+  length(dec_oSig_list) == 6L,
+  length(clock_oSig_list) == 13L
+)
+
+purrr::iwalk(
+  dep_oSig_list,
+  function(obj, nm) {
+    validate_omic_signature(
+      obj,
+      DEP_LEVELS,
+      paste(
+        nm,
+        "DEP OmicSignature"
+      )
+    )
+  }
+)
+
+purrr::iwalk(
+  dec_oSig_list,
+  function(obj, nm) {
+    validate_omic_signature(
+      obj,
+      DECOUPLING_LEVELS,
+      paste(
+        nm,
+        "decoupling OmicSignature"
+      )
+    )
+  }
+)
+
+purrr::iwalk(
+  clock_oSig_list,
+  function(obj, nm) {
+    validate_omic_signature(
+      obj,
+      CLOCK_LEVELS,
+      paste(
+        nm,
+        "clock OmicSignature"
+      )
+    )
+  }
+)
+
+dep_members <- sigrepo_collection_members(
+  OmSC_DEP
+)
+
+dec_members <- sigrepo_collection_members(
+  OmSC_Decoupling
+)
+
+clock_members <- sigrepo_collection_members(
+  OmSC_Clock
+)
+
+stopifnot(
+  length(dep_members) == 13L,
+  length(dec_members) == 6L,
+  length(clock_members) == 13L
+)
+
+extract_signature_names <- function(x) {
+  vapply(
+    x,
+    function(object) {
+      as.character(
+        object$metadata$signature_name
+      )
+    },
+    character(1)
+  )
+}
+
+stopifnot(
+  setequal(
+    extract_signature_names(
+      dep_members
+    ),
+    vapply(
+      dep_oSig_list,
+      function(object) {
+        as.character(
+          object$metadata$signature_name
+        )
+      },
+      character(1)
+    )
+  ),
+  setequal(
+    extract_signature_names(
+      dec_members
+    ),
+    vapply(
+      dec_oSig_list,
+      function(object) {
+        as.character(
+          object$metadata$signature_name
+        )
+      },
+      character(1)
+    )
+  ),
+  setequal(
+    extract_signature_names(
+      clock_members
+    ),
+    vapply(
+      clock_oSig_list,
+      function(object) {
+        as.character(
+          object$metadata$signature_name
+        )
+      },
+      character(1)
+    )
+  )
+)
+
+ding_signature_counts <- dplyr::bind_rows(
+  tibble::tibble(
+    family = "Age-associated proteins",
+    tissue = names(dep_oSig_list),
+    signature_rows = purrr::map_int(
+      dep_oSig_list,
+      ~ nrow(.x$signature)
+    )
+  ),
+  tibble::tibble(
+    family = "Proteome-transcriptome decoupling",
+    tissue = names(dec_oSig_list),
+    signature_rows = purrr::map_int(
+      dec_oSig_list,
+      ~ nrow(.x$signature)
+    )
+  ),
+  tibble::tibble(
+    family = "Proteomic aging clock",
+    tissue = names(clock_oSig_list),
+    signature_rows = purrr::map_int(
+      clock_oSig_list,
+      ~ nrow(.x$signature)
+    )
+  )
+)
+
+print(ding_signature_counts)
+
+EXPECTED_DEP_SIGNATURE_ROWS <-
+  EXPECTED_DEP_SOURCE_ROWS
+
+EXPECTED_DECOUPLING_SIGNATURE_ROWS <-
+  EXPECTED_DECOUPLING_SOURCE_ROWS
+
+EXPECTED_CLOCK_SIGNATURE_ROWS <-
+  EXPECTED_CLOCK_SOURCE_ROWS
+
+actual_signature_rows <- function(
+    count_table,
+    family_name,
+    expected_tissues
+) {
+  current <- count_table |>
+    dplyr::filter(
+      family == family_name
+    )
+
+  stats::setNames(
+    current$signature_rows,
+    current$tissue
+  )[
+    expected_tissues
+  ]
+}
+
+stopifnot(
+  identical(
+    actual_signature_rows(
+      ding_signature_counts,
+      "Age-associated proteins",
+      names(
+        EXPECTED_DEP_SIGNATURE_ROWS
+      )
+    ),
+    EXPECTED_DEP_SIGNATURE_ROWS
+  ),
+  identical(
+    actual_signature_rows(
+      ding_signature_counts,
+      "Proteome-transcriptome decoupling",
+      names(
+        EXPECTED_DECOUPLING_SIGNATURE_ROWS
+      )
+    ),
+    EXPECTED_DECOUPLING_SIGNATURE_ROWS
+  ),
+  identical(
+    actual_signature_rows(
+      ding_signature_counts,
+      "Proteomic aging clock",
+      names(
+        EXPECTED_CLOCK_SIGNATURE_ROWS
+      )
+    ),
+    EXPECTED_CLOCK_SIGNATURE_ROWS
+  )
+)
+
+message(
+  paste0(
+    "Ding 2025 development validation passed for ",
+    nrow(ding_signature_counts),
+    " OmicSignature objects in three collections, with all expected ",
+    "per-signature row counts confirmed."
+  )
+)
+```
+
+# Approval status
+
+No unresolved items remain for this approved reference workflow.
+
+The workflow uses the reviewed and frozen Ding 2025 source-label-to-UniProt
+mapping cache. It passed source-table validation, controlled-vocabulary
+validation, mapping validation, expected-count validation, UniProt-format
+validation, probe-ID validation, pre-construction and post-construction
+signature validation, collection validation, and a clean end-to-end render.
+
+The approved workflow creates 13 age-associated protein signatures,
+6 proteome-transcriptome decoupling signatures, and 13 proteomic aging-clock
+signatures, organized into three OmicSignature collections.
+
+# Optional save step
+
+```{r save, eval=FALSE}
+save_osig_list <- function(
+    osig_list,
+    outdir
+) {
+  purrr::iwalk(
+    osig_list,
+    function(object, object_key) {
+      output_file <- file.path(
+        outdir,
+        paste0(
+          object$metadata$signature_name,
+          "_oSig.rds"
+        )
+      )
+
+      if (file.exists(output_file)) {
+        stop(
+          "Refusing to overwrite existing file: ",
+          output_file,
+          call. = FALSE
+        )
+      }
+
+      saveRDS(
+        object,
+        output_file
+      )
+    }
+  )
+}
+
+save_osig_list(
+  dep_oSig_list,
+  OUTDIR
+)
+
+save_osig_list(
+  dec_oSig_list,
+  OUTDIR
+)
+
+save_osig_list(
+  clock_oSig_list,
+  OUTDIR
+)
+
+collection_outputs <- c(
+  DEP = file.path(
+    OUTDIR,
+    "Aging_Hs_MultiTissue_AgeAssociatedProteins_Ding2025_OmSC.rds"
+  ),
+  Decoupling = file.path(
+    OUTDIR,
+    "Aging_Hs_MultiTissue_ProteomeTranscriptomeDecoupling_Ding2025_OmSC.rds"
+  ),
+  Clock = file.path(
+    OUTDIR,
+    "Aging_Hs_MultiTissue_ProteomicClockFeatures_Ding2025_OmSC.rds"
+  )
+)
+
+stopifnot(
+  !any(
+    file.exists(
+      collection_outputs
+    )
+  )
+)
+
+saveRDS(
+  OmSC_DEP,
+  collection_outputs[["DEP"]]
+)
+
+saveRDS(
+  OmSC_Decoupling,
+  collection_outputs[["Decoupling"]]
+)
+
+saveRDS(
+  OmSC_Clock,
+  collection_outputs[["Clock"]]
+)
+```

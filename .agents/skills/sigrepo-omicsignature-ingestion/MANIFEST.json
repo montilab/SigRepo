@@ -1,0 +1,44 @@
+{
+  "name": "sigrepo-omicsignature-ingestion",
+  "version": "1.1.0",
+  "created": "2026-08-05",
+  "updated": "2026-08-05",
+  "foundation": {
+    "approved_examples": [
+      "LLFS_Sebastiani2024",
+      "EMT_Youssef2024",
+      "Ding2025",
+      "AhR_CYP1B1_MDA_SUM149"
+    ],
+    "api_contract": "v4 passed",
+    "repository_contract": "passed"
+  },
+  "contents": {
+    "references": [
+      "activation_tests.md",
+      "approved_examples.md",
+      "core_conventions.md",
+      "difexp_policy.md",
+      "evidence_and_stop_rules.md",
+      "mapping_policy.md",
+      "metadata_and_naming.md",
+      "package_api_contract.md",
+      "probe_id_policy.md",
+      "regression_scenarios.md",
+      "validation_contract.md",
+      "workflow_decision_tree.md"
+    ],
+    "assets": [
+      "DEVELOPMENT_README_TEMPLATE.md",
+      "approval_checklist.md",
+      "differential_table_template.Rmd",
+      "mapping_builder_template.md",
+      "membership_selected_result_template.Rmd",
+      "preflight_report_template.md"
+    ],
+    "scripts": [
+      "create_candidate_scaffold.py",
+      "verify_repository_foundation.py"
+    ]
+  }
+}

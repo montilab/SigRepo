@@ -1,0 +1,10 @@
+metric,value
+source_symbols,5370
+study_crosswalk_symbols,4700
+hgnc_fallback_symbols,670
+final_mapping_rows,5370
+unresolved_source_symbols,0
+one_to_many_source_symbols,0
+hgnc_approved_symbol_fallbacks,667
+hgnc_previous_symbol_fallbacks,3
+special_review_decisions,18

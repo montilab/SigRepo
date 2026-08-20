@@ -1,0 +1,2 @@
+ensembl_release,source_labels,mapped_labels,source_context_rows,mapped_rows,unresolved_labels,one_to_many_labels,excluded_labels,excluded_source_rows,final_row_expansion
+114,22981,22834,91924,91364,0,4,147,588,28

@@ -1,0 +1,1169 @@
+---
+title: "Derivation of signatures from the Long Life Family Study (LLFS) plasma metabolome"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    theme: united
+    code_folding: show
+    toc: true
+    toc_float: true
+---
+
+```{r global, echo=FALSE}
+knitr::opts_chunk$set(message=FALSE, warning=FALSE)
+```
+
+```{r}
+current_input <- knitr::current_input(
+  dir = TRUE
+)
+
+if (nzchar(current_input)) {
+  RMD_DIR <- dirname(
+    normalizePath(
+      current_input,
+      winslash = "/",
+      mustWork = TRUE
+    )
+  )
+} else {
+  RMD_DIR <- normalizePath(
+    getwd(),
+    winslash = "/",
+    mustWork = TRUE
+  )
+}
+
+REFERENCE_DIR <- file.path(
+  RMD_DIR,
+  "reference_data"
+)
+
+OUTDIR <- file.path(
+  RMD_DIR,
+  "outputs"
+)
+
+INFILE <- Sys.getenv(
+  "LLFS_INPUT_FILE",
+  unset = ""
+)
+
+if (!nzchar(INFILE)) {
+  stop(
+    paste0(
+      "LLFS_INPUT_FILE is not set. ",
+      "Set it to the LLFS supplementary ",
+      "Excel workbook path before rendering."
+    ),
+    call. = FALSE
+  )
+}
+
+stopifnot(
+  file.exists(INFILE),
+  dir.exists(REFERENCE_DIR)
+)
+
+## OmicSignature tutorial
+## montilab.github.io/OmicSignature/articles/CreateOmS.html
+
+## support scripts
+## check github.com/montilab/MLscripts for useful scripts
+## e.g.,
+## > options(box.path=file.path(Sys.getenv("CBMGIT"), "MLscripts"))
+## > box::use(R/deseq_wrapper)
+## alternative (less desirable)
+## > source(file.path(Sys.getenv("CBMGIT"), "MLscripts", "R", "deseq_wrapper.R"))
+```
+
+```{r}
+user_lib <- Sys.getenv(
+  "SIGREPO_R_LIB",
+  unset = ""
+)
+
+if (nzchar(user_lib)) {
+  stopifnot(
+    dir.exists(user_lib)
+  )
+
+  .libPaths(
+    c(
+      user_lib,
+      .libPaths()
+    )
+  )
+}
+
+library(OmicSignature)
+library(dplyr)
+library(stringr)
+library(openxlsx)
+library(readxl)
+library(purrr)
+library(tibble)
+
+library(tidyr)
+
+library(biomaRt)
+
+library(curl)
+library(stringi)
+
+
+find_codex_reference_root <- function(start = getwd()) {
+  current <- normalizePath(
+    start,
+    winslash = "/",
+    mustWork = TRUE
+  )
+
+  repeat {
+    candidate <- file.path(current, "codex_reference")
+
+    if (dir.exists(candidate)) {
+      return(
+        normalizePath(
+          candidate,
+          winslash = "/",
+          mustWork = TRUE
+        )
+      )
+    }
+
+    parent <- dirname(current)
+
+    if (identical(parent, current)) {
+      stop(
+        "Could not locate the codex_reference directory.",
+        call. = FALSE
+      )
+    }
+
+    current <- parent
+  }
+}
+
+CODEX_REFERENCE_ROOT <- find_codex_reference_root(
+  RMD_DIR
+)
+
+OMIC_HELPER <- file.path(
+  CODEX_REFERENCE_ROOT,
+  "helpers",
+  "omicsignature_compat.R"
+)
+
+stopifnot(file.exists(OMIC_HELPER))
+source(OMIC_HELPER)
+
+OMIC_API <- sigrepo_assert_compatible_api()
+print(OMIC_API)
+
+```
+
+# Preflight interpretation
+
+## Study and source
+
+- Study: Sebastiani et al., Cell Reports, 2024.
+- PMID: 39504246.
+- Source workbook sheet: `all results-regression`.
+- Platform: metabolomics by mass spectrometry.
+- Sample: blood plasma.
+- The paper reports RefMet standardized names from the July 2023 release.
+
+## Biologically justified objects
+
+1. Longitudinal aging-associated plasma metabolites.
+2. Exceptional-longevity-associated plasma metabolites.
+3. Survival-associated plasma metabolites.
+4. One collection containing exactly those three related objects.
+
+## Source classification and `difexp`
+
+The workbook contains a broad regression-results table with effect estimates,
+adjusted P values, and study-provided Boolean selection indicators. The mapped
+parent result table is retained as `difexp`; each signature is derived from the
+same parent table using its corresponding study selection indicator.
+
+## Score and direction
+
+- Longitudinal aging: the reported aging effect.
+- Exceptional longevity: the reported centenarian effect.
+- Survival: `log(HR.death.est)`.
+- Zero-valued effects are not assigned to either biological direction.
+- Group labels are factors with explicit levels.
+
+## Feature and probe identifiers
+
+- `Standardized.name` is the primary RefMet `feature_name`.
+- `refmet_convert()` is rescue-only when `Standardized.name` is missing.
+- `Compound.Name` is used as the source feature/probe identifier only after
+  its non-missingness and uniqueness are validated.
+- Rows unresolved after RefMet rescue remain in the mapping audit and are
+  excluded only from object input.
+
+# Source manifest
+
+| Object family | Source sheet | Parent table | Selection column | `difexp` |
+|---|---|---|---|---|
+| Longitudinal aging | all results-regression | complete mapped regression results | aging.fdr.05 | retained |
+| Exceptional longevity | all results-regression | complete mapped regression results | el.fdr.05 | retained |
+| Survival | all results-regression | complete mapped regression results | surv.fdr.05 | retained |
+
+
+
+
+It includes the star-cleaning step, RefMet rescue, and QC tables.
+```{r}
+refmet_convert <- function(DF) {
+  stopifnot(methods::is(DF, "data.frame"))
+
+  mets <- stringi::stri_join_list(list(DF |> dplyr::pull(1)), sep = "\n")
+  h <- curl::new_handle()
+  curl::handle_setform(h, metabolite_name = mets)
+
+  req <- curl::curl_fetch_memory(
+    "https://www.metabolomicsworkbench.org/databases/refmet/name_to_refmet_new_min.php",
+    handle = h
+  )
+
+  x <- rawToChar(req$content)
+  y <- strsplit(x, "\n")
+  refmet <- data.frame(ncol = 7)
+
+  for (i in seq_along(y[[1]])) {
+    if (nchar(y[[1]][i]) > 1) {
+      z <- strsplit(y[[1]][i], "\t")
+      for (j in seq_along(z[[1]])) {
+        refmet[i, j] <- z[[1]][j]
+      }
+    }
+  }
+
+  refmet <- refmet[rowSums(is.na(refmet)) != ncol(refmet), , drop = FALSE]
+  colnames(refmet) <- refmet[1, ]
+  refmet <- refmet[-1, ]
+  refmet[is.na(refmet)] <- ""
+
+  refmet |>
+    dplyr::rename_with(~ trimws(.x)) |>
+    dplyr::rename_with(~ tolower(stringr::str_replace(.x, "[ ]+", "_")), everything()) |>
+    dplyr::rename(
+      metabolite = "input_name",
+      refmet_name = "standardized_name"
+    ) |>
+    dplyr::mutate(refmet_name = ifelse(refmet_name == "-", NA, refmet_name)) |>
+    dplyr::mutate(across(-c(metabolite, refmet_name), ~ ifelse(.x == "", NA, .x)))
+}
+```
+
+```{r}
+clean_text <- function(x) {
+  x <- as.character(x)
+  stringr::str_squish(x)
+}
+
+clean_compound_for_refmet <- function(x) {
+  x <- clean_text(x)
+  x <- stringr::str_replace(x, "\\*$", "")   # remove trailing star only
+  x <- stringr::str_squish(x)
+  x
+}
+
+metab_raw0 <- readxl::read_excel(
+  path = INFILE,
+  sheet = "all results-regression"
+) %>%
+  dplyr::mutate(
+    source_file = basename(INFILE),
+    source_sheet = "all results-regression",
+    source_row = dplyr::row_number() + 1L,
+    Compound.Name = clean_text(Compound.Name),
+    Compound.Name_clean = clean_compound_for_refmet(Compound.Name),
+    Standardized.name = clean_text(Standardized.name),
+    Standardized.name = stringr::str_replace(Standardized.name, "\\*$", ""),
+    Standardized.name = clean_text(Standardized.name),
+    Standardized.name = dplyr::if_else(
+     is.na(Standardized.name) | Standardized.name == "" | Standardized.name == "-",
+     NA_character_,
+     Standardized.name
+)
+  )
+```
+
+```{r}
+# This verifies the assumption before using Compound.Name as probe_id
+compound_probe_qc <- metab_raw0 |>
+  dplyr::filter(!is.na(Compound.Name), nzchar(Compound.Name)) |>
+  dplyr::count(Compound.Name, name = "source_row_count") |>
+  dplyr::filter(source_row_count > 1L)
+
+stopifnot(
+  all(!is.na(metab_raw0$Compound.Name)),
+  all(nzchar(metab_raw0$Compound.Name)),
+  nrow(compound_probe_qc) == 0L
+)
+```
+
+```{r refmet-rescue}
+## RefMet rescue is cache-first for reproducibility.
+## Generate the cache once in a controlled environment, review it, and keep it
+## with the approved reference materials.
+
+REFMET_CACHE <- file.path(
+  REFERENCE_DIR,
+  "LLFS_Sebastiani2024_refmet_rescue_2023_07.rds"
+)
+
+stopifnot(
+  file.exists(REFMET_CACHE)
+)
+
+ALLOW_LIVE_REFMET_QUERY <- FALSE                                
+
+compound_df <- metab_raw0 |>
+  dplyr::distinct(Compound.Name_clean) |>
+  dplyr::filter(!is.na(Compound.Name_clean), nzchar(Compound.Name_clean)) |>
+  dplyr::rename(metabolite = Compound.Name_clean)
+
+if (file.exists(REFMET_CACHE)) {
+  refmet_rescue <- readRDS(REFMET_CACHE)
+} else if (ALLOW_LIVE_REFMET_QUERY) {
+  refmet_rescue <- refmet_convert(compound_df) |>
+    dplyr::transmute(
+      Compound.Name_clean = clean_text(metabolite),
+      refmet_name_rescued = clean_text(refmet_name),
+      resolver = "Metabolomics Workbench RefMet name converter",
+      retrieved_at_utc = format(Sys.time(), tz = "UTC", usetz = TRUE)
+    ) |>
+    dplyr::mutate(
+      refmet_name_rescued = dplyr::if_else(
+        is.na(refmet_name_rescued) |
+          !nzchar(refmet_name_rescued) |
+          refmet_name_rescued == "-",
+        NA_character_,
+        refmet_name_rescued
+      )
+    ) |>
+    dplyr::distinct()
+
+  stop(
+    paste0(
+      "A new RefMet rescue table was generated in memory. Review it and save ",
+      "the approved cache explicitly as: ",
+      REFMET_CACHE,
+      ". Then rerun with ALLOW_LIVE_REFMET_QUERY = FALSE."
+    ),
+    call. = FALSE
+  )
+} else {
+  stop(
+    paste0(
+      "Required reviewed RefMet rescue cache is missing: ",
+      REFMET_CACHE,
+      ". Do not query a live resolver silently in an approved workflow."
+    ),
+    call. = FALSE
+  )
+}
+
+stopifnot(
+  is.data.frame(refmet_rescue),
+  all(c("Compound.Name_clean", "refmet_name_rescued") %in%
+        names(refmet_rescue)),
+  !anyDuplicated(refmet_rescue$Compound.Name_clean)
+)
+```
+
+```{r}
+## Final feature_name precedence:
+## 1) paper-provided Standardized.name
+## 2) rescued RefMet name from Compound.Name
+## 3) NA -> retained in audit and excluded from object input
+
+metab_raw <- metab_raw0 |>
+  dplyr::left_join(refmet_rescue, by = "Compound.Name_clean") |>
+  dplyr::mutate(
+    ## Compound.Name is a unique source-table feature identifier in this workbook.
+    probe_id = as.character(Compound.Name),
+    feature_name = dplyr::coalesce(Standardized.name, refmet_name_rescued),
+    feature_name = stringr::str_replace(feature_name, "\\*$", ""),
+    feature_name = clean_text(feature_name),
+    refmet_source = dplyr::case_when(
+      !is.na(Standardized.name) ~ "provided_Standardized.name",
+      is.na(Standardized.name) & !is.na(refmet_name_rescued) ~
+        "rescued_from_Compound.Name_clean",
+      TRUE ~ "missing_refmet"
+    )
+  )
+```
+
+```{r}
+qc_source_summary <- dplyr::bind_rows(
+  metab_raw %>%
+    dplyr::filter(aging.fdr.05 == TRUE) %>%
+    dplyr::count(refmet_source) %>%
+    dplyr::mutate(signature = "Aging"),
+
+  metab_raw %>%
+    dplyr::filter(el.fdr.05 == TRUE) %>%
+    dplyr::count(refmet_source) %>%
+    dplyr::mutate(signature = "EL"),
+
+  metab_raw %>%
+    dplyr::filter(surv.fdr.05 == TRUE) %>%
+    dplyr::count(refmet_source) %>%
+    dplyr::mutate(signature = "Survival")
+) %>%
+  dplyr::select(signature, refmet_source, n)
+
+print(qc_source_summary)
+```
+
+```{r}
+qc_summary <- tibble::tibble(
+  signature = c("Aging", "EL", "Survival"),
+
+  original_significant = c(
+    sum(metab_raw$aging.fdr.05 == TRUE, na.rm = TRUE),
+    sum(metab_raw$el.fdr.05 == TRUE, na.rm = TRUE),
+    sum(metab_raw$surv.fdr.05 == TRUE, na.rm = TRUE)
+  ),
+
+  original_refmet_from_paper = c(
+    sum(metab_raw$aging.fdr.05 == TRUE & !is.na(metab_raw$Standardized.name), na.rm = TRUE),
+    sum(metab_raw$el.fdr.05 == TRUE & !is.na(metab_raw$Standardized.name), na.rm = TRUE),
+    sum(metab_raw$surv.fdr.05 == TRUE & !is.na(metab_raw$Standardized.name), na.rm = TRUE)
+  ),
+
+  rescued_new_refmet = c(
+    sum(metab_raw$aging.fdr.05 == TRUE &
+          metab_raw$refmet_source == "rescued_from_Compound.Name_clean", na.rm = TRUE),
+    sum(metab_raw$el.fdr.05 == TRUE &
+          metab_raw$refmet_source == "rescued_from_Compound.Name_clean", na.rm = TRUE),
+    sum(metab_raw$surv.fdr.05 == TRUE &
+          metab_raw$refmet_source == "rescued_from_Compound.Name_clean", na.rm = TRUE)
+  ),
+
+  final_usable_refmet = c(
+    sum(metab_raw$aging.fdr.05 == TRUE & !is.na(metab_raw$feature_name), na.rm = TRUE),
+    sum(metab_raw$el.fdr.05 == TRUE & !is.na(metab_raw$feature_name), na.rm = TRUE),
+    sum(metab_raw$surv.fdr.05 == TRUE & !is.na(metab_raw$feature_name), na.rm = TRUE)
+  ),
+
+  still_unmapped = c(
+    sum(metab_raw$aging.fdr.05 == TRUE & is.na(metab_raw$feature_name), na.rm = TRUE),
+    sum(metab_raw$el.fdr.05 == TRUE & is.na(metab_raw$feature_name), na.rm = TRUE),
+    sum(metab_raw$surv.fdr.05 == TRUE & is.na(metab_raw$feature_name), na.rm = TRUE)
+  )
+)
+
+print(qc_summary)
+```
+
+```{r threshold-validation}
+threshold_flag_qc <- tibble::tibble(
+  signature = c(
+    "Longitudinal aging",
+    "Exceptional longevity",
+    "Survival"
+  ),
+  mismatch_n = c(
+    sum(
+      dplyr::coalesce(
+        as.logical(metab_raw$aging.fdr.05),
+        FALSE
+      ) !=
+        (
+          !is.na(metab_raw$Aging_pval_adj) &
+            metab_raw$Aging_pval_adj < 0.05
+        )
+    ),
+    sum(
+      dplyr::coalesce(
+        as.logical(metab_raw$el.fdr.05),
+        FALSE
+      ) !=
+        (
+          !is.na(metab_raw$EL_pval_adj) &
+            metab_raw$EL_pval_adj < 0.05
+        )
+    ),
+    sum(
+      dplyr::coalesce(
+        as.logical(metab_raw$surv.fdr.05),
+        FALSE
+      ) !=
+        (
+          !is.na(metab_raw$Metab_pval_adj) &
+            metab_raw$Metab_pval_adj < 0.05
+        )
+    )
+  )
+)
+
+print(threshold_flag_qc)
+
+stopifnot(
+  all(threshold_flag_qc$mismatch_n == 0L)
+)
+```
+
+ - Use the original Metabolon compound names (Compound.Name)
+ 
+ - Re-query the current RefMet database
+ 
+ - Recover additional mappings because:
+ 
+   * RefMet database evolves over time
+   
+   * newer RefMet versions may now recognize compounds that were previously unmapped
+   
+   * formatting issues (stars, suffixes, spaces) may prevent matching
+
+```{r}
+dir.create(
+  OUTDIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+do_write_audit <- FALSE
+
+if (do_write_audit) {
+  saveRDS(
+    metab_raw,
+    file = file.path(
+      OUTDIR,
+      "LLFS_Metabolomics_Aging_EL_Survival_refmet_rescued_prepared.rds"
+    )
+  )
+
+  audit_file <- file.path(
+    OUTDIR,
+    "LLFS_Metabolomics_Aging_EL_Survival_refmet_rescue_audit.xlsx"
+  )
+
+  stopifnot(!file.exists(audit_file))
+
+  openxlsx::write.xlsx(
+    list(
+      prepared_table = as.data.frame(metab_raw),
+      refmet_rescue_table = as.data.frame(refmet_rescue),
+      qc_source_summary = as.data.frame(qc_source_summary),
+      qc_summary = as.data.frame(qc_summary)
+    ),
+    file = audit_file,
+    overwrite = FALSE
+  )
+}
+
+## saves the fully processed metabolomics table after:
+# cleaning, rescue mapping, feature_name assignment and QC annotations
+
+## Contains:
+# original compound names, original standardized names, rescued RefMet names,
+# final feature_name, source of mapping, all statistics/effects/FDR columns
+```
+
+
+# 2) OmicSignature object
+Continue using the in-memory `metab_raw` object.
+
+```{r}
+AUTHOR_STR <- "Sebastiani2024"
+AUTHOR <- "Sebastiani P et al."
+
+ORGANISM_STR <- "Homo sapiens"
+ASSAY_STR <- "metabolomics"
+PLATFORM_STR <- "metabolomics by mass spectrometry"
+SAMPLE_STR <- "blood plasma"
+
+sigrepo_assert_platform(PLATFORM_STR)
+sigrepo_assert_sample_type(SAMPLE_STR)
+
+YEAR_NUM <- 2024
+PMID_STR <- "39504246"
+
+KEYWORDS <- c(
+  "LLFS",
+  "Long Life Family Study",
+  "metabolomics",
+  "Metabolon",
+  "aging",
+  "exceptional longevity",
+  "survival"
+)
+```
+
+```{r}
+make_safe_name <- function(x) {
+  x %>%
+    as.character() %>%
+    str_replace_all("[^A-Za-z0-9]+", "_") %>%
+    str_replace_all("_+", "_") %>%
+    str_replace_all("^_|_$", "")
+}
+
+sanitize_for_sql <- function(x) {
+  x <- as.character(x)
+  x <- gsub("[\r\n\t]+", " ", x)
+  x <- gsub("'", "", x, fixed = TRUE)
+  str_squish(x)
+}
+
+make_signature_name <- function(detail) {
+  paste(
+    make_safe_name("Aging"),
+    make_safe_name("Hs"),
+    make_safe_name("BloodPlasma"),
+    make_safe_name(detail),
+    make_safe_name(AUTHOR_STR),
+    sep = "_"
+  )
+}
+
+make_collection_name <- function(topic) {
+  paste(
+    make_safe_name("Aging"),
+    make_safe_name("Hs"),
+    make_safe_name("BloodPlasma"),
+    make_safe_name(topic),
+    make_safe_name(AUTHOR_STR),
+    sep = "_"
+  )
+}
+```
+
+```{r}
+make_metadata <- function(signature_name,
+                          phenotype,
+                          description,
+                          covariates,
+                          keywords) {
+  OmicSignature::createMetadata(
+    signature_name = sanitize_for_sql(signature_name),
+    organism = ORGANISM_STR,
+    direction_type = "bi-directional",
+    assay_type = ASSAY_STR,
+    phenotype = sanitize_for_sql(phenotype),
+    covariates = covariates,
+    platform = PLATFORM_STR,
+    sample_type = SAMPLE_STR,
+    author = AUTHOR,
+    year = YEAR_NUM,
+    PMID = PMID_STR,
+    keywords = sigrepo_keywords(keywords),
+    adj_p_cutoff = 0.05,
+    description = sanitize_for_sql(description)
+  )
+}
+```
+Important changes:
+ - actual covariates are supplied per object;
+ - keyword terms are passed through `sigrepo_keywords()` and stored as one
+   scalar metadata string, as required by the validated OmicSignature API contract;
+ - `score_cutoff = 0` is removed because zero was not a study selection threshold.
+
+
+```{r}
+prepare_metab_parent <- function(df,
+                                 score_col,
+                                 adjp_col,
+                                 label_pos,
+                                 label_neg,
+                                 survival = FALSE) {
+  df |>
+    dplyr::mutate(
+      score = if (survival) {
+        log(as.numeric(.data[[score_col]]))
+      } else {
+        as.numeric(.data[[score_col]])
+      },
+      adj_p = as.numeric(.data[[adjp_col]]),
+      group_label = factor(
+        dplyr::case_when(
+          score > 0 ~ label_pos,
+          score < 0 ~ label_neg,
+          TRUE ~ NA_character_
+        ),
+        levels = c(label_pos, label_neg)
+      )
+    ) |>
+    dplyr::filter(
+      !is.na(feature_name),
+      nzchar(feature_name),
+      feature_name != "-",
+      !is.na(probe_id),
+      nzchar(probe_id),
+      !is.na(score),
+      is.finite(score),
+       score != 0,
+      !is.na(group_label)
+    ) |>
+    dplyr::arrange(
+      is.na(adj_p),
+      adj_p,
+      dplyr::desc(abs(score))
+    ) |>
+    dplyr::distinct(
+      probe_id,
+      feature_name,
+      score,
+      adj_p,
+      group_label,
+      .keep_all = TRUE
+    ) |>
+    as.data.frame()
+}
+# Rationale: rows with valid analytical effects remain in the parent difexpeven when an adjusted P value is missing. The final selected signature stillmust have a finite adjusted P value and satisfy the study selection flag.
+
+derive_signature <- function(parent, flag_col) {
+  parent |>
+    dplyr::filter(.data[[flag_col]] %in% TRUE) |>
+    dplyr::select(
+      probe_id,
+      feature_name,
+      score,
+      group_label
+    ) |>
+    as.data.frame()
+}
+
+# This creates each complete parent table once and derives the selected signature from that same parent.
+```
+
+```{r}
+difexp_aging <- prepare_metab_parent(
+  metab_raw,
+  score_col = "Aging.effect",
+  adjp_col = "Aging_pval_adj",
+  label_pos = "Increasing with longitudinal age",
+  label_neg = "Decreasing with longitudinal age"
+)
+
+sig_aging <- derive_signature(
+  parent = difexp_aging,
+  flag_col = "aging.fdr.05"
+)
+
+difexp_el <- prepare_metab_parent(
+  metab_raw,
+  score_col = "cent.effect",
+  adjp_col = "EL_pval_adj",
+  label_pos = "Higher in exceptional longevity",
+  label_neg = "Lower in exceptional longevity"
+)
+
+sig_el <- derive_signature(
+  parent = difexp_el,
+  flag_col = "el.fdr.05"
+)
+
+difexp_survival <- prepare_metab_parent(
+  metab_raw,
+  score_col = "HR.death.est",
+  adjp_col = "Metab_pval_adj",
+  label_pos = "Higher mortality risk",
+  label_neg = "Lower mortality risk",
+  survival = TRUE
+)
+
+sig_survival <- derive_signature(
+  parent = difexp_survival,
+  flag_col = "surv.fdr.05"
+)
+```
+
+```{r}
+meta_aging <- make_metadata(
+  signature_name = make_signature_name("LongitudinalAgingMetabolites"),
+  phenotype = "Longitudinal aging-associated plasma metabolites",
+  covariates = paste(
+    c(
+      "age at first assessment",
+      "sex",
+      "education",
+      "enrollment country",
+      "medications for type 2 diabetes",
+      "dyslipidemia",
+      "heart disease",
+      "hypertension",
+      "four genome-wide principal components"
+    ),
+    collapse = ", "
+  ),
+  keywords = c(
+    "LLFS",
+    "metabolomics",
+    "longitudinal aging",
+    "plasma"
+  ),
+  description = paste0(
+    "Bi-directional plasma metabolomics signature of metabolites associated ",
+    "with longitudinal aging in the Long Life Family Study. Positive scores ",
+    "indicate metabolites increasing with longitudinal age; negative scores ",
+    "indicate metabolites decreasing with longitudinal age. Feature names use ",
+    "the study-provided RefMet standardized names when available, with ",
+    "Compound.Name-based RefMet conversion used only as rescue."
+  )
+)
+
+meta_el <- make_metadata(
+  signature_name = make_signature_name("ExceptionalLongevityMetabolites"),
+  phenotype = "Exceptional longevity-associated plasma metabolites",
+  covariates = paste(
+    c(
+      "sex",
+      "education",
+      "enrollment country",
+      "medications for type 2 diabetes",
+      "dyslipidemia",
+      "heart disease",
+      "hypertension",
+      "four genome-wide principal components"
+    ),
+    collapse = ", "
+  ),
+  keywords = c(
+    "LLFS",
+    "metabolomics",
+    "exceptional longevity",
+    "plasma"
+  ),
+  description = paste0(
+    "Bi-directional plasma metabolomics signature of metabolites associated ",
+    "with exceptional longevity in the Long Life Family Study. Positive scores ",
+    "indicate metabolites higher in exceptional-longevity participants; ",
+    "negative scores indicate metabolites lower in exceptional-longevity ",
+    "participants. Feature names use the study-provided RefMet standardized ",
+    "names when available, with Compound.Name-based RefMet conversion used ",
+    "only as rescue."
+  )
+)
+
+meta_survival <- make_metadata(
+  signature_name = make_signature_name("SurvivalAssociatedMetabolites"),
+  phenotype = "Survival-associated plasma metabolites",
+  covariates = paste(
+    c(
+      "age at enrollment",
+      "sex",
+      "education",
+      "enrollment country",
+      "medications for type 2 diabetes",
+      "dyslipidemia",
+      "heart disease",
+      "hypertension",
+      "four genome-wide principal components"
+    ),
+    collapse = ", "
+  ),
+  keywords = c(
+    "LLFS",
+    "metabolomics",
+    "survival",
+    "mortality",
+    "plasma"
+  ),
+  description = paste0(
+    "Bi-directional plasma metabolomics signature of metabolites associated ",
+    "with survival in the Long Life Family Study. Scores are log hazard ratios ",
+    "for death; positive scores indicate higher mortality risk and negative ",
+    "scores indicate lower mortality risk. Feature names use the study-provided ",
+    "RefMet standardized names when available, with Compound.Name-based RefMet ",
+    "conversion used only as rescue."
+  )
+)
+```
+
+Validation before object creation
+```{r}
+validate_metab_tables <- function(signature, difexp, flag_col) {
+
+  stopifnot(
+    all(c("probe_id", "feature_name", "score", "group_label") %in%
+          names(signature)),
+    all(c(
+      "probe_id", "feature_name", "score", "adj_p",
+      "group_label", flag_col
+    ) %in% names(difexp)),
+    is.character(signature$probe_id),
+    is.character(difexp$probe_id),
+    all(!is.na(signature$probe_id) & nzchar(signature$probe_id)),
+    all(!is.na(difexp$probe_id) & nzchar(difexp$probe_id)),
+    !anyDuplicated(signature$probe_id),
+    !anyDuplicated(difexp$probe_id),
+    all(!is.na(signature$feature_name) & nzchar(signature$feature_name)),
+    is.numeric(signature$score),
+    all(is.finite(signature$score)),
+    all(signature$score != 0),
+    is.factor(signature$group_label),
+    all(!is.na(signature$group_label))
+  )
+
+  parent_lookup <- difexp |>
+    dplyr::select(
+      probe_id,
+      parent_feature_name = feature_name,
+      parent_score = score,
+      parent_group_label = group_label,
+      parent_adj_p = adj_p,
+      selected = dplyr::all_of(flag_col)
+    )
+
+  synchronization_qc <- signature |>
+    dplyr::left_join(parent_lookup, by = "probe_id")
+
+  stopifnot(
+    nrow(synchronization_qc) == nrow(signature),
+    all(!is.na(synchronization_qc$parent_feature_name)),
+    all(
+      synchronization_qc$feature_name ==
+        synchronization_qc$parent_feature_name
+    ),
+    isTRUE(all.equal(
+      synchronization_qc$score,
+      synchronization_qc$parent_score,
+      tolerance = 0
+    )),
+    all(
+      as.character(synchronization_qc$group_label) ==
+        as.character(synchronization_qc$parent_group_label)
+    ),
+    all(synchronization_qc$selected %in% TRUE),
+    all(!is.na(synchronization_qc$parent_adj_p)),
+    all(is.finite(synchronization_qc$parent_adj_p)),
+    all(synchronization_qc$parent_adj_p < 0.05)
+  )
+}
+
+validate_metab_tables(sig_aging, difexp_aging, "aging.fdr.05")
+validate_metab_tables(sig_el, difexp_el, "el.fdr.05")
+validate_metab_tables(sig_survival, difexp_survival, "surv.fdr.05")
+```
+
+
+```{r}
+oSig_aging <- OmicSignature::OmicSignature$new(
+  metadata = meta_aging,
+  signature = sig_aging,
+  difexp = difexp_aging
+)
+
+oSig_el <- OmicSignature::OmicSignature$new(
+  metadata = meta_el,
+  signature = sig_el,
+  difexp = difexp_el
+)
+
+oSig_survival <- OmicSignature::OmicSignature$new(
+  metadata = meta_survival,
+  signature = sig_survival,
+  difexp = difexp_survival
+)
+
+# -----
+# This is a post-construction check. The existing validate_metab_tables() checks the tables before object construction; this additional function confirms that OmicSignature did not alter or damage the probe IDs during construction. The convention requires nonmissing, character-valued, unique probe IDs.
+
+validate_created_omic_signature <- function(object, object_name) {
+  stopifnot(
+    !is.null(object$signature),
+    is.data.frame(object$signature),
+    "probe_id" %in% names(object$signature),
+    is.character(object$signature$probe_id),
+    !anyNA(object$signature$probe_id),
+    all(nzchar(object$signature$probe_id)),
+    !anyDuplicated(object$signature$probe_id)
+  )
+
+  message(
+    object_name,
+    ": ",
+    nrow(object$signature),
+    " signature rows with valid unique probe IDs."
+  )
+
+  invisible(TRUE)
+}
+
+validate_created_omic_signature(
+  oSig_aging,
+  "LLFS longitudinal aging"
+)
+
+validate_created_omic_signature(
+  oSig_el,
+  "LLFS exceptional longevity"
+)
+
+validate_created_omic_signature(
+  oSig_survival,
+  "LLFS survival"
+)
+
+# -----
+OmSC_LLFS <- OmicSignature::OmicSignatureCollection$new(
+  OmicSigList = list(
+    LongitudinalAgingMetabolites = oSig_aging,
+    ExceptionalLongevityMetabolites = oSig_el,
+    SurvivalAssociatedMetabolites = oSig_survival
+  ),
+  metadata = list(
+    collection_name = make_collection_name("LLFS_Aging_EL_SurvivalMetabolites"),
+    description = paste0(
+      "Plasma metabolomics signatures from the Long Life Family Study, including longitudinal aging-associated, ",
+      "exceptional longevity-associated, and survival-associated metabolite signatures. Feature names use RefMet standardized metabolite names. ",
+      "Missing RefMet names were first rescued from original Compound.Name using the Metabolomics Workbench RefMet converter; rows still lacking RefMet names were excluded."
+    ),
+    author = AUTHOR
+  )
+)
+
+# We validate the actual signature metadata, not temporary list names such as first or second.
+llfs_members <- sigrepo_collection_members(OmSC_LLFS)
+
+stopifnot(
+  length(llfs_members) == 3L
+)
+
+actual_signature_names <- vapply(
+  llfs_members,
+  function(x) {
+    as.character(x$metadata$signature_name)
+  },
+  character(1)
+)
+
+expected_signature_names <- c(
+  as.character(oSig_aging$metadata$signature_name),
+  as.character(oSig_el$metadata$signature_name),
+  as.character(oSig_survival$metadata$signature_name)
+)
+
+stopifnot(
+  setequal(
+    actual_signature_names,
+    expected_signature_names
+  )
+)
+
+message(
+  "LLFS collection contains the expected three OmicSignature objects."
+)
+
+llfs_count_qc <- tibble::tibble(
+  item = c(
+    "Source workbook rows",
+    "Longitudinal aging signature",
+    "Exceptional longevity signature",
+    "Survival signature"
+  ),
+  observed_n = c(
+    nrow(metab_raw0),
+    nrow(oSig_aging$signature),
+    nrow(oSig_el$signature),
+    nrow(oSig_survival$signature)
+  ),
+  expected_n = c(
+    408L,
+    232L,
+    212L,
+    140L
+  )
+)
+
+print(llfs_count_qc)
+
+stopifnot(
+  identical(
+    as.integer(llfs_count_qc$observed_n),
+    as.integer(llfs_count_qc$expected_n)
+  ),
+  nrow(difexp_aging) >= nrow(oSig_aging$signature),
+  nrow(difexp_el) >= nrow(oSig_el$signature),
+  nrow(difexp_survival) >= nrow(oSig_survival$signature)
+)
+
+message(
+  "LLFS source and signature counts match the validated reference run."
+)
+```
+
+# Approval status
+
+No unresolved items remain for this approved reference workflow.
+
+The reviewed RefMet rescue cache is stored with the example. The workflow
+passed the OmicSignature API compatibility check, threshold validation,
+pre-construction and post-construction validation, collection validation,
+expected-count validation, and a clean end-to-end render.
+
+## Save
+
+```{r save, eval=FALSE}
+saveRDS(
+  oSig_aging,
+  file = file.path(OUTDIR, paste0(oSig_aging$metadata$signature_name, "_refmetRescued_oSig.rds"))
+)
+
+saveRDS(
+  oSig_el,
+  file = file.path(OUTDIR, paste0(oSig_el$metadata$signature_name, "_refmetRescued_oSig.rds"))
+)
+
+saveRDS(
+  oSig_survival,
+  file = file.path(OUTDIR, paste0(oSig_survival$metadata$signature_name, "_refmetRescued_oSig.rds"))
+)
+
+saveRDS(
+  OmSC_LLFS,
+  file = file.path(OUTDIR, "Aging_Hs_BloodPlasma_LLFS_Aging_EL_SurvivalMetabolites_Sebastiani2024_refmetRescued_OmSC.rds")
+)
+
+cat("\nSignature sizes:\n")
+print(c(
+  Aging = nrow(oSig_aging$signature),
+  EL = nrow(oSig_el$signature),
+  Survival = nrow(oSig_survival$signature)
+))
+
+cat("\nSignature columns:\n")
+print(colnames(oSig_aging$signature))
+print(colnames(oSig_el$signature))
+print(colnames(oSig_survival$signature))
+
+cat("\nDifexp columns:\n")
+print(colnames(oSig_aging$difexp))
+print(colnames(oSig_el$difexp))
+print(colnames(oSig_survival$difexp))
+
+cat("\nGroup labels:\n")
+print(table(oSig_aging$signature$group_label))
+print(table(oSig_el$signature$group_label))
+print(table(oSig_survival$signature$group_label))
+```
+
+```{r}
+check_refmet_rescue_source <- function(sig_obj, source_df) {
+  sig_obj$signature |>
+    dplyr::left_join(
+      source_df |>
+        dplyr::select(
+          probe_id,
+          refmet_source
+        ) |>
+        dplyr::distinct(),
+      by = "probe_id"
+    ) |>
+    dplyr::count(refmet_source)
+}
+
+check_refmet_rescue_source(oSig_aging, metab_raw)
+check_refmet_rescue_source(oSig_el, metab_raw)
+check_refmet_rescue_source(oSig_survival, metab_raw)
+```

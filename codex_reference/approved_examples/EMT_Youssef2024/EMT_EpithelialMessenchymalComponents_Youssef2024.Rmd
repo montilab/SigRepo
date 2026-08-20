@@ -1,0 +1,828 @@
+---
+title: "Derivation of EMT signatures - Khalil Kass Youssef et. al"
+date:   "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    theme: united
+    code_folding: show
+    toc: true
+    toc_float: true
+---
+
+```{r global, echo=FALSE}
+knitr::opts_chunk$set(message=FALSE, warning=FALSE)
+```
+
+```{r}
+current_input <- knitr::current_input(
+  dir = TRUE
+)
+
+if (
+  length(current_input) == 1L &&
+    !is.na(current_input) &&
+    nzchar(current_input)
+) {
+  RMD_DIR <- dirname(
+    normalizePath(
+      current_input,
+      winslash = "/",
+      mustWork = TRUE
+    )
+  )
+} else {
+  RMD_DIR <- normalizePath(
+    getwd(),
+    winslash = "/",
+    mustWork = TRUE
+  )
+}
+
+REFERENCE_DIR <- file.path(
+  RMD_DIR,
+  "reference_data"
+)
+
+OUTDIR <- file.path(
+  RMD_DIR,
+  "outputs"
+)
+
+INFILE <- Sys.getenv(
+  "YOUSSEF2024_INPUT_FILE",
+  unset = ""
+)
+
+if (!nzchar(INFILE)) {
+  stop(
+    paste0(
+      "YOUSSEF2024_INPUT_FILE is not set. ",
+      "Set it to the Youssef 2024 supplementary workbook."
+    ),
+    call. = FALSE
+  )
+}
+
+stopifnot(
+  file.exists(INFILE),
+  dir.exists(REFERENCE_DIR)
+)
+
+```
+
+```{r}
+library(Biobase)
+library(dplyr)
+library(readr)
+library(readxl)
+library(tibble)
+library(tidyr)
+
+# ------------------------------------------------------------------------------
+# user_lib <- "/restricted/projectnb/montilab-p/personal/hnikouei/R/x86_64-pc-linux-gnu-library/4.4"
+# dir.create(user_lib, recursive = TRUE, showWarnings = FALSE)
+
+# .libPaths(c(user_lib, .libPaths()))
+# 
+# if (!requireNamespace("remotes", quietly = TRUE)) {
+#   install.packages("remotes", lib = user_lib, repos = "https://cloud.r-project.org")
+# }
+# 
+# remotes::install_github(
+#   "montilab/OmicSignature",
+#   lib = user_lib,
+#   upgrade = "never",
+#   dependencies = TRUE
+# )
+
+# .libPaths(c(user_lib, .libPaths()))
+# library(OmicSignature)
+# ------------------------------------------------------------------------------
+
+user_lib <- Sys.getenv(
+  "SIGREPO_R_LIB",
+  unset = ""
+)
+
+if (nzchar(user_lib)) {
+  stopifnot(
+    dir.exists(user_lib)
+  )
+
+  .libPaths(
+    c(
+      user_lib,
+      .libPaths()
+    )
+  )
+}
+
+library(OmicSignature)
+
+
+find_codex_reference_root <- function(start = getwd()) {
+  current <- normalizePath(
+    start,
+    winslash = "/",
+    mustWork = TRUE
+  )
+
+  repeat {
+    candidate <- file.path(current, "codex_reference")
+
+    if (dir.exists(candidate)) {
+      return(
+        normalizePath(
+          candidate,
+          winslash = "/",
+          mustWork = TRUE
+        )
+      )
+    }
+
+    parent <- dirname(current)
+
+    if (identical(parent, current)) {
+      stop(
+        "Could not locate the codex_reference directory.",
+        call. = FALSE
+      )
+    }
+
+    current <- parent
+  }
+}
+
+CODEX_REFERENCE_ROOT <- find_codex_reference_root(
+  RMD_DIR
+)
+
+OMIC_HELPER <- file.path(
+  CODEX_REFERENCE_ROOT,
+  "helpers",
+  "omicsignature_compat.R"
+)
+
+stopifnot(file.exists(OMIC_HELPER))
+source(
+  OMIC_HELPER,
+  local = TRUE
+)
+
+OMIC_API <- sigrepo_assert_compatible_api()
+print(OMIC_API)
+```
+
+# Preflight interpretation
+
+## Study and scope
+
+- Study: Youssef et al., Nature Cancer, 2024.
+- PMID: 39414946.
+- Requested scope: the human epithelial and mesenchymal EMT-component
+  gene sets listed in Supplementary Table 1.
+- Supplementary Table 1 states that these component lists were extracted
+  from prior references and used by the current paper to score breast
+  cancer cell lines.
+
+## Biologically justified objects
+
+1. Epithelial EMT-component membership signature.
+2. Mesenchymal EMT-component membership signature.
+3. One collection containing exactly those two related objects.
+
+The BC-PINGs, validation, pathway, and other supplementary analyses are
+not separate objects in this workflow.
+
+## Source classification and object design
+
+- Source: Supplementary Table 1.
+- Source type: curated membership-only gene lists.
+- Score: constant membership weight of 1.
+- Direction type: uni-directional for each object.
+- `difexp`: `NULL`; the source is not a broader differential-analysis table.
+- Source identifiers: human gene symbols.
+- Repository feature identifiers: Ensembl gene IDs from Ensembl release 114.
+- Mapping: HGNC symbol to Ensembl v114, retaining valid one-to-many mappings.
+- Unmatched rows remain in the mapping audit and are excluded only from
+  object input.
+- No genuine assay probe identifier is supplied. Probe IDs are assigned once
+  through the tested OmicSignature compatibility helper.
+
+## Resolved metadata
+
+- Approved `sample_type`: `breast cancer cell line`.
+- Approved platform: `transcriptomics by bulk RNA-seq`.
+- Both values are validated against the controlled-vocabulary terms exposed
+  by the compatible installed OmicSignature package.
+
+
+# Load data (read Supplementary Table 1)
+and extract raw human gene symbols
+```{r}
+## 1) Read Supplementary Table 1
+## Supplementary Table 1 contains:
+##   - epithelial genes in columns 1:7
+##   - mesenchymal genes in columns 8:11
+
+tbl1 <- readxl::read_excel(
+  path = INFILE,
+  sheet = "Supplementary Table 1",
+  skip = 3,
+  col_names = FALSE
+)
+
+names(tbl1) <- paste0("col", seq_len(ncol(tbl1)))
+
+## Preserve the source row and source column for every supplied gene symbol.
+## The +3 accounts for the rows skipped above.
+
+epi_raw <- tbl1 |>
+  dplyr::mutate(source_row = dplyr::row_number() + 3L) |>
+  dplyr::select(source_row, col1:col7) |>
+  tidyr::pivot_longer(
+    cols = col1:col7,
+    names_to = "source_column",
+    values_to = "original_feature_name"
+  ) |>
+  dplyr::mutate(
+    source_file = basename(INFILE),
+    source_sheet = "Supplementary Table 1",
+    original_feature_name = trimws(as.character(original_feature_name)),
+    signature_class = "Epithelial"
+  ) |>
+  dplyr::filter(
+    !is.na(original_feature_name),
+    nzchar(original_feature_name)
+  ) |>
+  dplyr::distinct(
+    source_file,
+    source_sheet,
+    source_row,
+    source_column,
+    original_feature_name,
+    signature_class
+  )
+
+mes_raw <- tbl1 |>
+  dplyr::mutate(source_row = dplyr::row_number() + 3L) |>
+  dplyr::select(source_row, col8:col11) |>
+  tidyr::pivot_longer(
+    cols = col8:col11,
+    names_to = "source_column",
+    values_to = "original_feature_name"
+  ) |>
+  dplyr::mutate(
+    source_file = basename(INFILE),
+    source_sheet = "Supplementary Table 1",
+    original_feature_name = trimws(as.character(original_feature_name)),
+    signature_class = "Mesenchymal"
+  ) |>
+  dplyr::filter(
+    !is.na(original_feature_name),
+    nzchar(original_feature_name)
+  ) |>
+  dplyr::distinct(
+    source_file,
+    source_sheet,
+    source_row,
+    source_column,
+    original_feature_name,
+    signature_class
+  )
+
+cat("Number of epithelial source entries:", nrow(epi_raw), "\n")
+cat("Number of mesenchymal source entries:", nrow(mes_raw), "\n")
+
+head(epi_raw)
+head(mes_raw)
+
+```
+
+# Map symbols to Ensembl v114 and build the mapping audit
+```{r mapping}
+## 4) Load the reviewed Symbol -> Ensembl v114 mapping cache
+## Template used:
+##   Symbol -> Ensembl v114 with reviewed 1:N expansion
+
+MAPPING_CACHE <- file.path(
+  REFERENCE_DIR,
+  "Youssef2024_HGNC_to_Ensembl_v114.rds"
+)
+
+if (!file.exists(MAPPING_CACHE)) {
+  stop(
+    paste0(
+      "The reviewed Ensembl release 114 ",
+      "mapping cache is missing: ",
+      MAPPING_CACHE
+    ),
+    call. = FALSE
+  )
+}
+
+symbol_map <- readRDS(
+  MAPPING_CACHE
+)
+
+stopifnot(
+  is.data.frame(symbol_map),
+
+  identical(
+    names(symbol_map),
+    c(
+      "original_feature_name",
+      "feature_name"
+    )
+  ),
+
+  nrow(symbol_map) == 398L,
+
+  dplyr::n_distinct(
+    symbol_map$original_feature_name
+  ) == 396L,
+
+  !anyNA(symbol_map),
+
+  all(
+    nzchar(
+      symbol_map$original_feature_name
+    )
+  ),
+
+  all(
+    stringr::str_detect(
+      symbol_map$feature_name,
+      "^ENSG[0-9]+$"
+    )
+  ),
+
+  !anyDuplicated(symbol_map)
+)
+
+message(
+  paste0(
+    "Loaded the reviewed Youssef 2024 ",
+    "HGNC-to-Ensembl release 114 mapping cache: ",
+    nrow(symbol_map),
+    " mapping rows for ",
+    dplyr::n_distinct(
+      symbol_map$original_feature_name
+    ),
+    " source symbols."
+  )
+)
+
+## -----------------------------------------------------------------------------
+## 5) Apply mapping and retain a complete mapping audit
+
+make_symbol_mapping_audit <- function(source_tbl, symbol_map) {
+  source_tbl |>
+    dplyr::left_join(
+  symbol_map,
+  by = "original_feature_name",
+  relationship = "many-to-many"
+) |>
+    dplyr::group_by(
+      source_file,
+      source_sheet,
+      source_row,
+      source_column,
+      original_feature_name,
+      signature_class
+    ) |>
+    dplyr::mutate(
+      primary_mapping_key = original_feature_name,
+      rescue_mapping_key = NA_character_,
+      mapping_source = "reviewed static HGNC-to-Ensembl release 114 mapping cache",
+      mapping_multiplicity = dplyr::n_distinct(
+        feature_name[!is.na(feature_name) & nzchar(feature_name)]
+      ),
+      match_status = dplyr::case_when(
+        mapping_multiplicity == 0L ~ "unmatched",
+        mapping_multiplicity == 1L ~ "mapped",
+        mapping_multiplicity > 1L ~ "one_to_many"
+      )
+    ) |>
+    dplyr::ungroup()
+}
+
+epi_mapped <- make_symbol_mapping_audit(epi_raw, symbol_map)
+mes_mapped <- make_symbol_mapping_audit(mes_raw, symbol_map)
+
+## Optional draft audit writes. Keep FALSE in the reusable reference example.
+do_write_audit <- FALSE
+
+if (do_write_audit) {
+  saveRDS(
+    epi_mapped,
+    file = file.path(OUTDIR, "EMT_Epithelial_symbol_to_ensembl_v114_mapped.rds")
+  )
+
+  saveRDS(
+    mes_mapped,
+    file = file.path(OUTDIR, "EMT_Mesenchymal_symbol_to_ensembl_v114_mapped.rds")
+  )
+
+  write.csv(
+    epi_mapped,
+    file = file.path(OUTDIR, "EMT_Epithelial_symbol_to_ensembl_v114_mapped.csv"),
+    row.names = FALSE
+  )
+
+  write.csv(
+    mes_mapped,
+    file = file.path(OUTDIR, "EMT_Mesenchymal_symbol_to_ensembl_v114_mapped.csv"),
+    row.names = FALSE
+  )
+}
+
+dir.create(
+  OUTDIR,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+```
+
+```{r mapping-qc}
+cat("Epithelial source entries:", nrow(epi_raw), "\n")
+print(table(epi_mapped$match_status, useNA = "ifany"))
+
+cat("\nMesenchymal source entries:", nrow(mes_raw), "\n")
+print(table(mes_mapped$match_status, useNA = "ifany"))
+
+epi_unmatched <- epi_mapped |>
+  dplyr::filter(match_status == "unmatched")
+
+mes_unmatched <- mes_mapped |>
+  dplyr::filter(match_status == "unmatched")
+
+epi_one_to_many <- epi_mapped |>
+  dplyr::filter(match_status == "one_to_many")
+
+mes_one_to_many <- mes_mapped |>
+  dplyr::filter(match_status == "one_to_many")
+
+print(epi_unmatched)
+print(mes_unmatched)
+print(epi_one_to_many)
+print(mes_one_to_many)
+```
+The runtime mapping tables above are authoritative. An increase from source
+rows to mapped rows is expected when a source symbol has multiple valid
+Ensembl v114 mappings. Valid one-to-many mappings remain expanded. Unmatched
+and one-to-many rows must be reviewed in the audit before approval.
+
+The workflow continues with the in-memory `epi_mapped` and `mes_mapped`
+objects; it does not reload legacy mapped RDS files.
+
+## Reviewed mapping decisions
+
+The frozen mapping cache was constructed using Ensembl release 114 gene
+records and the HGNC 2025-04-01 archive.
+
+Direct Ensembl release 114 symbol mappings were preferred. Supported HGNC
+previous-symbol mappings were used as rescue mappings. The ambiguous alias
+`CD`, which could refer to either `CTLA4` or `NOD2`, was excluded. For `MALL`
+and `SLC6A10P`, the Ensembl IDs supported by HGNC were retained. Nineteen
+source symbols remained unresolved after the supported rescue procedure and
+were excluded from object construction while remaining documented in the
+mapping review records.
+
+# Build the OmicSignature objects 
+build signature tables from the mapped output
+```{r}
+## 7) Build final membership-only signature tables
+##
+## These are curated membership signatures:
+##   - difexp = NULL
+##   - score = 1
+##   - direction_type = "uni-directional"
+##
+## Unmatched rows remain in the mapping audit but do not enter the objects.
+## Valid one-to-many mappings remain expanded.
+
+make_membership_signature <- function(mapping_audit, label) {
+  raw_signature <- mapping_audit |>
+    dplyr::filter(
+      match_status %in% c("mapped", "one_to_many"),
+      !is.na(feature_name),
+      nzchar(feature_name)
+    ) |>
+    dplyr::transmute(
+      feature_name = trimws(feature_name),
+      score = 1,
+      group_label = factor(label, levels = label)
+    ) |>
+    as.data.frame()
+
+  ## No genuine assay/probe identifier is supplied by the source.
+  ## Standardize once and stop if the package removes a legitimate mapping row.
+  sigrepo_standardize_signature(
+    raw_signature,
+    context = paste(label, "EMT membership signature")
+  )
+}
+# The helper verifies that row membership, repeated feature mappings, andautomatically assigned probe IDs remain valid.
+
+
+sig_epithelial <- make_membership_signature(
+  mapping_audit = epi_mapped,
+  label = "Epithelial"
+)
+
+sig_mesenchymal <- make_membership_signature(
+  mapping_audit = mes_mapped,
+  label = "Mesenchymal"
+)
+
+validate_membership_signature <- function(sig, expected_label) {
+  stopifnot(
+    all(c("probe_id", "feature_name", "score", "group_label") %in% names(sig)),
+    is.character(sig$probe_id),
+    all(!is.na(sig$probe_id) & nzchar(sig$probe_id)),
+    !anyDuplicated(sig$probe_id),
+    all(!is.na(sig$feature_name) & nzchar(sig$feature_name)),
+    is.numeric(sig$score),
+    all(is.finite(sig$score)),
+    all(sig$score == 1),
+    is.factor(sig$group_label),
+    identical(levels(sig$group_label), expected_label),
+    all(as.character(sig$group_label) == expected_label)
+  )
+}
+
+validate_membership_signature(sig_epithelial, "Epithelial")
+validate_membership_signature(sig_mesenchymal, "Mesenchymal")
+
+cat("Final epithelial signature rows:", nrow(sig_epithelial), "\n")
+cat("Final mesenchymal signature rows:", nrow(sig_mesenchymal), "\n")
+
+EXPECTED_EPITHELIAL_ROWS <- 272L
+EXPECTED_MESENCHYMAL_ROWS <- 126L
+
+stopifnot(
+  nrow(sig_epithelial) ==
+    EXPECTED_EPITHELIAL_ROWS,
+
+  nrow(sig_mesenchymal) ==
+    EXPECTED_MESENCHYMAL_ROWS,
+
+  identical(
+    sig_epithelial$probe_id,
+    paste0(
+      "feature_",
+      seq_len(EXPECTED_EPITHELIAL_ROWS)
+    )
+  ),
+
+  identical(
+    sig_mesenchymal$probe_id,
+    paste0(
+      "feature_",
+      seq_len(EXPECTED_MESENCHYMAL_ROWS)
+    )
+  )
+)
+
+message(
+  paste0(
+    "Expected EMT signature counts confirmed: ",
+    EXPECTED_EPITHELIAL_ROWS,
+    " epithelial and ",
+    EXPECTED_MESENCHYMAL_ROWS,
+    " mesenchymal rows."
+  )
+)
+## -----------------------------------------------------------------------------
+## 9) Metadata
+# These are curated EMT membership lists, not DE results.
+
+## These two values must be supported by the source references and must exactly
+## match the terms returned by the compatible installed OmicSignature package.
+##
+## Do not approve this reference while either value remains unresolved.
+SAMPLE_STR <- "breast cancer cell line"
+
+PLATFORM_STR <-
+  "transcriptomics by bulk RNA-seq"
+
+
+sigrepo_assert_sample_type(
+  SAMPLE_STR
+)
+
+sigrepo_assert_platform(
+  PLATFORM_STR
+)
+
+
+meta_epithelial <- OmicSignature::createMetadata(
+  signature_name = "BreastCancer_Hs_BreastCancerCellLines_EpithelialEMTComponent_Youssef2024", # Epithelial-to-mesenchymal transition.
+  organism       = "Homo sapiens",
+  direction_type = "uni-directional",
+  assay_type     = "transcriptomics",
+  phenotype      = "Epithelial EMT component",
+  platform       = PLATFORM_STR,
+  sample_type    = SAMPLE_STR,
+  covariates     = "none",
+  keywords       = sigrepo_keywords(
+    c("EMT", "epithelial", "breast cancer", "cell line")
+  ),
+  author         = "Khalil Kass Youssef",
+  PMID           = "39414946",
+  year           = 2024,
+  description    = "Epithelial EMT-component gene set from Supplementary Table 1, used in Youssef et al. Nature Cancer 2024 to score the epithelial side of the EMT spectrum across human breast cancer cell lines."
+)
+
+meta_mesenchymal <- OmicSignature::createMetadata(
+  signature_name = "BreastCancer_Hs_BreastCancerCellLines_MesenchymalEMTComponent_Youssef2024",
+  organism       = "Homo sapiens",
+  direction_type = "uni-directional",
+  assay_type     = "transcriptomics",
+  phenotype      = "Mesenchymal EMT component",
+ platform       = PLATFORM_STR,
+  sample_type    = SAMPLE_STR,
+  covariates     = "none",
+  keywords       = sigrepo_keywords(
+    c("EMT", "mesenchymal", "breast cancer", "cell line")
+  ),
+  author         = "Khalil Kass Youssef",
+  PMID           = "39414946",
+  year           = 2024,
+  description    = "Mesenchymal EMT-component gene set from Supplementary Table 1, used in Youssef et al. Nature Cancer 2024 to score the mesenchymal side of the EMT spectrum across human breast cancer cell lines."
+)
+
+```
+
+```{r}
+## 10) Create OmicSignature objects
+## difexp = NULL because these are list-only signatures
+
+oSig_epithelial <- OmicSignature::OmicSignature$new(
+  metadata  = meta_epithelial,
+  signature = sig_epithelial,
+  difexp    = NULL
+)
+
+oSig_mesenchymal <- OmicSignature::OmicSignature$new(
+  metadata  = meta_mesenchymal,
+  signature = sig_mesenchymal,
+  difexp    = NULL
+)
+
+```
+
+post-construction validation
+```{r}
+validate_created_omic_signature <-
+  function(object, object_name) {
+
+    stopifnot(
+      !is.null(object$signature),
+      is.data.frame(object$signature),
+      "probe_id" %in%
+        names(object$signature),
+      is.character(
+        object$signature$probe_id
+      ),
+      !anyNA(
+        object$signature$probe_id
+      ),
+      all(
+        nzchar(
+          object$signature$probe_id
+        )
+      ),
+      !anyDuplicated(
+        object$signature$probe_id
+      )
+    )
+
+    message(
+      object_name,
+      ": ",
+      nrow(object$signature),
+      " valid signature rows."
+    )
+
+    invisible(TRUE)
+  }
+
+validate_created_omic_signature(
+  oSig_epithelial,
+  "Youssef epithelial EMT"
+)
+
+validate_created_omic_signature(
+  oSig_mesenchymal,
+  "Youssef mesenchymal EMT"
+)
+```
+
+# Collection
+```{r}
+## 11) Create collection
+
+OmSC_EMT <- OmicSignature::OmicSignatureCollection$new(
+  OmicSigList = list(
+    epithelial  = oSig_epithelial,
+    mesenchymal = oSig_mesenchymal
+  ),
+  metadata = list(
+    collection_name = "BreastCancer_Hs_BreastCancerCellLines_EMTComponents_Youssef2024",
+    description     = "Human epithelial and mesenchymal EMT-component gene sets from Supplementary Table 1 of Youssef et al. Nature Cancer 2024, used to score EMT state across human breast cancer cell lines.",
+    author          = "Khalil Kass Youssef"
+  )
+)
+
+# collection validation
+emt_members <- sigrepo_collection_members(OmSC_EMT)
+
+stopifnot(
+  length(emt_members) == 2L
+)
+
+actual_signature_names <- vapply(
+  emt_members,
+  function(x) {
+    as.character(
+      x$metadata$signature_name
+    )
+  },
+  character(1)
+)
+
+expected_signature_names <- c(
+  as.character(
+    oSig_epithelial$metadata$signature_name
+  ),
+  as.character(
+    oSig_mesenchymal$metadata$signature_name
+  )
+)
+
+stopifnot(
+  setequal(
+    actual_signature_names,
+    expected_signature_names
+  )
+)
+
+message(
+  paste0(
+    "EMT collection contains the ",
+    "expected two OmicSignature objects."
+  )
+)
+```
+
+# Approval status
+
+No unresolved items remain for this approved reference workflow.
+
+The workflow uses a reviewed and frozen Ensembl release 114 mapping cache.
+It passed controlled-vocabulary validation, mapping validation, expected-count
+validation, probe-ID validation, pre-construction and post-construction
+validation, collection validation, and a clean end-to-end render.
+
+# Save
+```{r save, eval=FALSE}
+## 12) Optional save step
+## Keep eval=FALSE in the reusable reference example.
+
+# Do not execute the save chunk while this file is being used as a reference example.
+
+saveRDS(
+  oSig_epithelial,
+  file = file.path(
+    OUTDIR,
+    "EMT_Hs_BreastCancerCellLines_EpithelialEMTComponent_Youssef2024_oSig.rds"
+  )
+)
+
+saveRDS(
+  oSig_mesenchymal,
+  file = file.path(
+    OUTDIR,
+    "EMT_Hs_BreastCancerCellLines_MesenchymalEMTComponent_Youssef2024_oSig.rds"
+  )
+)
+
+saveRDS(
+  OmSC_EMT,
+  file = file.path(
+    OUTDIR,
+    "EMT_Hs_BreastCancerCellLines_EpithelialMesenchymalComponents_Youssef2024_OmSC.rds"
+  )
+)
+
+
+## 13) Optional quick inspection
+
+head(oSig_epithelial$signature)
+head(oSig_mesenchymal$signature)
+
+nrow(oSig_epithelial$signature)
+nrow(oSig_mesenchymal$signature)
+```

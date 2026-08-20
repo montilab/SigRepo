@@ -1,0 +1,566 @@
+---
+title: "AhR/CYP1B1 MDA-MB-231 and SUM-149PT approved OmicSignature reference workflow"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+---
+
+# Approval status
+
+No unresolved items remain for this approved reference workflow.
+
+The source interpretation and `limma.logFC` score direction are supported. The
+exact signature rule is `adj.P.Val <= 0.01` with no fold-change cutoff. The
+Ensembl release 114 mapping is reviewed and frozen. All four objects and the
+four-member collection passed clean-session validation. Save and upload
+behavior remains disabled by default.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+```{r libraries}
+library(dplyr)
+library(purrr)
+library(readr)
+library(stringr)
+library(tibble)
+library(OmicSignature)
+```
+
+```{r locate-foundation}
+find_repo_root <- function(start = getwd()) {
+  current <- normalizePath(start, winslash = "/", mustWork = TRUE)
+  repeat {
+    if (dir.exists(file.path(current, "codex_reference")) &&
+        dir.exists(file.path(current, "codex_tests"))) {
+      return(current)
+    }
+    parent <- dirname(current)
+    if (identical(parent, current)) {
+      stop("Could not locate the SigRepo repository root.", call. = FALSE)
+    }
+    current <- parent
+  }
+}
+
+current_rmd <- knitr::current_input(dir = TRUE)
+RMD_DIR <- normalizePath(
+  if (nzchar(current_rmd)) dirname(current_rmd) else getwd(),
+  winslash = "/",
+  mustWork = TRUE
+)
+REPO_ROOT <- find_repo_root(RMD_DIR)
+REFERENCE_DIR <- file.path(RMD_DIR, "reference_data")
+
+source(file.path(
+  REPO_ROOT, "codex_reference", "helpers", "omicsignature_compat.R"
+))
+sigrepo_assert_compatible_api()
+```
+
+```{r paths-and-constants}
+SCENARIO_DIR <- file.path(
+  REPO_ROOT,
+  "codex_tests", "scenario1_diff_table", "8_AhR_CYP1B1_MDA_Sum149"
+)
+
+env_or_default <- function(name, default) {
+  value <- Sys.getenv(name, unset = "")
+  if (nzchar(value)) value else default
+}
+
+SOURCE_PATHS <- c(
+  mda_ahr = env_or_default(
+    "AHR_CYP_MDA_AHR_SOURCE",
+    file.path(SCENARIO_DIR, "diffanal.MDA.AhR.xls")
+  ),
+  mda_cyp1b1 = env_or_default(
+    "AHR_CYP_MDA_CYP1B1_SOURCE",
+    file.path(SCENARIO_DIR, "diffanal.MDA.CYP.xls")
+  ),
+  sum149_ahr = env_or_default(
+    "AHR_CYP_SUM149_AHR_SOURCE",
+    file.path(SCENARIO_DIR, "diffanal.SUM.AhR.xls")
+  ),
+  sum149_cyp1b1 = env_or_default(
+    "AHR_CYP_SUM149_CYP1B1_SOURCE",
+    file.path(SCENARIO_DIR, "diffanal.SUM.CYP.xls")
+  )
+)
+
+REVIEWED_MAPPING_FILE <- file.path(
+  REFERENCE_DIR,
+  "AhR_CYP1B1_Ensembl_v114_reviewed_mapping.rds"
+)
+
+SIGNATURE_ADJ_P_CUTOFF <- 0.01
+REQUIRED_SOURCE_ROWS <- 22981L
+REQUIRED_COLUMNS <- c(
+  "ensembl_gene_id", "entrezgene", "hgnc_symbol", "high.class", "t",
+  "P.Value", "adj.P.Val", "limma.logFC"
+)
+
+SPECS <- tribble(
+  ~signature_key, ~source_file, ~cell_line, ~source_condition, ~positive_label, ~sample_type, ~signature_name, ~expected_source_signature_rows, ~expected_missing_entrez,
+  "mda_ahr", "diffanal.MDA.AhR.xls", "MDA-MB-231", "AhR", "AHR_KD", "MDA-MB-231 cell", "BreastCancer_Hs_MDA_MB_231_AHR_KD_vs_CN_MontiLab2016", 219L, 3372L,
+  "mda_cyp1b1", "diffanal.MDA.CYP.xls", "MDA-MB-231", "CYP1B1", "CYP1B1_KD", "MDA-MB-231 cell", "BreastCancer_Hs_MDA_MB_231_CYP1B1_KD_vs_CN_MontiLab2016", 6L, 3372L,
+  "sum149_ahr", "diffanal.SUM.AhR.xls", "SUM-149PT", "AhR", "AHR_KD", "SUM-149PT cell", "BreastCancer_Hs_SUM149PT_AHR_KD_vs_CN_MontiLab2016", 2558L, 3372L,
+  "sum149_cyp1b1", "diffanal.SUM.CYP.xls", "SUM-149PT", "CYP1B1", "CYP1B1_KD", "SUM-149PT cell", "BreastCancer_Hs_SUM149PT_CYP1B1_KD_vs_CN_MontiLab2016", 1077L, 3372L
+)
+
+COLLECTION_NAME <- "BreastCancer_Hs_CellLine_AhR_CYP1B1_KD_MontiLab2016"
+
+EXPECTED_MAPPED_COUNTS <- tribble(
+  ~signature_key, ~mapped_parent_rows, ~mapped_signature_rows,
+  "mda_ahr", 22841L, 217L,
+  "mda_cyp1b1", 22841L, 6L,
+  "sum149_ahr", 22841L, 2552L,
+  "sum149_cyp1b1", 22841L, 1074L
+)
+
+stopifnot(
+  length(SOURCE_PATHS) == 4L,
+  all(file.exists(SOURCE_PATHS)),
+  nrow(SPECS) == 4L
+)
+
+sigrepo_assert_platform("transcriptomics by array")
+walk(unique(SPECS$sample_type), sigrepo_assert_sample_type)
+```
+
+## Accepted preflight
+
+The four inputs are complete limma differential-analysis tables. The accepted
+contrast evidence is `cond = AhR` or `cond = CYP1B1` versus `control = CN`.
+The signed score is `limma.logFC`: positive means higher expression in the
+knockdown condition and negative means higher expression in `CN`. The exact
+signature rule is `adj.P.Val <= 0.01`, with no fold-change cutoff.
+
+```{r read-and-validate-sources}
+clean_text <- function(x) {
+  x <- as.character(x)
+  x <- str_replace_all(x, "[\\u00A0\\u2007\\u202F\\uFEFF]", " ")
+  str_squish(x)
+}
+
+clean_ensembl <- function(x) str_remove(clean_text(x), "\\.[0-9]+$")
+
+read_source <- function(signature_key) {
+  spec <- SPECS %>% filter(.data$signature_key == .env$signature_key)
+  path <- unname(SOURCE_PATHS[[signature_key]])
+  source_file <- basename(path)
+
+  raw <- read_tsv(
+    path,
+    col_types = cols(.default = col_character()),
+    na = c("", "NA", "N/A", "NULL"),
+    progress = FALSE
+  ) %>% as_tibble()
+
+  missing_columns <- setdiff(REQUIRED_COLUMNS, names(raw))
+  if (length(missing_columns) > 0L) {
+    stop(source_file, " is missing required columns: ",
+         paste(missing_columns, collapse = ", "), call. = FALSE)
+  }
+  if (nrow(raw) != REQUIRED_SOURCE_ROWS) {
+    stop(source_file, " has ", nrow(raw), " rows; expected ",
+         REQUIRED_SOURCE_ROWS, ".", call. = FALSE)
+  }
+
+  out <- raw %>%
+    mutate(
+      signature_key = signature_key,
+      source_file = source_file,
+      source_row = row_number() + 1L,
+      original_ensembl_gene_id = clean_text(ensembl_gene_id),
+      cleaned_ensembl_gene_id = clean_ensembl(ensembl_gene_id),
+      source_hgnc_symbol = clean_text(hgnc_symbol),
+      source_entrezgene = clean_text(entrezgene),
+      score = suppressWarnings(as.numeric(limma.logFC)),
+      p_value = suppressWarnings(as.numeric(P.Value)),
+      adj_p = suppressWarnings(as.numeric(adj.P.Val)),
+      t_statistic = suppressWarnings(as.numeric(t)),
+      group_label = factor(
+        case_when(
+          score > 0 ~ spec$positive_label,
+          score < 0 ~ "CN",
+          TRUE ~ NA_character_
+        ),
+        levels = c(spec$positive_label, "CN")
+      )
+    )
+
+  numeric_columns <- c("score", "p_value", "adj_p", "t_statistic")
+  if (any(!map_lgl(out[numeric_columns], ~ all(is.finite(.x))))) {
+    stop(source_file, " has missing or non-finite analytical values.",
+         call. = FALSE)
+  }
+  if (any(out$score == 0) || anyNA(out$group_label)) {
+    stop(source_file, " has zero scores or unresolved group labels.",
+         call. = FALSE)
+  }
+
+  primary_identifier_missing <- (
+    is.na(out$original_ensembl_gene_id) |
+      !nzchar(out$original_ensembl_gene_id) |
+      is.na(out$cleaned_ensembl_gene_id) |
+      !nzchar(out$cleaned_ensembl_gene_id)
+  )
+  if (any(primary_identifier_missing)) {
+    stop(source_file, " has missing primary Ensembl identifiers.",
+         call. = FALSE)
+  }
+
+  missing_entrez <- sum(
+    is.na(out$source_entrezgene) |
+      !nzchar(out$source_entrezgene)
+  )
+  if (missing_entrez != spec$expected_missing_entrez) {
+    stop(
+      source_file, " has ", missing_entrez,
+      " missing Entrez rescue identifiers; expected ",
+      spec$expected_missing_entrez, ".", call. = FALSE
+    )
+  }
+
+  observed_signature_rows <- sum(out$adj_p <= SIGNATURE_ADJ_P_CUTOFF)
+  if (observed_signature_rows != spec$expected_source_signature_rows) {
+    stop(
+      source_file, " has ", observed_signature_rows,
+      " source rows satisfying adj.P.Val <= 0.01; expected ",
+      spec$expected_source_signature_rows, ".", call. = FALSE
+    )
+  }
+  out
+}
+
+source_tables <- set_names(SPECS$signature_key) %>% map(read_source)
+```
+
+```{r reviewed-frozen-mapping}
+if (!file.exists(REVIEWED_MAPPING_FILE)) {
+  stop(
+    "Reviewed frozen mapping cache is absent: ", REVIEWED_MAPPING_FILE,
+    ". Run and review the one-time builder, then run the offline finalizer. ",
+    "This Rmd never calls a live mapping service.",
+    call. = FALSE
+  )
+}
+
+mapping_bundle <- readRDS(REVIEWED_MAPPING_FILE)
+required_bundle_names <- c(
+  "status", "mapping", "audit", "summary", "expected_counts",
+  "ensembl_release", "source_md5"
+)
+if (!is.list(mapping_bundle) ||
+    !all(required_bundle_names %in% names(mapping_bundle))) {
+  stop("Reviewed mapping cache has an invalid bundle structure.", call. = FALSE)
+}
+if (!identical(mapping_bundle$status, "REVIEWED")) {
+  stop("Mapping cache is not marked REVIEWED.", call. = FALSE)
+}
+if (!identical(as.integer(mapping_bundle$ensembl_release), 114L)) {
+  stop("Reviewed mapping cache is not Ensembl release 114.", call. = FALSE)
+}
+
+current_source_md5 <- unname(tools::md5sum(SOURCE_PATHS))
+names(current_source_md5) <- basename(SOURCE_PATHS)
+expected_source_md5 <- mapping_bundle$source_md5[names(current_source_md5)]
+
+if (anyNA(expected_source_md5) ||
+    !identical(unname(current_source_md5), unname(expected_source_md5))) {
+  stop(
+    "One or more source files differ from those used to build the reviewed mapping.",
+    call. = FALSE
+  )
+}
+
+reviewed_mapping <- as_tibble(mapping_bundle$mapping)
+reviewed_audit <- as_tibble(mapping_bundle$audit)
+frozen_counts <- as_tibble(mapping_bundle$expected_counts)
+
+required_mapping_columns <- c(
+  "source_file", "source_row", "original_ensembl_gene_id", "hgnc_symbol",
+  "entrezgene", "cleaned_key", "target_ensembl_gene_id", "mapping_route",
+  "ensembl_release", "match_status", "multiplicity", "ambiguity",
+  "decision", "decision_note"
+)
+if (!all(required_mapping_columns %in% names(reviewed_mapping))) {
+  stop("Reviewed mapping cache is missing required mapping columns.",
+       call. = FALSE)
+}
+if (anyNA(reviewed_mapping$target_ensembl_gene_id) ||
+    any(!str_detect(reviewed_mapping$target_ensembl_gene_id,
+                    "^ENSG[0-9]+$"))) {
+  stop("Reviewed mapping contains missing or invalid target Ensembl IDs.",
+       call. = FALSE)
+}
+if (any(reviewed_mapping$decision != "include")) {
+  stop("Reviewed mapping contains non-include rows in its mapping component.",
+       call. = FALSE)
+}
+if (!"approval_blocking" %in% names(reviewed_audit) ||
+    anyNA(reviewed_audit$approval_blocking) ||
+    any(reviewed_audit$approval_blocking)) {
+  stop("Reviewed mapping audit still contains approval-blocking cases.",
+       call. = FALSE)
+}
+
+required_count_columns <- c(
+  "signature_key", "mapped_parent_rows", "mapped_signature_rows"
+)
+if (!all(required_count_columns %in% names(frozen_counts)) ||
+    nrow(frozen_counts) != 4L ||
+    anyNA(frozen_counts[required_count_columns])) {
+  stop(
+    "Mapping-derived expected counts are not frozen in the reviewed cache.",
+    call. = FALSE
+  )
+}
+
+count_check <- frozen_counts %>%
+  select(all_of(required_count_columns)) %>%
+  arrange(signature_key)
+expected_count_check <- EXPECTED_MAPPED_COUNTS %>%
+  arrange(signature_key)
+if (!identical(count_check, expected_count_check)) {
+  stop(
+    "Reviewed mapping counts do not match the approved frozen counts.",
+    call. = FALSE
+  )
+}
+```
+
+```{r mapped-standardized-parents}
+make_parent <- function(signature_key) {
+  source <- source_tables[[signature_key]]
+  spec <- SPECS %>% filter(.data$signature_key == .env$signature_key)
+  map_for_source <- reviewed_mapping %>%
+    filter(.data$source_file == spec$source_file)
+
+  parent_prepared <- source %>%
+    inner_join(
+      map_for_source,
+      by = c(
+        "source_file", "source_row", "original_ensembl_gene_id",
+        "source_hgnc_symbol" = "hgnc_symbol",
+        "source_entrezgene" = "entrezgene"
+      ),
+      relationship = "many-to-many"
+    ) %>%
+    transmute(
+      feature_name = target_ensembl_gene_id,
+      symbol = source_hgnc_symbol,
+      score,
+      p_value,
+      adj_p,
+      `P.Value` = p_value,
+      `adj.P.Val` = adj_p,
+      t = t_statistic,
+      group_label,
+      source_file,
+      source_row,
+      original_ensembl_gene_id,
+      hgnc_symbol = source_hgnc_symbol,
+      entrezgene = source_entrezgene,
+      cleaned_key,
+      mapping_route,
+      match_status,
+      multiplicity,
+      ambiguity,
+      decision,
+      decision_note
+    ) %>%
+    arrange(source_row, feature_name)
+
+  expected <- frozen_counts %>%
+    filter(.data$signature_key == .env$signature_key)
+  if (nrow(expected) != 1L ||
+      nrow(parent_prepared) != expected$mapped_parent_rows) {
+    stop(signature_key, ": mapped parent count does not match frozen count.",
+         call. = FALSE)
+  }
+
+  # No genuine assay identifier exists. Assign deterministic feature_n IDs
+  # once on the complete mapped parent, then standardize the parent once.
+  parent <- sigrepo_standardize_signature(
+    as.data.frame(parent_prepared),
+    paste(spec$signature_name, "parent difexp")
+  )
+
+  expected_probe_ids <- paste0("feature_", seq_len(nrow(parent)))
+  if (!setequal(parent$probe_id, expected_probe_ids)) {
+    stop(signature_key, ": deterministic feature_n probe IDs are invalid.",
+         call. = FALSE)
+  }
+  parent
+}
+
+difexp_tables <- set_names(SPECS$signature_key) %>% map(make_parent)
+
+signature_tables <- imap(difexp_tables, function(parent, signature_key) {
+  expected <- frozen_counts %>%
+    filter(.data$signature_key == .env$signature_key)
+  child <- parent[parent$adj.P.Val <= SIGNATURE_ADJ_P_CUTOFF, , drop = FALSE]
+  if (nrow(child) != expected$mapped_signature_rows) {
+    stop(signature_key, ": mapped signature count does not match frozen count.",
+         call. = FALSE)
+  }
+  child
+})
+```
+
+```{r parent-child-validation}
+SYNC_COLUMNS <- c(
+  "probe_id", "feature_name", "score", "P.Value", "adj.P.Val", "t",
+  "source_file", "source_row", "original_ensembl_gene_id", "hgnc_symbol",
+  "entrezgene"
+)
+
+row_keys <- function(x, columns) {
+  do.call(paste, c(lapply(x[columns], as.character), sep = "\r"))
+}
+
+iwalk(signature_tables, function(signature, signature_key) {
+  parent <- difexp_tables[[signature_key]]
+  spec <- SPECS %>% filter(.data$signature_key == .env$signature_key)
+
+  stopifnot(
+    all(SYNC_COLUMNS %in% names(parent)),
+    all(SYNC_COLUMNS %in% names(signature)),
+    all(signature$adj.P.Val <= SIGNATURE_ADJ_P_CUTOFF),
+    !anyNA(parent$probe_id),
+    !anyDuplicated(parent$probe_id),
+    is.factor(parent$group_label),
+    identical(levels(parent$group_label), c(spec$positive_label, "CN")),
+    all(row_keys(signature, SYNC_COLUMNS) %in%
+          row_keys(parent, SYNC_COLUMNS))
+  )
+})
+```
+
+```{r metadata-and-objects}
+make_metadata <- function(signature_key) {
+  spec <- SPECS %>% filter(.data$signature_key == .env$signature_key)
+  OmicSignature::createMetadata(
+    signature_name = spec$signature_name,
+    organism = "Homo sapiens",
+    direction_type = "bi-directional",
+    assay_type = "transcriptomics",
+    phenotype = paste(spec$positive_label, "versus CN in", spec$cell_line),
+    platform = "transcriptomics by array",
+    sample_type = spec$sample_type,
+    covariates = "none",
+    author = "Stefano Monti",
+    year = 2016,
+    adj_p_cutoff = SIGNATURE_ADJ_P_CUTOFF,
+    keywords = sigrepo_keywords(c(
+      "AHR", "CYP1B1", "knockdown", "breast cancer", spec$cell_line
+    )),
+    cutoff_description = paste0(
+      "Primary repository signature criterion: adj.P.Val <= 0.01; ",
+      "no fold-change cutoff."
+    ),
+    description = paste(
+      "Unpublished MontiLab Affymetrix Human Gene 2.0 ST transcriptomic",
+      "signature for", spec$positive_label, "versus CN in", spec$cell_line,
+      "cells. Positive limma.logFC indicates higher expression in the",
+      "knockdown condition; negative values indicate higher expression in CN."
+    )
+  )
+}
+
+metadata_list <- set_names(SPECS$signature_key) %>% map(make_metadata)
+
+MEMBER_NAMES <- c(
+  "MDA_MB_231_AHR_KD_vs_CN",
+  "MDA_MB_231_CYP1B1_KD_vs_CN",
+  "SUM149PT_AHR_KD_vs_CN",
+  "SUM149PT_CYP1B1_KD_vs_CN"
+)
+
+member_key_map <- setNames(
+  SPECS$signature_key,
+  MEMBER_NAMES
+)
+
+osig_list <- map(
+  member_key_map,
+  function(signature_key) {
+    OmicSignature::OmicSignature$new(
+      metadata = metadata_list[[signature_key]],
+      signature = signature_tables[[signature_key]],
+      difexp = difexp_tables[[signature_key]],
+      print_message = FALSE
+    )
+  }
+)
+
+collection_metadata <- list(
+  collection_name = COLLECTION_NAME,
+  description = paste(
+    "Four unpublished MontiLab Affymetrix transcriptomic signatures for AHR",
+    "and CYP1B1 knockdown versus CN in MDA-MB-231 and SUM-149PT cells."
+  ),
+  author = "Stefano Monti",
+  year = 2016
+)
+
+ahr_cyp_collection <- OmicSignature::OmicSignatureCollection$new(
+  OmicSigList = osig_list,
+  metadata = collection_metadata,
+  print_message = FALSE
+)
+```
+
+```{r object-and-collection-validation}
+stopifnot(length(osig_list) == 4L)
+
+iwalk(osig_list, function(osig, member_name) {
+  signature_key <- unname(member_key_map[[member_name]])
+  expected <- frozen_counts %>%
+    filter(.data$signature_key == .env$signature_key)
+
+  stopifnot(
+    length(signature_key) == 1L,
+    nrow(expected) == 1L,
+    nrow(osig$difexp) == expected$mapped_parent_rows,
+    nrow(osig$signature) == expected$mapped_signature_rows,
+    all(row_keys(osig$signature, SYNC_COLUMNS) %in%
+          row_keys(osig$difexp, SYNC_COLUMNS))
+  )
+})
+
+collection_members <- sigrepo_collection_members(ahr_cyp_collection)
+
+actual_signature_names <- vapply(
+  collection_members,
+  function(object) {
+    as.character(object$metadata$signature_name)
+  },
+  character(1)
+)
+
+expected_signature_names <- vapply(
+  osig_list,
+  function(object) {
+    as.character(object$metadata$signature_name)
+  },
+  character(1)
+)
+
+stopifnot(
+  length(collection_members) == 4L,
+  setequal(actual_signature_names, expected_signature_names)
+)
+```
+
+```{r save-approved-objects, eval=FALSE}
+# Disabled by default for the approved reference workflow. Enable only for an
+# explicitly authorized repository operation after output-path review.
+stop("Saving and upload are disabled by default.", call. = FALSE)
+```

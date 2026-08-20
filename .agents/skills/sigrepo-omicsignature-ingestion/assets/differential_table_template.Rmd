@@ -1,0 +1,150 @@
+---
+title: "{{STUDY_KEY}} differential-table OmicSignature development workflow"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+# Development status
+
+This workflow remains under development. Replace this section only after a
+clean render, object inspection, mapping review, expected-count validation, and
+approved-location rerender.
+
+```{r libraries}
+library(dplyr)
+library(readr)
+library(readxl)
+library(stringr)
+library(tibble)
+library(purrr)
+library(OmicSignature)
+```
+
+```{r locate-foundation}
+find_repo_root <- function(start = getwd()) {
+  current <- normalizePath(start, winslash = "/", mustWork = TRUE)
+  repeat {
+    if (dir.exists(file.path(current, "codex_reference"))) return(current)
+    parent <- dirname(current)
+    if (identical(parent, current)) stop("Could not locate SigRepo repository root.")
+    current <- parent
+  }
+}
+
+REPO_ROOT <- find_repo_root()
+source(file.path(REPO_ROOT, "codex_reference", "helpers", "omicsignature_compat.R"))
+sigrepo_assert_compatible_api()
+```
+
+```{r paths-and-constants}
+SOURCE_FILE <- Sys.getenv("{{SOURCE_ENV_VAR}}", unset = "")
+stopifnot(nzchar(SOURCE_FILE), file.exists(SOURCE_FILE))
+
+SIGNATURE_NAME <- "{{SIGNATURE_NAME}}"
+APPROVED_PLATFORM <- "{{PLATFORM}}"
+APPROVED_SAMPLE_TYPE <- "{{SAMPLE_TYPE}}"
+GROUP_LEVELS <- c("{{GROUP_1}}", "{{GROUP_2}}")
+
+# Replace with the exact supported rule and operator.
+SIGNATURE_RULE_DESCRIPTION <- "{{EXACT_RULE}}"
+
+sigrepo_assert_platform(APPROVED_PLATFORM)
+sigrepo_assert_sample_type(APPROVED_SAMPLE_TYPE)
+```
+
+```{r source-and-mapping}
+# Read the complete or broader differential-analysis table.
+# Map through a reviewed frozen cache under reference_data/.
+# Preserve source provenance in development audit tables.
+
+difexp_prepared <- tibble(
+  feature_name = character(),
+  score = numeric(),
+  p_value = numeric(),
+  adj_p_value = numeric(),
+  group_label = factor(character(), levels = GROUP_LEVELS)
+)
+
+stopifnot(nrow(difexp_prepared) > 0L)
+stopifnot(identical(levels(difexp_prepared$group_label), GROUP_LEVELS))
+
+# Standardize the parent exactly once. This creates or validates probe IDs.
+difexp <- sigrepo_standardize_signature(
+  difexp_prepared,
+  paste(SIGNATURE_NAME, "parent difexp")
+)
+
+# Derive the child from the standardized parent. Do not standardize again.
+signature <- difexp %>%
+  filter({{EXACT_FILTER_EXPRESSION}})
+
+stopifnot(nrow(signature) > 0L)
+```
+
+```{r parent-child-validation}
+parent_key <- paste(
+  difexp$probe_id,
+  difexp$feature_name,
+  difexp$score,
+  sep = "\r"
+)
+
+signature_key <- paste(
+  signature$probe_id,
+  signature$feature_name,
+  signature$score,
+  sep = "\r"
+)
+
+stopifnot(
+  all(signature$probe_id %in% difexp$probe_id),
+  all(signature_key %in% parent_key),
+  !anyNA(difexp$probe_id),
+  !anyDuplicated(difexp$probe_id),
+  all(as.character(signature$group_label) %in% GROUP_LEVELS)
+)
+```
+
+```{r metadata-object}
+metadata <- OmicSignature::createMetadata(
+  signature_name = SIGNATURE_NAME,
+  organism = "{{ORGANISM}}",
+  direction_type = "{{DIRECTION_TYPE}}",
+  assay_type = "{{ASSAY_TYPE}}",
+  phenotype = "{{PHENOTYPE}}",
+  platform = APPROVED_PLATFORM,
+  sample_type = APPROVED_SAMPLE_TYPE,
+  author = "{{AUTHOR}}",
+  keywords = sigrepo_keywords(c("{{KEYWORD_1}}", "{{KEYWORD_2}}")),
+  cutoff_description = SIGNATURE_RULE_DESCRIPTION,
+  description = "{{DESCRIPTION}}"
+)
+
+oSig <- OmicSignature::OmicSignature$new(
+  metadata = metadata,
+  signature = signature,
+  difexp = difexp,
+  print_message = FALSE
+)
+```
+
+```{r validation}
+stopifnot(
+  nrow(oSig$signature) == nrow(signature),
+  nrow(oSig$difexp) == nrow(difexp),
+  all(oSig$signature$probe_id %in% oSig$difexp$probe_id)
+)
+```
+
+```{r save-objects, eval=FALSE}
+# Enable only after approval and explicit output-path review.
+saveRDS(oSig, file.path("{{OUTPUT_DIRECTORY}}", paste0(SIGNATURE_NAME, "_oSig.rds")))
+```
