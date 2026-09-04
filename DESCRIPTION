@@ -15,7 +15,7 @@ Description: As high-throughput technology evolves, a large number of omics-sign
   This package helps to store signatures efficiently and retrieve them conveniently. 
 Depends: R (>= 4.4.0)
 License: GPL-3 + file LICENSE
-URL: https://github.com/montilab/SigRepo/
+URL: https://montilab.github.io/SigRepo/, https://github.com/montilab/SigRepo/
 Encoding: UTF-8
 LazyData: true 
 Imports:
