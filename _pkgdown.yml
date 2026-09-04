@@ -108,10 +108,7 @@ reference:
   - title: Compare Signatures
     desc: ~
     contents:
-      - '`compareSignatureFeatures`'
-      - '`compareSignatureScores`'
-      - '`plotSignatureOverlap`'
-      - '`signatureSetKsTest`'
+      - '`compareSignatures`'
 
   - title: Enrichment Analysis
     desc: ~
@@ -119,7 +116,67 @@ reference:
       - '`prepareHypeRSignatures`'
       - '`runHypeR`'
       - '`runHyperGEM`'
+      - '`hypergemAvailable`'
+      - '`hypergemExport`'
       
+  - title: Build Signature Objects
+    desc: Construct and validate OmicSignature and OmicSignatureCollection objects before depositing them
+    contents:
+      - '`createOmicSignature`'
+      - '`createOmicCollection`'
+      - '`createSignatureMetadata`'
+      - '`createCollectionMetadata`'
+      - '`checkOmicSignature`'
+      - '`checkOmicCollection`'
+      - '`protTransform`'
+
+  - title: Controlled Vocabulary
+    desc: The value sets SigRepo validates metadata against
+    contents:
+      - '`direction_types`'
+      - '`assay_tbl`'
+      - '`metabolomics_feature_tables`'
+
+  - title: Internal Helpers
+    desc: >
+      Exported for use across the package and by the server, not part of the
+      day-to-day interface. Listed so every help page is reachable.
+    contents:
+      - '`addGeneticVariantsFeatureSet`'
+      - '`addGeneticVariantsSignatureSet`'
+      - '`addMetabolomicsNomenclature`'
+      - '`addSignatureWithID`'
+      - '`build_api_url`'
+      - '`get_api_handle`'
+      - '`stop_for_api_error`'
+      - '`test_conn_handler`'
+      - '`checkAssayType`'
+      - '`checkDBTable`'
+      - '`checkDirectionType`'
+      - '`checkDuplicatedEmails`'
+      - '`checkPermissions`'
+      - '`checkTableInput`'
+      - '`createHashKey`'
+      - '`getDBColNames`'
+      - '`getNumOfObs`'
+      - '`getVariableID`'
+      - '`insert_table_sql`'
+      - '`lookup_table_sql`'
+      - '`delete_table_sql`'
+      - '`print_messages`'
+      - '`removeDuplicates`'
+      - '`resolveMetabolomicsFeatureConfig`'
+      - '`verbose`'
+      - '`showAssayTypeErrorMessage`'
+      - '`showGeneticVariantsErrorMessage`'
+      - '`showMetabolomicsAmbiguityMessage`'
+      - '`showMetabolomicsErrorMessage`'
+      - '`showOrganismErrorMessage`'
+      - '`showPlatformErrorMessage`'
+      - '`showProteomicsErrorMessage`'
+      - '`showSampleTypeErrorMessage`'
+      - '`showTranscriptomicsErrorMessage`'
+
   - title: Example Data
     desc: Example signatures included in the package
     contents:
