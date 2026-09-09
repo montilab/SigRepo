@@ -144,17 +144,29 @@ sanitizeRetrievedSignature <- function(signature, direction_type){
 
 #' @title createOmicSignature
 #' @description Get the signature set uploaded by a specific user in the database.
-#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
-#' @param db_signature_tbl A Data Frame; must contain the following column names: 
+#' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required)
+#' @param db_signature_tbl A Data Frame; must contain the following column names:
 #' 'signature_id'
-#' 
+#' @param difexp Optional pre-loaded difexp data frame. Only used when
+#'   \code{fetch_difexp = FALSE}; lets a caller that already has the difexp on
+#'   hand (e.g. the SigRepo API, reading it from disk) inject it instead of
+#'   having createOmicSignature fetch it over HTTP.
+#' @param fetch_difexp Logical; when \code{TRUE} (default, the original
+#'   behavior) difexp is retrieved from the SigRepo API's \code{get_difexp}
+#'   endpoint. Set \code{FALSE} to skip that HTTP round-trip and use the
+#'   \code{difexp} argument as-is -- required when calling this from inside the
+#'   API process itself, where an HTTP call back to the same single-process
+#'   server would deadlock.
+#'
 #' @import OmicSignature
-#' 
+#'
 #' @keywords internal
-#' 
+#'
 createOmicSignature <- function(
     conn_handler = NULL,
-    db_signature_tbl
+    db_signature_tbl,
+    difexp = NULL,
+    fetch_difexp = TRUE
 ){
   
   # Establish user connection ###
@@ -172,7 +184,7 @@ createOmicSignature <- function(
     # Disconnect from database ####
     DBI::dbDisconnect(conn)    
     # Show message
-    base::stop(base::sprintf("\n'db_signature_tbl' must be a data frame and cannot be empty.\n"))
+    base::stop("\n'db_signature_tbl' must be a data frame and cannot be empty.\n")
   }
   
   # Create metadata
@@ -198,7 +210,12 @@ createOmicSignature <- function(
   }
   
   # If signature has difexp, get a copy by its signature hash key ####
-  if(db_signature_tbl$has_difexp[1] == TRUE){
+  # When fetch_difexp = FALSE the caller has already supplied `difexp`
+  # directly (e.g. the API loads it from disk to avoid an HTTP round-trip back
+  # to itself), so use it as-is and skip the get_difexp API call.
+  if(!fetch_difexp){
+    # difexp keeps whatever was passed in (possibly NULL).
+  }else if(db_signature_tbl$has_difexp[1] == TRUE){
     # Get API URL
     api_url <- SigRepo::build_api_url(
       conn_handler = conn_handler,

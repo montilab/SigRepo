@@ -129,9 +129,18 @@ jobs:
           done
           curl -fsS http://127.0.0.1:3838/__docs__/ >/dev/null
 
-      - name: Initialize schema and reference data via /init_db
+      # Schema and reference tables only -- deliberately NOT /init_db.
+      #
+      # /init_db is schema + reference tables + a full MSigDB gene set build,
+      # and msigdbr downloads that data from zenodo.org on first use. No test in
+      # this package uses MSigDB: the hypeR and hypeR-GEM tests construct their
+      # own gene sets inline and pass them to runHypeR(). So the download bought
+      # this suite nothing and made every run depend on a third-party service
+      # staying up -- which is how a zenodo 504 turned into a red build here.
+      - name: Initialize schema and reference data
         run: |
-          curl -fsS -X POST "http://127.0.0.1:3838/init_db?admin_key=${ADMIN_KEY}"
+          curl -fsS -X POST "http://127.0.0.1:3838/init_db_schema?admin_key=${ADMIN_KEY}"
+          curl -fsS -X POST "http://127.0.0.1:3838/init_db_tables?admin_key=${ADMIN_KEY}"
 
       - name: Run testthat with coverage
         run: |

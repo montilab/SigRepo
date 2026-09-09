@@ -171,6 +171,30 @@ test_that("runHypeR can retrieve MSigDB genesets automatically", {
   testthat::skip_if_not_installed("hypeR")
   testthat::skip_if_not_installed("msigdbr")
 
+  # This is the one test in the suite that needs MSigDB itself; every other
+  # hypeR test builds its gene sets inline. msigdbr 26.x stopped bundling the
+  # data and downloads it from zenodo.org on first use, so the test now depends
+  # on a third-party service being reachable.
+  #
+  # Probe that service through the exact call resolveHypeRGenesets() makes, and
+  # skip with the reason when it is down: an outage there is an environment
+  # failure, not a regression in runHypeR, and it should not turn the suite red
+  # for everyone. The probe also warms msigdbr's cache, so the call below does
+  # not download twice. A probe that SUCCEEDS leaves both assertions in force.
+  probe <- base::tryCatch(
+    {
+      base::suppressWarnings(
+        hypeR::msigdb_gsets(species = "Homo sapiens", collection = "H")
+      )
+      TRUE
+    },
+    error = function(err) base::conditionMessage(err)
+  )
+  testthat::skip_if_not(
+    base::isTRUE(probe),
+    base::paste("MSigDB gene sets could not be downloaded:", probe)
+  )
+
   utils::data("LLFS_Aging_Gene_2023", package = "SigRepo", envir = environment())
 
   hyp_res <- base::suppressWarnings(
