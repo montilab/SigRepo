@@ -11,10 +11,15 @@ updateProteomicsFeatureSet(conn_handler = NULL, organism, verbose = TRUE)
 
 \item{organism}{An organism to extract and update its features (required)}
 
-\item{verbose}{A logical value of whether to print diagnostic messages. 
-Defaults to 'TRUE'}
+\item{verbose}{A logical value of whether to print diagnostic messages.
+Defaults to 'TRUE'.}
 }
 \description{
-Retrieve FTP UniProt data from NCBI and update proteomics 
-feature set in the database
+Refresh an organism's proteomics reference features from
+UniProt: every accession for the organism with its primary gene name.
+Existing rows are re-symbolled where UniProt now has a name, features that
+left UniProt are archived, and new accessions are added. A stored symbol is
+never replaced by a blank; stored placeholders (UniProt entry names such as
+`1433B_HUMAN`, or the accession copied into the symbol column) are treated
+as blank so a real name can take their place, and are cleared if none does.
 }
