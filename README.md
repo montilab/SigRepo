@@ -159,16 +159,34 @@ visibility.
 
 ## Comparing signatures
 
-`compareSignatures()` wraps `OmicSignature::compare_omic_signatures()`
-so a set of signatures can be compared directly:
+`compareSignatures()` is a front end to
+`OmicSignature::compare_omic_signatures()`: it takes the same arguments
+with the same defaults, and assembles the signature lists from the
+database (by id or name), from OmicSignature objects, or both:
 
-    # Compare several signatures by feature overlap
+    # Compare several stored signatures by feature overlap
     result <- SigRepo::compareSignatures(
+      conn_handler = conn_handler,
       signature_names = c("signature_a", "signature_b", "signature_c"),
       method = "overlap"
     )
 
     result$comparisons$level1_vs_level1$jaccard
+
+    # Query signatures against a reference set: rows are the query, columns the reference
+    result <- SigRepo::compareSignatures(
+      conn_handler = conn_handler,
+      signature_ids = c(12, 34),
+      signature_ids2 = c(56, 78),
+      omic_signatures2 = list(local = my_omic_signature),
+      method = "gsea"
+    )
+
+Ids or names that do not exist, or that the account cannot see, are
+reported in a warning and left out; fetched signatures that share a name
+are told apart as `"name (id N)"`. The result is the
+`compare_omic_signatures()` list, so it can be passed to
+`OmicSignature::signature_similarity_heatmap()`.
 
 Supported methods:
 
