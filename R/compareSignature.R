@@ -1,52 +1,143 @@
 #' Compare signatures from the SigRepo database
 #'
-#' @description Thin wrapper around
-#' \code{OmicSignature::compare_omic_signatures()} that pulls signatures out of
-#' the SigRepo database and runs a pairwise comparison across all of them at
-#' once. Supply signatures by \code{signature_id} and/or \code{signature_name}
-#' (fetched via \code{getSignature()}), or pass ready-made OmicSignature objects
-#' directly through \code{omic_signatures}.
+#' @description
+#' A SigRepo front end to \code{OmicSignature::compare_omic_signatures()}. It
+#' takes every argument that function takes, with the same defaults, and adds
+#' a way to assemble the two signature lists from the database.
 #'
-#' The result is the matrix-based structure documented in
-#' \code{?OmicSignature::compare_omic_signatures}: for \code{method =
-#' "overlap"}, \code{jaccard}/\code{pvalue}/\code{counts} matrices per label
-#' pairing; for the rank-based methods (\code{"ks_rank"}, \code{"ks_score"},
-#' \code{"gsea"}), \code{score}/\code{pvalue} matrices.
+#' Each list is built from up to three sources, kept in this order: database
+#' signature ids (\code{signature_ids}), database signature names
+#' (\code{signature_names}), and OmicSignature objects supplied directly
+#' (\code{omic_signatures}). The \code{*2} arguments build the optional second
+#' list, the counterpart of \code{sig_list2}. With only the first list every
+#' signature is compared against every other one (a self-comparison, which
+#' needs at least two signatures). With both lists each signature in the
+#' first is compared against each in the second, giving rectangular result
+#' matrices with the first list as rows and the second as columns; one
+#' signature per side is enough. For \code{method = "ks_rank"},
+#' \code{"ks_score"} and \code{"gsea"} the second list is the ranking side and
+#' needs bi-directional signatures with a difexp table, exactly as for
+#' \code{sig_list2}.
+#'
+#' Ids and names are resolved with \code{searchSignature()} and then fetched
+#' one at a time with \code{getSignature()}, so the outcome of every request
+#' is known. Ids or names that do not exist, and signatures the connected
+#' account is not allowed to see, are reported in a warning and left out; if
+#' nothing at all can be assembled for a list, that is an error instead.
+#' Names are matched case-insensitively, and a name shared by several users'
+#' signatures matches all of them. A signature requested by both id and name
+#' is included once. Fetched signatures are named by their
+#' \code{signature_name}; because names are only unique per user, fetched
+#' signatures that share a name are told apart as \code{"name (id N)"}.
+#' Supplied objects keep their list names, or fall back to their metadata
+#' \code{signature_name}.
+#'
+#' Everything else -- cutoff validation, label pairing, the comparison itself
+#' and its warnings and errors -- is
+#' \code{OmicSignature::compare_omic_signatures()}'s, unchanged. The value is
+#' that function's list, so it can be passed straight to
+#' \code{OmicSignature::signature_similarity_heatmap()}.
 #'
 #' @param conn_handler An R object obtained from \code{SigRepo::newConnHandler()}.
-#'   Required unless \code{omic_signatures} is supplied.
-#' @param signature_ids Optional vector of database signature IDs to compare.
-#' @param signature_names Optional vector of signature names to compare.
-#' @param omic_signatures Optional named list of OmicSignature objects (or an
-#'   OmicSignatureCollection) to compare directly, skipping the database fetch.
-#' @param method Comparison method passed to
-#'   \code{OmicSignature::compare_omic_signatures()}. One of \code{"overlap"},
-#'   \code{"ks_rank"}, \code{"ks_score"}, or \code{"gsea"}. The rank-based
-#'   methods require signatures that carry a difexp table.
-#' @param verbose Logical; whether to print diagnostic messages while fetching
-#'   signatures. Defaults to \code{FALSE}.
-#' @param ... Additional arguments forwarded to
-#'   \code{OmicSignature::compare_omic_signatures()} (e.g. \code{score_cutoff},
-#'   \code{adj_p_cutoff}, \code{min_features}, \code{background},
-#'   \code{label_pairing}).
+#'   Required whenever signatures are requested by id or name.
+#' @param signature_ids Database signature ids for the first list.
+#' @param signature_names Database signature names for the first list.
+#' @param omic_signatures An OmicSignature object, a list of OmicSignature
+#'   objects, or an OmicSignatureCollection for the first list.
+#' @param signature_ids2 Database signature ids for the optional second list.
+#' @param signature_names2 Database signature names for the optional second list.
+#' @param omic_signatures2 An OmicSignature object, a list of OmicSignature
+#'   objects, or an OmicSignatureCollection for the optional second list.
+#' @param method Comparison method: \code{"overlap"}, \code{"ks_rank"},
+#'   \code{"ks_score"} or \code{"gsea"}; \code{"ks"} is accepted as an alias
+#'   for \code{"ks_rank"}. The rank-based methods need difexp tables.
+#' @param background Optional background feature vector for overlap tests.
+#' @param score_cutoff Minimum absolute score to include in a signature.
+#' @param adj_p_cutoff Maximum adjusted p-value to include in a signature.
+#' @param min_features Minimum number of features retained per label-specific
+#'   signature (at least 3).
+#' @param max_feature Maximum number of features retained per label-specific
+#'   signature.
+#' @param label_pairing Optional named list giving the two group-label levels
+#'   to compare for signatures in the first list. Names refer to the signature
+#'   names used in the result: the list names of supplied objects, or the
+#'   database \code{signature_name} of fetched ones.
+#' @param label_pairing2 The same for the second list.
+#' @param feature_col Column containing feature identifiers.
+#' @param score_col Column containing scores in signature and difexp tables.
+#' @param adj_p_col Column containing adjusted p-values in difexp tables.
+#' @param p_value_col Column containing p-values used to rank difexp tables.
+#' @param group_col Column containing phenotype group labels.
+#' @param adjust Logical; adjust p-values within each returned comparison.
+#' @param p_adjust_method Multiple-testing correction method.
+#' @param alternative Alternative hypothesis for the Fisher and KS tests.
+#' @param gsea_score Column of the fgsea output returned as the score matrix.
+#' @param minSize Minimum pathway size passed to fgsea.
+#' @param maxSize Maximum pathway size passed to fgsea.
+#' @param nproc Number of fgsea workers.
+#' @param verbose Logical; whether to print diagnostic messages while
+#'   resolving and fetching signatures. Defaults to \code{FALSE}.
+#' @param ... Additional arguments passed on to fgsea for
+#'   \code{method = "gsea"}.
+#'
+#' @details See \code{?OmicSignature::compare_omic_signatures} for the full
+#'   description of every comparison argument, of how uni-directional
+#'   signatures are handled, and of the result.
 #'
 #' @return The list returned by
 #'   \code{OmicSignature::compare_omic_signatures()}: \code{method},
-#'   \code{comparisons}, \code{label_order}, and \code{background}.
+#'   \code{comparisons}, \code{label_order} and \code{background}. For a
+#'   two-list comparison \code{label_order} holds both \code{sig_list1} and
+#'   \code{sig_list2}.
+#'
+#' @seealso \code{OmicSignature::compare_omic_signatures()},
+#'   \code{OmicSignature::signature_similarity_heatmap()},
+#'   \code{getSignature()}, \code{searchSignature()}.
 #'
 #' @examples
+#' # The bundled example signatures need no database
+#' utils::data("omic_signature_1", "omic_signature_2", "omic_signature_3", package = "SigRepo")
+#'
+#' res <- SigRepo::compareSignatures(
+#'   omic_signatures = list(v1 = omic_signature_1, v2 = omic_signature_2, v3 = omic_signature_3),
+#'   method = "overlap",
+#'   min_features = 3,
+#'   max_feature = 10
+#' )
+#' res$comparisons$level1_vs_level1$jaccard
+#'
+#' # Query versus reference: rows are the first list, columns the second
+#' res2 <- SigRepo::compareSignatures(
+#'   omic_signatures = list(v1 = omic_signature_1),
+#'   omic_signatures2 = list(v2 = omic_signature_2, v3 = omic_signature_3),
+#'   method = "ks_rank",
+#'   min_features = 3,
+#'   max_feature = 10
+#' )
+#' res2$comparisons$level1_vs_level1$score
+#'
 #' \dontrun{
 #' conn_handler <- SigRepo::newConnHandler(
 #'   dbname = "sigrepo", host = "localhost", port = 3306,
 #'   user = "montilab", password = "sigrepo"
 #' )
+#'
+#' # Signatures stored in the database, by id and by name
 #' res <- SigRepo::compareSignatures(
 #'   conn_handler = conn_handler,
-#'   signature_ids = c(12, 34, 56),
-#'   method = "overlap",
-#'   min_features = 10
+#'   signature_ids = c(12, 34),
+#'   signature_names = "my_signature",
+#'   method = "overlap"
 #' )
-#' res$comparisons$level1_vs_level1$jaccard
+#'
+#' # A query signature against a reference set, mixing stored and local ones
+#' res <- SigRepo::compareSignatures(
+#'   conn_handler = conn_handler,
+#'   signature_ids = 12,
+#'   signature_ids2 = c(34, 56),
+#'   omic_signatures2 = list(local = my_omic_signature),
+#'   method = "gsea"
+#' )
 #' }
 #'
 #' @export
@@ -55,36 +146,318 @@ compareSignatures <- function(
     signature_ids = NULL,
     signature_names = NULL,
     omic_signatures = NULL,
-    method = c("overlap", "ks_rank", "ks_score", "gsea"),
+    signature_ids2 = NULL,
+    signature_names2 = NULL,
+    omic_signatures2 = NULL,
+    method = c("overlap", "ks_rank", "ks_score", "ks", "gsea"),
+    background = NULL,
+    score_cutoff = 0,
+    adj_p_cutoff = 0.05,
+    min_features = 5,
+    max_feature = 500,
+    label_pairing = NULL,
+    label_pairing2 = NULL,
+    feature_col = "feature_name",
+    score_col = "score",
+    adj_p_col = "adj_p",
+    p_value_col = "p_value",
+    group_col = "group_label",
+    adjust = FALSE,
+    p_adjust_method = "BH",
+    alternative = "greater",
+    gsea_score = "NES",
+    minSize = 1,
+    maxSize = Inf,
+    nproc = 0,
     verbose = FALSE,
     ...) {
 
   method <- base::match.arg(method)
 
-  if (base::is.null(omic_signatures)) {
-    have_ids <- base::length(signature_ids) > 0 && !base::all(signature_ids %in% c("", NA))
-    have_names <- base::length(signature_names) > 0 && !base::all(signature_names %in% c("", NA))
-    if (base::is.null(conn_handler) || (!have_ids && !have_names)) {
-      base::stop(
-        "\nProvide 'conn_handler' and 'signature_ids' and/or 'signature_names', ",
-        "or pass a list of OmicSignature objects via 'omic_signatures'.\n"
-      )
-    }
-    omic_signatures <- getSignature(
+  # Whether to print the diagnostic messages
+  SigRepo::print_messages(verbose = verbose)
+
+  signature_ids <- cleanCompareRequest(signature_ids)
+  signature_names <- cleanCompareRequest(signature_names)
+  signature_ids2 <- cleanCompareRequest(signature_ids2)
+  signature_names2 <- cleanCompareRequest(signature_names2)
+
+  # A connection is only needed when something has to come from the database;
+  # check it up front so the message is about the connection, not about an
+  # empty list.
+  needs_database <- base::length(c(signature_ids, signature_names, signature_ids2, signature_names2)) > 0
+  if (needs_database && base::is.null(conn_handler)) {
+    base::stop(
+      "\n'conn_handler' is required to fetch signatures by 'signature_ids', 'signature_names', ",
+      "'signature_ids2' or 'signature_names2'.\n"
+    )
+  }
+
+  sig_list1 <- resolveCompareSignatureList(
+    conn_handler = conn_handler,
+    signature_ids = signature_ids,
+    signature_names = signature_names,
+    omic_signatures = omic_signatures,
+    arg_suffix = "",
+    verbose = verbose
+  )
+  if (base::length(sig_list1) == 0) {
+    base::stop(
+      "\nProvide signatures for the first list through 'signature_ids', 'signature_names' ",
+      "and/or 'omic_signatures'.\n"
+    )
+  }
+
+  # The second list is only in play when the caller asked for one.
+  sig_list2 <- NULL
+  two_lists <- base::length(c(signature_ids2, signature_names2)) > 0 || !base::is.null(omic_signatures2)
+  if (two_lists) {
+    sig_list2 <- resolveCompareSignatureList(
       conn_handler = conn_handler,
-      signature_id = signature_ids,
-      signature_name = signature_names,
+      signature_ids = signature_ids2,
+      signature_names = signature_names2,
+      omic_signatures = omic_signatures2,
+      arg_suffix = "2",
+      verbose = verbose
+    )
+    if (base::length(sig_list2) == 0) {
+      base::stop("\nThe second list ('omic_signatures2') is empty.\n")
+    }
+  } else if (base::length(sig_list1) < 2) {
+    base::stop(
+      "\nAt least two signatures are required for a self-comparison; got ", base::length(sig_list1), ". ",
+      "Add more signatures to the first list, or supply a second list through ",
+      "'signature_ids2', 'signature_names2' or 'omic_signatures2'.\n"
+    )
+  }
+
+  SigRepo::verbose(base::sprintf(
+    "Comparing %d signature(s)%s with method '%s'.\n",
+    base::length(sig_list1),
+    if (two_lists) base::sprintf(" against %d reference signature(s)", base::length(sig_list2)) else "",
+    method
+  ))
+
+  OmicSignature::compare_omic_signatures(
+    sig_list1 = sig_list1,
+    sig_list2 = sig_list2,
+    method = method,
+    background = background,
+    score_cutoff = score_cutoff,
+    adj_p_cutoff = adj_p_cutoff,
+    min_features = min_features,
+    max_feature = max_feature,
+    label_pairing = label_pairing,
+    label_pairing2 = label_pairing2,
+    feature_col = feature_col,
+    score_col = score_col,
+    adj_p_col = adj_p_col,
+    p_value_col = p_value_col,
+    group_col = group_col,
+    adjust = adjust,
+    p_adjust_method = p_adjust_method,
+    alternative = alternative,
+    gsea_score = gsea_score,
+    minSize = minSize,
+    maxSize = maxSize,
+    nproc = nproc,
+    ...
+  )
+}
+
+
+#' Drop empty entries from a vector of requested ids or names
+#'
+#' @param x A vector of ids or names, or NULL.
+#' @return A unique vector with NA, empty and whitespace-only entries removed,
+#'   trimmed, or a zero-length vector.
+#' @noRd
+cleanCompareRequest <- function(x) {
+  if (base::length(x) == 0) {
+    return(base::character())
+  }
+  x <- base::as.character(x)
+  x <- base::trimws(x)
+  x <- x[!base::is.na(x) & x != ""]
+  base::unique(x)
+}
+
+
+#' Assemble one signature list for compareSignatures()
+#'
+#' Fetched signatures come first, in the order they were requested (ids, then
+#' names), followed by the supplied objects.
+#'
+#' @param conn_handler Connection handler; only used when ids or names are given.
+#' @param signature_ids Cleaned ids to fetch.
+#' @param signature_names Cleaned names to fetch.
+#' @param omic_signatures Supplied objects, list, collection, or NULL.
+#' @param arg_suffix "" for the first list, "2" for the second; used in messages.
+#' @param verbose Passed on to the database helpers.
+#' @return A named list of OmicSignature objects, possibly empty.
+#' @noRd
+resolveCompareSignatureList <- function(conn_handler, signature_ids, signature_names, omic_signatures,
+                                        arg_suffix = "", verbose = FALSE) {
+
+  fetched <- base::list()
+  if (base::length(c(signature_ids, signature_names)) > 0) {
+    fetched <- fetchCompareSignatures(
+      conn_handler = conn_handler,
+      signature_ids = signature_ids,
+      signature_names = signature_names,
+      arg_suffix = arg_suffix,
       verbose = verbose
     )
   }
 
-  if (base::is.null(omic_signatures) || base::length(omic_signatures) < 2) {
-    base::stop("\nAt least two signatures are required to compare.\n")
+  supplied <- asCompareSignatureList(omic_signatures, arg_name = base::paste0("omic_signatures", arg_suffix))
+
+  c(fetched, supplied)
+}
+
+
+#' Fetch requested signatures from the database, reporting what could not be
+#'
+#' @return A named list of OmicSignature objects; empty when nothing could be
+#'   fetched, in which case an error has already been raised.
+#' @noRd
+fetchCompareSignatures <- function(conn_handler, signature_ids, signature_names, arg_suffix = "", verbose = FALSE) {
+
+  ids_arg <- base::paste0("signature_ids", arg_suffix)
+  names_arg <- base::paste0("signature_names", arg_suffix)
+  problems <- base::character()
+
+  # Resolve ids and names to signature rows separately: searchSignature()
+  # combines its filters with AND, so one call with both would only return
+  # signatures matching an id *and* a name.
+  rows <- NULL
+  if (base::length(signature_ids) > 0) {
+    by_id <- searchSignature(conn_handler = conn_handler, signature_id = signature_ids, verbose = verbose)
+    found <- base::as.character(by_id$signature_id)
+    unknown <- signature_ids[!signature_ids %in% found]
+    if (base::length(unknown) > 0) {
+      problems <- c(problems, base::sprintf(
+        "%s: no signature with id %s exists.", ids_arg, base::paste(unknown, collapse = ", ")
+      ))
+    }
+    # Keep the caller's order.
+    rows <- by_id[base::match(signature_ids[signature_ids %in% found], found), , drop = FALSE]
+  }
+  if (base::length(signature_names) > 0) {
+    by_name <- searchSignature(conn_handler = conn_handler, signature_name = signature_names, verbose = verbose)
+    found <- base::tolower(base::trimws(base::as.character(by_name$signature_name)))
+    wanted <- base::tolower(signature_names)
+    unknown <- signature_names[!wanted %in% found]
+    if (base::length(unknown) > 0) {
+      problems <- c(problems, base::sprintf(
+        "%s: no signature named %s exists.", names_arg,
+        base::paste(base::sprintf("'%s'", unknown), collapse = ", ")
+      ))
+    }
+    # Every match for each requested name, in the order the names were given.
+    ordered <- base::unlist(base::lapply(wanted, function(w) base::which(found == w)), use.names = FALSE)
+    rows <- base::rbind(rows, by_name[ordered, , drop = FALSE])
   }
 
-  OmicSignature::compare_omic_signatures(
-    sig_list1 = omic_signatures,
-    method = method,
-    ...
-  )
+  # A signature requested by both id and name is fetched once.
+  if (!base::is.null(rows) && base::nrow(rows) > 0) {
+    rows <- rows[!base::duplicated(base::as.character(rows$signature_id)), , drop = FALSE]
+  }
+
+  fetched <- base::list()
+  fetched_ids <- base::character()
+  fetched_names <- base::character()
+  for (i in base::seq_len(NROW(rows))) {
+    row_id <- base::as.character(rows$signature_id[i])
+    row_name <- base::as.character(rows$signature_name[i])
+    got <- getSignature(conn_handler = conn_handler, signature_id = row_id, verbose = verbose)
+    if (base::is.null(got) || base::length(got) == 0) {
+      problems <- c(problems, base::sprintf(
+        "signature id %s ('%s') could not be retrieved: it is not visible to this account.", row_id, row_name
+      ))
+      next
+    }
+    fetched[[base::length(fetched) + 1L]] <- got[[1]]
+    fetched_ids <- c(fetched_ids, row_id)
+    fetched_names <- c(fetched_names, row_name)
+  }
+
+  if (base::length(fetched) == 0) {
+    base::stop(
+      "\nNone of the signatures requested through '", ids_arg, "' or '", names_arg, "' could be retrieved.\n",
+      base::paste(problems, collapse = "\n"), "\n"
+    )
+  }
+  if (base::length(problems) > 0) {
+    base::warning(
+      "Some requested signatures were left out of the comparison:\n",
+      base::paste(problems, collapse = "\n"),
+      call. = FALSE
+    )
+  }
+
+  # Names are unique per user, not globally: tell duplicates apart by id so
+  # the result matrices stay addressable.
+  duplicated_names <- fetched_names %in% fetched_names[base::duplicated(fetched_names)]
+  fetched_names[duplicated_names] <- base::sprintf("%s (id %s)", fetched_names[duplicated_names], fetched_ids[duplicated_names])
+  base::names(fetched) <- fetched_names
+
+  SigRepo::verbose(base::sprintf("Retrieved %d signature(s) from the database.\n", base::length(fetched)))
+
+  fetched
+}
+
+
+#' Normalise supplied signature objects into a named list
+#'
+#' @param x An OmicSignature, a list of them, an OmicSignatureCollection, or NULL.
+#' @param arg_name Argument name for error messages.
+#' @return A named list of OmicSignature objects (possibly empty). Existing
+#'   list names are kept; missing ones are filled from the metadata
+#'   \code{signature_name}, as compare_omic_signatures() itself does.
+#' @noRd
+asCompareSignatureList <- function(x, arg_name) {
+  if (base::is.null(x)) {
+    return(base::list())
+  }
+  if (methods::is(x, "OmicSignatureCollection")) {
+    x <- x$OmicSigList
+  }
+  if (methods::is(x, "OmicSignature")) {
+    x <- base::list(x)
+  }
+  if (!base::is.list(x)) {
+    base::stop(
+      "\n'", arg_name, "' must be an OmicSignature object, a list of OmicSignature objects, ",
+      "or an OmicSignatureCollection.\n"
+    )
+  }
+  if (base::length(x) == 0) {
+    return(base::list())
+  }
+
+  is_signature <- base::vapply(x, function(s) methods::is(s, "OmicSignature"), logical(1))
+  if (!base::all(is_signature)) {
+    bad <- base::names(x)[!is_signature]
+    if (base::is.null(bad) || base::any(bad %in% c("", NA))) {
+      bad <- base::which(!is_signature)
+    }
+    base::stop(
+      "\n'", arg_name, "' contains elements that are not OmicSignature objects: ",
+      base::paste(bad, collapse = ", "), "\n"
+    )
+  }
+
+  list_names <- base::names(x)
+  if (base::is.null(list_names)) {
+    list_names <- base::rep("", base::length(x))
+  }
+  blank <- base::is.na(list_names) | list_names == ""
+  list_names[blank] <- base::vapply(x[blank], function(s) {
+    nm <- s$metadata$signature_name
+    if (base::is.null(nm) || base::length(nm) == 0 || base::is.na(nm[1]) || nm[1] == "") "signature" else base::as.character(nm[1])
+  }, character(1))
+  base::names(x) <- list_names
+
+  x
 }
