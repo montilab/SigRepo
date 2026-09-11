@@ -7,6 +7,14 @@
 test_that("compareSignatures compares signatures fetched from the database", {
   test_conn <- SigRepo::test_conn_handler
 
+  # This test writes (uploads, then deletes) two signatures. The production
+  # database is read-only for testing purposes, so only run against a test
+  # stack (CI's ephemeral one, or a local Docker stack via SIGREPO_TEST_*). ####
+  testthat::skip_if(
+    base::identical(test_conn$host, "sigrepo.org"),
+    "refusing to upload test signatures to the production database at sigrepo.org"
+  )
+
   fixture <- base::readRDS(testthat::test_path("test_data", "test_data_transcriptomics.rds"))
 
   # Two uploads of the fixture under distinct names, so the comparison has a
@@ -86,7 +94,7 @@ test_that("compareSignatures compares signatures fetched from the database", {
       max_feature = 10,
       verbose = FALSE
     ),
-    "0"
+    "with id 0 exists"
   )
   expect_equal(base::dim(res3$comparisons$level1_vs_level1$jaccard), c(2L, 2L))
 })

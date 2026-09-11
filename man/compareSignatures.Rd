@@ -72,8 +72,10 @@ signature.}
 
 \item{label_pairing}{Optional named list giving the two group-label levels
 to compare for signatures in the first list. Names refer to the signature
-names used in the result: the list names of supplied objects, or the
-database \code{signature_name} of fetched ones.}
+names used in the result: the list names of supplied objects (their
+metadata \code{signature_name} when unnamed), and the database
+\code{signature_name} of fetched ones, including the \code{"name (id N)"}
+form given to fetched signatures that share a name.}
 
 \item{label_pairing2}{The same for the second list.}
 
@@ -136,15 +138,15 @@ needs bi-directional signatures with a difexp table, exactly as for
 Ids and names are resolved with \code{searchSignature()} and then fetched
 one at a time with \code{getSignature()}, so the outcome of every request
 is known. Ids or names that do not exist, and signatures the connected
-account is not allowed to see, are reported in a warning and left out; if
-nothing at all can be assembled for a list, that is an error instead.
-Names are matched case-insensitively, and a name shared by several users'
-signatures matches all of them. A signature requested by both id and name
-is included once. Fetched signatures are named by their
-\code{signature_name}; because names are only unique per user, fetched
-signatures that share a name are told apart as \code{"name (id N)"}.
-Supplied objects keep their list names, or fall back to their metadata
-\code{signature_name}.
+account is not allowed to see, are reported in a warning and left out, and
+the comparison goes ahead on whatever could be assembled for that list;
+only when that leaves the list empty is it an error instead. Names are
+matched case-insensitively, and a name shared by several users' signatures
+matches all of them. A signature requested by both id and name is included
+once. Fetched signatures are named by their \code{signature_name}; because
+names are only unique per user, fetched signatures that share a name are
+told apart as \code{"name (id N)"}. Supplied objects keep their list
+names, or fall back to their metadata \code{signature_name}.
 
 Everything else -- cutoff validation, label pairing, the comparison itself
 and its warnings and errors -- is

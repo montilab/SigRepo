@@ -22,15 +22,15 @@
 #' Ids and names are resolved with \code{searchSignature()} and then fetched
 #' one at a time with \code{getSignature()}, so the outcome of every request
 #' is known. Ids or names that do not exist, and signatures the connected
-#' account is not allowed to see, are reported in a warning and left out; if
-#' nothing at all can be assembled for a list, that is an error instead.
-#' Names are matched case-insensitively, and a name shared by several users'
-#' signatures matches all of them. A signature requested by both id and name
-#' is included once. Fetched signatures are named by their
-#' \code{signature_name}; because names are only unique per user, fetched
-#' signatures that share a name are told apart as \code{"name (id N)"}.
-#' Supplied objects keep their list names, or fall back to their metadata
-#' \code{signature_name}.
+#' account is not allowed to see, are reported in a warning and left out, and
+#' the comparison goes ahead on whatever could be assembled for that list;
+#' only when that leaves the list empty is it an error instead. Names are
+#' matched case-insensitively, and a name shared by several users' signatures
+#' matches all of them. A signature requested by both id and name is included
+#' once. Fetched signatures are named by their \code{signature_name}; because
+#' names are only unique per user, fetched signatures that share a name are
+#' told apart as \code{"name (id N)"}. Supplied objects keep their list
+#' names, or fall back to their metadata \code{signature_name}.
 #'
 #' Everything else -- cutoff validation, label pairing, the comparison itself
 #' and its warnings and errors -- is
@@ -60,8 +60,10 @@
 #'   signature.
 #' @param label_pairing Optional named list giving the two group-label levels
 #'   to compare for signatures in the first list. Names refer to the signature
-#'   names used in the result: the list names of supplied objects, or the
-#'   database \code{signature_name} of fetched ones.
+#'   names used in the result: the list names of supplied objects (their
+#'   metadata \code{signature_name} when unnamed), and the database
+#'   \code{signature_name} of fetched ones, including the \code{"name (id N)"}
+#'   form given to fetched signatures that share a name.
 #' @param label_pairing2 The same for the second list.
 #' @param feature_col Column containing feature identifiers.
 #' @param score_col Column containing scores in signature and difexp tables.
@@ -266,17 +268,26 @@ compareSignatures <- function(
 }
 
 
-#' Drop empty entries from a vector of requested ids or names
+#' Turn a vector of requested ids or names into clean character strings
 #'
 #' @param x A vector of ids or names, or NULL.
-#' @return A unique vector with NA, empty and whitespace-only entries removed,
-#'   trimmed, or a zero-length vector.
+#' @return A unique character vector, trimmed, with NA and empty entries
+#'   removed; zero-length when nothing usable was given.
 #' @noRd
 cleanCompareRequest <- function(x) {
   if (base::length(x) == 0) {
     return(base::character())
   }
-  x <- base::as.character(x)
+  if (base::is.numeric(x)) {
+    # as.character() prints large numbers in scientific notation
+    # ("1e+05"), which the database's string comparison would never match;
+    # write every number out in full instead.
+    x <- base::vapply(x, function(v) {
+      if (base::is.na(v)) NA_character_ else base::format(v, scientific = FALSE, trim = TRUE)
+    }, base::character(1))
+  } else {
+    x <- base::as.character(x)
+  }
   x <- base::trimws(x)
   x <- x[!base::is.na(x) & x != ""]
   base::unique(x)
@@ -286,7 +297,9 @@ cleanCompareRequest <- function(x) {
 #' Assemble one signature list for compareSignatures()
 #'
 #' Fetched signatures come first, in the order they were requested (ids, then
-#' names), followed by the supplied objects.
+#' names), followed by the supplied objects. Requests that could not be
+#' honoured are reported with a warning, or with an error when they leave
+#' the whole list empty.
 #'
 #' @param conn_handler Connection handler; only used when ids or names are given.
 #' @param signature_ids Cleaned ids to fetch.
@@ -300,26 +313,48 @@ resolveCompareSignatureList <- function(conn_handler, signature_ids, signature_n
                                         arg_suffix = "", verbose = FALSE) {
 
   fetched <- base::list()
+  problems <- base::character()
   if (base::length(c(signature_ids, signature_names)) > 0) {
-    fetched <- fetchCompareSignatures(
+    got <- fetchCompareSignatures(
       conn_handler = conn_handler,
       signature_ids = signature_ids,
       signature_names = signature_names,
       arg_suffix = arg_suffix,
       verbose = verbose
     )
+    fetched <- got$signatures
+    problems <- got$problems
   }
 
   supplied <- asCompareSignatureList(omic_signatures, arg_name = base::paste0("omic_signatures", arg_suffix))
+  signatures <- c(fetched, supplied)
 
-  c(fetched, supplied)
+  # Failed requests are only fatal when nothing at all is left to compare;
+  # otherwise the comparison goes ahead on what could be assembled.
+  if (base::length(problems) > 0) {
+    if (base::length(signatures) == 0) {
+      base::stop(
+        "\nNone of the signatures requested through 'signature_ids", arg_suffix, "' or 'signature_names",
+        arg_suffix, "' could be retrieved.\n",
+        base::paste(problems, collapse = "\n"), "\n"
+      )
+    }
+    base::warning(
+      "Some requested signatures were left out of the comparison:\n",
+      base::paste(problems, collapse = "\n"),
+      call. = FALSE
+    )
+  }
+
+  signatures
 }
 
 
-#' Fetch requested signatures from the database, reporting what could not be
+#' Fetch requested signatures from the database and report what could not be
 #'
-#' @return A named list of OmicSignature objects; empty when nothing could be
-#'   fetched, in which case an error has already been raised.
+#' @return A list with `signatures` (a named list of OmicSignature objects,
+#'   possibly empty) and `problems` (a character vector, one entry per id or
+#'   name that could not be honoured).
 #' @noRd
 fetchCompareSignatures <- function(conn_handler, signature_ids, signature_names, arg_suffix = "", verbose = FALSE) {
 
@@ -367,7 +402,7 @@ fetchCompareSignatures <- function(conn_handler, signature_ids, signature_names,
   fetched <- base::list()
   fetched_ids <- base::character()
   fetched_names <- base::character()
-  for (i in base::seq_len(NROW(rows))) {
+  for (i in base::seq_len(base::NROW(rows))) {
     row_id <- base::as.character(rows$signature_id[i])
     row_name <- base::as.character(rows$signature_name[i])
     got <- getSignature(conn_handler = conn_handler, signature_id = row_id, verbose = verbose)
@@ -382,20 +417,6 @@ fetchCompareSignatures <- function(conn_handler, signature_ids, signature_names,
     fetched_names <- c(fetched_names, row_name)
   }
 
-  if (base::length(fetched) == 0) {
-    base::stop(
-      "\nNone of the signatures requested through '", ids_arg, "' or '", names_arg, "' could be retrieved.\n",
-      base::paste(problems, collapse = "\n"), "\n"
-    )
-  }
-  if (base::length(problems) > 0) {
-    base::warning(
-      "Some requested signatures were left out of the comparison:\n",
-      base::paste(problems, collapse = "\n"),
-      call. = FALSE
-    )
-  }
-
   # Names are unique per user, not globally: tell duplicates apart by id so
   # the result matrices stay addressable.
   duplicated_names <- fetched_names %in% fetched_names[base::duplicated(fetched_names)]
@@ -404,7 +425,7 @@ fetchCompareSignatures <- function(conn_handler, signature_ids, signature_names,
 
   SigRepo::verbose(base::sprintf("Retrieved %d signature(s) from the database.\n", base::length(fetched)))
 
-  fetched
+  base::list(signatures = fetched, problems = problems)
 }
 
 
@@ -412,9 +433,11 @@ fetchCompareSignatures <- function(conn_handler, signature_ids, signature_names,
 #'
 #' @param x An OmicSignature, a list of them, an OmicSignatureCollection, or NULL.
 #' @param arg_name Argument name for error messages.
-#' @return A named list of OmicSignature objects (possibly empty). Existing
-#'   list names are kept; missing ones are filled from the metadata
-#'   \code{signature_name}, as compare_omic_signatures() itself does.
+#' @return A named list of OmicSignature objects (possibly empty). Names the
+#'   caller gave are kept and only blank ones are filled from the metadata
+#'   \code{signature_name}. (compare_omic_signatures() itself replaces every
+#'   name from metadata as soon as one is blank; keeping the caller's names
+#'   is friendlier and is what the user-facing documentation promises.)
 #' @noRd
 asCompareSignatureList <- function(x, arg_name) {
   if (base::is.null(x)) {
@@ -436,7 +459,7 @@ asCompareSignatureList <- function(x, arg_name) {
     return(base::list())
   }
 
-  is_signature <- base::vapply(x, function(s) methods::is(s, "OmicSignature"), logical(1))
+  is_signature <- base::vapply(x, function(s) methods::is(s, "OmicSignature"), base::logical(1))
   if (!base::all(is_signature)) {
     bad <- base::names(x)[!is_signature]
     if (base::is.null(bad) || base::any(bad %in% c("", NA))) {
@@ -454,9 +477,8 @@ asCompareSignatureList <- function(x, arg_name) {
   }
   blank <- base::is.na(list_names) | list_names == ""
   list_names[blank] <- base::vapply(x[blank], function(s) {
-    nm <- s$metadata$signature_name
-    if (base::is.null(nm) || base::length(nm) == 0 || base::is.na(nm[1]) || nm[1] == "") "signature" else base::as.character(nm[1])
-  }, character(1))
+    resolveSignatureLabel(omic_signature = s, label = NULL, fallback = "signature")
+  }, base::character(1))
   base::names(x) <- list_names
 
   x

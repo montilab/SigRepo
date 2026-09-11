@@ -23,11 +23,12 @@ example_signatures <- function(){
 }
 
 # What the mocked database "contains": ids, names, whether the caller may see
-# each one, and which example object stands in for it. Ids deliberately do
-# not start at 1, so an index/id mix-up in the wrapper would show. ####
+# each one, and which example object stands in for it. Ids are integers, as
+# the MySQL driver returns them, and deliberately do not start at 1, so an
+# index/id mix-up in the wrapper would show. ####
 default_rows <- function(){
   base::data.frame(
-    signature_id = c(11, 12, 13, 14),
+    signature_id = c(11L, 12L, 13L, 14L),
     signature_name = c(
       "Myc_reduce_mice_liver_24m_v1", "Myc_reduce_mice_liver_24m_v2",
       "Myc_reduce_mice_liver_24m_v3", "Myc_reduce_mice_liver_24m_v4"
@@ -42,8 +43,9 @@ default_rows <- function(){
 # Mocks with the same calling conventions as the real helpers. searchSignature
 # ANDs its filters and returns a (possibly empty) metadata table; getSignature
 # returns NULL for anything the caller can't see, otherwise a list named by
-# signature_name. Every call is recorded so tests can check what the wrapper
-# passed down. ####
+# signature_name. Ids are matched as strings, like the SQL the real helpers
+# build (trim(lower(signature_id)) IN (...)). Every call is recorded so tests
+# can check what the wrapper passed down. ####
 mock_database <- function(sigs, rows = default_rows()){
   calls <- base::new.env()
   calls$search <- base::list()
@@ -52,7 +54,7 @@ mock_database <- function(sigs, rows = default_rows()){
   filter_rows <- function(signature_id, signature_name){
     hits <- rows
     if(base::length(signature_id) > 0){
-      hits <- hits[hits$signature_id %in% base::as.numeric(signature_id), , drop = FALSE]
+      hits <- hits[base::as.character(hits$signature_id) %in% base::trimws(base::as.character(signature_id)), , drop = FALSE]
     }
     if(base::length(signature_name) > 0){
       hits <- hits[base::tolower(hits$signature_name) %in% base::tolower(base::trimws(signature_name)), , drop = FALSE]
@@ -245,6 +247,38 @@ test_that("signature_ids are fetched with the caller's connection and compared b
   }
 })
 
+test_that("ids may be given as character strings, with surrounding whitespace", {
+  sigs <- example_signatures()
+  db <- mock_database(sigs)
+  testthat::local_mocked_bindings(searchSignature = db$search, getSignature = db$get, .package = "SigRepo")
+
+  res <- SigRepo::compareSignatures(
+    conn_handler = mock_conn_handler, signature_ids = c("11", " 13 "),
+    method = "overlap", min_features = 3, max_feature = 10
+  )
+
+  expect_equal(base::rownames(first_matrix(res)), c("Myc_reduce_mice_liver_24m_v1", "Myc_reduce_mice_liver_24m_v3"))
+})
+
+test_that("large numeric ids are not turned into scientific notation", {
+  sigs <- example_signatures()
+  rows <- default_rows()
+  rows$signature_id[rows$key == "v4"] <- 100000L
+  db <- mock_database(sigs, rows)
+  testthat::local_mocked_bindings(searchSignature = db$search, getSignature = db$get, .package = "SigRepo")
+
+  # as.character(100000) is "1e+05", which the database's string comparison
+  # would never match.
+  expect_warning(
+    res <- SigRepo::compareSignatures(
+      conn_handler = mock_conn_handler, signature_ids = c(11, 100000),
+      method = "overlap", min_features = 3, max_feature = 10
+    ),
+    regexp = NA
+  )
+  expect_equal(base::rownames(first_matrix(res)), c("Myc_reduce_mice_liver_24m_v1", "Myc_reduce_mice_liver_24m_v4"))
+})
+
 test_that("signature_names resolve case-insensitively and combine with ids in one list", {
   sigs <- example_signatures()
   db <- mock_database(sigs)
@@ -256,6 +290,21 @@ test_that("signature_names resolve case-insensitively and combine with ids in on
   )
 
   expect_equal(base::rownames(first_matrix(res)), c("Myc_reduce_mice_liver_24m_v1", "Myc_reduce_mice_liver_24m_v2"))
+})
+
+test_that("a name shared by several signatures matches all of them", {
+  sigs <- example_signatures()
+  rows <- default_rows()
+  rows$signature_name[rows$signature_id %in% c(12L, 13L)] <- "shared_name"
+  db <- mock_database(sigs, rows)
+  testthat::local_mocked_bindings(searchSignature = db$search, getSignature = db$get, .package = "SigRepo")
+
+  res <- SigRepo::compareSignatures(
+    conn_handler = mock_conn_handler, signature_names = "shared_name",
+    method = "overlap", min_features = 3, max_feature = 10
+  )
+
+  expect_equal(base::rownames(first_matrix(res)), c("shared_name (id 12)", "shared_name (id 13)"))
 })
 
 test_that("a signature requested by both id and name is only included once", {
@@ -298,7 +347,7 @@ test_that("ids and names that do not exist are reported and the rest are compare
 test_that("signatures the caller cannot see are reported and the rest are compared", {
   sigs <- example_signatures()
   rows <- default_rows()
-  rows$visible[rows$signature_id == 14] <- FALSE
+  rows$visible[rows$signature_id == 14L] <- FALSE
   db <- mock_database(sigs, rows)
   testthat::local_mocked_bindings(searchSignature = db$search, getSignature = db$get, .package = "SigRepo")
 
@@ -310,6 +359,21 @@ test_that("signatures the caller cannot see are reported and the rest are compar
     "14"
   )
   expect_equal(base::rownames(first_matrix(res)), c("Myc_reduce_mice_liver_24m_v1", "Myc_reduce_mice_liver_24m_v2"))
+})
+
+test_that("when every database request fails but objects were supplied, the objects are compared with a warning", {
+  sigs <- example_signatures()
+  db <- mock_database(sigs)
+  testthat::local_mocked_bindings(searchSignature = db$search, getSignature = db$get, .package = "SigRepo")
+
+  expect_warning(
+    res <- SigRepo::compareSignatures(
+      conn_handler = mock_conn_handler, signature_ids = 999, omic_signatures = sigs[2:3],
+      method = "overlap", min_features = 3, max_feature = 10
+    ),
+    "999"
+  )
+  expect_equal(base::rownames(first_matrix(res)), c("v2", "v3"))
 })
 
 test_that("an error names the request when nothing can be fetched", {
@@ -364,7 +428,7 @@ test_that("a reference list that cannot be fetched at all is an error", {
 test_that("fetched signatures that share a name are told apart by id", {
   sigs <- example_signatures()
   rows <- default_rows()
-  rows$signature_name[rows$signature_id %in% c(12, 13)] <- "shared_name"
+  rows$signature_name[rows$signature_id %in% c(12L, 13L)] <- "shared_name"
   db <- mock_database(sigs, rows)
   testthat::local_mocked_bindings(searchSignature = db$search, getSignature = db$get, .package = "SigRepo")
 
