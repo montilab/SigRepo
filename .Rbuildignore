@@ -8,6 +8,7 @@
 ^\.Rproj\.user
 ^\.git
 ^\.github
+^\.claude
 ^docs
 ^pkgdown
 ^tests/testthat/_snaps
@@ -38,3 +39,7 @@
 ^\.Rproj\.user$
 ^local_validation$
 ^R/hypeR_examples\.R$
+^testing_manuscripts$
+^artifacts$
+^sigs_in_repo\.csv$
+^\.lintr$

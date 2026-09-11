@@ -15,7 +15,7 @@ Description: As high-throughput technology evolves, a large number of omics-sign
   This package helps to store signatures efficiently and retrieve them conveniently. 
 Depends: R (>= 4.4.0)
 License: GPL-3 + file LICENSE
-URL: https://github.com/montilab/SigRepo/
+URL: https://montilab.github.io/SigRepo/, https://github.com/montilab/SigRepo/
 Encoding: UTF-8
 LazyData: true 
 Imports:
@@ -35,21 +35,17 @@ Remotes:
   montilab/OmicSignature,
   montilab/hypeR-GEM
 Suggests:
-    BiocManager,
-    devtools,
-    ExperimentHub,
-    hypeR,
-    hypeR.GEM,
-    knitr,
-    org.Hs.eg.db,
-    pkgdown,
-    rhdf5,
-    rmarkdown,
-    signatureSearch,
-    signatureSearchData,
-    testthat (>= 3.0.0),
-    tidyverse,
-    withr
+  BiocManager,
+  devtools,
+  fgsea,
+  hypeR,
+  hypeR.GEM,
+  knitr,
+  pkgdown,
+  rmarkdown,
+  testthat (>= 3.0.0),
+  tidyverse,
+  withr
 Config/testthat/edition: 3
 biocViews: Software, FeatureExtraction
 VignetteBuilder: knitr

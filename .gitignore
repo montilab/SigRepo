@@ -22,3 +22,12 @@
 # Ignore folders
 .Rproj.user/
 docs/
+
+# Local-only validation harness: runs against a developer's own MySQL/API
+# stack via local_validation/.env.local-validation. Never belongs on a remote.
+local_validation/
+
+# Local scratch: manuscripts under curation, exported repo dumps, misc files
+testing_manuscripts/
+artifacts/
+sigs_in_repo.csv

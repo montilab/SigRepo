@@ -1,3 +1,106 @@
+#' Pick a display label for a signature
+#'
+#' Uses an explicit label when given, otherwise the signature's own
+#' \code{signature_name}, otherwise the supplied fallback.
+#'
+#' Restored alongside \code{resolveComparisonSignature()}: both lived in
+#' R/compareSignature.R and were removed with the pairwise comparison helpers,
+#' but the hypeR and hypeR-GEM clients still depend on them.
+#'
+#' @param omic_signature An \code{OmicSignature} object.
+#' @param label An explicit label, or NULL.
+#' @param fallback Label to use when neither is available.
+#'
+#' @noRd
+resolveSignatureLabel <- function(omic_signature, label, fallback) {
+
+  if (!base::is.null(label) && base::length(label) > 0 && !base::is.na(label[1]) && label[1] != "") {
+    return(base::as.character(label[1]))
+  }
+
+  if (methods::is(omic_signature, "OmicSignature") &&
+      "signature_name" %in% base::names(omic_signature$metadata) &&
+      base::length(omic_signature$metadata$signature_name) > 0 &&
+      !base::is.na(omic_signature$metadata$signature_name[1]) &&
+      omic_signature$metadata$signature_name[1] != "") {
+    return(base::as.character(omic_signature$metadata$signature_name[1]))
+  }
+
+  fallback
+
+}
+
+
+#' Resolve a single signature for a client-side workflow
+#'
+#' Returns \code{omic_signature} when one is supplied, otherwise fetches
+#' exactly one signature from the database by id or name.
+#'
+#' This lived in R/compareSignature.R alongside the pairwise comparison
+#' helpers. Those were replaced by \code{compareSignatures()}, which resolves
+#' its own inputs, but \code{runHypeR()} still depends on this, so it moved
+#' here to sit with its only caller.
+#'
+#' @param conn_handler An R object obtained from \code{SigRepo::newConnHandler()}.
+#' Required unless \code{omic_signature} is supplied.
+#' @param signature_id A single SigRepo signature ID.
+#' @param signature_name A single SigRepo signature name.
+#' @param omic_signature A single \code{OmicSignature} object.
+#' @param label A human-readable label used in error messages.
+#' @param verbose Logical; whether to print diagnostic messages.
+#'
+#' @noRd
+resolveComparisonSignature <- function(
+    conn_handler = NULL,
+    signature_id = NULL,
+    signature_name = NULL,
+    omic_signature = NULL,
+    label = "signature",
+    verbose = TRUE
+) {
+
+  if (!base::is.null(omic_signature)) {
+    if (!methods::is(omic_signature, "OmicSignature")) {
+      base::stop(base::sprintf("\n'omic_signature' for %s must be an OmicSignature object.\n", label))
+    }
+    return(omic_signature)
+  }
+
+  if (base::is.null(conn_handler)) {
+    base::stop(base::sprintf(
+      "\nProvide 'conn_handler' and either 'signature_id' or 'signature_name' for %s, or pass an OmicSignature object.\n",
+      label
+    ))
+  }
+
+  if ((base::length(signature_id) == 0 || base::all(signature_id %in% c("", NA))) &&
+      (base::length(signature_name) == 0 || base::all(signature_name %in% c("", NA)))) {
+    base::stop(base::sprintf("\nProvide 'signature_id' or 'signature_name' for %s.\n", label))
+  }
+
+  omic_signature_list <- getSignature(
+    conn_handler = conn_handler,
+    signature_id = signature_id,
+    signature_name = signature_name,
+    verbose = verbose
+  )
+
+  if (base::is.null(omic_signature_list) || base::length(omic_signature_list) == 0) {
+    base::stop(base::sprintf("\nNo %s was returned from the database.\n", label))
+  }
+
+  if (base::length(omic_signature_list) > 1) {
+    base::stop(base::sprintf(
+      "\nMore than one %s was returned from the database. Use a unique signature_id or signature_name.\n",
+      label
+    ))
+  }
+
+  omic_signature_list[[1]]
+
+}
+
+
 #' Resolve one or more signatures for client-side hypeR workflows
 #'
 #' @param conn_handler An R object obtained from \code{SigRepo::newConnHandler()}.

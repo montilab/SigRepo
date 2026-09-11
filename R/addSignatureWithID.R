@@ -141,7 +141,7 @@ addSignatureWithID <- function(
       )
     )
     # Store difexp in database
-    res <- 
+    res <-
       httr::POST(
         url = api_url,
         body = base::list(
@@ -150,6 +150,11 @@ addSignatureWithID <- function(
       )
     # Check status code
     if(res$status_code != 200){
+      # Delete signature -- without this, a failed difexp store leaves an
+      # orphaned 'signatures' row behind with has_difexp/num_of_difexp
+      # already set from the in-memory object, but no difexp file and no
+      # signature_feature_set rows to back it up.
+      SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = metadata_tbl$signature_id[1], verbose = FALSE)
       # Disconnect from database ####
       base::suppressWarnings(DBI::dbDisconnect(conn))
       # Show message
@@ -159,62 +164,122 @@ addSignatureWithID <- function(
         action = "re-upload the difexp table to the SigRepo API"
       )
     }else{
-      # Remove files from file system 
+      # Remove files from file system
       base::unlink(base::file.path(data_path, base::paste0(metadata_tbl$signature_hashkey[1], ".RDS")))
     }
   }
-  
+
   # Put signature set back to its original form
+  #
+  # Every branch below is wrapped in tryCatch (and, for assay types that can
+  # fail silently by returning a non-empty warning table instead of raising
+  # an error -- metabolomics chief among them, when none of the incoming
+  # feature identifiers resolve against the reference tables) an explicit
+  # warn_tbl check too, mirroring addSignature.R's rollback pattern. Without
+  # this, a failure here leaves the 'signatures' row from earlier in this
+  # function permanently orphaned: has_difexp/num_of_difexp already claim
+  # data that was never actually written to signature_feature_set.
   if (metadata_tbl$assay_type[1] == "transcriptomics") {
-    SigRepo::addTranscriptomicsSignatureSet(
-      conn_handler = conn_handler,
-      signature_id = metadata_tbl$signature_id[1],
-      organism_id = metadata_tbl$organism_id[1],
-      signature_set = omic_signature$signature,
-      verbose = verbose
-    )
+    warn_tbl <- base::tryCatch({
+      SigRepo::addTranscriptomicsSignatureSet(
+        conn_handler = conn_handler,
+        signature_id = metadata_tbl$signature_id[1],
+        organism_id = metadata_tbl$organism_id[1],
+        signature_set = omic_signature$signature,
+        verbose = verbose
+      )
+    }, error = function(e){
+      SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = metadata_tbl$signature_id[1], verbose = FALSE)
+      base::suppressWarnings(DBI::dbDisconnect(conn))
+      base::stop(base::as.character(e), "\n")
+    })
+    if(methods::is(warn_tbl, "data.frame") && base::nrow(warn_tbl) > 0){
+      SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = metadata_tbl$signature_id[1], verbose = FALSE)
+      base::suppressWarnings(DBI::dbDisconnect(conn))
+      return(warn_tbl)
+    }
   } else if (metadata_tbl$assay_type[1] == "proteomics") {
-    SigRepo::addProteomicsSignatureSet(
-      conn_handler = conn_handler,
-      signature_id = metadata_tbl$signature_id[1],
-      organism_id = metadata_tbl$organism_id[1],
-      signature_set = omic_signature$signature,
-      verbose = verbose
-    )
+    warn_tbl <- base::tryCatch({
+      SigRepo::addProteomicsSignatureSet(
+        conn_handler = conn_handler,
+        signature_id = metadata_tbl$signature_id[1],
+        organism_id = metadata_tbl$organism_id[1],
+        signature_set = omic_signature$signature,
+        verbose = verbose
+      )
+    }, error = function(e){
+      SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = metadata_tbl$signature_id[1], verbose = FALSE)
+      base::suppressWarnings(DBI::dbDisconnect(conn))
+      base::stop(base::as.character(e), "\n")
+    })
+    if(methods::is(warn_tbl, "data.frame") && base::nrow(warn_tbl) > 0){
+      SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = metadata_tbl$signature_id[1], verbose = FALSE)
+      base::suppressWarnings(DBI::dbDisconnect(conn))
+      return(warn_tbl)
+    }
   } else if (metadata_tbl$assay_type[1] == "metabolomics") {
-    SigRepo::addMetabolomicsSignatureSet(
-      conn_handler = conn_handler,
-      signature_id = metadata_tbl$signature_id[1],
-      signature_set = omic_signature$signature,
-      feature_database = metabolomics_nomenclature,
-      verbose = verbose
-    )
+    warn_tbl <- base::tryCatch({
+      SigRepo::addMetabolomicsSignatureSet(
+        conn_handler = conn_handler,
+        signature_id = metadata_tbl$signature_id[1],
+        signature_set = omic_signature$signature,
+        feature_database = metabolomics_nomenclature,
+        verbose = verbose
+      )
+    }, error = function(e){
+      SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = metadata_tbl$signature_id[1], verbose = FALSE)
+      base::suppressWarnings(DBI::dbDisconnect(conn))
+      base::stop(base::as.character(e), "\n")
+    })
+    if(methods::is(warn_tbl, "data.frame") && base::nrow(warn_tbl) > 0){
+      SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = metadata_tbl$signature_id[1], verbose = FALSE)
+      base::suppressWarnings(DBI::dbDisconnect(conn))
+      return(warn_tbl)
+    }
   } else if (metadata_tbl$assay_type[1] == "genetic_variants") {
-    SigRepo::addGeneticVariantsSignatureSet(
-      conn_handler = conn_handler,
-      signature_id = metadata_tbl$signature_id[1],
-      organism_id = metadata_tbl$organism_id[1],
-      signature_set = omic_signature$signature,
-      verbose = verbose
-    )
+    warn_tbl <- base::tryCatch({
+      SigRepo::addGeneticVariantsSignatureSet(
+        conn_handler = conn_handler,
+        signature_id = metadata_tbl$signature_id[1],
+        organism_id = metadata_tbl$organism_id[1],
+        signature_set = omic_signature$signature,
+        verbose = verbose
+      )
+    }, error = function(e){
+      SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = metadata_tbl$signature_id[1], verbose = FALSE)
+      base::suppressWarnings(DBI::dbDisconnect(conn))
+      base::stop(base::as.character(e), "\n")
+    })
+    if(methods::is(warn_tbl, "data.frame") && base::nrow(warn_tbl) > 0){
+      SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = metadata_tbl$signature_id[1], verbose = FALSE)
+      base::suppressWarnings(DBI::dbDisconnect(conn))
+      return(warn_tbl)
+    }
   } else {
+    SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = metadata_tbl$signature_id[1], verbose = FALSE)
     base::suppressWarnings(DBI::dbDisconnect(conn))
     SigRepo::showAssayTypeErrorMessage(unknown_values = metadata_tbl$assay_type[1])
   }
-  
+
   # Add user to signature access table after signature
-  SigRepo::addUserToSignature(
-    conn_handler = conn_handler,
-    signature_id = metadata_tbl$signature_id[1],
-    user_name = user_name,
-    access_type = "owner",
-    verbose = verbose
-  )
+  base::tryCatch({
+    SigRepo::addUserToSignature(
+      conn_handler = conn_handler,
+      signature_id = metadata_tbl$signature_id[1],
+      user_name = user_name,
+      access_type = "owner",
+      verbose = verbose
+    )
+  }, error = function(e){
+    SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = metadata_tbl$signature_id[1], verbose = FALSE)
+    base::suppressWarnings(DBI::dbDisconnect(conn))
+    base::stop(base::as.character(e), "\n")
+  })
 
   # Disconnect from database ####
-  base::suppressWarnings(DBI::dbDisconnect(conn))   
-  
-  # Return 
+  base::suppressWarnings(DBI::dbDisconnect(conn))
+
+  # Return
   return(base::invisible())
-  
-}  
+
+}
