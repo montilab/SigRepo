@@ -58,7 +58,7 @@ updateTranscriptomicsFeatureSet <- function(
   }else{
     
     # Show message
-    SigRepo::verbose(base::sprintf("Getting the latest version available in the biomaRt...\n"))
+    SigRepo::verbose("Getting the latest version available in the biomaRt...\n")
     
     ensembl_genes <- biomaRt::listEnsembl() |> dplyr::filter(.data$biomart %in% "genes")
     current_release <- ensemblReleaseNumber(ensembl_genes$version)[1]
@@ -231,7 +231,7 @@ updateTranscriptomicsFeatureSet <- function(
     }
 
     # Show message
-    SigRepo::verbose(base::sprintf("Updating organism table to latest version...\n"))
+    SigRepo::verbose("Updating organism table to latest version...\n")
     
     # Create SQL statement to update version in organisms table
     statement <- base::sprintf(

@@ -72,7 +72,7 @@ getSignature <- function(
     # Get a list of signature with visibility = FALSE
     signature_visibility <- signature_tbl |> dplyr::filter(.data$visibility == FALSE) |> dplyr::distinct(.data$signature_id, .data$visibility) 
     # Check if user has the permission to view the signatures ####
-    for(w in 1:base::nrow(signature_visibility)){
+    for(w in base::seq_len(base::nrow(signature_visibility))){
       #w=1;
       signature_access_tbl <- SigRepo::lookup_table_sql(
         conn = conn,
@@ -97,7 +97,7 @@ getSignature <- function(
     base::suppressWarnings(DBI::dbDisconnect(conn)) 
     
     # Show message
-    SigRepo::verbose(base::sprintf("There are no signatures returned from the search parameters.\n"))
+    SigRepo::verbose("There are no signatures returned from the search parameters.\n")
     
     # Return NULL
     return(NULL)

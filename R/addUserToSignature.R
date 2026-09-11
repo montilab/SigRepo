@@ -164,7 +164,7 @@ addUserToSignature <- function(
           # Disconnect from database ####
           base::suppressWarnings(DBI::dbDisconnect(conn)) 
           # Show message
-          base::stop(base::sprintf("\nUser = '%s' does not have the permission to add User = % to signature_id = '%s' in the SigRepo database.\n", orig_user_name, base::paste0("'", user_name, "'", collapse = ", "), signature_id))
+          base::stop(base::sprintf("\nUser = '%s' does not have the permission to add User = %s to signature_id = '%s' in the SigRepo database.\n", orig_user_name, base::paste0("'", user_name, "'", collapse = ", "), signature_id))
         }
       }
       

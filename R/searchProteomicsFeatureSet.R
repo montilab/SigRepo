@@ -86,7 +86,7 @@ searchProteomicsFeatureSet <- function(
     base::suppressWarnings(DBI::dbDisconnect(conn)) 
     
     # Show message
-    base::stop(base::sprintf("\nThere are no features returned from the search parameters.\n"))
+    base::stop("\nThere are no features returned from the search parameters.\n")
     
   }else{
     

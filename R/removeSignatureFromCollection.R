@@ -186,7 +186,7 @@ removeSignatureFromCollection <- function(
       # Disconnect from database ####
       base::suppressWarnings(DBI::dbDisconnect(conn)) 
       # Show message
-      base::stop(base::sprintf("\nsignature_id = %s do(es) not belongs to collection_id = %s.\n", base::paste0("'", signature_id[base::which(!signature_id %in% signature_collection_tbl$signature_id)], "'", collapse = ", ")))
+      base::stop(base::sprintf("\nsignature_id = %s do(es) not belongs to collection_id = %s.\n", base::paste0("'", signature_id[base::which(!signature_id %in% signature_collection_tbl$signature_id)], "'", collapse = ", "), collection_id))
     }
     
     # If signature does exist in collection, remove them from collection

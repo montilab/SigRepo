@@ -93,7 +93,7 @@ getSignatureFeatureSet <- function(
 
   if (base::nrow(signature_tbl) == 0) {
     base::suppressWarnings(DBI::dbDisconnect(conn))
-    SigRepo::verbose(base::sprintf("There are no signature feature set rows returned from the search parameters.\n"))
+    SigRepo::verbose("There are no signature feature set rows returned from the search parameters.\n")
     return(NULL)
   }
 

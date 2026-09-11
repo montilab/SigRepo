@@ -7,6 +7,9 @@
 test_conn_handler
 }
 \description{
-A test connection handler for the package
+A test connection handler for the package. Points at the shared
+sigrepo.org test instance by default; set the `SIGREPO_TEST_DB_*` /
+`SIGREPO_TEST_API_*` environment variables before loading the package to
+point it at a different (e.g. local, ephemeral) SigRepo stack instead.
 }
 \keyword{internal}
