@@ -22,7 +22,7 @@ createOmicCollection <- function(
     # Disconnect from database ####
     DBI::dbDisconnect(conn)    
     # Show message
-    base::stop(base::sprintf("'db_collection_tbl' must be a data frame and cannot be empty."))
+    base::stop("'db_collection_tbl' must be a data frame and cannot be empty.")
   }
   
   # Create metadata

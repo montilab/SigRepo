@@ -58,14 +58,14 @@ updateTranscriptomicsFeatureSet <- function(
   }else{
     
     # Show message
-    SigRepo::verbose(base::sprintf("Getting the latest version available in the biomaRt...\n"))
+    SigRepo::verbose("Getting the latest version available in the biomaRt...\n")
     
     current_ensembl_version <- biomaRt::listEnsembl() |> 
       dplyr::mutate(version = base::gsub("(.*?)([1-9]{1,})", "\\2", .data$version)) |> 
       dplyr::filter(.data$biomart %in% "genes")
     
     # Show message
-    SigRepo::verbose(base::sprintf("Checking biomaRt version against the database version...\n"))
+    SigRepo::verbose("Checking biomaRt version against the database version...\n")
     
     if(current_ensembl_version$version[1] < organism_tbl$biomart_version[1]){
       # Disconnect from database ####
@@ -150,7 +150,7 @@ updateTranscriptomicsFeatureSet <- function(
     }
       
     # Show message
-    SigRepo::verbose(base::sprintf("Updating features to latest version...\n"))
+    SigRepo::verbose("Updating features to latest version...\n")
       
     # If overlapping features are not empty, update features to latest version
     if(base::nrow(overlapping_features) > 0){
@@ -295,7 +295,7 @@ updateTranscriptomicsFeatureSet <- function(
     }
     
     # Show message
-    SigRepo::verbose(base::sprintf("Updating organism table to latest version...\n"))
+    SigRepo::verbose("Updating organism table to latest version...\n")
     
     # Create SQL statement to update version in organisms table
     statement <- base::sprintf(

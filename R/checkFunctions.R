@@ -200,7 +200,7 @@ checkTableInput <- function(
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn))  
     # Return error message
-    base::stop(base::sprintf("'table' must be a data frame object and cannot be empty.\n"))
+    base::stop("'table' must be a data frame object and cannot be empty.\n")
   }
   
   # Whether to exclude selected column names from the checklist
@@ -319,7 +319,7 @@ checkDuplicatedEmails <- function(
             base::suppressWarnings(DBI::dbDisconnect(conn))  
             # Return error message
             base::stop(
-              base::sprintf("\tThe following email address:\n"),
+              "\tThe following email address:\n",
               base::sprintf("\t%s\n", base::paste0(base::unique(existing_tbl[,return_var]), collapse = ",\n")),
               base::sprintf("\talready existed in the '%s' table of the database.\n", db_table_name),
               base::sprintf("\tEmail address must be unique for each user. Please provide a different email for user = '%s'.\n", table$user_name[s])
@@ -449,7 +449,7 @@ checkOmicSignature <- function(
     signature <- signature |> dplyr::mutate(score = "")
   
   if(metadata$direction_type[1] %in% c("bi-directional", "categorical") && !"group_label" %in% base::colnames(signature)){
-    base::stop(base::sprintf("'signature' in OmicSignature object requires a 'group_label' variable as the direction of the signature is 'bi-directional' or 'categorical'"))
+    base::stop("'signature' in OmicSignature object requires a 'group_label' variable as the direction of the signature is 'bi-directional' or 'categorical'")
   }else if(metadata$direction_type[1] %in% c("uni-directional") && !"group_label" %in% base::colnames(signature)){
     signature <- signature |> dplyr::mutate(group_label = "")
   }
@@ -479,7 +479,7 @@ checkOmicSignature <- function(
     base::stop(base::sprintf("'difexp' in OmicSignature object must have the following required column names: %s, and as least one of the following fields: %s", base::paste0("'", difexp_req_fields, "'", collapse = ", "), base::paste0("'", difexp_opt_fields, "'", collapse = "/")))
   
   if(!base::is.null(difexp) && metadata$direction_type[1] %in% c("bi-directional", "categorical") && !"group_label" %in% base::colnames(difexp)){
-    base::stop(base::sprintf("When the direction of the signature is bi-directional or categorical, 'difexp' in OmicSignature requires a 'group_label' variable."))
+    base::stop("When the direction of the signature is bi-directional or categorical, 'difexp' in OmicSignature requires a 'group_label' variable.")
   }else if(!base::is.null(difexp) && metadata$direction_type[1] %in% c("uni-directional") && !"group_label" %in% base::colnames(difexp)){
     difexp <- difexp |> dplyr::mutate(group_label = "")
   }

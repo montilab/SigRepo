@@ -89,7 +89,7 @@ searchCollection <- function(
     base::suppressWarnings(DBI::dbDisconnect(conn))     
     
     # Show message
-    SigRepo::verbose(base::sprintf("There is no collection returned from the search parameters.\n"))
+    SigRepo::verbose("There is no collection returned from the search parameters.\n")
     
     # Return NULL
     return(base::data.frame(NULL))

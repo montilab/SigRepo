@@ -35,16 +35,21 @@ Remotes:
   montilab/OmicSignature,
   montilab/hypeR-GEM
 Suggests:
-  BiocManager,
-  devtools,
-  hypeR,
-  hypeR.GEM,
-  knitr,
-  pkgdown,
-  rmarkdown,
-  testthat (>= 3.0.0),
-  tidyverse,
-  withr
+    BiocManager,
+    devtools,
+    ExperimentHub,
+    hypeR,
+    hypeR.GEM,
+    knitr,
+    org.Hs.eg.db,
+    pkgdown,
+    rhdf5,
+    rmarkdown,
+    signatureSearch,
+    signatureSearchData,
+    testthat (>= 3.0.0),
+    tidyverse,
+    withr
 Config/testthat/edition: 3
 biocViews: Software, FeatureExtraction
 VignetteBuilder: knitr

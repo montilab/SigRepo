@@ -53,7 +53,7 @@ updateProteomicsFeatureSet <- function(
     base::suppressWarnings(DBI::dbDisconnect(conn))     
     
     # Show message
-    base::stop(base::sprintf("There are no organisms returned from the search parameters.\n"))
+    base::stop("There are no organisms returned from the search parameters.\n")
     
   }else{
   
@@ -153,7 +153,7 @@ updateProteomicsFeatureSet <- function(
     }
     
     # Show message
-    SigRepo::verbose(base::sprintf("Updating features to latest version...\n"))
+    SigRepo::verbose("Updating features to latest version...\n")
     
     # Only update when the length of the overlapping features is different
     if(base::nrow(overlapping_features) > 0 && base::nrow(overlapping_features) != base::nrow(proteomics_tbl)){
@@ -297,7 +297,7 @@ updateProteomicsFeatureSet <- function(
     }
     
     # Show message
-    SigRepo::verbose(base::sprintf("Updating organism table to latest updated date...\n"))
+    SigRepo::verbose("Updating organism table to latest updated date...\n")
     
     # Create SQL statement to update version in organisms table
     statement <- base::sprintf(
