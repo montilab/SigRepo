@@ -9,67 +9,205 @@ compareSignatures(
   signature_ids = NULL,
   signature_names = NULL,
   omic_signatures = NULL,
-  method = c("overlap", "ks_rank", "ks_score", "gsea"),
+  signature_ids2 = NULL,
+  signature_names2 = NULL,
+  omic_signatures2 = NULL,
+  method = c("overlap", "ks_rank", "ks_score", "ks", "gsea"),
+  background = NULL,
+  score_cutoff = 0,
+  adj_p_cutoff = 0.05,
+  min_features = 5,
+  max_feature = 500,
+  label_pairing = NULL,
+  label_pairing2 = NULL,
+  feature_col = "feature_name",
+  score_col = "score",
+  adj_p_col = "adj_p",
+  p_value_col = "p_value",
+  group_col = "group_label",
+  adjust = FALSE,
+  p_adjust_method = "BH",
+  alternative = "greater",
+  gsea_score = "NES",
+  minSize = 1,
+  maxSize = Inf,
+  nproc = 0,
   verbose = FALSE,
   ...
 )
 }
 \arguments{
 \item{conn_handler}{An R object obtained from \code{SigRepo::newConnHandler()}.
-Required unless \code{omic_signatures} is supplied.}
+Required whenever signatures are requested by id or name.}
 
-\item{signature_ids}{Optional vector of database signature IDs to compare.}
+\item{signature_ids}{Database signature ids for the first list.}
 
-\item{signature_names}{Optional vector of signature names to compare.}
+\item{signature_names}{Database signature names for the first list.}
 
-\item{omic_signatures}{Optional named list of OmicSignature objects (or an
-OmicSignatureCollection) to compare directly, skipping the database fetch.}
+\item{omic_signatures}{An OmicSignature object, a list of OmicSignature
+objects, or an OmicSignatureCollection for the first list.}
 
-\item{method}{Comparison method passed to
-\code{OmicSignature::compare_omic_signatures()}. One of \code{"overlap"},
-\code{"ks_rank"}, \code{"ks_score"}, or \code{"gsea"}. The rank-based
-methods require signatures that carry a difexp table.}
+\item{signature_ids2}{Database signature ids for the optional second list.}
 
-\item{verbose}{Logical; whether to print diagnostic messages while fetching
-signatures. Defaults to \code{FALSE}.}
+\item{signature_names2}{Database signature names for the optional second list.}
 
-\item{...}{Additional arguments forwarded to
-\code{OmicSignature::compare_omic_signatures()} (e.g. \code{score_cutoff},
-\code{adj_p_cutoff}, \code{min_features}, \code{background},
-\code{label_pairing}).}
+\item{omic_signatures2}{An OmicSignature object, a list of OmicSignature
+objects, or an OmicSignatureCollection for the optional second list.}
+
+\item{method}{Comparison method: \code{"overlap"}, \code{"ks_rank"},
+\code{"ks_score"} or \code{"gsea"}; \code{"ks"} is accepted as an alias
+for \code{"ks_rank"}. The rank-based methods need difexp tables.}
+
+\item{background}{Optional background feature vector for overlap tests.}
+
+\item{score_cutoff}{Minimum absolute score to include in a signature.}
+
+\item{adj_p_cutoff}{Maximum adjusted p-value to include in a signature.}
+
+\item{min_features}{Minimum number of features retained per label-specific
+signature (at least 3).}
+
+\item{max_feature}{Maximum number of features retained per label-specific
+signature.}
+
+\item{label_pairing}{Optional named list giving the two group-label levels
+to compare for signatures in the first list. Names refer to the signature
+names used in the result: the list names of supplied objects (their
+metadata \code{signature_name} when unnamed), and the database
+\code{signature_name} of fetched ones, including the \code{"name (id N)"}
+form given to fetched signatures that share a name.}
+
+\item{label_pairing2}{The same for the second list.}
+
+\item{feature_col}{Column containing feature identifiers.}
+
+\item{score_col}{Column containing scores in signature and difexp tables.}
+
+\item{adj_p_col}{Column containing adjusted p-values in difexp tables.}
+
+\item{p_value_col}{Column containing p-values used to rank difexp tables.}
+
+\item{group_col}{Column containing phenotype group labels.}
+
+\item{adjust}{Logical; adjust p-values within each returned comparison.}
+
+\item{p_adjust_method}{Multiple-testing correction method.}
+
+\item{alternative}{Alternative hypothesis for the Fisher and KS tests.}
+
+\item{gsea_score}{Column of the fgsea output returned as the score matrix.}
+
+\item{minSize}{Minimum pathway size passed to fgsea.}
+
+\item{maxSize}{Maximum pathway size passed to fgsea.}
+
+\item{nproc}{Number of fgsea workers.}
+
+\item{verbose}{Logical; whether to print diagnostic messages while
+resolving and fetching signatures. Defaults to \code{FALSE}.}
+
+\item{...}{Additional arguments passed on to fgsea for
+\code{method = "gsea"}.}
 }
 \value{
 The list returned by
   \code{OmicSignature::compare_omic_signatures()}: \code{method},
-  \code{comparisons}, \code{label_order}, and \code{background}.
+  \code{comparisons}, \code{label_order} and \code{background}. For a
+  two-list comparison \code{label_order} holds both \code{sig_list1} and
+  \code{sig_list2}.
 }
 \description{
-Thin wrapper around
-\code{OmicSignature::compare_omic_signatures()} that pulls signatures out of
-the SigRepo database and runs a pairwise comparison across all of them at
-once. Supply signatures by \code{signature_id} and/or \code{signature_name}
-(fetched via \code{getSignature()}), or pass ready-made OmicSignature objects
-directly through \code{omic_signatures}.
+A SigRepo front end to \code{OmicSignature::compare_omic_signatures()}. It
+takes every argument that function takes, with the same defaults, and adds
+a way to assemble the two signature lists from the database.
 
-The result is the matrix-based structure documented in
-\code{?OmicSignature::compare_omic_signatures}: for \code{method =
-"overlap"}, \code{jaccard}/\code{pvalue}/\code{counts} matrices per label
-pairing; for the rank-based methods (\code{"ks_rank"}, \code{"ks_score"},
-\code{"gsea"}), \code{score}/\code{pvalue} matrices.
+Each list is built from up to three sources, kept in this order: database
+signature ids (\code{signature_ids}), database signature names
+(\code{signature_names}), and OmicSignature objects supplied directly
+(\code{omic_signatures}). The \code{*2} arguments build the optional second
+list, the counterpart of \code{sig_list2}. With only the first list every
+signature is compared against every other one (a self-comparison, which
+needs at least two signatures). With both lists each signature in the
+first is compared against each in the second, giving rectangular result
+matrices with the first list as rows and the second as columns; one
+signature per side is enough. For \code{method = "ks_rank"},
+\code{"ks_score"} and \code{"gsea"} the second list is the ranking side and
+needs bi-directional signatures with a difexp table, exactly as for
+\code{sig_list2}.
+
+Ids and names are resolved with \code{searchSignature()} and then fetched
+one at a time with \code{getSignature()}, so the outcome of every request
+is known. Ids or names that do not exist, and signatures the connected
+account is not allowed to see, are reported in a warning and left out, and
+the comparison goes ahead on whatever could be assembled for that list;
+only when that leaves the list empty is it an error instead. Names are
+matched case-insensitively, and a name shared by several users' signatures
+matches all of them. A signature requested by both id and name is included
+once. Fetched signatures are named by their \code{signature_name}; because
+names are only unique per user, fetched signatures that share a name are
+told apart as \code{"name (id N)"}. Supplied objects keep their list
+names, or fall back to their metadata \code{signature_name}.
+
+Everything else -- cutoff validation, label pairing, the comparison itself
+and its warnings and errors -- is
+\code{OmicSignature::compare_omic_signatures()}'s, unchanged. The value is
+that function's list, so it can be passed straight to
+\code{OmicSignature::signature_similarity_heatmap()}.
+}
+\details{
+See \code{?OmicSignature::compare_omic_signatures} for the full
+  description of every comparison argument, of how uni-directional
+  signatures are handled, and of the result.
 }
 \examples{
+# The bundled example signatures need no database
+utils::data("omic_signature_1", "omic_signature_2", "omic_signature_3", package = "SigRepo")
+
+res <- SigRepo::compareSignatures(
+  omic_signatures = list(v1 = omic_signature_1, v2 = omic_signature_2, v3 = omic_signature_3),
+  method = "overlap",
+  min_features = 3,
+  max_feature = 10
+)
+res$comparisons$level1_vs_level1$jaccard
+
+# Query versus reference: rows are the first list, columns the second
+res2 <- SigRepo::compareSignatures(
+  omic_signatures = list(v1 = omic_signature_1),
+  omic_signatures2 = list(v2 = omic_signature_2, v3 = omic_signature_3),
+  method = "ks_rank",
+  min_features = 3,
+  max_feature = 10
+)
+res2$comparisons$level1_vs_level1$score
+
 \dontrun{
 conn_handler <- SigRepo::newConnHandler(
   dbname = "sigrepo", host = "localhost", port = 3306,
   user = "montilab", password = "sigrepo"
 )
+
+# Signatures stored in the database, by id and by name
 res <- SigRepo::compareSignatures(
   conn_handler = conn_handler,
-  signature_ids = c(12, 34, 56),
-  method = "overlap",
-  min_features = 10
+  signature_ids = c(12, 34),
+  signature_names = "my_signature",
+  method = "overlap"
 )
-res$comparisons$level1_vs_level1$jaccard
+
+# A query signature against a reference set, mixing stored and local ones
+res <- SigRepo::compareSignatures(
+  conn_handler = conn_handler,
+  signature_ids = 12,
+  signature_ids2 = c(34, 56),
+  omic_signatures2 = list(local = my_omic_signature),
+  method = "gsea"
+)
 }
 
+}
+\seealso{
+\code{OmicSignature::compare_omic_signatures()},
+  \code{OmicSignature::signature_similarity_heatmap()},
+  \code{getSignature()}, \code{searchSignature()}.
 }

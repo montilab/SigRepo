@@ -37,6 +37,7 @@ Remotes:
 Suggests:
   BiocManager,
   devtools,
+  fgsea,
   hypeR,
   hypeR.GEM,
   knitr,
