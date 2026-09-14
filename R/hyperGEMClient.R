@@ -308,7 +308,7 @@ runHyperGEM <- function(
     )
   }
 
-  resolved_genesets <- resolveHypeRGenesets(genesets = genesets)
+  resolved_genesets <- getHypeRGenesets(genesets = genesets)
   method <- base::match.arg(method)
 
   enrichment_inputs <- prepareHyperGEMSignatures(
