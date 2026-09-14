@@ -1,0 +1,163 @@
+---
+title: "Running hypeR enrichment on SigRepo signatures"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Running hypeR enrichment on SigRepo signatures}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  eval = requireNamespace("hypeR", quietly = TRUE) && requireNamespace("msigdbr", quietly = TRUE)
+)
+```
+
+```{r}
+library(SigRepo)
+library(hypeR)
+
+utils::data("LLFS_Aging_Gene_2023", package = "SigRepo")
+sig <- LLFS_Aging_Gene_2023
+```
+
+## What `runHypeR()` does
+
+`runHypeR()` turns SigRepo signatures into the query vectors `hypeR::hypeR()`
+expects, runs hypeR, and returns hypeR's own object. Every argument from `test`
+on is hypeR's, with hypeR's defaults, so a SigRepo run and a plain hypeR run on
+the same genes give the same table.
+
+## Genesets
+
+Fetch an MSigDB collection with `genesets = "msigdb"`:
+
+```{r}
+hallmark <- SigRepo::getHypeRGenesets("msigdb", msigdb_collection = "H")
+hallmark
+```
+
+Or pass your own genesets — a named list, `hypeR::gsets` or `hypeR::rgsets`:
+
+```{r}
+my_genesets <- list(
+  ribosome_like = c("RPL3", "RPL4", "RPS6"),
+  interferon_like = c("ISG15", "IFIT1", "MX1")
+)
+```
+
+`runHypeR()` accepts either form in `genesets`. The `msigdb_*` arguments only
+apply with `genesets = "msigdb"`.
+
+## Inspect the query vectors
+
+`prepareHypeRSignatures()` shows exactly what will be tested and where the gene
+symbols came from:
+
+```{r}
+prepared <- SigRepo::prepareHypeRSignatures(omic_signature = sig, verbose = FALSE)
+prepared$info
+lengths(prepared$signatures)
+```
+
+This signature's table has no symbol column, so symbols come from its difexp,
+joined on `probe_id`. A bi-directional signature has one `group_label` per arm,
+and `split = TRUE` (the default) tests each arm separately. Query names are
+always unique — built as `"<label> | <group_label>"` (or just `"<label>"` when
+there is no group) and disambiguated as `name (2)`, `name (3)` if two
+signatures would otherwise collide.
+
+## Hypergeometric test
+
+```{r}
+hyp <- SigRepo::runHypeR(
+  omic_signature = sig,
+  genesets = "msigdb",
+  msigdb_collection = "H",
+  verbose = FALSE
+)
+hyp
+```
+
+As in hypeR, `fdr` and `pval` default to `1`, so every geneset is kept; pass
+`fdr = 0.05` to filter. The result is a hypeR `multihyp` (one `hyp` per arm),
+so hypeR's functions work on it directly:
+
+```{r, fig.width = 7, fig.height = 5}
+hypeR::hyp_dots(hyp, merge = TRUE, top = 10, title = "LLFS aging, Hallmark")
+```
+
+Each `hyp$info` records where its query came from:
+
+```{r}
+tail(hyp$data[[1]]$info, 4)
+```
+
+## Ranked (KS) test
+
+`test = "kstest"` ranks the full difexp table by `score`. `power = 1` (hypeR's
+default) weights hits by score, GSEA-style; `power = 0` is the classic KS test.
+With `power != 0`, a geneset whose hits in a query all score exactly `0` cannot
+be scored by a weighted KS test, so it is dropped for that query with a
+warning.
+
+```{r}
+ranked <- SigRepo::runHypeR(
+  omic_signature = sig,
+  genesets = hallmark,
+  test = "kstest",
+  power = 0,
+  verbose = FALSE
+)
+head(ranked$data)
+```
+
+## Background
+
+`background` takes what hypeR takes — a population size (default `23467`) or a
+gene vector — plus `"difexp"`, which uses each signature's measured genes.
+Anything else is an error: `background` must be a number, a gene vector, or
+exactly `"difexp"`.
+
+```{r}
+hyp_measured <- SigRepo::runHypeR(
+  omic_signature = sig,
+  genesets = hallmark,
+  background = "difexp",
+  verbose = FALSE
+)
+hyp_measured$data[[1]]$info$Background
+```
+
+## Signatures from the database
+
+With a connection, pass signature ids or names instead of objects. Signatures
+that cannot produce a query (no gene symbols, no difexp for `kstest`) are
+skipped with a warning.
+
+```{r, eval = FALSE}
+conn_handler <- SigRepo::newConnHandler(
+  dbname = "sigrepo",
+  host = "sigrepo.org",
+  port = 3306,
+  user = "<user-name>",
+  password = "<password>"
+)
+
+hyp <- SigRepo::runHypeR(
+  conn_handler = conn_handler,
+  signature_id = c(101, 102, 103),
+  genesets = "msigdb",
+  msigdb_collection = "H",
+  fdr = 0.05
+)
+
+# hyp_to_excel() uses each query name as an Excel sheet name, which must be at
+# most 31 characters and cannot contain : \ / ? * [ ], and SigRepo query names
+# built from long signature names routinely break that, so make them sheet-safe first:
+names(hyp$data) <- make.unique(substr(gsub("[][\\\\/?*:]", "_", names(hyp$data)), 1, 28))
+hypeR::hyp_to_excel(hyp, file_path = "sigrepo_hallmark.xlsx")
+```
