@@ -11,12 +11,18 @@
   `hyp_to_excel()` uses query names as sheet names (at most 31 characters, no
   `: \ / ? * [ ]`), so long signature names need sheet-safe names first:
   ```r
-  names(hyp$data) <- make.unique(substr(gsub("[][\\\\/?*:]", "_", names(hyp$data)), 1, 28))
+  n <- names(hyp$data)
+  names(hyp$data) <- sprintf("%02d_%s", seq_along(n), substr(gsub("[][\\\\/?*:]", "_", sub(".* \\| ", "", n)), 1, 27))
   hypeR::hyp_to_excel(hyp, file_path = "results.xlsx")
   ```
 - `method` is now `test = c("hypergeometric", "kstest")`. The `"hypergeo"`,
-  `"ks"` and `"gsea"` aliases are gone: GSEA-style weighting is
-  `test = "kstest"` with `power = 1` (the default); `power = 0` is the classic KS test.
+  `"ks"` and `"gsea"` aliases are gone; use `test = "kstest"` for a ranked test.
+  `power` changes only the kstest `score` (`1`, the default, weights hits by
+  |score|; `0` is unweighted). The p-value and FDR come from hypeR's unweighted,
+  one-sided KS test and do not depend on `power` or `absolute`. It finds
+  genesets enriched toward the top of the ranking (the highest scores); to test
+  the other end, add `difexp$neg_score <- -difexp$score` to your OmicSignature
+  copy and pass `score_col = "neg_score"`.
 - Defaults match `hypeR::hypeR()`: `fdr = 1` (was 0.05), `pval = 1` (new),
   `background = 23467`. `background = "difexp"` uses each signature's measured genes.
 - `genesets` is required: `genesets = "msigdb"` with `msigdb_collection`
@@ -48,9 +54,14 @@
 - `runHypeR()` errors on an invalid `background` (e.g. `"Difexp"`); both
   functions error on a `split` that is not `TRUE`/`FALSE` and on
   `omic_signature` supplied together with `signature_id`/`signature_name`.
-- Weighted kstest (`power != 0`) drops, with a warning, genesets whose hits all
-  have score 0. hypeR cannot score them and would otherwise error or put scores
-  on the wrong genesets.
+- kstest drops, with a warning, genesets hypeR cannot score: those whose hits
+  all have score 0 (`power != 0`) and those containing every query gene (any
+  power). hypeR would otherwise error or put scores on the wrong genesets.
+  Dropped genesets are also left out of the FDR adjustment.
+- With `background = "difexp"`, a hypergeometric query is reduced to the genes
+  its difexp measured, with a warning; hypeR reduces only the genesets.
+- A query left with no genesets or no genes is skipped with a warning instead of
+  aborting the whole run.
 
 # SigRepo 1.0.0
 

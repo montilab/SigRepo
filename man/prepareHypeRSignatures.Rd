@@ -32,7 +32,9 @@ signature table) or \code{"kstest"} (a named numeric vector ranked by
 
 \item{split}{Logical; for \code{"hypergeometric"}, build one vector per
 \code{group_label} (e.g. one per arm of a bi-directional signature). Ignored by
-\code{"kstest"}, whose ranked list already carries direction in its sign.
+\code{"kstest"}, which ranks the whole difexp in one vector by signed score;
+its test finds genesets enriched toward the top of that ranking only (see
+\code{power} in \code{runHypeR()}).
 Defaults to \code{TRUE}.}
 
 \item{score_col}{difexp column used to rank genes for \code{"kstest"}.

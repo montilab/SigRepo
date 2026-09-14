@@ -179,7 +179,8 @@ test_that("B1: the documented sheet-name workaround makes hyp_to_excel() work on
   hyp <- SigRepo::runHypeR(omic_signature = list(long, colon), genesets = gs, verbose = FALSE)
   expect_error(hypeR::hyp_to_excel(hyp, file_path = xlsx), "Max length is 31 characters", fixed = TRUE)
 
-  names(hyp$data) <- make.unique(substr(gsub("[][\\\\/?*:]", "_", names(hyp$data)), 1, 28))
+  n <- names(hyp$data)
+  names(hyp$data) <- sprintf("%02d_%s", seq_along(n), substr(gsub("[][\\\\/?*:]", "_", sub(".* \\| ", "", n)), 1, 27))
   expect_no_error(hypeR::hyp_to_excel(hyp, file_path = xlsx))
 
   sheets <- openxlsx::getSheetNames(xlsx)
@@ -197,7 +198,7 @@ test_that("U1: weighted kstest drops genesets whose hits all score 0, with a war
   expect_warning(
     res <- SigRepo::runHypeR(omic_signature = sig, genesets = hyper_zero_score_genesets(),
                              test = "kstest", power = 1, verbose = FALSE),
-    "Dropped 1 geneset(s) whose hits all have score 0 (undefined for weighted kstest, power != 0): S2", fixed = TRUE
+    "Dropped 1 geneset(s) that hypeR's kstest cannot score (all hits score 0, or the geneset covers every query gene): S2", fixed = TRUE
   )
   expect_false("S2" %in% res$data$label)
 
@@ -259,7 +260,7 @@ test_that("U1 fix round 1: the zero-weight check sees the gene-vector background
   # After reduction to bg, S2 and S4 hit only B (score 0); S1 keeps D, S3 keeps C.
   expect_warning(
     res <- SigRepo::runHypeR(omic_signature = sig, genesets = gs, test = "kstest", background = bg, verbose = FALSE),
-    "Dropped 2 geneset(s) whose hits all have score 0 (undefined for weighted kstest, power != 0): S2, S4",
+    "Dropped 2 geneset(s) that hypeR's kstest cannot score (all hits score 0, or the geneset covers every query gene): S2, S4",
     fixed = TRUE
   )
 
@@ -272,4 +273,92 @@ test_that("U1 fix round 1: the zero-weight check sees the gene-vector background
   expect_identical(dz$genesets, gs[c("S1", "S3")])
   expect_identical(SigRepo:::dropZeroWeightGenesets(gs, vec)$dropped, character())
   expect_identical(SigRepo:::dropZeroWeightGenesets(gs, vec, background = 23467)$dropped, character())
+})
+
+# ---- Final-review fix wave (F1-F4) ----
+
+test_that("F1: kstest pval and fdr do not depend on power (only score does)", {
+  testthat::skip_if_not_installed("hypeR")
+  sig <- make_hyper_sig(difexp = hyper_difexp_table())
+
+  by_label <- function(res) res$data[order(res$data$label), , drop = FALSE]
+  weighted <- by_label(SigRepo::runHypeR(omic_signature = sig, genesets = hyper_genesets(), test = "kstest", power = 1, verbose = FALSE))
+  unweighted <- by_label(SigRepo::runHypeR(omic_signature = sig, genesets = hyper_genesets(), test = "kstest", power = 0, verbose = FALSE))
+
+  expect_identical(weighted$label, unweighted$label)
+  expect_identical(weighted$pval, unweighted$pval)
+  expect_identical(weighted$fdr, unweighted$fdr)
+})
+
+test_that("F2: background = \"difexp\" removes hypergeometric query genes that difexp did not measure", {
+  testthat::skip_if_not_installed("hypeR")
+  sig_tbl <- hyper_sig_table()
+  sig_tbl$symbol <- c("A", "B", "C", "Z")
+  sig <- make_hyper_sig(signature = sig_tbl, difexp = hyper_difexp_table())
+  difexp_symbols <- unique(sig$difexp$gene_symbol)
+  expect_false("Z" %in% difexp_symbols)
+
+  expect_warning(
+    res <- SigRepo::runHypeR(omic_signature = sig, genesets = hyper_genesets(), background = "difexp",
+                             split = FALSE, verbose = FALSE),
+    "background = \"difexp\": removed 1 query gene(s) not measured in difexp from: 'sig_a' (1)", fixed = TRUE
+  )
+
+  direct <- hypeR::hypeR(c("A", "B", "C"), hyper_genesets(), test = "hypergeometric", background = difexp_symbols)
+  expect_equal(res$data, direct$data)
+})
+
+test_that("F3: a query with no genesets left is skipped and the rest of the batch still runs", {
+  testthat::skip_if_not_installed("hypeR")
+  zero_sig <- make_hyper_zero_score_sig()
+  other_sig <- make_hyper_sig(difexp = hyper_difexp_table())
+  other_vec <- SigRepo::prepareHypeRSignatures(omic_signature = other_sig, test = "kstest", verbose = FALSE)$signatures[[1]]
+
+  # The reviewer's reproduction used list(S2 = "B"), but hypeR 2.0.0's kstest
+  # errors on any one-geneset list ("dim(X) must have a positive length"), so
+  # other_sig could never return a result with it. S4 also hits only B.
+  gs <- list(S2 = "B", S4 = c("B", "X"))
+
+  warnings <- NULL
+  expect_no_error(
+    warnings <- testthat::capture_warnings(
+      res <- SigRepo::runHypeR(omic_signature = list(zero_sig, other_sig), genesets = gs,
+                               test = "kstest", verbose = FALSE)
+    )
+  )
+
+  expect_length(warnings, 2)
+  expect_match(warnings[1], "Dropped 2 geneset(s) that hypeR's kstest cannot score (all hits score 0, or the geneset covers every query gene): S2, S4", fixed = TRUE)
+  expect_match(warnings[2], "Skipped 1 query(ies) with nothing left to test after removing zero-weight genesets or unmeasured genes: 'zero'", fixed = TRUE)
+
+  expect_true(inherits(res, "hyp"))
+  expect_equal(res$data, hypeR::hypeR(other_vec, gs, test = "kstest")$data)
+  expect_equal(res$info[["SigRepo Signature Name"]], "sig_a")
+})
+
+test_that("F3: every query skipped is a clear error", {
+  testthat::skip_if_not_installed("hypeR")
+  expect_error(
+    suppressWarnings(SigRepo::runHypeR(omic_signature = make_hyper_zero_score_sig(), genesets = list(S2 = "B"),
+                                       test = "kstest", verbose = FALSE)),
+    "No query had genesets left to test", fixed = TRUE
+  )
+})
+
+test_that("F4: kstest drops a geneset that covers every query gene, at power 1 and power 0", {
+  testthat::skip_if_not_installed("hypeR")
+  sig <- make_hyper_cover_sig()
+  vec <- SigRepo::prepareHypeRSignatures(omic_signature = sig, test = "kstest", verbose = FALSE)$signatures[[1]]
+  expect_equal(vec, c(A = 3, B = 2, C = -1))
+  gs <- list(ALL = c("A", "B", "C", "X"), S2 = "A", S3 = "B")
+
+  for (pwr in c(1, 0)) {
+    expect_no_error(expect_warning(
+      res <- SigRepo::runHypeR(omic_signature = sig, genesets = gs, test = "kstest", power = pwr, verbose = FALSE),
+      "Dropped 1 geneset(s) that hypeR's kstest cannot score (all hits score 0, or the geneset covers every query gene): ALL",
+      fixed = TRUE
+    ))
+    expect_false("ALL" %in% res$data$label)
+    expect_equal(res$data, hypeR::hypeR(vec, list(S2 = "A", S3 = "B"), test = "kstest", power = pwr)$data)
+  }
 })

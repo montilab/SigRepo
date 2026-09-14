@@ -373,7 +373,9 @@ buildHypeRQueries <- function(inputs, test, split, score_col, conn_handler) {
 #' \code{score_col} from the full difexp table).
 #' @param split Logical; for \code{"hypergeometric"}, build one vector per
 #' \code{group_label} (e.g. one per arm of a bi-directional signature). Ignored by
-#' \code{"kstest"}, whose ranked list already carries direction in its sign.
+#' \code{"kstest"}, which ranks the whole difexp in one vector by signed score;
+#' its test finds genesets enriched toward the top of that ranking only (see
+#' \code{power} in \code{runHypeR()}).
 #' Defaults to \code{TRUE}.
 #' @param score_col difexp column used to rank genes for \code{"kstest"}.
 #' Defaults to \code{"score"}.

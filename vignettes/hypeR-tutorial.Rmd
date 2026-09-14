@@ -98,10 +98,22 @@ tail(hyp$data[[1]]$info, 4)
 
 ## Ranked (KS) test
 
-`test = "kstest"` ranks the full difexp table by `score`. `power = 1` (hypeR's
-default) weights hits by score, GSEA-style; `power = 0` is the classic KS test.
-With `power != 0`, a geneset whose hits in a query all score exactly `0` cannot
-be scored by a weighted KS test, so it is dropped for that query with a
+`test = "kstest"` ranks the full difexp table by `score`, highest first.
+
+- The p-value and FDR come from hypeR's unweighted, one-sided KS test. They do
+  not depend on `power` or `absolute`.
+- `power` changes only the enrichment `score`: `1` (hypeR's default) weights
+  hits by |score|, `0` is unweighted.
+- The test finds genesets enriched toward the top of the ranking (the highest
+  scores). Genesets concentrated among the most negative scores cannot reach
+  significance. To test that end, rank by a negated score column: add
+  `difexp$neg_score <- -difexp$score` to your OmicSignature copy and pass
+  `score_col = "neg_score"`.
+
+hypeR's kstest cannot score a geneset whose hits in a query all score exactly
+`0` (with `power != 0`), or one that contains every query gene (at any power).
+Such genesets are dropped for that query with a warning, which also leaves them
+out of the FDR adjustment. A query with no genesets left is skipped with a
 warning.
 
 ```{r}
@@ -120,7 +132,9 @@ head(ranked$data)
 `background` takes what hypeR takes — a population size (default `23467`) or a
 gene vector — plus `"difexp"`, which uses each signature's measured genes.
 Anything else is an error: `background` must be a number, a gene vector, or
-exactly `"difexp"`.
+exactly `"difexp"`. With `"difexp"`, a hypergeometric query is first reduced to
+the genes its difexp measured (hypeR reduces only the genesets), with a warning
+naming each query that lost genes.
 
 ```{r}
 hyp_measured <- SigRepo::runHypeR(
@@ -157,7 +171,9 @@ hyp <- SigRepo::runHypeR(
 
 # hyp_to_excel() uses each query name as an Excel sheet name, which must be at
 # most 31 characters and cannot contain : \ / ? * [ ], and SigRepo query names
-# built from long signature names routinely break that, so make them sheet-safe first:
-names(hyp$data) <- make.unique(substr(gsub("[][\\\\/?*:]", "_", names(hyp$data)), 1, 28))
+# built from long signature names routinely break that, so make them sheet-safe
+# first. This keeps the group label and numbers the sheets so they stay unique:
+n <- names(hyp$data)
+names(hyp$data) <- sprintf("%02d_%s", seq_along(n), substr(gsub("[][\\\\/?*:]", "_", sub(".* \\| ", "", n)), 1, 27))
 hypeR::hyp_to_excel(hyp, file_path = "sigrepo_hallmark.xlsx")
 ```

@@ -61,7 +61,9 @@ signature table) or \code{"kstest"} (a named numeric vector ranked by
 
 \item{split}{Logical; for \code{"hypergeometric"}, build one vector per
 \code{group_label} (e.g. one per arm of a bi-directional signature). Ignored by
-\code{"kstest"}, whose ranked list already carries direction in its sign.
+\code{"kstest"}, which ranks the whole difexp in one vector by signed score;
+its test finds genesets enriched toward the top of that ranking only (see
+\code{power} in \code{runHypeR()}).
 Defaults to \code{TRUE}.}
 
 \item{score_col}{difexp column used to rank genes for \code{"kstest"}.
@@ -70,13 +72,23 @@ Defaults to \code{"score"}.}
 \item{background}{hypeR's background: a single number (population size), a
 character vector of background genes, or \code{"difexp"} to use each
 signature's measured genes from its difexp table. Signatures without difexp
-symbols fall back to \code{23467} with a warning. Anything else (e.g.
-\code{"Difexp"}) is an error. Defaults to \code{23467}.}
+symbols fall back to \code{23467} with a warning. With \code{"difexp"}, a
+hypergeometric query is first reduced to its measured genes (hypeR reduces
+only the genesets), with a warning naming each query that lost genes.
+Anything else (e.g. \code{"Difexp"}) is an error. Defaults to \code{23467}.}
 
-\item{power}{Exponent for score weights (kstest only). \code{1} (default)
-weights hits by score, GSEA-style; \code{0} is the classic unweighted KS
-statistic. With \code{power != 0}, genesets whose hits in a query all have
-score 0 cannot be scored and are dropped for that query with a warning.}
+\item{power}{Exponent for the kstest score weights (kstest only). It changes
+only the enrichment \code{score}: \code{1} (default) weights hits by
+|score|, \code{0} is unweighted. The \code{pval} and \code{fdr} come from
+hypeR's unweighted, one-sided KS test and do not depend on \code{power} or
+\code{absolute}. That test finds genesets enriched toward the top of the
+ranking (the highest scores); genesets concentrated among the most negative
+scores cannot reach significance. To test that end, rank by a negated score
+column: add \code{difexp$neg_score <- -difexp$score} to your OmicSignature
+copy and pass \code{score_col = "neg_score"}. hypeR's kstest also cannot
+score a geneset whose hits in a query all have score 0 (\code{power != 0})
+or that contains every query gene (any power); such genesets are dropped for
+that query with a warning, which also removes them from the FDR adjustment.}
 
 \item{absolute}{Passed to \code{hypeR::hypeR()} (kstest only). Defaults to \code{FALSE}.}
 
@@ -95,7 +107,10 @@ A \code{hypeR} \code{hyp} object when one query vector is produced,
 otherwise a \code{multihyp} named by query. Each \code{hyp$info} ends with
 \code{SigRepo Signature ID}, \code{SigRepo Signature Name},
 \code{Group Label} and \code{Symbol Source}. Signatures that cannot produce a
-query are skipped with a warning; if none can, an error is raised.
+query are skipped with a warning; if none can, an error is raised. A query
+left with no genesets or no genes (after the drops described under
+\code{power} and \code{background}) is skipped with a warning; if no query
+is left, an error is raised.
 Query names are unique but can be long; rename them as shown in the
 description before \code{hypeR::hyp_to_excel()}.
 }
@@ -110,9 +125,11 @@ the result is hypeR's own object, so \code{hypeR::hyp_dots()},
 \code{hyp_to_excel()} uses each query name as an Excel sheet name, which
 must be at most 31 characters and cannot contain \code{: \\ / ? * [ ]}.
 Query names built from long signature names break that, so make the names
-sheet-safe first:
+sheet-safe first. This keeps the group label (the part after \code{" | "}),
+so arms stay distinguishable, and numbers the sheets so they stay unique:
 \preformatted{
-names(hyp$data) <- make.unique(substr(gsub("[][\\\\\\\\/?*:]", "_", names(hyp$data)), 1, 28))
+n <- names(hyp$data)
+names(hyp$data) <- sprintf("\%02d_\%s", seq_along(n), substr(gsub("[][\\\\\\\\/?*:]", "_", sub(".* \\\\| ", "", n)), 1, 27))
 hypeR::hyp_to_excel(hyp, file_path = "results.xlsx")
 }
 }

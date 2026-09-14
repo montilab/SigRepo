@@ -77,3 +77,20 @@ make_hyper_zero_score_sig <- function() {
 hyper_zero_score_genesets <- function() {
   list(S1 = c("A", "D"), S2 = "B", S3 = "C")
 }
+
+# Signature whose kstest vector is exactly c(A = 3, B = 2, C = -1), for
+# genesets that contain every query gene.
+make_hyper_cover_sig <- function() {
+  make_hyper_sig(
+    name = "cover",
+    signature = data.frame(
+      probe_id = c("p1", "p2"), feature_name = c("f1", "f2"), score = c(3, 2),
+      group_label = factor(c("Up", "Up")), symbol = c("A", "B")
+    ),
+    difexp = data.frame(
+      probe_id = paste0("p", 1:3), feature_name = paste0("f", 1:3),
+      gene_symbol = c("A", "B", "C"), score = c(3, 2, -1),
+      p_value = 0.01, adj_p = 0.05, group_label = factor(c("Up", "Up", "Down"))
+    )
+  )
+}

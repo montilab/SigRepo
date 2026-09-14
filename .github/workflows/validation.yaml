@@ -133,8 +133,10 @@ jobs:
       #
       # /init_db is schema + reference tables + a full MSigDB gene set build,
       # and msigdbr downloads that data from zenodo.org on first use. No test in
-      # this package uses MSigDB: the hypeR and hypeR-GEM tests construct their
-      # own gene sets inline and pass them to runHypeR(). So the download bought
+      # this package needs the database's MSigDB gene sets: the hypeR and
+      # hypeR-GEM client tests construct their own gene sets inline, and the one
+      # MSigDB test, test_hypeR_genesets.R, does a live Hallmark fetch through
+      # msigdbr on the client side that skips on error. So the download bought
       # this suite nothing and made every run depend on a third-party service
       # staying up -- which is how a zenodo 504 turned into a red build here.
       - name: Initialize schema and reference data
