@@ -143,3 +143,107 @@ test_that("prepareHypeRSignatures rejects the removed test aliases", {
     "should be one of"
   )
 })
+
+# ---- Task 3c regressions (stress-test bugs B2-B5) ----
+
+test_that("B2: query names are unique even when a label collides with another signature's group suffix", {
+  a <- make_hyper_sig("X", signature = data.frame(
+    probe_id = c("p1", "p2"), feature_name = c("f1", "f2"), score = c(2, -2),
+    group_label = factor(c("Up", "Down")), symbol = c("TP53", "MYC")
+  ))
+  b <- make_hyper_sig("X | Up", signature = data.frame(
+    probe_id = "p1", feature_name = "f1", score = 1, group_label = factor(NA), symbol = "EGFR"
+  ), direction_type = "uni-directional")
+
+  prepared <- SigRepo::prepareHypeRSignatures(omic_signature = list(a, b), verbose = FALSE)
+
+  expect_equal(names(prepared$signatures), c("X | Down", "X | Up", "X | Up (2)"))
+  expect_identical(prepared$info$query, names(prepared$signatures))
+  expect_equal(prepared$info$signature_name, c("X", "X", "X | Up"))
+  expect_equal(prepared$signatures[["X | Up (2)"]], "EGFR")
+})
+
+test_that("B3: the probe_id join uses (probe_id, feature_name) so a repeated probe_id keeps its own symbol", {
+  d <- data.frame(probe_id = c("p1", "p1"), feature_name = c("f1", "f2"), gene_symbol = c("GENE_A", "GENE_B"),
+                  score = c(3, 2.9), p_value = .01, adj_p = .05, group_label = factor(c("Up", "Up")))
+  s <- data.frame(probe_id = "p1", feature_name = "f2", score = 2.9, group_label = factor("Up"))
+
+  prepared <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig("dup", s, d), verbose = FALSE)
+
+  expect_equal(prepared$signatures[[1]], "GENE_B")
+  expect_equal(prepared$info$symbol_source, "difexp$gene_symbol via probe_id")
+})
+
+test_that("B3: a non-unique probe_id without feature_name on both sides skips the probe_id join", {
+  meta <- list(assay_type = "transcriptomics", organism = "Homo sapiens")
+  difexp_no_fn <- data.frame(probe_id = c("p1", "p1", "p2"), gene_symbol = c("GENE_A", "GENE_B", "GENE_C"))
+
+  # Neither table has feature_name: nothing else to try, so no symbols.
+  neither <- SigRepo:::resolveSignatureSymbols(
+    list(metadata = meta, signature = data.frame(probe_id = c("p1", "p2")), difexp = difexp_no_fn),
+    "signature"
+  )
+  expect_true(all(is.na(neither$symbols)))
+  expect_true(is.na(neither$source))
+
+  # Only the signature has feature_name: fall through to the reference lookup.
+  testthat::local_mocked_bindings(
+    lookupReferenceSymbols = function(conn_handler, assay_type, organism, feature_names) c(f1 = "REF_1", f2 = "REF_2"),
+    .package = "SigRepo"
+  )
+  sig_only <- SigRepo:::resolveSignatureSymbols(
+    list(metadata = meta, signature = data.frame(probe_id = c("p1", "p2"), feature_name = c("f1", "f2")),
+         difexp = difexp_no_fn),
+    "signature", conn_handler = list()
+  )
+  expect_equal(sig_only$symbols, c("REF_1", "REF_2"))
+  expect_equal(sig_only$source, "reference feature_name")
+
+  # A unique probe_id without feature_name still joins on probe_id alone.
+  unique_probe <- SigRepo:::resolveSignatureSymbols(
+    list(metadata = meta, signature = data.frame(probe_id = c("p2", "p1")),
+         difexp = data.frame(probe_id = c("p1", "p2"), gene_symbol = c("GENE_A", "GENE_C"))),
+    "signature"
+  )
+  expect_equal(unique_probe$symbols, c("GENE_C", "GENE_A"))
+  expect_equal(unique_probe$source, "difexp$gene_symbol via probe_id")
+})
+
+test_that("B4: kstest collapse keeps the positive value on an opposite-sign |score| tie, whatever the row order", {
+  d <- data.frame(probe_id = paste0("p", 1:3), feature_name = paste0("f", 1:3), gene_symbol = c("TP53", "TP53", "MYC"),
+                  score = c(2, -2, 1), p_value = .01, adj_p = .05, group_label = factor(c("Up", "Down", "Up")))
+  s <- data.frame(probe_id = "p3", feature_name = "f3", score = 1, group_label = factor("Up"))
+  f <- function(dd) {
+    SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig("t", s, dd), test = "kstest",
+                                    verbose = FALSE)$signatures[[1]][["TP53"]]
+  }
+
+  expect_equal(c(f(d), f(d[c(2, 1, 3), ])), c(2, 2))
+})
+
+test_that("B5/E09: prepareHypeRSignatures rejects a split that is not TRUE or FALSE", {
+  for (bad in list("yes", NA, c(TRUE, FALSE), 1)) {
+    expect_error(
+      SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(), split = bad, verbose = FALSE),
+      "'split' must be TRUE or FALSE", fixed = TRUE
+    )
+  }
+})
+
+test_that("B5/E10: omic_signature together with signature_id or signature_name is an error", {
+  expect_error(
+    SigRepo:::collectHypeRSignatures(conn_handler = list(), signature_id = "1", signature_name = NULL,
+                                     omic_signature = make_hyper_sig(), verbose = FALSE),
+    "Supply either 'omic_signature' or 'signature_id'/'signature_name', not both", fixed = TRUE
+  )
+  expect_error(
+    SigRepo::prepareHypeRSignatures(conn_handler = list(), signature_name = "x",
+                                    omic_signature = make_hyper_sig(), verbose = FALSE),
+    "Supply either 'omic_signature' or 'signature_id'/'signature_name', not both", fixed = TRUE
+  )
+  # Empty ids/names are not a conflict.
+  expect_no_error(
+    SigRepo::prepareHypeRSignatures(signature_id = c("", NA), signature_name = character(),
+                                    omic_signature = make_hyper_sig(), verbose = FALSE)
+  )
+})

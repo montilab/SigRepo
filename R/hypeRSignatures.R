@@ -100,10 +100,23 @@ resolveSignatureSymbols <- function(omic_signature, table = c("signature", "dife
     difexp_tbl <- omic_signature$difexp
     difexp_col <- hypeRSymbolColumn(difexp_tbl)
     if (!base::is.null(difexp_col) && "probe_id" %in% base::colnames(tbl) && "probe_id" %in% base::colnames(difexp_tbl)) {
-      by_probe <- stats::setNames(cleanHypeRSymbols(difexp_tbl[[difexp_col]]), base::as.character(difexp_tbl$probe_id))
-      symbols <- base::unname(by_probe[base::as.character(tbl$probe_id)])
-      if (base::any(!base::is.na(symbols))) {
-        return(base::list(symbols = symbols, source = base::sprintf("difexp$%s via probe_id", difexp_col)))
+      # A probe_id can repeat in difexp (multi-mapped probes, aptamers), so join
+      # on (probe_id, feature_name) when both tables have feature_name. Without
+      # it, join on probe_id only when that key is unique; otherwise a row could
+      # borrow another feature's symbol, so skip to the reference lookup.
+      join_key <- if ("feature_name" %in% base::colnames(tbl) && "feature_name" %in% base::colnames(difexp_tbl)) {
+        function(t) base::paste(base::as.character(t$probe_id), base::as.character(t$feature_name), sep = "\r")
+      } else if (!base::anyDuplicated(base::as.character(difexp_tbl$probe_id))) {
+        function(t) base::as.character(t$probe_id)
+      } else {
+        NULL
+      }
+      if (!base::is.null(join_key)) {
+        by_key <- stats::setNames(cleanHypeRSymbols(difexp_tbl[[difexp_col]]), join_key(difexp_tbl))
+        symbols <- base::unname(by_key[join_key(tbl)])
+        if (base::any(!base::is.na(symbols))) {
+          return(base::list(symbols = symbols, source = base::sprintf("difexp$%s via probe_id", difexp_col)))
+        }
       }
     }
   }
@@ -132,6 +145,13 @@ resolveSignatureSymbols <- function(omic_signature, table = c("signature", "dife
   base::list(symbols = base::rep(NA_character_, n_rows), source = NA_character_)
 }
 
+checkHypeRSplit <- function(split) {
+  if (!(base::is.logical(split) && base::length(split) == 1L && !base::is.na(split))) {
+    base::stop("\n'split' must be TRUE or FALSE.\n")
+  }
+  base::invisible(split)
+}
+
 disambiguateHypeRLabels <- function(labels) {
   used <- base::character()
   for (i in base::seq_along(labels)) {
@@ -150,6 +170,11 @@ disambiguateHypeRLabels <- function(labels) {
 #' Resolve signatures plus their ids and display labels
 #' @noRd
 collectHypeRSignatures <- function(conn_handler, signature_id, signature_name, omic_signature, verbose) {
+  supplied <- function(x) base::length(x) > 0 && base::any(!x %in% c("", NA))
+  if (!base::is.null(omic_signature) && (supplied(signature_id) || supplied(signature_name))) {
+    base::stop("\nSupply either 'omic_signature' or 'signature_id'/'signature_name', not both.\n")
+  }
+
   signatures <- resolveHypeRSignatures(
     conn_handler = conn_handler,
     signature_id = signature_id,
@@ -267,7 +292,9 @@ buildKstestQuery <- function(omic_signature, label, signature_id, score_col, con
 
   best <- base::vapply(
     base::split(scores[keep], resolved$symbols[keep]),
-    function(x) x[base::which.max(base::abs(x))],
+    # On an opposite-sign |score| tie keep the positive value, so the result
+    # does not depend on difexp row order.
+    function(x) base::max(x[base::abs(x) == base::max(base::abs(x))]),
     base::numeric(1)
   )
   query <- base::sort(best, decreasing = TRUE)
@@ -308,9 +335,17 @@ buildHypeRQueries <- function(inputs, test, split, score_col, conn_handler) {
     info[[base::length(info) + 1]] <- built$info
   }
 
+  info <- if (base::length(info) > 0) base::do.call(base::rbind, info) else emptyHypeRInfo()
+  # Labels are unique per signature, but a label can still collide with another
+  # signature's "<label> | <group>" query name, so de-duplicate the final names.
+  if (base::length(queries) > 0) {
+    base::names(queries) <- disambiguateHypeRLabels(base::names(queries))
+    info$query <- base::names(queries)
+  }
+
   base::list(
     signatures = queries,
-    info = if (base::length(info) > 0) base::do.call(base::rbind, info) else emptyHypeRInfo(),
+    info = info,
     skipped = if (base::length(skipped) > 0) {
       base::do.call(base::rbind, skipped)
     } else {
@@ -376,6 +411,7 @@ prepareHypeRSignatures <- function(
     verbose = TRUE
 ) {
   test <- base::match.arg(test)
+  checkHypeRSplit(split)
 
   inputs <- collectHypeRSignatures(
     conn_handler = conn_handler,

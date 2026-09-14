@@ -56,3 +56,24 @@ hyper_genesets <- function() {
     SET_E = c("E", "X4", "X5")
   )
 }
+
+# Signature whose kstest vector is exactly c(A = 2, D = 1, B = 0, C = -1):
+# B scores exactly 0, so a geneset hitting only B has no weight.
+make_hyper_zero_score_sig <- function() {
+  make_hyper_sig(
+    name = "zero",
+    signature = data.frame(
+      probe_id = c("p1", "p4"), feature_name = c("f1", "f4"), score = c(2, 1),
+      group_label = factor(c("Up", "Up")), symbol = c("A", "D")
+    ),
+    difexp = data.frame(
+      probe_id = paste0("p", 1:4), feature_name = paste0("f", 1:4),
+      gene_symbol = c("A", "B", "C", "D"), score = c(2, 0, -1, 1),
+      p_value = 0.01, adj_p = 0.05, group_label = factor(c("Up", "Up", "Down", "Up"))
+    )
+  )
+}
+
+hyper_zero_score_genesets <- function() {
+  list(S1 = c("A", "D"), S2 = "B", S3 = "C")
+}

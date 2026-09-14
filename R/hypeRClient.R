@@ -277,6 +277,60 @@ appendHypeRProvenance <- function(hyp_obj, info_row) {
   hyp_obj
 }
 
+#' Error unless background is a single positive number, a gene vector, or "difexp"
+#' @noRd
+checkHypeRBackground <- function(background) {
+  is_number <- base::is.numeric(background) && base::length(background) == 1L &&
+    base::is.finite(background) && background > 0
+  is_genes <- base::is.character(background) && base::length(background) >= 2L
+  is_difexp <- base::identical(background, "difexp")
+  if (!(is_number || is_genes || is_difexp)) {
+    base::stop("\nbackground must be a number, a gene vector, or \"difexp\".\n")
+  }
+  base::invisible(background)
+}
+
+#' Drop genesets a weighted kstest cannot score
+#'
+#' hypeR's weighted kstest (power != 0) gives an empty score when every hit of
+#' a geneset has weight 0, which either errors or silently shifts scores onto
+#' other genesets. Drops each geneset whose members present in `query` all have
+#' score exactly 0; genesets with no members in `query` are kept.
+#'
+#' @param genesets Named list, `hypeR::gsets` or `hypeR::rgsets`.
+#' @param query Named numeric vector (gene -> score).
+#' @return list(genesets = same kind as the input, unchanged when nothing is
+#'   dropped; dropped = chr labels)
+#' @noRd
+dropZeroWeightGenesets <- function(genesets, query) {
+  unchanged <- base::list(genesets = genesets, dropped = base::character())
+  zero_genes <- base::names(query)[query == 0]
+  if (base::length(zero_genes) == 0) {
+    return(unchanged)
+  }
+  nonzero_genes <- base::names(query)[query != 0]
+
+  is_hyper_gsets <- methods::is(genesets, "gsets") || methods::is(genesets, "rgsets")
+  members <- if (is_hyper_gsets) genesets$genesets else genesets
+  drop <- base::vapply(members, function(genes) {
+    base::any(genes %in% zero_genes) && !base::any(genes %in% nonzero_genes)
+  }, base::logical(1))
+  if (!base::any(drop)) {
+    return(unchanged)
+  }
+
+  kept_labels <- base::names(members)[!drop]
+  reduced <- if (methods::is(genesets, "rgsets")) {
+    genesets$subset(kept_labels)
+  } else if (methods::is(genesets, "gsets")) {
+    hypeR::gsets$new(members[!drop], name = genesets$name, version = genesets$version, quiet = TRUE)
+  } else {
+    genesets[!drop]
+  }
+
+  base::list(genesets = reduced, dropped = base::names(members)[drop])
+}
+
 warnSkippedHypeRSignatures <- function(skipped) {
   if (base::nrow(skipped) == 0) {
     return(base::invisible(NULL))
@@ -300,15 +354,26 @@ warnSkippedHypeRSignatures <- function(skipped) {
 #' \code{hyp_show()}, \code{hyp_emap()}, \code{hyp_to_excel()} and
 #' \code{hyp_to_rmd()} work on it directly.
 #'
+#' \code{hyp_to_excel()} uses each query name as an Excel sheet name, which
+#' must be at most 31 characters and cannot contain \code{: \\ / ? * [ ]}.
+#' Query names built from long signature names break that, so make the names
+#' sheet-safe first:
+#' \preformatted{
+#' names(hyp$data) <- make.unique(substr(gsub("[][\\\\\\\\/?*:]", "_", names(hyp$data)), 1, 28))
+#' hypeR::hyp_to_excel(hyp, file_path = "results.xlsx")
+#' }
+#'
 #' @inheritParams prepareHypeRSignatures
 #' @inheritParams getHypeRGenesets
 #' @param background hypeR's background: a single number (population size), a
 #' character vector of background genes, or \code{"difexp"} to use each
 #' signature's measured genes from its difexp table. Signatures without difexp
-#' symbols fall back to \code{23467} with a warning. Defaults to \code{23467}.
+#' symbols fall back to \code{23467} with a warning. Anything else (e.g.
+#' \code{"Difexp"}) is an error. Defaults to \code{23467}.
 #' @param power Exponent for score weights (kstest only). \code{1} (default)
 #' weights hits by score, GSEA-style; \code{0} is the classic unweighted KS
-#' statistic.
+#' statistic. With \code{power != 0}, genesets whose hits in a query all have
+#' score 0 cannot be scored and are dropped for that query with a warning.
 #' @param absolute Passed to \code{hypeR::hypeR()} (kstest only). Defaults to \code{FALSE}.
 #' @param pval Keep results with p-value at or below this. Defaults to \code{1}.
 #' @param fdr Keep results with FDR at or below this. Defaults to \code{1}.
@@ -320,6 +385,8 @@ warnSkippedHypeRSignatures <- function(skipped) {
 #' \code{SigRepo Signature ID}, \code{SigRepo Signature Name},
 #' \code{Group Label} and \code{Symbol Source}. Signatures that cannot produce a
 #' query are skipped with a warning; if none can, an error is raised.
+#' Query names are unique but can be long; rename them as shown in the
+#' description before \code{hypeR::hyp_to_excel()}.
 #'
 #' @examples
 #' \dontrun{
@@ -370,6 +437,8 @@ runHypeR <- function(
   }
 
   test <- base::match.arg(test)
+  checkHypeRBackground(background)
+  checkHypeRSplit(split)
 
   if (base::missing(genesets)) {
     genesets <- NULL
@@ -399,13 +468,34 @@ runHypeR <- function(
   backgrounds <- resolveQueryBackgrounds(background, prepared$info, inputs, conn_handler)
   query_names <- base::names(prepared$signatures)
 
+  # Weighted kstest cannot score a geneset whose hits all have score 0 (hypeR
+  # errors or misaligns scores), so drop those per query before calling hypeR.
+  query_genesets <- base::lapply(prepared$signatures, function(query) {
+    if (base::identical(test, "kstest") && power != 0) {
+      dropZeroWeightGenesets(resolved_genesets, query)
+    } else {
+      base::list(genesets = resolved_genesets, dropped = base::character())
+    }
+  })
+  dropped <- base::unique(base::unlist(base::lapply(query_genesets, `[[`, "dropped"), use.names = FALSE))
+  if (base::length(dropped) > 0) {
+    base::warning(
+      base::sprintf(
+        "Dropped %d geneset(s) whose hits all have score 0 (undefined for weighted kstest, power != 0): %s",
+        base::length(dropped),
+        base::paste(c(dropped[base::seq_len(base::min(10L, base::length(dropped)))], if (base::length(dropped) > 10) "..."), collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+
   results <- base::lapply(base::seq_along(prepared$signatures), function(i) {
     if (!quiet && base::length(query_names) > 1) {
       base::cat(base::sprintf("\n%s\n", query_names[i]))
     }
     hyp_obj <- hypeR::hypeR(
       signature = prepared$signatures[[i]],
-      genesets = resolved_genesets,
+      genesets = query_genesets[[i]]$genesets,
       test = test,
       background = backgrounds[[i]],
       power = power,

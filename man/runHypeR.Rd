@@ -70,11 +70,13 @@ Defaults to \code{"score"}.}
 \item{background}{hypeR's background: a single number (population size), a
 character vector of background genes, or \code{"difexp"} to use each
 signature's measured genes from its difexp table. Signatures without difexp
-symbols fall back to \code{23467} with a warning. Defaults to \code{23467}.}
+symbols fall back to \code{23467} with a warning. Anything else (e.g.
+\code{"Difexp"}) is an error. Defaults to \code{23467}.}
 
 \item{power}{Exponent for score weights (kstest only). \code{1} (default)
 weights hits by score, GSEA-style; \code{0} is the classic unweighted KS
-statistic.}
+statistic. With \code{power != 0}, genesets whose hits in a query all have
+score 0 cannot be scored and are dropped for that query with a warning.}
 
 \item{absolute}{Passed to \code{hypeR::hypeR()} (kstest only). Defaults to \code{FALSE}.}
 
@@ -94,6 +96,8 @@ otherwise a \code{multihyp} named by query. Each \code{hyp$info} ends with
 \code{SigRepo Signature ID}, \code{SigRepo Signature Name},
 \code{Group Label} and \code{Symbol Source}. Signatures that cannot produce a
 query are skipped with a warning; if none can, an error is raised.
+Query names are unique but can be long; rename them as shown in the
+description before \code{hypeR::hyp_to_excel()}.
 }
 \description{
 Builds hypeR query vectors from SigRepo signatures (see
@@ -102,6 +106,15 @@ arguments after \code{score_col} are hypeR's own, with hypeR's defaults, and
 the result is hypeR's own object, so \code{hypeR::hyp_dots()},
 \code{hyp_show()}, \code{hyp_emap()}, \code{hyp_to_excel()} and
 \code{hyp_to_rmd()} work on it directly.
+
+\code{hyp_to_excel()} uses each query name as an Excel sheet name, which
+must be at most 31 characters and cannot contain \code{: \\ / ? * [ ]}.
+Query names built from long signature names break that, so make the names
+sheet-safe first:
+\preformatted{
+names(hyp$data) <- make.unique(substr(gsub("[][\\\\\\\\/?*:]", "_", names(hyp$data)), 1, 28))
+hypeR::hyp_to_excel(hyp, file_path = "results.xlsx")
+}
 }
 \examples{
 \dontrun{
