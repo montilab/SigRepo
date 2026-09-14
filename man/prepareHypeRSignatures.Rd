@@ -9,7 +9,7 @@ prepareHypeRSignatures(
   signature_id = NULL,
   signature_name = NULL,
   omic_signature = NULL,
-  method = c("hypergeo", "kstest", "gsea"),
+  method = c("hypergeo", "hypergeometric", "kstest", "ks", "gsea"),
   feature_col = "feature_name",
   score_col = "score",
   split_by_group = FALSE,
@@ -41,9 +41,10 @@ Defaults to \code{"score"}.}
 \item{split_by_group}{Logical; whether to create separate query vectors for
 each \code{group_label}. Defaults to \code{FALSE}.}
 
-\item{split_by_direction}{Logical; when \code{method = "hypergeo"}, whether
-to split each group into up- and down-direction feature sets using the sign
-of \code{score_col}. Defaults to \code{FALSE}.}
+\item{split_by_direction}{Logical; retained for compatibility with other
+SigRepo wrappers, but ignored by the hypeR wrapper because HypeR queries are
+prepared as one feature vector per group label and should not be further
+split by positive/negative direction. Defaults to \code{FALSE}.}
 
 \item{verbose}{Logical; whether or not to print diagnostic messages while
 retrieving signatures. Defaults to \code{TRUE}.}

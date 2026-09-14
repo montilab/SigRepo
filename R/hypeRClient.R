@@ -213,6 +213,89 @@ resolveHypeRSignatureLabels <- function(omic_signatures) {
   base::make.unique(labels)
 }
 
+fetchMsigdbGenesets <- function(
+    species = "Homo sapiens",
+    collection = "H",
+    subcollection = NULL,
+    clean = FALSE
+) {
+  if (!requireNamespace("msigdbr", quietly = TRUE)) {
+    base::stop(
+      "\nPackage 'msigdbr' is required to retrieve MSigDB genesets. Please install it first.\n"
+    )
+  }
+
+  species <- base::as.character(species[[1]])
+  collection <- base::as.character(collection[[1]])
+  subcollection <- if (
+    base::is.null(subcollection) ||
+    base::length(subcollection) == 0 ||
+    base::all(subcollection %in% c("", NA))
+  ) {
+    NULL
+  } else {
+    base::as.character(subcollection[[1]])
+  }
+
+  call_args <- base::list(
+    species = species,
+    collection = collection
+  )
+  if (!base::is.null(subcollection)) {
+    call_args$subcollection <- subcollection
+  }
+
+  # Some msigdbr builds support a direct "species = mouse" + "collection = ..."
+  # query, while others require the ortholog-mapped human database for non-human
+  # sets. Use the direct human mapping as the safest fallback instead of relying
+  # on the upstream hypeR wrapper, which has been inconsistent across recent
+  # releases.
+  response <- tryCatch(
+    do.call(msigdbr::msigdbr, call_args),
+    error = function(e) {
+      if (!base::identical(species, "Homo sapiens")) {
+        fallback_args <- call_args
+        fallback_args$species <- "Homo sapiens"
+        fallback_args$db_species <- if (base::identical(species, "Mus musculus")) "MM" else "HS"
+        return(do.call(msigdbr::msigdbr, fallback_args))
+      }
+      stop(e)
+    }
+  )
+
+  if (base::nrow(response) == 0L) {
+    base::stop(
+      "\nNo MSigDB genesets were returned for the requested species/collection combination.\n"
+    )
+  }
+
+  mdf <- response[, c("gs_name", "gene_symbol")]
+  mdf <- stats::na.omit(mdf)
+  mdf <- unique(mdf)
+
+  gsets <- split(mdf$gene_symbol, mdf$gs_name)
+  if (isTRUE(clean)) {
+    names(gsets) <- base::gsub("^HALLMARK_|^KEGG_|^GO_|^CP:|^C[0-9]+\\.", "", names(gsets))
+  }
+
+  gsets
+}
+
+#' Resolve genesets for hypeR, including direct MSigDB fetches
+#'
+#' @description Resolves a named list of genesets directly or retrieves a
+#' collection from MSigDB when requested.
+#'
+#' @param genesets A named list of genesets, a hypeR gsets object, or a hypeR
+#' rgsets object.
+#' @param msigdb_species Species name for MSigDB lookup.
+#' @param msigdb_collection MSigDB collection id.
+#' @param msigdb_subcollection Optional MSigDB subcollection id.
+#' @param msigdb_clean Logical; whether to simplify geneset names.
+#'
+#' @return A named list of genesets or a hypeR gsets object.
+#'
+#' @export
 resolveHypeRGenesets <- function(
     genesets = NULL,
     msigdb_species = NULL,
@@ -231,12 +314,6 @@ resolveHypeRGenesets <- function(
   }
 
   if (msigdb_requested) {
-    if (!requireNamespace("hypeR", quietly = TRUE)) {
-      base::stop(
-        "\nPackage 'hypeR' is required to retrieve MSigDB genesets. Please install it first.\n"
-      )
-    }
-
     msigdb_species <- if (
       base::is.null(msigdb_species) ||
       base::length(msigdb_species) == 0 ||
@@ -259,7 +336,7 @@ resolveHypeRGenesets <- function(
     }
 
     return(
-      hypeR::msigdb_gsets(
+      fetchMsigdbGenesets(
         species = msigdb_species,
         collection = msigdb_collection,
         subcollection = msigdb_subcollection,
@@ -294,6 +371,123 @@ resolveHypeRGenesets <- function(
   genesets
 }
 
+resolveHypeRFeatureSymbols <- function(
+    data_tbl = NULL,
+    feature_col = "feature_name",
+    assay_type = NULL,
+    sig_name = NULL,
+    conn_handler = NULL,
+    verbose = TRUE
+) {
+  if (base::is.null(data_tbl) || !methods::is(data_tbl, "data.frame") || base::nrow(data_tbl) == 0) {
+    return(list(data = data_tbl, feature_col = feature_col, n_dropped = 0L, mapped = FALSE))
+  }
+
+  symbol_like <- c("symbol", "gene_symbol", "gene", "gene_name")
+  existing_symbol <- symbol_like[symbol_like %in% base::colnames(data_tbl)]
+  if (base::length(existing_symbol) > 0) {
+    return(list(
+      data = data_tbl,
+      feature_col = existing_symbol[[1]],
+      n_dropped = 0L,
+      mapped = FALSE
+    ))
+  }
+
+  if (!feature_col %in% base::colnames(data_tbl)) {
+    fallback_cols <- c("feature_name", "feature_id", "probe_id", "probe", "feature")
+    fallback_cols <- fallback_cols[fallback_cols %in% base::colnames(data_tbl)]
+    if (base::length(fallback_cols) == 0L) {
+      return(list(data = data_tbl, feature_col = feature_col, n_dropped = 0L, mapped = FALSE))
+    }
+    feature_col <- fallback_cols[[1]]
+  }
+
+  if (feature_col %in% c("symbol", "gene_symbol", "gene", "gene_name")) {
+    return(list(data = data_tbl, feature_col = feature_col, n_dropped = 0L, mapped = FALSE))
+  }
+
+  ref_lookup <- switch(
+    base::tolower(base::as.character(assay_type)),
+    transcriptomics = "transcriptomics_features",
+    proteomics = "proteomics_features",
+    genetic_variants = "genetic_variants_features",
+    NULL
+  )
+
+  if (base::is.null(ref_lookup) || base::is.null(conn_handler)) {
+    return(list(data = data_tbl, feature_col = feature_col, n_dropped = 0L, mapped = FALSE))
+  }
+
+  feature_values <- base::as.character(data_tbl[[feature_col]])
+  valid_idx <- !base::is.na(feature_values) & nzchar(feature_values)
+  if (!base::any(valid_idx)) {
+    return(list(data = data_tbl, feature_col = feature_col, n_dropped = 0L, mapped = FALSE))
+  }
+
+  mapped_tbl <- tryCatch(
+    SigRepo::lookup_table_sql(
+      conn = SigRepo::conn_init(conn_handler),
+      db_table_name = ref_lookup,
+      return_var = c("feature_name", "gene_symbol"),
+      filter_coln_var = "feature_name",
+      filter_coln_val = base::list("feature_name" = base::unique(feature_values[valid_idx])),
+      check_db_table = TRUE
+    ),
+    error = function(e) NULL
+  )
+
+  if (base::is.null(mapped_tbl) || base::nrow(mapped_tbl) == 0) {
+    return(list(data = data_tbl, feature_col = feature_col, n_dropped = 0L, mapped = FALSE))
+  }
+
+  mapped_tbl <- mapped_tbl[
+    !base::is.na(mapped_tbl$feature_name) & nzchar(mapped_tbl$feature_name) &
+      !base::is.na(mapped_tbl$gene_symbol) & nzchar(mapped_tbl$gene_symbol),
+    ,
+    drop = FALSE
+  ]
+
+  if (base::nrow(mapped_tbl) == 0) {
+    return(list(data = data_tbl, feature_col = feature_col, n_dropped = 0L, mapped = FALSE))
+  }
+
+  symbol_map <- stats::setNames(
+    base::as.character(mapped_tbl$gene_symbol),
+    base::as.character(mapped_tbl$feature_name)
+  )
+
+  matched_idx <- valid_idx & feature_values %in% base::names(symbol_map)
+  mapped_values <- symbol_map[feature_values[matched_idx]]
+
+  if (base::sum(valid_idx) == 0 || base::sum(matched_idx) == 0) {
+    return(list(data = data_tbl, feature_col = feature_col, n_dropped = 0L, mapped = FALSE))
+  }
+
+  dropped_count <- base::sum(valid_idx) - base::sum(matched_idx)
+  if (dropped_count > 0L) {
+    base::warning(
+      base::sprintf(
+        "Signature '%s' used reference MySQL feature mapping to resolve %s to gene symbols; %s row(s) were dropped because they could not be mapped.",
+        if (is.null(sig_name) || !nzchar(sig_name)) "hypeR_input" else sig_name,
+        feature_col,
+        dropped_count
+      ),
+      call. = FALSE
+    )
+  }
+
+  out_tbl <- data_tbl[matched_idx, , drop = FALSE]
+  out_tbl$symbol <- unname(mapped_values)
+
+  list(
+    data = out_tbl,
+    feature_col = "symbol",
+    n_dropped = dropped_count,
+    mapped = TRUE
+  )
+}
+
 #' Build hypeR-ready signature vectors from SigRepo signatures
 #'
 #' @description Converts one or more SigRepo signatures into the query-vector
@@ -316,9 +510,10 @@ resolveHypeRGenesets <- function(
 #' Defaults to \code{"score"}.
 #' @param split_by_group Logical; whether to create separate query vectors for
 #' each \code{group_label}. Defaults to \code{FALSE}.
-#' @param split_by_direction Logical; when \code{method = "hypergeo"}, whether
-#' to split each group into up- and down-direction feature sets using the sign
-#' of \code{score_col}. Defaults to \code{FALSE}.
+#' @param split_by_direction Logical; retained for compatibility with other
+#' SigRepo wrappers, but ignored by the hypeR wrapper because HypeR queries are
+#' prepared as one feature vector per group label and should not be further
+#' split by positive/negative direction. Defaults to \code{FALSE}.
 #' @param verbose Logical; whether or not to print diagnostic messages while
 #' retrieving signatures. Defaults to \code{TRUE}.
 #'
@@ -335,7 +530,7 @@ prepareHypeRSignatures <- function(
     signature_id = NULL,
     signature_name = NULL,
     omic_signature = NULL,
-    method = c("hypergeo", "kstest", "gsea"),
+    method = c("hypergeo", "hypergeometric", "kstest", "ks", "gsea"),
     feature_col = "feature_name",
     score_col = "score",
     split_by_group = FALSE,
@@ -343,7 +538,20 @@ prepareHypeRSignatures <- function(
     verbose = TRUE
 ){
 
-  method <- base::match.arg(method)
+  method <- base::match.arg(method, choices = c("hypergeo", "hypergeometric", "kstest", "ks", "gsea"))
+  if (identical(method, "hypergeo") || identical(method, "hypergeometric")) {
+    method <- "hypergeometric"
+  } else if (identical(method, "ks") || identical(method, "kstest")) {
+    method <- "kstest"
+  }
+
+  if (isTRUE(split_by_direction)) {
+    base::warning(
+      "split_by_direction is ignored by SigRepo::prepareHypeRSignatures(); hypeR queries are split by group_label only.",
+      call. = FALSE
+    )
+  }
+  split_by_direction <- FALSE
 
   omic_signatures <- resolveHypeRSignatures(
     conn_handler = conn_handler,
@@ -376,7 +584,7 @@ prepareHypeRSignatures <- function(
     sig_obj <- omic_signatures[[sig_idx]]
     sig_name <- signature_labels[[sig_idx]]
 
-    if (identical(method, "hypergeo")) {
+    if (identical(method, "hypergeometric")) {
       signature_tbl <- sig_obj$signature
 
       if (!methods::is(signature_tbl, "data.frame") || base::nrow(signature_tbl) == 0) {
@@ -385,10 +593,24 @@ prepareHypeRSignatures <- function(
         )
       }
 
-      if (!feature_col %in% base::colnames(signature_tbl)) {
-        base::stop(
-          base::sprintf("\nSignature '%s' is missing feature column '%s' in 'signature'.\n", sig_name, feature_col)
+      if (!feature_col %in% base::colnames(signature_tbl) ||
+          feature_col %in% c("feature_name", "feature_id", "probe_id", "probe", "feature")) {
+        resolved_features <- resolveHypeRFeatureSymbols(
+          data_tbl = signature_tbl,
+          feature_col = feature_col,
+          assay_type = sig_obj$metadata$assay_type[1],
+          sig_name = sig_name,
+          conn_handler = conn_handler,
+          verbose = verbose
         )
+        if (resolved_features$mapped) {
+          signature_tbl <- resolved_features$data
+          feature_col <- resolved_features$feature_col
+        } else if (!feature_col %in% base::colnames(signature_tbl)) {
+          base::stop(
+            base::sprintf("\nSignature '%s' is missing feature column '%s' in 'signature'.\n", sig_name, feature_col)
+          )
+        }
       }
 
       if (split_by_group && "group_label" %in% base::colnames(signature_tbl)) {
@@ -397,70 +619,28 @@ prepareHypeRSignatures <- function(
         signature_tbl$group_label <- "all_features"
       }
 
-      if (split_by_direction) {
-        if (!score_col %in% base::colnames(signature_tbl)) {
-          base::stop(
-            base::sprintf(
-              "\nSignature '%s' is missing score column '%s', which is required for direction splitting.\n",
-              sig_name,
-              score_col
-            )
-          )
-        }
-        signature_tbl$score_value <- base::suppressWarnings(base::as.numeric(signature_tbl[[score_col]]))
-      }
-
       for (group_label in base::unique(signature_tbl$group_label)) {
         group_tbl <- signature_tbl[signature_tbl$group_label == group_label, , drop = FALSE]
 
-        if (split_by_direction) {
-          direction_specs <- base::list(
-            base::list(suffix = "up", keep = !base::is.na(group_tbl$score_value) & group_tbl$score_value >= 0),
-            base::list(suffix = "dn", keep = !base::is.na(group_tbl$score_value) & group_tbl$score_value < 0)
-          )
-
-          for (direction in direction_specs) {
-            query_features <- base::unique(base::as.character(group_tbl[[feature_col]][direction$keep]))
-            query_features <- query_features[!base::is.na(query_features) & query_features != ""]
-            if (base::length(query_features) == 0) {
-              next
-            }
-
-            component <- build_group_component(group_label, direction$suffix)
-            query_name <- base::sprintf("%s | %s", sig_name, component)
-            vectors[[query_name]] <- query_features
-
-            metadata_idx <- metadata_idx + 1
-            metadata[[metadata_idx]] <- base::data.frame(
-              query_name = query_name,
-              signature_name = sig_name,
-              method = method,
-              group_label = component,
-              n_features = base::length(query_features),
-              stringsAsFactors = FALSE
-            )
-          }
-        } else {
-          query_features <- base::unique(base::as.character(group_tbl[[feature_col]]))
-          query_features <- query_features[!base::is.na(query_features) & query_features != ""]
-          if (base::length(query_features) == 0) {
-            next
-          }
-
-          component <- build_group_component(group_label)
-          query_name <- if (identical(component, "all_features")) sig_name else base::sprintf("%s | %s", sig_name, component)
-          vectors[[query_name]] <- query_features
-
-          metadata_idx <- metadata_idx + 1
-          metadata[[metadata_idx]] <- base::data.frame(
-            query_name = query_name,
-            signature_name = sig_name,
-            method = method,
-            group_label = component,
-            n_features = base::length(query_features),
-            stringsAsFactors = FALSE
-          )
+        query_features <- base::unique(base::as.character(group_tbl[[feature_col]]))
+        query_features <- query_features[!base::is.na(query_features) & query_features != ""]
+        if (base::length(query_features) == 0) {
+          next
         }
+
+        component <- build_group_component(group_label)
+        query_name <- if (identical(component, "all_features")) sig_name else base::sprintf("%s | %s", sig_name, component)
+        vectors[[query_name]] <- query_features
+
+        metadata_idx <- metadata_idx + 1
+        metadata[[metadata_idx]] <- base::data.frame(
+          query_name = query_name,
+          signature_name = sig_name,
+          method = method,
+          group_label = component,
+          n_features = base::length(query_features),
+          stringsAsFactors = FALSE
+        )
       }
     } else {
       difexp_tbl <- sig_obj$difexp
@@ -473,6 +653,33 @@ prepareHypeRSignatures <- function(
             method
           )
         )
+      }
+
+      if (feature_col %in% c("feature_name", "feature_id", "probe_id", "probe", "feature") ||
+          !feature_col %in% base::colnames(difexp_tbl)) {
+        resolved_features <- resolveHypeRFeatureSymbols(
+          data_tbl = difexp_tbl,
+          feature_col = feature_col,
+          assay_type = sig_obj$metadata$assay_type[1],
+          sig_name = sig_name,
+          conn_handler = conn_handler,
+          verbose = verbose
+        )
+        if (resolved_features$mapped) {
+          difexp_tbl <- resolved_features$data
+          feature_col <- resolved_features$feature_col
+        } else if (!feature_col %in% base::colnames(difexp_tbl)) {
+          missing_cols <- base::setdiff(c(feature_col, score_col), base::colnames(difexp_tbl))
+          if (base::length(missing_cols) > 0) {
+            base::stop(
+              base::sprintf(
+                "\nSignature '%s' is missing required difexp column(s): %s.\n",
+                sig_name,
+                base::paste0(missing_cols, collapse = ", ")
+              )
+            )
+          }
+        }
       }
 
       missing_cols <- base::setdiff(c(feature_col, score_col), base::colnames(difexp_tbl))
@@ -598,9 +805,10 @@ prepareHypeRSignatures <- function(
 #' Defaults to \code{"score"}.
 #' @param split_by_group Logical; whether to create separate query vectors for
 #' each \code{group_label}. Defaults to \code{FALSE}.
-#' @param split_by_direction Logical; when \code{method = "hypergeo"}, whether
-#' to split each group into up- and down-direction feature sets using the sign
-#' of \code{score_col}. Defaults to \code{FALSE}.
+#' @param split_by_direction Logical; retained for backward compatibility, but
+#' ignored by the wrapper because HypeR signatures should be split only by
+#' \code{group_label}, not by positive/negative direction. Defaults to
+#' \code{FALSE}.
 #' @param background Optional background size passed to \code{hypeR}.
 #' @param fdr FDR threshold passed to \code{hypeR}. Defaults to \code{0.05}.
 #' @param plotting Logical; whether to let \code{hypeR} generate plots.
@@ -646,7 +854,7 @@ runHypeR <- function(
     msigdb_collection = NULL,
     msigdb_subcollection = NULL,
     msigdb_clean = FALSE,
-    method = c("hypergeo", "kstest", "gsea"),
+    method = c("hypergeo", "hypergeometric", "kstest", "ks", "gsea"),
     feature_col = "feature_name",
     score_col = "score",
     split_by_group = FALSE,
@@ -667,8 +875,20 @@ runHypeR <- function(
     )
   }
 
-  method <- base::match.arg(method)
-  hype_test <- if (identical(method, "hypergeo")) "hypergeometric" else "ks"
+  method <- base::match.arg(method, choices = c("hypergeo", "hypergeometric", "kstest", "ks", "gsea"))
+  if (identical(method, "hypergeo") || identical(method, "hypergeometric")) {
+    method <- "hypergeometric"
+  } else if (identical(method, "ks") || identical(method, "kstest")) {
+    method <- "kstest"
+  }
+  if (isTRUE(split_by_direction)) {
+    base::warning(
+      "split_by_direction is ignored by SigRepo::runHypeR(); hypeR queries are split by group_label only.",
+      call. = FALSE
+    )
+  }
+  split_by_direction <- FALSE
+  hype_test <- if (identical(method, "hypergeometric")) "hypergeometric" else "ks"
   extra_args <- base::list(...)
   resolved_genesets <- resolveHypeRGenesets(
     genesets = genesets,

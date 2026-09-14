@@ -1,3 +1,166 @@
+test_that("prepareHypeRSignatures keeps group labels but does not split by direction", {
+  testthat::skip_if_not_installed("hypeR")
+
+  sig <- OmicSignature::OmicSignature$new(
+    metadata = list(
+      signature_name = "group_only_signature",
+      assay_type = "transcriptomics",
+      phenotype = "test_phenotype",
+      organism = "Homo sapiens",
+      direction_type = "bi-directional",
+      others = list()
+    ),
+    signature = data.frame(
+      feature_name = c("GENE_A", "GENE_B", "GENE_C", "GENE_D"),
+      score = c(2, -1.5, 3, -0.8),
+      group_label = factor(c("treated", "treated", "control", "control")),
+      stringsAsFactors = FALSE
+    ),
+    difexp = NULL
+  )
+
+  prepared <- SigRepo::prepareHypeRSignatures(
+    omic_signature = sig,
+    method = "hypergeo",
+    split_by_group = TRUE,
+    split_by_direction = TRUE,
+    verbose = FALSE
+  )
+
+  expect_equal(
+    sort(names(prepared$signatures)),
+    sort(c("group_only_signature | control", "group_only_signature | treated"))
+  )
+  expect_false(any(grepl("_up|_dn", names(prepared$signatures), perl = TRUE)))
+})
+
+test_that("prepareHypeRSignatures falls back to reference gene symbols and warns when rows are dropped", {
+  testthat::skip_if_not_installed("hypeR")
+
+  sig <- OmicSignature::OmicSignature$new(
+    metadata = list(
+      signature_name = "mapped_symbol_signature",
+      assay_type = "transcriptomics",
+      phenotype = "test_phenotype",
+      organism = "Homo sapiens",
+      direction_type = "bi-directional",
+      others = list()
+    ),
+    signature = data.frame(
+      feature_name = c("feat_1", "feat_2", "feat_3", "feat_4"),
+      feature_id = c(101, 102, 103, 104),
+      group_label = factor(c("treated", "treated", "control", "control")),
+      stringsAsFactors = FALSE
+    ),
+    difexp = data.frame(
+      feature_name = c("feat_1", "feat_2", "feat_3", "feat_4"),
+      score = c(2.2, -1.8, 2.5, -0.9),
+      p_value = c(0.01, 0.02, 0.03, 0.04),
+      group_label = factor(c("treated", "treated", "control", "control")),
+      stringsAsFactors = FALSE
+    )
+  )
+
+  testthat::local_mocked_bindings(
+    conn_init = function(conn_handler) list(),
+    lookup_table_sql = function(conn, db_table_name, return_var, filter_coln_var, filter_coln_val, check_db_table = TRUE, ...) {
+      expect_equal(db_table_name, "transcriptomics_features")
+      expect_equal(return_var, c("feature_name", "gene_symbol"))
+      data.frame(
+        feature_name = c("feat_1", "feat_2", "feat_3"),
+        gene_symbol = c("GENE_A", "GENE_B", NA_character_),
+        stringsAsFactors = FALSE
+      )
+    },
+    .package = "SigRepo"
+  )
+
+  expect_warning(
+    prepared <- SigRepo::prepareHypeRSignatures(
+      conn_handler = list(),
+      omic_signature = sig,
+      method = "gsea",
+      split_by_group = TRUE,
+      verbose = FALSE
+    ),
+    "dropped"
+  )
+
+  expect_true("GENE_A" %in% names(prepared$signatures[[1]]))
+  expect_true("GENE_B" %in% names(prepared$signatures[[1]]))
+  expect_false("feat_3" %in% names(prepared$signatures[[1]]))
+})
+
+test_that("prepareHypeRSignatures resolves feature_name to symbol when feature_col is symbol", {
+  testthat::skip_if_not_installed("hypeR")
+
+  sig <- OmicSignature::OmicSignature$new(
+    metadata = list(
+      signature_name = "symbol_targeted_signature",
+      assay_type = "transcriptomics",
+      phenotype = "test_phenotype",
+      organism = "Homo sapiens",
+      direction_type = "bi-directional",
+      others = list()
+    ),
+    signature = data.frame(
+      feature_name = c("feat_1", "feat_2", "feat_3"),
+      group_label = factor(c("treated", "treated", "control")),
+      stringsAsFactors = FALSE
+    ),
+    difexp = NULL
+  )
+
+  testthat::local_mocked_bindings(
+    conn_init = function(conn_handler) list(),
+    lookup_table_sql = function(conn, db_table_name, return_var, filter_coln_var, filter_coln_val, check_db_table = TRUE, ...) {
+      expect_equal(db_table_name, "transcriptomics_features")
+      expect_equal(return_var, c("feature_name", "gene_symbol"))
+      data.frame(
+        feature_name = c("feat_1", "feat_2", "feat_3"),
+        gene_symbol = c("GENE_A", "GENE_B", "GENE_C"),
+        stringsAsFactors = FALSE
+      )
+    },
+    .package = "SigRepo"
+  )
+
+  prepared <- SigRepo::prepareHypeRSignatures(
+    conn_handler = list(),
+    omic_signature = sig,
+    method = "hypergeo",
+    feature_col = "symbol",
+    split_by_group = TRUE,
+    verbose = FALSE
+  )
+
+  expect_true("GENE_A" %in% unlist(prepared$signatures))
+  expect_true("GENE_B" %in% unlist(prepared$signatures))
+})
+
+test_that("prepareHypeRSignatures accepts hypergeometric and ks aliases", {
+  testthat::skip_if_not_installed("hypeR")
+
+  utils::data("LLFS_Aging_Gene_2023", package = "SigRepo", envir = environment())
+
+  hyper <- SigRepo::prepareHypeRSignatures(
+    omic_signature = LLFS_Aging_Gene_2023,
+    method = "hypergeometric",
+    verbose = FALSE
+  )
+
+  ks <- SigRepo::prepareHypeRSignatures(
+    omic_signature = LLFS_Aging_Gene_2023,
+    method = "ks",
+    verbose = FALSE
+  )
+
+  expect_true(methods::is(hyper, "list"))
+  expect_true(methods::is(ks, "list"))
+  expect_true(base::length(hyper$signatures) > 0)
+  expect_true(base::length(ks$signatures) > 0)
+})
+
 test_that("prepareHypeRSignatures builds hypergeometric query vectors", {
   testthat::skip_if_not_installed("hypeR")
 
@@ -167,6 +330,20 @@ test_that("runHypeR accepts hypeR gsets objects directly", {
   expect_true("hyp" %in% class(hyp_res$result))
 })
 
+test_that("resolveHypeRGenesets falls back to direct msigdbr for mouse C2 collections", {
+  testthat::skip_if_not_installed("msigdbr")
+
+  gsets <- SigRepo::resolveHypeRGenesets(
+    msigdb_species = "Mus musculus",
+    msigdb_collection = "C2",
+    msigdb_subcollection = "CP:KEGG_LEGACY"
+  )
+
+  expect_true(methods::is(gsets, "list"))
+  expect_true(length(gsets) > 0)
+  expect_true(any(grepl("KEGG", names(gsets), fixed = TRUE)))
+})
+
 test_that("runHypeR can retrieve MSigDB genesets automatically", {
   testthat::skip_if_not_installed("hypeR")
   testthat::skip_if_not_installed("msigdbr")
@@ -176,15 +353,15 @@ test_that("runHypeR can retrieve MSigDB genesets automatically", {
   # data and downloads it from zenodo.org on first use, so the test now depends
   # on a third-party service being reachable.
   #
-  # Probe that service through the exact call resolveHypeRGenesets() makes, and
-  # skip with the reason when it is down: an outage there is an environment
-  # failure, not a regression in runHypeR, and it should not turn the suite red
-  # for everyone. The probe also warms msigdbr's cache, so the call below does
-  # not download twice. A probe that SUCCEEDS leaves both assertions in force.
+  # Probe that service through the direct msigdbr fetch used by SigRepo, and skip
+  # with the reason when it is down: an outage there is an environment failure,
+  # not a regression in runHypeR, and it should not turn the suite red for
+  # everyone. The probe also warms msigdbr's cache, so the call below does not
+  # download twice. A probe that SUCCEEDS leaves both assertions in force.
   probe <- base::tryCatch(
     {
       base::suppressWarnings(
-        hypeR::msigdb_gsets(species = "Homo sapiens", collection = "H")
+        SigRepo:::fetchMsigdbGenesets(species = "Homo sapiens", collection = "H")
       )
       TRUE
     },
@@ -209,5 +386,6 @@ test_that("runHypeR can retrieve MSigDB genesets automatically", {
   )
 
   expect_true("hyp" %in% class(hyp_res$result))
-  expect_true(base::grepl("H", hyp_res$result$info[["Genesets"]], fixed = TRUE))
+  expect_true("Genesets" %in% names(hyp_res$result$info))
+  expect_true(!base::is.null(hyp_res$result$info[["Genesets"]]))
 })

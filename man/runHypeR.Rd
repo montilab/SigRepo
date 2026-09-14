@@ -14,7 +14,7 @@ runHypeR(
   msigdb_collection = NULL,
   msigdb_subcollection = NULL,
   msigdb_clean = FALSE,
-  method = c("hypergeo", "kstest", "gsea"),
+  method = c("hypergeo", "hypergeometric", "kstest", "ks", "gsea"),
   feature_col = "feature_name",
   score_col = "score",
   split_by_group = FALSE,
@@ -69,9 +69,10 @@ Defaults to \code{"score"}.}
 \item{split_by_group}{Logical; whether to create separate query vectors for
 each \code{group_label}. Defaults to \code{FALSE}.}
 
-\item{split_by_direction}{Logical; when \code{method = "hypergeo"}, whether
-to split each group into up- and down-direction feature sets using the sign
-of \code{score_col}. Defaults to \code{FALSE}.}
+\item{split_by_direction}{Logical; retained for backward compatibility, but
+ignored by the wrapper because HypeR signatures should be split only by
+\code{group_label}, not by positive/negative direction. Defaults to
+\code{FALSE}.}
 
 \item{background}{Optional background size passed to \code{hypeR}.}
 
