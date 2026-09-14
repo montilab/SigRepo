@@ -212,3 +212,216 @@ resolveHypeRSignatureLabels <- function(omic_signatures) {
 
   base::make.unique(labels)
 }
+
+
+#' Background for each query vector
+#'
+#' A number or gene vector is passed through for every query. "difexp" gives
+#' each query its own signature's measured genes; signatures without difexp
+#' symbols fall back to hypeR's default with one warning.
+#'
+#' @return Unnamed list, one background per row of `info`.
+#' @noRd
+resolveQueryBackgrounds <- function(background, info, inputs, conn_handler) {
+  if (!(base::is.character(background) && base::length(background) == 1L && base::identical(background, "difexp"))) {
+    return(base::rep(base::list(background), base::nrow(info)))
+  }
+
+  signatures_by_label <- stats::setNames(inputs$signatures, inputs$labels)
+  universes <- base::list()
+  fell_back <- base::character()
+
+  for (label in base::unique(info$signature_name)) {
+    sig <- signatures_by_label[[label]]
+    symbols <- if (methods::is(sig$difexp, "data.frame") && base::nrow(sig$difexp) > 0) {
+      resolveSignatureSymbols(sig, "difexp", conn_handler)$symbols
+    } else {
+      NA_character_
+    }
+    symbols <- base::unique(symbols[!base::is.na(symbols)])
+
+    if (base::length(symbols) == 0) {
+      fell_back <- c(fell_back, label)
+      universes[[label]] <- HYPER_DEFAULT_BACKGROUND
+    } else {
+      universes[[label]] <- symbols
+    }
+  }
+
+  if (base::length(fell_back) > 0) {
+    base::warning(
+      base::sprintf(
+        "background = \"difexp\": no difexp gene symbols for %s; used background = %s instead.",
+        base::paste(base::sprintf("'%s'", fell_back), collapse = ", "),
+        HYPER_DEFAULT_BACKGROUND
+      ),
+      call. = FALSE
+    )
+  }
+
+  base::unname(universes[info$signature_name])
+}
+
+#' Append SigRepo provenance to a hyp object's info, in a fixed order
+#'
+#' hypeR::hyp_to_excel() stacks info across a multihyp with mapply(), so every
+#' hyp must carry the same keys in the same order.
+#' @noRd
+appendHypeRProvenance <- function(hyp_obj, info_row) {
+  hyp_obj$info <- c(hyp_obj$info, base::list(
+    "SigRepo Signature ID" = if (base::is.na(info_row$signature_id)) "" else base::as.character(info_row$signature_id),
+    "SigRepo Signature Name" = base::as.character(info_row$signature_name),
+    "Group Label" = if (base::is.na(info_row$group_label)) "" else base::as.character(info_row$group_label),
+    "Symbol Source" = if (base::is.na(info_row$symbol_source)) "" else base::as.character(info_row$symbol_source)
+  ))
+  hyp_obj
+}
+
+warnSkippedHypeRSignatures <- function(skipped) {
+  if (base::nrow(skipped) == 0) {
+    return(base::invisible(NULL))
+  }
+  base::warning(
+    base::sprintf(
+      "Skipped %d signature(s): %s",
+      base::nrow(skipped),
+      base::paste(base::sprintf("'%s' (%s: %s)", skipped$signature, skipped$reason, skipped$message), collapse = "; ")
+    ),
+    call. = FALSE
+  )
+}
+
+#' Run hypeR enrichment on SigRepo signatures
+#'
+#' @description Builds hypeR query vectors from SigRepo signatures (see
+#' \code{prepareHypeRSignatures()}) and runs \code{hypeR::hypeR()} on them. The
+#' arguments after \code{score_col} are hypeR's own, with hypeR's defaults, and
+#' the result is hypeR's own object, so \code{hypeR::hyp_dots()},
+#' \code{hyp_show()}, \code{hyp_emap()}, \code{hyp_to_excel()} and
+#' \code{hyp_to_rmd()} work on it directly.
+#'
+#' @inheritParams prepareHypeRSignatures
+#' @inheritParams getHypeRGenesets
+#' @param background hypeR's background: a single number (population size), a
+#' character vector of background genes, or \code{"difexp"} to use each
+#' signature's measured genes from its difexp table. Signatures without difexp
+#' symbols fall back to \code{23467} with a warning. Defaults to \code{23467}.
+#' @param power Exponent for score weights (kstest only). \code{1} (default)
+#' weights hits by score, GSEA-style; \code{0} is the classic unweighted KS
+#' statistic.
+#' @param absolute Passed to \code{hypeR::hypeR()} (kstest only). Defaults to \code{FALSE}.
+#' @param pval Keep results with p-value at or below this. Defaults to \code{1}.
+#' @param fdr Keep results with FDR at or below this. Defaults to \code{1}.
+#' @param plotting Logical; generate hypeR's per-geneset plots. Defaults to \code{FALSE}.
+#' @param quiet Logical; suppress hypeR's logs. Defaults to \code{TRUE}.
+#'
+#' @return A \code{hypeR} \code{hyp} object when one query vector is produced,
+#' otherwise a \code{multihyp} named by query. Each \code{hyp$info} ends with
+#' \code{SigRepo Signature ID}, \code{SigRepo Signature Name},
+#' \code{Group Label} and \code{Symbol Source}. Signatures that cannot produce a
+#' query are skipped with a warning; if none can, an error is raised.
+#'
+#' @examples
+#' \dontrun{
+#' utils::data("LLFS_Aging_Gene_2023", package = "SigRepo")
+#'
+#' hyp <- SigRepo::runHypeR(
+#'   omic_signature = LLFS_Aging_Gene_2023,
+#'   genesets = "msigdb",
+#'   msigdb_collection = "H",
+#'   fdr = 0.05
+#' )
+#' hypeR::hyp_dots(hyp)
+#'
+#' ranked <- SigRepo::runHypeR(
+#'   omic_signature = LLFS_Aging_Gene_2023,
+#'   genesets = "msigdb",
+#'   msigdb_collection = "H",
+#'   test = "kstest",
+#'   power = 0
+#' )
+#' }
+#'
+#' @export
+runHypeR <- function(
+    conn_handler = NULL,
+    signature_id = NULL,
+    signature_name = NULL,
+    omic_signature = NULL,
+    genesets,
+    msigdb_species = NULL,
+    msigdb_collection = NULL,
+    msigdb_subcollection = NULL,
+    msigdb_clean = FALSE,
+    test = c("hypergeometric", "kstest"),
+    split = TRUE,
+    score_col = "score",
+    background = 23467,
+    power = 1,
+    absolute = FALSE,
+    pval = 1,
+    fdr = 1,
+    plotting = FALSE,
+    quiet = TRUE,
+    verbose = TRUE
+) {
+  if (!base::requireNamespace("hypeR", quietly = TRUE)) {
+    base::stop("\nPackage 'hypeR' is required for runHypeR(). Please install it first.\n")
+  }
+
+  test <- base::match.arg(test)
+
+  if (base::missing(genesets)) {
+    genesets <- NULL
+  }
+  resolved_genesets <- getHypeRGenesets(
+    genesets = genesets,
+    msigdb_species = msigdb_species,
+    msigdb_collection = msigdb_collection,
+    msigdb_subcollection = msigdb_subcollection,
+    msigdb_clean = msigdb_clean
+  )
+
+  inputs <- collectHypeRSignatures(
+    conn_handler = conn_handler,
+    signature_id = signature_id,
+    signature_name = signature_name,
+    omic_signature = omic_signature,
+    verbose = verbose
+  )
+  prepared <- buildHypeRQueries(inputs, test = test, split = split, score_col = score_col, conn_handler = conn_handler)
+
+  warnSkippedHypeRSignatures(prepared$skipped)
+  if (base::length(prepared$signatures) == 0) {
+    base::stop("\nNo signature produced a hypeR query vector; see the warning for each signature's reason.\n")
+  }
+
+  backgrounds <- resolveQueryBackgrounds(background, prepared$info, inputs, conn_handler)
+  query_names <- base::names(prepared$signatures)
+
+  results <- base::lapply(base::seq_along(prepared$signatures), function(i) {
+    if (!quiet && base::length(query_names) > 1) {
+      base::cat(base::sprintf("\n%s\n", query_names[i]))
+    }
+    hyp_obj <- hypeR::hypeR(
+      signature = prepared$signatures[[i]],
+      genesets = resolved_genesets,
+      test = test,
+      background = backgrounds[[i]],
+      power = power,
+      absolute = absolute,
+      pval = pval,
+      fdr = fdr,
+      plotting = plotting,
+      quiet = quiet
+    )
+    appendHypeRProvenance(hyp_obj, prepared$info[i, , drop = FALSE])
+  })
+  base::names(results) <- query_names
+
+  if (base::length(results) == 1L) {
+    return(results[[1]])
+  }
+
+  hypeR::multihyp$new(data = results)
+}
