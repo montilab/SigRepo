@@ -40,6 +40,7 @@ Suggests:
   fgsea,
   hypeR,
   hypeR.GEM,
+  msigdbr,
   knitr,
   pkgdown,
   rmarkdown,

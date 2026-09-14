@@ -115,6 +115,7 @@ reference:
     contents:
       - '`prepareHypeRSignatures`'
       - '`runHypeR`'
+      - '`getHypeRGenesets`'
       - '`runHyperGEM`'
       - '`hypergemAvailable`'
       - '`hypergemExport`'
