@@ -145,6 +145,8 @@ resolveSignatureSymbols <- function(omic_signature, table = c("signature", "dife
   base::list(symbols = base::rep(NA_character_, n_rows), source = NA_character_)
 }
 
+#' Error unless split is TRUE or FALSE
+#' @noRd
 checkHypeRSplit <- function(split) {
   if (!(base::is.logical(split) && base::length(split) == 1L && !base::is.na(split))) {
     base::stop("\n'split' must be TRUE or FALSE.\n")

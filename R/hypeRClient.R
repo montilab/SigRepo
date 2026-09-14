@@ -297,12 +297,18 @@ checkHypeRBackground <- function(background) {
 #' other genesets. Drops each geneset whose members present in `query` all have
 #' score exactly 0; genesets with no members in `query` are kept.
 #'
+#' hypeR reduces genesets to a gene-vector background before the kstest, so
+#' when `background` is a character vector the check uses each geneset's
+#' members within it. The returned genesets are not reduced; hypeR still does
+#' that itself.
+#'
 #' @param genesets Named list, `hypeR::gsets` or `hypeR::rgsets`.
 #' @param query Named numeric vector (gene -> score).
+#' @param background The query's background; only a character vector matters.
 #' @return list(genesets = same kind as the input, unchanged when nothing is
 #'   dropped; dropped = chr labels)
 #' @noRd
-dropZeroWeightGenesets <- function(genesets, query) {
+dropZeroWeightGenesets <- function(genesets, query, background = NULL) {
   unchanged <- base::list(genesets = genesets, dropped = base::character())
   zero_genes <- base::names(query)[query == 0]
   if (base::length(zero_genes) == 0) {
@@ -312,7 +318,11 @@ dropZeroWeightGenesets <- function(genesets, query) {
 
   is_hyper_gsets <- methods::is(genesets, "gsets") || methods::is(genesets, "rgsets")
   members <- if (is_hyper_gsets) genesets$genesets else genesets
+  reduce_to_background <- base::is.character(background)
   drop <- base::vapply(members, function(genes) {
+    if (reduce_to_background) {
+      genes <- genes[genes %in% background]
+    }
     base::any(genes %in% zero_genes) && !base::any(genes %in% nonzero_genes)
   }, base::logical(1))
   if (!base::any(drop)) {
@@ -470,9 +480,9 @@ runHypeR <- function(
 
   # Weighted kstest cannot score a geneset whose hits all have score 0 (hypeR
   # errors or misaligns scores), so drop those per query before calling hypeR.
-  query_genesets <- base::lapply(prepared$signatures, function(query) {
+  query_genesets <- base::lapply(base::seq_along(prepared$signatures), function(i) {
     if (base::identical(test, "kstest") && power != 0) {
-      dropZeroWeightGenesets(resolved_genesets, query)
+      dropZeroWeightGenesets(resolved_genesets, prepared$signatures[[i]], background = backgrounds[[i]])
     } else {
       base::list(genesets = resolved_genesets, dropped = base::character())
     }

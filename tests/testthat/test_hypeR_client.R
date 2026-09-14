@@ -177,7 +177,7 @@ test_that("B1: the documented sheet-name workaround makes hyp_to_excel() work on
   on.exit(unlink(xlsx), add = TRUE)
 
   hyp <- SigRepo::runHypeR(omic_signature = list(long, colon), genesets = gs, verbose = FALSE)
-  expect_error(hypeR::hyp_to_excel(hyp, file_path = xlsx))
+  expect_error(hypeR::hyp_to_excel(hyp, file_path = xlsx), "Max length is 31 characters", fixed = TRUE)
 
   names(hyp$data) <- make.unique(substr(gsub("[][\\\\/?*:]", "_", names(hyp$data)), 1, 28))
   expect_no_error(hypeR::hyp_to_excel(hyp, file_path = xlsx))
@@ -247,4 +247,29 @@ test_that("U1: dropZeroWeightGenesets keeps the input kind and returns it unchan
   unchanged <- SigRepo:::dropZeroWeightGenesets(gsets_obj, no_zero)
   expect_identical(unchanged$genesets, gsets_obj)
   expect_identical(unchanged$dropped, character())
+})
+
+test_that("U1 fix round 1: the zero-weight check sees the gene-vector background reduction", {
+  testthat::skip_if_not_installed("hypeR")
+  sig <- make_hyper_zero_score_sig()
+  vec <- SigRepo::prepareHypeRSignatures(omic_signature = sig, test = "kstest", verbose = FALSE)$signatures[[1]]
+  gs <- list(S1 = c("A", "D"), S2 = c("B", "A"), S3 = "C", S4 = c("B", "A", "X"))
+  bg <- c("B", "C", "D")
+
+  # After reduction to bg, S2 and S4 hit only B (score 0); S1 keeps D, S3 keeps C.
+  expect_warning(
+    res <- SigRepo::runHypeR(omic_signature = sig, genesets = gs, test = "kstest", background = bg, verbose = FALSE),
+    "Dropped 2 geneset(s) whose hits all have score 0 (undefined for weighted kstest, power != 0): S2, S4",
+    fixed = TRUE
+  )
+
+  direct <- hypeR::hypeR(vec, gs[c("S1", "S3")], test = "kstest", background = bg, power = 1)
+  expect_equal(res$data, direct$data)
+
+  # Helper: background is applied only to the check; the returned object is not reduced.
+  dz <- SigRepo:::dropZeroWeightGenesets(gs, vec, background = bg)
+  expect_equal(dz$dropped, c("S2", "S4"))
+  expect_identical(dz$genesets, gs[c("S1", "S3")])
+  expect_identical(SigRepo:::dropZeroWeightGenesets(gs, vec)$dropped, character())
+  expect_identical(SigRepo:::dropZeroWeightGenesets(gs, vec, background = 23467)$dropped, character())
 })
