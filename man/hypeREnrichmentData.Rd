@@ -17,7 +17,9 @@ hypeREnrichmentData(hyp_obj, geneset, query = NULL)
 }
 \value{
 A list with \code{curve} (data frame: \code{position},
-\code{running_score}), \code{ticks} (data frame: \code{position},
+\code{running_score}; for fgsea, \code{curve} holds fgsea's own step
+points, positions \code{0} to \code{N+1}, not one row per ranked gene
+\code{1..N}), \code{ticks} (data frame: \code{position},
 \code{gene}, \code{score}, \code{leading_edge}) and \code{summary} (list:
 \code{query}, \code{geneset}, \code{test}, \code{direction}, \code{n_ranked},
 \code{n_hits}, \code{es}, \code{es_position}, \code{leading_edge_genes},
@@ -45,6 +47,10 @@ it is the negated score. The leading edge follows the GSEA convention (hits
 up to the extremum for a positive score, from it for a negative score); for
 kstest with a negative score this can differ from hypeR's \code{hits}
 column, which always counts from the top.
+
+\code{absolute = TRUE} kstest results are not supported: hypeR scores them
+as \code{max(z) - min(z)}, which has no running-sum curve, so this errors
+for them.
 }
 \examples{
 \dontrun{

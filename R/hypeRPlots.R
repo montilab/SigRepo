@@ -143,7 +143,7 @@ plotHypeREnrichment <- function(hyp_obj, geneset, query = NULL, title = NULL) {
       base::sprintf("%s\noverlap = %s, p = %s, FDR = %s", selected$name, row$overlap[1],
                     formatHypeRNumber(row$pval[1]), formatHypeRNumber(row$fdr[1]))
     } else {
-      base::sprintf("%s\nnot in results after cutoffs", selected$name)
+      base::sprintf("%s\nnot in the result table", selected$name)
     }
     return(hypeR::ggvenn(hyp$args$signature, members, "Query", "Geneset", plot_title) +
              ggplot2::labs(subtitle = subtitle))
@@ -153,7 +153,7 @@ plotHypeREnrichment <- function(hyp_obj, geneset, query = NULL, title = NULL) {
   summary <- enrichment$summary
   subtitle <- base::paste0(selected$name, "\nES = ", formatHypeRNumber(summary$es))
   if (base::is.na(summary$pval)) {
-    subtitle <- base::paste0(subtitle, ", not in results after cutoffs")
+    subtitle <- base::paste0(subtitle, ", not in the result table")
   } else {
     if (base::identical(summary$test, "fgsea")) {
       subtitle <- base::paste0(subtitle, ", NES = ", formatHypeRNumber(summary$nes))
@@ -229,6 +229,12 @@ plotHypeRMapOne <- function(name, hyp, type, val, pval, fdr, top, similarity_met
     base::warning(base::sprintf("No genesets pass the cutoffs for '%s'.", name), call. = FALSE)
     return(NULL)
   }
+  if (base::nrow(data) < 2) {
+    base::warning(base::sprintf(
+      "Only one geneset passes the cutoffs for '%s'; a map needs at least two.", name
+    ), call. = FALSE)
+    return(NULL)
+  }
   if (base::identical(type, "hmap")) {
     return(hypeR::hyp_hmap(hyp, pval = pval, fdr = fdr, val = val, top = top))
   }
@@ -254,10 +260,14 @@ plotHypeRMapOne <- function(name, hyp, type, val, pval, fdr, top, similarity_met
 #' an error.
 #'
 #' @inheritParams hypeRDotData
+#' @param val \code{"fdr"} (default) or \code{"pval"}: the value that colours
+#' the map's nodes. Unlike \code{hypeRDotData()}, it does not rank genesets or
+#' choose \code{top}.
 #' @param type \code{"emap"} (default) or \code{"hmap"}.
 #' @param query Query name; with \code{NULL} a \code{multihyp} of several queries
 #' gives a named list with one map per query.
-#' @param top Maximum genesets drawn per map. Default \code{25}.
+#' @param top The first \code{top} rows of each result table after the
+#' cutoffs, in table order (not chosen by \code{val}). Default \code{25}.
 #' @param similarity_metric,similarity_cutoff Passed to \code{hypeR::hyp_emap()}.
 #'
 #' @return A \code{visNetwork} widget, \code{NULL} (with a warning) when there is
@@ -285,6 +295,8 @@ plotHypeRMap <- function(
   similarity_metric <- base::match.arg(similarity_metric)
   checkHypeRNumber(top, "top", 1)
   checkHypeRNumber(similarity_cutoff, "similarity_cutoff", 0)
+  checkHypeRNumber(pval, "pval", 0)
+  checkHypeRNumber(fdr, "fdr", 0)
 
   hyps <- hypeRResultHyps(hyp_obj)
   draw <- function(name, hyp) {

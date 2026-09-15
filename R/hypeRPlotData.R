@@ -93,6 +93,8 @@ checkHypeRNumber <- function(x, name, min) {
   base::invisible(x)
 }
 
+#' 0-row hypeRDotData() frame, with the right columns and types
+#' @noRd
 emptyHypeRDotData <- function() {
   base::data.frame(
     query = base::character(), query_label = base::factor(), signature_name = base::character(),
@@ -134,7 +136,9 @@ emptyHypeRDotData <- function() {
 #' \code{pval}, \code{fdr}, \code{significance} (-log10 of \code{val}; values of
 #' 0 are floored to a tenth of the smallest positive value, or 1e-300),
 #' \code{score} (fgsea NES, kstest score, \code{NA} for hypergeometric) and
-#' \code{size}. It has 0 rows when nothing passes the cutoffs.
+#' \code{size}. It has 0 rows when nothing passes the cutoffs. Ties for the
+#' shared \code{top} genesets are broken by the best (smallest) \code{pval}
+#' across queries, then by label name.
 #'
 #' @examples
 #' \dontrun{
@@ -170,6 +174,9 @@ hypeRDotData <- function(
     if (base::nrow(data) == 0) {
       return(NULL)
     }
+    if (size_by %in% c("geneset", "overlap") && !(size_by %in% base::colnames(data))) {
+      base::stop(base::sprintf("\nsize_by = \"%s\" needs a '%s' column in the results.\n", size_by, size_by))
+    }
     score <- if ("nes" %in% base::colnames(data)) {
       data$nes
     } else if ("score" %in% base::colnames(data)) {
@@ -193,7 +200,8 @@ hypeRDotData <- function(
   dots <- base::do.call(base::rbind, rows)
 
   best <- base::tapply(dots$value, dots$label, base::min)
-  ranked_labels <- base::names(best)[base::order(best, base::names(best))]
+  best_p <- base::tapply(dots$pval, dots$label, base::min)
+  ranked_labels <- base::names(best)[base::order(best, best_p[base::names(best)], base::names(best))]
   kept_labels <- ranked_labels[base::seq_len(base::min(top, base::length(ranked_labels)))]
   dots <- dots[dots$label %in% kept_labels, , drop = FALSE]
 
@@ -339,8 +347,14 @@ hypeRFgseaCurve <- function(stats, members, power) {
 #' kstest with a negative score this can differ from hypeR's \code{hits}
 #' column, which always counts from the top.
 #'
+#' \code{absolute = TRUE} kstest results are not supported: hypeR scores them
+#' as \code{max(z) - min(z)}, which has no running-sum curve, so this errors
+#' for them.
+#'
 #' @return A list with \code{curve} (data frame: \code{position},
-#' \code{running_score}), \code{ticks} (data frame: \code{position},
+#' \code{running_score}; for fgsea, \code{curve} holds fgsea's own step
+#' points, positions \code{0} to \code{N+1}, not one row per ranked gene
+#' \code{1..N}), \code{ticks} (data frame: \code{position},
 #' \code{gene}, \code{score}, \code{leading_edge}) and \code{summary} (list:
 #' \code{query}, \code{geneset}, \code{test}, \code{direction}, \code{n_ranked},
 #' \code{n_hits}, \code{es}, \code{es_position}, \code{leading_edge_genes},
@@ -360,9 +374,17 @@ hypeREnrichmentData <- function(hyp_obj, geneset, query = NULL) {
   if (!test %in% c("kstest", "fgsea")) {
     base::stop("\nhypeREnrichmentData() needs kstest or fgsea results; use plotHypeREnrichment() for hypergeometric overlap.\n")
   }
+  if (base::identical(test, "kstest") && base::isTRUE(hyp$args$absolute)) {
+    base::stop("\nabsolute = TRUE kstest results have no running-sum curve; hypeR scores them as max - min.\n")
+  }
 
   members <- hypeRGenesetMembers(hyp, geneset)
   stats <- hyp$args$signature
+  if (base::identical(test, "fgsea")) {
+    # fgsea::plotEnrichmentData() reorders the stats this way before it
+    # computes ticks and the leading edge; match its coordinates.
+    stats <- stats[base::order(base::rank(-stats))]
+  }
   ranked_genes <- if (base::is.character(stats)) stats else base::names(stats)
   if (!base::any(ranked_genes %in% members)) {
     base::stop(base::sprintf("\n'%s' has no genes in this ranking.\n", geneset))

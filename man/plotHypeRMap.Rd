@@ -24,12 +24,14 @@ plotHypeRMap(
 \item{query}{Query name; with \code{NULL} a \code{multihyp} of several queries
 gives a named list with one map per query.}
 
-\item{val}{\code{"fdr"} (default) or \code{"pval"}: the value used to rank
-genesets and to compute \code{significance}.}
+\item{val}{\code{"fdr"} (default) or \code{"pval"}: the value that colours
+the map's nodes. Unlike \code{hypeRDotData()}, it does not rank genesets or
+choose \code{top}.}
 
 \item{pval, fdr}{Keep rows with p-value / FDR at or below these. Default \code{1}.}
 
-\item{top}{Maximum genesets drawn per map. Default \code{25}.}
+\item{top}{The first \code{top} rows of each result table after the
+cutoffs, in table order (not chosen by \code{val}). Default \code{25}.}
 
 \item{similarity_metric, similarity_cutoff}{Passed to \code{hypeR::hyp_emap()}.}
 }

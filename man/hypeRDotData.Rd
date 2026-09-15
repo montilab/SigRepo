@@ -47,7 +47,9 @@ significant geneset is the last level, i.e. the top row of a plot),
 \code{pval}, \code{fdr}, \code{significance} (-log10 of \code{val}; values of
 0 are floored to a tenth of the smallest positive value, or 1e-300),
 \code{score} (fgsea NES, kstest score, \code{NA} for hypergeometric) and
-\code{size}. It has 0 rows when nothing passes the cutoffs.
+\code{size}. It has 0 rows when nothing passes the cutoffs. Ties for the
+shared \code{top} genesets are broken by the best (smallest) \code{pval}
+across queries, then by label name.
 }
 \description{
 Tidy data behind \code{plotHypeRDots()}: one row per query and
