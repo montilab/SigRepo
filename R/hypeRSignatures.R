@@ -487,7 +487,10 @@ buildHypeRQueries <- function(inputs, test, split, score_col, resolve_symbols,
     built <- if (base::identical(test, "hypergeometric")) {
       buildHypergeometricQueries(inputs$signatures[[i]], inputs$labels[i], inputs$ids[i], split, resolve_symbols)
     } else {
-      buildKstestQueries(inputs$signatures[[i]], inputs$labels[i], inputs$ids[i], score_col, direction, ks_source, resolve_symbols)
+      # fgsea tests both tails in one run, so it needs only the "up" ranking;
+      # direction picks result sides later.
+      ranking_direction <- if (base::identical(test, "fgsea")) "up" else direction
+      buildKstestQueries(inputs$signatures[[i]], inputs$labels[i], inputs$ids[i], score_col, ranking_direction, ks_source, resolve_symbols)
     }
 
     if (!base::is.null(built$skip)) {
@@ -506,6 +509,9 @@ buildHypeRQueries <- function(inputs, test, split, score_col, resolve_symbols,
   }
 
   info <- if (base::length(info) > 0) base::do.call(base::rbind, info) else emptyHypeRInfo()
+  if (base::identical(test, "fgsea") && base::nrow(info) > 0) {
+    info$direction <- direction
+  }
   if (base::length(queries) > 0) {
     if (!base::is.null(query_names)) {
       base::names(queries) <- applyHypeRQueryNames(query_names, info)
@@ -556,6 +562,12 @@ buildNativeHypeRQueries <- function(signature, test, query_names) {
   skipped <- base::list()
   for (label in base::names(signature)) {
     x <- signature[[label]]
+    if (base::identical(test, "fgsea") && base::is.character(x)) {
+      base::stop(base::sprintf(
+        "\n'signature' element '%s': test = \"fgsea\" needs scores: pass a named numeric vector.\n",
+        label
+      ))
+    }
     if (base::is.character(x) && !base::is.list(x)) {
       symbols <- cleanHypeRSymbols(x)
       query <- base::unique(symbols[!base::is.na(symbols)])
@@ -631,10 +643,14 @@ collectAndBuildHypeRQueries <- function(conn_handler, signature_id, signature_na
     if (!base::is.null(omic_signature) || supplied(signature_id) || supplied(signature_name)) {
       base::stop("\nSupply either 'signature' or SigRepo signatures ('omic_signature', 'signature_id', 'signature_name'), not both.\n")
     }
-    if (!base::identical(direction, "up") || !base::identical(ks_source, "difexp")) {
+    reorders <- !base::identical(direction, "up") && !base::identical(test, "fgsea")
+    if (reorders || !base::identical(ks_source, "difexp")) {
       base::stop("\n'direction' and 'ks_source' apply to SigRepo signatures; with 'signature', order the vector yourself.\n")
     }
     native <- buildNativeHypeRQueries(signature, test, query_names)
+    if (base::identical(test, "fgsea") && base::nrow(native$prepared$info) > 0) {
+      native$prepared$info$direction <- direction
+    }
     return(c(native, base::list(native = TRUE)))
   }
 
@@ -745,8 +761,13 @@ getHypeRDifexp <- function(
 #' stay at their defaults. Use \code{getHypeRDifexp()} to build a gene list from
 #' a signature's difexp with your own cutoffs.
 #' @param test \code{"hypergeometric"} (a character vector of symbols from the
-#' signature table) or \code{"kstest"} (a named numeric vector ranked by
-#' \code{score_col}, from the table named by \code{ks_source}).
+#' signature table), \code{"kstest"} (a named numeric vector ranked by
+#' \code{score_col}, from the table named by \code{ks_source}) or
+#' \code{"fgsea"} (the same ranking as \code{"kstest"} with
+#' \code{direction = "up"}; one ranking per signature, or per category for a
+#' categorical signature, and \code{info$direction} holds the requested
+#' direction). With \code{"fgsea"}, \code{signature} input must be named numeric
+#' vectors.
 #' @param split Logical; for \code{"hypergeometric"}, build one vector per
 #' \code{group_label} (e.g. one per arm of a bi-directional signature). A
 #' categorical signature's groups are categories rather than directions, so when
@@ -765,7 +786,11 @@ getHypeRDifexp <- function(
 #' \code{" | down"} with \code{"both"}). A ranking needs a signed score: one
 #' whose scores are all equal (\code{constant_score}) or all one sign
 #' (\code{unsigned_score}) is skipped, per category for categorical
-#' signatures.
+#' signatures. For \code{"fgsea"}, which tests both tails in one run,
+#' \code{direction} chooses which result sides \code{runHypeR()} returns:
+#' \code{"up"} (ES > 0), \code{"down"} (ES < 0) or \code{"both"}, the default
+#' for \code{"fgsea"} when \code{direction} is not passed; it is allowed with
+#' \code{signature} input.
 #' @param ks_source For \code{"kstest"} only: the table to rank.
 #' \code{"difexp"} (default) ranks every measured gene. \code{"signature"}
 #' ranks only the signature table, for signatures stored without a difexp; the
@@ -816,7 +841,7 @@ prepareHypeRSignatures <- function(
     signature_name = NULL,
     omic_signature = NULL,
     signature = NULL,
-    test = c("hypergeometric", "kstest"),
+    test = c("hypergeometric", "kstest", "fgsea"),
     split = TRUE,
     direction = c("up", "down", "both"),
     ks_source = c("difexp", "signature"),
@@ -824,8 +849,9 @@ prepareHypeRSignatures <- function(
     query_names = NULL,
     verbose = TRUE
 ) {
+  direction_missing <- base::missing(direction)
   test <- base::match.arg(test)
-  direction <- base::match.arg(direction)
+  direction <- if (base::identical(test, "fgsea") && direction_missing) "both" else base::match.arg(direction)
   ks_source <- base::match.arg(ks_source)
   checkHypeRSplit(split)
   checkHypeRKstestArgs(test, direction, ks_source)

@@ -107,3 +107,38 @@ test_that("runFgseaHyps hyps carry hypeR's info keys first, then fgsea's, and gs
   expect_true(inherits(run$hyps$up$args$genesets, "gsets"))
   expect_length(run$hyps$up$plots, 0L)
 })
+
+# ---- Rankings: prepareHypeRSignatures(test = "fgsea") ----
+
+test_that("fgsea uses the kstest up ranking, one per signature, with the requested direction in info", {
+  sig <- make_hyper_fgsea_sig()
+  ks <- SigRepo::prepareHypeRSignatures(omic_signature = sig, test = "kstest", verbose = FALSE)
+
+  both <- SigRepo::prepareHypeRSignatures(omic_signature = sig, test = "fgsea", verbose = FALSE)
+  expect_equal(names(both$signatures), "fg")
+  expect_equal(both$signatures, ks$signatures)
+  expect_equal(both$info$direction, "both")
+
+  down <- SigRepo::prepareHypeRSignatures(omic_signature = sig, test = "fgsea", direction = "down", verbose = FALSE)
+  expect_equal(down$signatures, ks$signatures)
+  expect_equal(down$info$direction, "down")
+})
+
+test_that("fgsea ranks a categorical signature once per category", {
+  prepared <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_categorical_sig(), test = "fgsea", verbose = FALSE)
+  expect_equal(names(prepared$signatures), c("cat | red", "cat | white"))
+  expect_equal(prepared$info$direction, c("both", "both"))
+})
+
+test_that("fgsea native input must be named numeric; direction is allowed, ks_source is not", {
+  expect_error(
+    SigRepo::prepareHypeRSignatures(signature = c("A", "B"), test = "fgsea", verbose = FALSE),
+    "test = \"fgsea\" needs scores: pass a named numeric vector", fixed = TRUE
+  )
+  up <- SigRepo::prepareHypeRSignatures(signature = hyper_fgsea_stats(), test = "fgsea", direction = "up", verbose = FALSE)
+  expect_equal(up$info$direction, "up")
+  expect_error(
+    SigRepo::prepareHypeRSignatures(signature = hyper_fgsea_stats(), test = "fgsea", ks_source = "signature", verbose = FALSE),
+    "'direction' and 'ks_source' apply to SigRepo signatures", fixed = TRUE
+  )
+})
