@@ -27,9 +27,15 @@ sig <- LLFS_Aging_Gene_2023
 ## What `runHypeR()` does
 
 `runHypeR()` turns SigRepo signatures into the query vectors `hypeR::hypeR()`
-expects, runs hypeR, and returns hypeR's own object. Every argument from `test`
-on is hypeR's, with hypeR's defaults, so a SigRepo run and a plain hypeR run on
-the same genes give the same table.
+expects, runs hypeR, and returns hypeR's own object. Every argument from
+`background` on is hypeR's, with hypeR's defaults, so a SigRepo run and a plain
+hypeR run on the same genes give the same table.
+
+The hypeR documentation site (montilab.github.io/hypeR-docs) still shows hypeR
+1.7.2. hypeR 2.x renamed some helper arguments, e.g.
+`msigdb_gsets(category =, subcategory =)` is now `collection =` /
+`subcollection =`. SigRepo needs hypeR 2.0.0 or later, so check the help pages
+of your installed hypeR (`?hypeR::msigdb_gsets`) rather than the site.
 
 ## Genesets
 
@@ -50,7 +56,11 @@ my_genesets <- list(
 ```
 
 `runHypeR()` accepts either form in `genesets`. The `msigdb_*` arguments only
-apply with `genesets = "msigdb"`.
+apply with `genesets = "msigdb"`. `genesets = "msigdb"` queries msigdbr on every
+call, so when you run several analyses, fetch the collection once with
+`getHypeRGenesets()` and pass the object, as the examples below do. Enrichr
+libraries (`hypeR::enrichr_gsets()`) and hypeR's curated hierarchies
+(`hypeR::hyperdb_rgsets()`, used by `hyp_hmap()`) pass through the same way.
 
 ## Inspect the query vectors
 
@@ -68,15 +78,24 @@ joined on `probe_id`. A bi-directional signature has one `group_label` per arm,
 and `split = TRUE` (the default) tests each arm separately. Query names are
 always unique — built as `"<label> | <group_label>"` (or just `"<label>"` when
 there is no group) and disambiguated as `name (2)`, `name (3)` if two
-signatures would otherwise collide.
+signatures would otherwise collide. To choose your own names, pass
+`query_names`, a function of the `info` table:
+
+```{r}
+short <- SigRepo::prepareHypeRSignatures(
+  omic_signature = sig,
+  query_names = function(info) paste0("LLFS_", info$group_label),
+  verbose = FALSE
+)
+names(short$signatures)
+```
 
 ## Hypergeometric test
 
 ```{r}
 hyp <- SigRepo::runHypeR(
   omic_signature = sig,
-  genesets = "msigdb",
-  msigdb_collection = "H",
+  genesets = hallmark,
   verbose = FALSE
 )
 hyp
@@ -90,10 +109,22 @@ so hypeR's functions work on it directly:
 hypeR::hyp_dots(hyp, merge = TRUE, top = 10, title = "LLFS aging, Hallmark")
 ```
 
-Each `hyp$info` records where its query came from:
+`hyp_show()` takes a single `hyp`, so pass one arm:
+
+```{r, eval = FALSE}
+hypeR::hyp_show(hyp$data[[1]])
+```
+
+The return type follows the input, as in hypeR. A single signature (one
+`OmicSignature`, id or name) gives a `hyp` when it can only build one query:
+`split = FALSE`, or a kstest with `direction = "up"` or `"down"`. Everything
+else gives a `multihyp`, even when only one query is left after skips, so
+batch code can always index `res$data`.
+
+Each `hyp$info` records where its query came from and how it was run:
 
 ```{r}
-tail(hyp$data[[1]]$info, 4)
+tail(hyp$data[[1]]$info, 13)
 ```
 
 ## Ranked (KS) test
@@ -103,12 +134,16 @@ tail(hyp$data[[1]]$info, 4)
 - The p-value and FDR come from hypeR's unweighted, one-sided KS test. They do
   not depend on `power` or `absolute`.
 - `power` changes only the enrichment `score`: `1` (hypeR's default) weights
-  hits by |score|, `0` is unweighted.
-- The test finds genesets enriched toward the top of the ranking (the highest
-  scores). Genesets concentrated among the most negative scores cannot reach
-  significance. To test that end, rank by a negated score column: add
-  `difexp$neg_score <- -difexp$score` to your OmicSignature copy and pass
-  `score_col = "neg_score"`.
+  hits by |score|; `0` runs hypeR's ranked signature (gene names in rank
+  order), so `Signature Type` is `"ranked"`.
+- The test finds genesets enriched toward the top of the ranking only.
+  `direction = "down"` ranks by the negated score, so genesets concentrated
+  among the most negative scores come first; `direction = "both"` runs both and
+  returns `"<label> | up"` and `"<label> | down"`.
+- `ks_source = "signature"` ranks the signature table instead of the difexp,
+  for signatures stored without one. Only the signature's genes are ranked, so
+  the test asks where genesets fall within the signature, not within
+  everything measured.
 
 hypeR's kstest cannot score a geneset whose hits in a query all score exactly
 `0` (with `power != 0`), or one that contains every query gene (at any power).
@@ -121,10 +156,11 @@ ranked <- SigRepo::runHypeR(
   omic_signature = sig,
   genesets = hallmark,
   test = "kstest",
-  power = 0,
+  direction = "both",
   verbose = FALSE
 )
-head(ranked$data)
+names(ranked$data)
+head(ranked$data[["LLFS_Aging_Gene_2023 | down"]]$data)
 ```
 
 ## Background
@@ -132,9 +168,10 @@ head(ranked$data)
 `background` takes what hypeR takes — a population size (default `23467`) or a
 gene vector — plus `"difexp"`, which uses each signature's measured genes.
 Anything else is an error: `background` must be a number, a gene vector, or
-exactly `"difexp"`. With `"difexp"`, a hypergeometric query is first reduced to
-the genes its difexp measured (hypeR reduces only the genesets), with a warning
-naming each query that lost genes.
+exactly `"difexp"`. With a gene vector or `"difexp"`, a hypergeometric query is
+first reduced to the background genes (hypeR reduces only the genesets), with a
+warning naming each query that lost genes. `SigRepo Background Source` and
+`SigRepo Query Genes Removed` in each `hyp$info` record what happened.
 
 ```{r}
 hyp_measured <- SigRepo::runHypeR(
@@ -144,6 +181,19 @@ hyp_measured <- SigRepo::runHypeR(
   verbose = FALSE
 )
 hyp_measured$data[[1]]$info$Background
+```
+
+## Export
+
+`hypeR::hyp_to_excel()` uses each query name as a sheet name, and Excel allows
+at most 31 characters with none of `: \ / ? * [ ]`. Most SigRepo signature
+names are longer, so use `hypeRToExcel()`: it shortens and de-duplicates the
+sheet names and adds an `index` sheet that maps each sheet back to its query
+and signature.
+
+```{r, eval = requireNamespace("hypeR", quietly = TRUE) && requireNamespace("msigdbr", quietly = TRUE) && requireNamespace("openxlsx", quietly = TRUE)}
+xlsx <- tempfile(fileext = ".xlsx")
+SigRepo::hypeRToExcel(hyp, file_path = xlsx)
 ```
 
 ## Signatures from the database
@@ -164,16 +214,8 @@ conn_handler <- SigRepo::newConnHandler(
 hyp <- SigRepo::runHypeR(
   conn_handler = conn_handler,
   signature_id = c(101, 102, 103),
-  genesets = "msigdb",
-  msigdb_collection = "H",
+  genesets = hallmark,
   fdr = 0.05
 )
-
-# hyp_to_excel() uses each query name as an Excel sheet name, which must be at
-# most 31 characters and cannot contain : \ / ? * [ ], and SigRepo query names
-# built from long signature names routinely break that, so make them sheet-safe
-# first. This keeps the group label and numbers the sheets so they stay unique:
-n <- names(hyp$data)
-names(hyp$data) <- sprintf("%02d_%s", seq_along(n), substr(gsub("[][\\\\/?*:]", "_", sub(".* \\| ", "", n)), 1, 27))
-hypeR::hyp_to_excel(hyp, file_path = "sigrepo_hallmark.xlsx")
+SigRepo::hypeRToExcel(hyp, file_path = "sigrepo_hallmark.xlsx")
 ```

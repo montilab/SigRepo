@@ -116,6 +116,7 @@ reference:
       - '`prepareHypeRSignatures`'
       - '`runHypeR`'
       - '`getHypeRGenesets`'
+      - '`hypeRToExcel`'
       - '`runHyperGEM`'
       - '`hypergemAvailable`'
       - '`hypergemExport`'
