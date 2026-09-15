@@ -154,3 +154,47 @@ test_that("hypeREnrichmentData errors on hypergeometric results, bad queries and
   expect_error(SigRepo::hypeREnrichmentData(ks, "NOPE", query = "x"), "Geneset 'NOPE' is not in this result's genesets", fixed = TRUE)
   expect_error(SigRepo::hypeREnrichmentData(ks, "ABSENT", query = "x"), "'ABSENT' has no genes in this ranking", fixed = TRUE)
 })
+
+# ---- plotHypeRDots() ----
+
+test_that("plotHypeRDots draws one column per query, including a one-query multihyp", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("ggplot2")
+  one <- hypeR::multihyp$new(data = list(only = make_dot_hyp(c("A", "B", "C"), c(0.001, 0.01, 0.2))))
+  plot <- SigRepo::plotHypeRDots(one)
+  built <- ggplot2::ggplot_build(plot)
+
+  expect_equal(nrow(built$data[[1]]), 3L)
+  expect_equal(built$layout$panel_params[[1]]$y$get_labels(), c("C", "B", "A"))
+  expect_equal(built$layout$panel_params[[1]]$x$get_labels(), "only")
+  expect_equal(rlang::as_label(plot$layers[[1]]$mapping$colour), "significance")
+  expect_equal(plot$scales$get_scales("colour")$name, "-log10(FDR)")
+  expect_equal(plot$scales$get_scales("colour")$get_transformation()$name, "identity")
+  expect_equal(plot$scales$get_scales("size")$name, "Geneset size")
+})
+
+test_that("plotHypeRDots colours by score for ranked tests and rejects it for hypergeometric", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("ggplot2")
+  fgsea <- make_dot_hyp(c("A", "B"), c(0.01, 0.02), test = "fgsea", extra = list(nes = c(2, -1)))
+  plot <- SigRepo::plotHypeRDots(fgsea, color_by = "score", size_by = "none")
+  expect_equal(plot$scales$get_scales("colour")$name, "NES")
+  expect_null(plot$scales$get_scales("size"))
+  expect_equal(SigRepo::plotHypeRDots(fgsea, val = "pval")$scales$get_scales("colour")$name, "-log10(p)")
+
+  kstest <- make_dot_hyp("A", 0.01, test = "kstest", extra = list(score = 0.5))
+  expect_equal(SigRepo::plotHypeRDots(kstest, color_by = "score")$scales$get_scales("colour")$name, "Score")
+  expect_error(SigRepo::plotHypeRDots(make_dot_hyp("A", 0.01), color_by = "score"),
+               "color_by = \"score\" needs kstest or fgsea results", fixed = TRUE)
+})
+
+test_that("plotHypeRDots shows an empty-state plot and angles labels for many queries", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("ggplot2")
+  empty <- SigRepo::plotHypeRDots(make_dot_hyp("A", 0.5), fdr = 0.05)
+  expect_equal(ggplot2::ggplot_build(empty)$data[[1]]$label, "No genesets pass the cutoffs")
+
+  many <- hypeR::multihyp$new(data = stats::setNames(lapply(1:5, function(i) make_dot_hyp("A", 0.01)), paste0("q", 1:5)))
+  expect_equal(SigRepo::plotHypeRDots(many)$theme$axis.text.x$angle, 45)
+  expect_null(SigRepo::plotHypeRDots(hypeR::multihyp$new(data = list(q1 = make_dot_hyp("A", 0.01))))$theme$axis.text.x$angle)
+})

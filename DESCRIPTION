@@ -38,6 +38,7 @@ Suggests:
   BiocManager,
   devtools,
   fgsea,
+  ggplot2,
   hypeR (>= 2.0.0),
   hypeR.GEM,
   msigdbr,
