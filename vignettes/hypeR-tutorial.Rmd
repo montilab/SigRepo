@@ -196,6 +196,49 @@ xlsx <- tempfile(fileext = ".xlsx")
 SigRepo::hypeRToExcel(hyp, file_path = xlsx)
 ```
 
+## Your own cutoffs and gene lists
+
+`runHypeR()` builds hypergeometric queries from the stored signature table. To
+use a different threshold, get the difexp with the gene symbols `runHypeR()`
+resolves, filter it, and pass the genes as `signature`, which takes anything
+`hypeR::hypeR()` takes: a character vector, a named numeric vector, or a named
+list of those.
+
+```{r}
+difexp <- SigRepo::getHypeRDifexp(omic_signature = sig, verbose = FALSE)[[1]]
+strict <- difexp[!is.na(difexp$resolved_symbol) & difexp$adj_p < 0.01, ]
+
+custom <- SigRepo::runHypeR(
+  signature = list(
+    strict_up = strict$resolved_symbol[strict$score > 0],
+    strict_down = strict$resolved_symbol[strict$score < 0]
+  ),
+  genesets = hallmark,
+  background = unique(stats::na.omit(difexp$resolved_symbol)),
+  verbose = FALSE
+)
+names(custom$data)
+```
+
+`signature` cannot be mixed with `omic_signature`, `signature_id` or
+`signature_name`, and its results carry `Symbol Source = "supplied"` with no
+signature ID.
+
+## Per-signature backgrounds
+
+`background` also takes a named list, one entry per signature, keyed by
+signature label (the `signature_name` column of `prepareHypeRSignatures()$info`)
+or signature ID. Each entry is a number, a gene vector, or `"difexp"`, and the
+arms of a split signature share their signature's entry:
+
+```{r, eval = FALSE}
+hyp <- SigRepo::runHypeR(
+  omic_signature = list(aging = sig, platform_study = other_sig),
+  genesets = hallmark,
+  background = list(aging = "difexp", platform_study = platform_genes)
+)
+```
+
 ## Signatures from the database
 
 With a connection, pass signature ids or names instead of objects. Signatures

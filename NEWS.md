@@ -56,6 +56,13 @@
 - `query_names`: a function of the query info table that returns the query
   names, e.g. `function(info) paste(info$signature_id, info$group_label, sep = "_")`.
 - `prepareHypeRSignatures()$info` gains a `direction` column.
+- `signature =` takes hypeR-native input (a character vector, a named numeric
+  vector, or a named list of those) instead of SigRepo signatures, and still
+  gets backgrounds, the kstest guards, provenance and the return-type rule.
+- `getHypeRDifexp()` returns each signature's difexp with `resolved_symbol`,
+  so you can apply your own cutoffs and pass the genes to `signature =`.
+- `background` can be a named list giving each signature its own background
+  (number, gene vector or `"difexp"`), keyed by signature label or ID.
 - `hypeR (>= 2.0.0)` in Suggests.
 
 ## Fixes
