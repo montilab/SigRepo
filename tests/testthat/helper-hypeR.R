@@ -196,3 +196,14 @@ make_dot_hyp <- function(labels, fdr, test = "hypergeometric", extra = list(), i
   }
   hypeR::hyp$new(data = data, info = c(list(Test = test), info))
 }
+
+# 11 signed scores (no zero) and a geneset with a single hit at position 6: its
+# running sum reaches exactly +0.5 and -0.5 (weighted) or +/-5/11 (ranked), the
+# tie behind the production HALLMARK_NOTCH_SIGNALING case.
+hyper_tie_stats <- function() {
+  stats::setNames(c(5, 4, 3, 2, 1, 0.5, -1, -2, -3, -4, -5), sprintf("T%02d", 1:11))
+}
+
+hyper_tie_genesets <- function() {
+  list(TIE = "T06", TOP = c("T01", "T02", "T03"), BOT = c("T09", "T10", "T11"))
+}
