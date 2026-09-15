@@ -181,14 +181,46 @@ names(ranked$data)
 head(ranked$data[["LLFS_Aging_Gene_2023 | down"]]$data)
 ```
 
+## GSEA with fgsea
+
+hypeR's kstest weights hits only for its enrichment `score`; its p-value is an
+unweighted KS test toward the top of the ranking, so `power` never changes
+significance. `test = "fgsea"` runs `fgsea::fgseaMultilevel()` on the same
+ranking instead: its permutation p-values reflect the score weights (`power` is
+fgsea's `gseaParam`), and one run tests both tails. Pathways come back split by
+the sign of their enrichment score into `"<query> | up"` and `"<query> | down"`.
+
+```{r, eval = requireNamespace("hypeR", quietly = TRUE) && requireNamespace("msigdbr", quietly = TRUE) && requireNamespace("fgsea", quietly = TRUE)}
+gsea <- SigRepo::runHypeR(
+  omic_signature = sig,
+  genesets = hallmark,
+  test = "fgsea",
+  fgsea_args = list(minSize = 15, maxSize = 500),
+  verbose = FALSE
+)
+names(gsea$data)
+head(gsea$data[["LLFS_Aging_Gene_2023 | up"]]$data[, c("label", "pval", "fdr", "nes", "overlap")])
+```
+
+fgsea estimates p-values by random sampling. `seed = 1` (the default) makes a
+call reproducible without changing your session's random-number state; a
+different `seed` gives slightly different p-values, and `seed = NULL` uses the
+session's state. `fgsea_args` passes other `fgseaMultilevel()` options, e.g.
+`minSize = 15, maxSize = 500` to test only pathways of typical size. The
+results work with hypeR's functions:
+
+```{r, fig.width = 7, fig.height = 5, eval = requireNamespace("hypeR", quietly = TRUE) && requireNamespace("msigdbr", quietly = TRUE) && requireNamespace("fgsea", quietly = TRUE)}
+hypeR::hyp_dots(gsea, merge = TRUE, top = 10, title = "LLFS aging, Hallmark GSEA")
+```
+
 ## Direction types
 
 hypeR itself has no notion of direction; the split into queries is SigRepo's.
 
-| `direction_type` | Hypergeometric (`split = TRUE`) | kstest |
+| `direction_type` | Hypergeometric (`split = TRUE`) | kstest and fgsea |
 |---|---|---|
 | uni-directional | one query of every feature | the whole difexp, ranked by score |
-| bi-directional | one query per `group_label` (each arm is a direction) | the whole difexp, ranked by signed score; `direction` picks the end |
+| bi-directional | one query per `group_label` (each arm is a direction) | the whole difexp, ranked by signed score; `direction` picks the end (kstest) or the ES side (fgsea) |
 | categorical | one query per category and score sign: `"<label> \| <group> \| up"` / `"\| down"` (by category only when there are no scores) | each category's own difexp rows ranked separately: `"<label> \| <group>"`, with `" \| up"` / `" \| down"` for `direction = "both"` |
 
 A categorical signature's groups are categories (e.g. subtypes), each with its

@@ -61,6 +61,17 @@
 
 ## New
 
+- `runHypeR(test = "fgsea")` runs GSEA with `fgsea::fgseaMultilevel()`, ported
+  from hypeR's fgsea vignette wrapper. Unlike hypeR's kstest, whose p-values
+  ignore the score weights and test only the top of the ranking, fgsea gives
+  weighted permutation p-values, NES and the leading edge for both tails in one
+  run. Pathways are split by the sign of their enrichment score into
+  `"<query> | up"` and `"<query> | down"` hyps (`direction`, default `"both"`
+  for fgsea). `seed = 1` makes the p-values reproducible without touching the
+  session's random-number state; `fgsea_args` passes fgsea options such as
+  `minSize`/`maxSize`. The results work with `hyp_dots()`, `hyp_emap()`,
+  `rctbl_build()`, `hyp_to_rmd()` and `hypeRToExcel()`.
+
 - `getHypeRGenesets()` returns a named, versioned `hypeR::gsets` for MSigDB.
   Mouse requests for human collections (e.g. C2, C5) now use ortholog mapping.
 - `hypeRToExcel()` writes a `hyp`/`multihyp` with Excel-safe, unique sheet
