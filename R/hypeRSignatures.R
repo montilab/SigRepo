@@ -145,6 +145,27 @@ resolveSignatureSymbols <- function(omic_signature, table = c("signature", "dife
   base::list(symbols = base::rep(NA_character_, n_rows), source = NA_character_)
 }
 
+#' resolveSignatureSymbols() memoised for one call
+#'
+#' A kstest run with background = "difexp" needs each signature's difexp
+#' symbols twice (query and background), and each resolution can be a
+#' reference-table query, so resolve each (signature, table) pair once.
+#'
+#' @param conn_handler Passed to resolveSignatureSymbols().
+#' @return function(omic_signature, table, key); `key` must be unique per
+#'   signature within the call (the signature's label).
+#' @noRd
+newHypeRSymbolResolver <- function(conn_handler) {
+  cache <- base::new.env(parent = base::emptyenv())
+  function(omic_signature, table, key) {
+    id <- base::paste(key, table, sep = "\r")
+    if (!base::exists(id, envir = cache, inherits = FALSE)) {
+      base::assign(id, resolveSignatureSymbols(omic_signature, table, conn_handler), envir = cache)
+    }
+    base::get(id, envir = cache, inherits = FALSE)
+  }
+}
+
 #' Error unless split is TRUE or FALSE
 #' @noRd
 checkHypeRSplit <- function(split) {
@@ -152,6 +173,38 @@ checkHypeRSplit <- function(split) {
     base::stop("\n'split' must be TRUE or FALSE.\n")
   }
   base::invisible(split)
+}
+
+#' Error when kstest-only arguments are changed for a hypergeometric test
+#' @noRd
+checkHypeRKstestArgs <- function(test, direction, ks_source) {
+  if (base::identical(test, "hypergeometric") && (!base::identical(direction, "up") || !base::identical(ks_source, "difexp"))) {
+    base::stop("\n'direction' and 'ks_source' only apply when test = \"kstest\".\n")
+  }
+  base::invisible(NULL)
+}
+
+#' Error unless query_names is NULL or a function
+#' @noRd
+checkHypeRQueryNames <- function(query_names) {
+  if (!base::is.null(query_names) && !base::is.function(query_names)) {
+    base::stop("\n'query_names' must be NULL or a function that takes the query info data frame and returns one name per row.\n")
+  }
+  base::invisible(query_names)
+}
+
+#' Apply a user query_names function to the info table
+#' @noRd
+applyHypeRQueryNames <- function(query_names, info) {
+  new_names <- query_names(info)
+  if (!base::is.character(new_names) || base::length(new_names) != base::nrow(info) ||
+      base::any(base::is.na(new_names) | !base::nzchar(new_names))) {
+    base::stop(base::sprintf(
+      "\n'query_names' must return a character vector of %d non-empty name(s), one per row of the query info.\n",
+      base::nrow(info)
+    ))
+  }
+  new_names
 }
 
 disambiguateHypeRLabels <- function(labels) {
@@ -203,21 +256,26 @@ collectHypeRSignatures <- function(conn_handler, signature_id, signature_name, o
     resolveSignatureLabel(signatures[[i]], label = NULL, fallback = base::sprintf("sig_%s", i))
   }, base::character(1))
 
-  base::list(signatures = base::unname(signatures), ids = ids, labels = disambiguateHypeRLabels(labels))
+  # hypeR returns a hyp for a vector and a multihyp for a list; a single
+  # OmicSignature or a single id/name is SigRepo's equivalent of a vector.
+  single <- methods::is(omic_signature, "OmicSignature") ||
+    (base::is.null(omic_signature) && base::length(signatures) == 1L)
+
+  base::list(signatures = base::unname(signatures), ids = ids, labels = disambiguateHypeRLabels(labels), single = single)
 }
 
 emptyHypeRInfo <- function() {
   base::data.frame(
     query = base::character(), signature_id = base::character(), signature_name = base::character(),
-    group_label = base::character(), n_features = base::integer(), n_dropped = base::integer(),
-    symbol_source = base::character(), stringsAsFactors = FALSE
+    group_label = base::character(), direction = base::character(), n_features = base::integer(),
+    n_dropped = base::integer(), symbol_source = base::character(), stringsAsFactors = FALSE
   )
 }
 
-hypeRInfoRow <- function(query, signature_id, label, group_label, n_features, n_dropped, symbol_source) {
+hypeRInfoRow <- function(query, signature_id, label, group_label, direction, n_features, n_dropped, symbol_source) {
   base::data.frame(
     query = query, signature_id = signature_id, signature_name = label, group_label = group_label,
-    n_features = base::as.integer(n_features), n_dropped = base::as.integer(n_dropped),
+    direction = direction, n_features = base::as.integer(n_features), n_dropped = base::as.integer(n_dropped),
     symbol_source = symbol_source, stringsAsFactors = FALSE
   )
 }
@@ -228,13 +286,13 @@ hypeRSkip <- function(reason, message) {
 
 #' Hypergeometric query vectors for one signature
 #' @noRd
-buildHypergeometricQueries <- function(omic_signature, label, signature_id, split, conn_handler) {
+buildHypergeometricQueries <- function(omic_signature, label, signature_id, split, resolve_symbols) {
   tbl <- omic_signature$signature
   if (!methods::is(tbl, "data.frame") || base::nrow(tbl) == 0) {
     return(hypeRSkip("empty_signature", "The signature table is empty."))
   }
 
-  resolved <- resolveSignatureSymbols(omic_signature, "signature", conn_handler)
+  resolved <- resolve_symbols(omic_signature, "signature", label)
   if (base::all(base::is.na(resolved$symbols))) {
     return(hypeRSkip("no_gene_symbols", "No gene symbols in the signature, its difexp, or the reference tables."))
   }
@@ -262,7 +320,7 @@ buildHypergeometricQueries <- function(omic_signature, label, signature_id, spli
     queries[[query_name]] <- query
     info[[base::length(info) + 1]] <- hypeRInfoRow(
       query = query_name, signature_id = signature_id, label = label,
-      group_label = if (base::nzchar(group)) group else NA_character_,
+      group_label = if (base::nzchar(group)) group else NA_character_, direction = NA_character_,
       n_features = base::length(query), n_dropped = base::sum(base::is.na(group_symbols)),
       symbol_source = resolved$source
     )
@@ -271,58 +329,71 @@ buildHypergeometricQueries <- function(omic_signature, label, signature_id, spli
   base::list(queries = queries, info = base::do.call(base::rbind, info), skip = NULL)
 }
 
-#' Weighted (ranked) kstest query vector for one signature
+#' Ranked kstest query vector(s) for one signature
+#'
+#' Ranks `ks_source`'s table by `score_col`. "up" puts the highest scores
+#' first; "down" ranks the negated scores so the lowest come first (hypeR's
+#' one-sided test only finds enrichment at the top); "both" returns one query
+#' per direction, named "<label> | up" and "<label> | down".
 #' @noRd
-buildKstestQuery <- function(omic_signature, label, signature_id, score_col, conn_handler) {
-  tbl <- omic_signature$difexp
+buildKstestQueries <- function(omic_signature, label, signature_id, score_col, direction, ks_source, resolve_symbols) {
+  tbl <- omic_signature[[ks_source]]
   if (!methods::is(tbl, "data.frame") || base::nrow(tbl) == 0) {
-    return(hypeRSkip("no_difexp", "kstest needs a difexp table and this signature has none."))
+    if (base::identical(ks_source, "difexp")) {
+      return(hypeRSkip("no_difexp", "kstest needs a difexp table and this signature has none."))
+    }
+    return(hypeRSkip("empty_signature", "The signature table is empty."))
   }
   if (!score_col %in% base::colnames(tbl)) {
     return(hypeRSkip(
       "missing_score_col",
-      base::sprintf("difexp has no '%s' column (has: %s).", score_col, base::paste(base::colnames(tbl), collapse = ", "))
+      base::sprintf("%s has no '%s' column (has: %s).", ks_source, score_col, base::paste(base::colnames(tbl), collapse = ", "))
     ))
   }
 
-  resolved <- resolveSignatureSymbols(omic_signature, "difexp", conn_handler)
+  resolved <- resolve_symbols(omic_signature, ks_source, label)
   scores <- base::suppressWarnings(base::as.numeric(tbl[[score_col]]))
   keep <- !base::is.na(resolved$symbols) & !base::is.na(scores)
   if (!base::any(keep)) {
-    return(hypeRSkip("no_gene_symbols", "No difexp row has both a gene symbol and a numeric score."))
+    return(hypeRSkip("no_gene_symbols", base::sprintf("No %s row has both a gene symbol and a numeric score.", ks_source)))
   }
 
   best <- base::vapply(
     base::split(scores[keep], resolved$symbols[keep]),
     # On an opposite-sign |score| tie keep the positive value, so the result
-    # does not depend on difexp row order.
+    # does not depend on row order.
     function(x) base::max(x[base::abs(x) == base::max(base::abs(x))]),
     base::numeric(1)
   )
-  query <- base::sort(best, decreasing = TRUE)
 
-  base::list(
-    queries = stats::setNames(base::list(query), label),
-    info = hypeRInfoRow(
-      query = label, signature_id = signature_id, label = label, group_label = NA_character_,
-      n_features = base::length(query), n_dropped = base::sum(!keep), symbol_source = resolved$source
-    ),
-    skip = NULL
-  )
+  directions <- if (base::identical(direction, "both")) c("up", "down") else direction
+  queries <- base::list()
+  info <- base::list()
+  for (d in directions) {
+    query_name <- if (base::identical(direction, "both")) base::sprintf("%s | %s", label, d) else label
+    queries[[query_name]] <- base::sort(if (base::identical(d, "down")) -best else best, decreasing = TRUE)
+    info[[base::length(info) + 1]] <- hypeRInfoRow(
+      query = query_name, signature_id = signature_id, label = label, group_label = NA_character_,
+      direction = d, n_features = base::length(best), n_dropped = base::sum(!keep), symbol_source = resolved$source
+    )
+  }
+
+  base::list(queries = queries, info = base::do.call(base::rbind, info), skip = NULL)
 }
 
 #' Build query vectors for already-collected signatures
 #' @noRd
-buildHypeRQueries <- function(inputs, test, split, score_col, conn_handler) {
+buildHypeRQueries <- function(inputs, test, split, score_col, resolve_symbols,
+                              direction = "up", ks_source = "difexp", query_names = NULL) {
   queries <- base::list()
   info <- base::list()
   skipped <- base::list()
 
   for (i in base::seq_along(inputs$signatures)) {
     built <- if (base::identical(test, "hypergeometric")) {
-      buildHypergeometricQueries(inputs$signatures[[i]], inputs$labels[i], inputs$ids[i], split, conn_handler)
+      buildHypergeometricQueries(inputs$signatures[[i]], inputs$labels[i], inputs$ids[i], split, resolve_symbols)
     } else {
-      buildKstestQuery(inputs$signatures[[i]], inputs$labels[i], inputs$ids[i], score_col, conn_handler)
+      buildKstestQueries(inputs$signatures[[i]], inputs$labels[i], inputs$ids[i], score_col, direction, ks_source, resolve_symbols)
     }
 
     if (!base::is.null(built$skip)) {
@@ -338,9 +409,13 @@ buildHypeRQueries <- function(inputs, test, split, score_col, conn_handler) {
   }
 
   info <- if (base::length(info) > 0) base::do.call(base::rbind, info) else emptyHypeRInfo()
-  # Labels are unique per signature, but a label can still collide with another
-  # signature's "<label> | <group>" query name, so de-duplicate the final names.
   if (base::length(queries) > 0) {
+    if (!base::is.null(query_names)) {
+      base::names(queries) <- applyHypeRQueryNames(query_names, info)
+    }
+    # Labels are unique per signature, but a label can still collide with
+    # another signature's "<label> | <group>" query name (or a user name can
+    # repeat), so de-duplicate the final names.
     base::names(queries) <- disambiguateHypeRLabels(base::names(queries))
     info$query <- base::names(queries)
   }
@@ -370,21 +445,37 @@ buildHypeRQueries <- function(inputs, test, split, score_col, conn_handler) {
 #' names, when given, become the query labels.
 #' @param test \code{"hypergeometric"} (a character vector of symbols from the
 #' signature table) or \code{"kstest"} (a named numeric vector ranked by
-#' \code{score_col} from the full difexp table).
+#' \code{score_col}, from the table named by \code{ks_source}).
 #' @param split Logical; for \code{"hypergeometric"}, build one vector per
 #' \code{group_label} (e.g. one per arm of a bi-directional signature). Ignored by
-#' \code{"kstest"}, which ranks the whole difexp in one vector by signed score;
-#' its test finds genesets enriched toward the top of that ranking only (see
-#' \code{power} in \code{runHypeR()}).
-#' Defaults to \code{TRUE}.
-#' @param score_col difexp column used to rank genes for \code{"kstest"}.
-#' Defaults to \code{"score"}.
+#' \code{"kstest"}, which ranks the whole table in one vector per
+#' \code{direction}. Defaults to \code{TRUE}.
+#' @param direction For \code{"kstest"} only: which end of the ranking to test.
+#' hypeR's KS test only finds genesets enriched toward the top of the ranking.
+#' \code{"up"} (default) ranks by \code{score_col}, highest first;
+#' \code{"down"} ranks by the negated \code{score_col}, so the lowest scores
+#' come first; \code{"both"} builds one query per direction, named
+#' \code{"<label> | up"} and \code{"<label> | down"}.
+#' @param ks_source For \code{"kstest"} only: the table to rank.
+#' \code{"difexp"} (default) ranks every measured gene. \code{"signature"}
+#' ranks only the signature table, for signatures stored without a difexp; the
+#' KS test then compares genesets against the signature's genes rather than
+#' against everything measured, so its p-values answer a narrower question.
+#' @param score_col Column used to rank genes for \code{"kstest"}, in the table
+#' named by \code{ks_source}. Defaults to \code{"score"}.
+#' @param query_names \code{NULL} (default) for names built as
+#' \code{"<label> | <group_label>"}, \code{"<label> | <direction>"} or
+#' \code{"<label>"}, or a function that takes the query info data frame (the
+#' \code{info} element described under Value, with those default names in
+#' \code{query}) and returns one non-empty name per row. Duplicates are made
+#' unique as \code{name (2)}. For example
+#' \code{function(info) paste(info$signature_id, info$group_label, sep = "_")}.
 #' @param verbose Logical; print messages while fetching signatures.
 #'
 #' @details Gene symbols come from the first source that works: a symbol column
 #' (\code{gene_symbol}, \code{symbol}, \code{geneSymbol}, \code{gene},
-#' \code{hgnc_symbol}, \code{mgi_symbol}) in the table itself; for
-#' \code{"hypergeometric"}, the difexp's symbol column joined on \code{probe_id};
+#' \code{hgnc_symbol}, \code{mgi_symbol}) in the table itself; for the
+#' signature table, the difexp's symbol column joined on \code{probe_id};
 #' then the reference feature table by \code{feature_name} and organism (needs
 #' \code{conn_handler}). \code{probe_id} is never read as a symbol.
 #'
@@ -392,7 +483,8 @@ buildHypeRQueries <- function(inputs, test, split, score_col, conn_handler) {
 #' \describe{
 #'   \item{\code{signatures}}{Named list of query vectors, ready for \code{hypeR::hypeR()}.}
 #'   \item{\code{info}}{Data frame, one row per query: \code{query}, \code{signature_id},
-#'   \code{signature_name}, \code{group_label}, \code{n_features}, \code{n_dropped},
+#'   \code{signature_name}, \code{group_label}, \code{direction} (kstest only),
+#'   \code{n_features}, \code{n_dropped} (rows without a gene symbol or score),
 #'   \code{symbol_source}.}
 #'   \item{\code{skipped}}{Data frame of signatures that produced no query:
 #'   \code{signature}, \code{reason}, \code{message}.}
@@ -411,11 +503,18 @@ prepareHypeRSignatures <- function(
     omic_signature = NULL,
     test = c("hypergeometric", "kstest"),
     split = TRUE,
+    direction = c("up", "down", "both"),
+    ks_source = c("difexp", "signature"),
     score_col = "score",
+    query_names = NULL,
     verbose = TRUE
 ) {
   test <- base::match.arg(test)
+  direction <- base::match.arg(direction)
+  ks_source <- base::match.arg(ks_source)
   checkHypeRSplit(split)
+  checkHypeRKstestArgs(test, direction, ks_source)
+  checkHypeRQueryNames(query_names)
 
   inputs <- collectHypeRSignatures(
     conn_handler = conn_handler,
@@ -425,5 +524,9 @@ prepareHypeRSignatures <- function(
     verbose = verbose
   )
 
-  buildHypeRQueries(inputs, test = test, split = split, score_col = score_col, conn_handler = conn_handler)
+  buildHypeRQueries(
+    inputs, test = test, split = split, score_col = score_col,
+    resolve_symbols = newHypeRSymbolResolver(conn_handler),
+    direction = direction, ks_source = ks_source, query_names = query_names
+  )
 }

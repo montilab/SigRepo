@@ -220,11 +220,16 @@ resolveHypeRSignatureLabels <- function(omic_signatures) {
 #' each query its own signature's measured genes; signatures without difexp
 #' symbols fall back to hypeR's default with one warning.
 #'
-#' @return Unnamed list, one background per row of `info`.
+#' @return list(values = unnamed list, one background per row of `info`;
+#'   sources = chr per row: "number", "genes", "difexp" or "difexp-fallback")
 #' @noRd
-resolveQueryBackgrounds <- function(background, info, inputs, conn_handler) {
-  if (!(base::is.character(background) && base::length(background) == 1L && base::identical(background, "difexp"))) {
-    return(base::rep(base::list(background), base::nrow(info)))
+resolveQueryBackgrounds <- function(background, info, inputs, resolve_symbols) {
+  n <- base::nrow(info)
+  if (!base::identical(background, "difexp")) {
+    return(base::list(
+      values = base::rep(base::list(background), n),
+      sources = base::rep(if (base::is.character(background)) "genes" else "number", n)
+    ))
   }
 
   signatures_by_label <- stats::setNames(inputs$signatures, inputs$labels)
@@ -234,7 +239,7 @@ resolveQueryBackgrounds <- function(background, info, inputs, conn_handler) {
   for (label in base::unique(info$signature_name)) {
     sig <- signatures_by_label[[label]]
     symbols <- if (methods::is(sig$difexp, "data.frame") && base::nrow(sig$difexp) > 0) {
-      resolveSignatureSymbols(sig, "difexp", conn_handler)$symbols
+      resolve_symbols(sig, "difexp", label)$symbols
     } else {
       NA_character_
     }
@@ -259,23 +264,58 @@ resolveQueryBackgrounds <- function(background, info, inputs, conn_handler) {
     )
   }
 
-  base::unname(universes[info$signature_name])
+  base::list(
+    values = base::unname(universes[info$signature_name]),
+    sources = base::ifelse(info$signature_name %in% fell_back, "difexp-fallback", "difexp")
+  )
 }
+
+# Excel caps a cell at 32767 characters; the dropped-geneset list goes into
+# hyp_to_excel()'s versioning sheet.
+HYPER_INFO_MAX_CHARS <- 32000L
 
 #' Append SigRepo provenance to a hyp object's info, in a fixed order
 #'
 #' hypeR::hyp_to_excel() stacks info across a multihyp with mapply(), so every
-#' hyp must carry the same keys in the same order.
+#' hyp must carry the same keys in the same order. Keys that do not apply to
+#' the test are "".
+#'
+#' @param info_row One row of the prepared info data frame.
+#' @param run list(test, split, score_col, ks_source, background_source,
+#'   query_genes_removed, genesets_dropped = chr).
 #' @noRd
-appendHypeRProvenance <- function(hyp_obj, info_row) {
+appendHypeRProvenance <- function(hyp_obj, info_row, run) {
+  blank_na <- function(x) if (base::is.na(x)) "" else base::as.character(x)
+  is_kstest <- base::identical(run$test, "kstest")
+  dropped_list <- base::paste(run$genesets_dropped, collapse = "; ")
+  if (base::nchar(dropped_list) > HYPER_INFO_MAX_CHARS) {
+    dropped_list <- base::paste0(base::substr(dropped_list, 1L, HYPER_INFO_MAX_CHARS), " ...")
+  }
+
   hyp_obj$info <- c(hyp_obj$info, base::list(
-    "SigRepo Signature ID" = if (base::is.na(info_row$signature_id)) "" else base::as.character(info_row$signature_id),
+    "SigRepo Signature ID" = blank_na(info_row$signature_id),
     "SigRepo Signature Name" = base::as.character(info_row$signature_name),
-    "Group Label" = if (base::is.na(info_row$group_label)) "" else base::as.character(info_row$group_label),
-    "Symbol Source" = if (base::is.na(info_row$symbol_source)) "" else base::as.character(info_row$symbol_source)
+    "Group Label" = blank_na(info_row$group_label),
+    "Symbol Source" = blank_na(info_row$symbol_source),
+    "SigRepo Direction" = blank_na(info_row$direction),
+    "SigRepo Ranked Table" = if (is_kstest) run$ks_source else "",
+    "SigRepo Score Column" = if (is_kstest) run$score_col else "",
+    "SigRepo Split" = if (is_kstest) "" else base::as.character(run$split),
+    "SigRepo Background Source" = run$background_source,
+    "SigRepo Features Unmapped" = base::as.character(info_row$n_dropped),
+    "SigRepo Query Genes Removed" = base::as.character(run$query_genes_removed),
+    "SigRepo Genesets Dropped" = base::as.character(base::length(run$genesets_dropped)),
+    "SigRepo Genesets Dropped List" = dropped_list
   ))
   hyp_obj
 }
+
+HYPER_PROVENANCE_KEYS <- c(
+  "SigRepo Signature ID", "SigRepo Signature Name", "Group Label", "Symbol Source",
+  "SigRepo Direction", "SigRepo Ranked Table", "SigRepo Score Column", "SigRepo Split",
+  "SigRepo Background Source", "SigRepo Features Unmapped", "SigRepo Query Genes Removed",
+  "SigRepo Genesets Dropped", "SigRepo Genesets Dropped List"
+)
 
 #' Error unless background is a single positive number, a gene vector, or "difexp"
 #' @noRd
@@ -380,78 +420,94 @@ warnSkippedHypeRSignatures <- function(skipped) {
 #'
 #' @description Builds hypeR query vectors from SigRepo signatures (see
 #' \code{prepareHypeRSignatures()}) and runs \code{hypeR::hypeR()} on them. The
-#' arguments after \code{score_col} are hypeR's own, with hypeR's defaults, and
-#' the result is hypeR's own object, so \code{hypeR::hyp_dots()},
-#' \code{hyp_show()}, \code{hyp_emap()}, \code{hyp_to_excel()} and
-#' \code{hyp_to_rmd()} work on it directly.
+#' arguments after \code{query_names} are hypeR's own, with hypeR's defaults,
+#' and the result is hypeR's own object, so \code{hypeR::hyp_dots()},
+#' \code{hyp_emap()}, \code{hyp_to_rmd()}, \code{hyp_to_table()} and
+#' \code{rctbl_build()} work on it directly, and \code{hyp_hmap()} does when
+#' \code{genesets} is a \code{hypeR::rgsets}. \code{hyp_show()} takes a single
+#' \code{hyp}, so pass one element of a \code{multihyp}, e.g.
+#' \code{hypeR::hyp_show(res$data[[1]])}; \code{hyp_to_graph()} also needs
+#' \code{rgsets} genesets.
 #'
-#' \code{hyp_to_excel()} uses each query name as an Excel sheet name, which
-#' must be at most 31 characters and cannot contain \code{: \\ / ? * [ ]}.
-#' Query names built from long signature names break that, so make the names
-#' sheet-safe first. This keeps the group label (the part after \code{" | "}),
-#' so arms stay distinguishable, and numbers the sheets so they stay unique:
-#' \preformatted{
-#' n <- names(hyp$data)
-#' names(hyp$data) <- sprintf("\%02d_\%s", seq_along(n), substr(gsub("[][\\\\\\\\/?*:]", "_", sub(".* \\\\| ", "", n)), 1, 27))
-#' hypeR::hyp_to_excel(hyp, file_path = "results.xlsx")
-#' }
+#' \code{hypeR::hyp_to_excel()} uses each query name as an Excel sheet name,
+#' which must be at most 31 characters and cannot contain
+#' \code{: \\ / ? * [ ]}; most SigRepo signature names are longer. Use
+#' \code{hypeRToExcel()}, which makes the sheet names safe and adds an index
+#' sheet, or shorten the names with \code{query_names}.
 #'
 #' @inheritParams prepareHypeRSignatures
 #' @inheritParams getHypeRGenesets
 #' @param background hypeR's background: a single number (population size), a
 #' character vector of background genes, or \code{"difexp"} to use each
 #' signature's measured genes from its difexp table. Signatures without difexp
-#' symbols fall back to \code{23467} with a warning. With \code{"difexp"}, a
-#' hypergeometric query is first reduced to its measured genes (hypeR reduces
-#' only the genesets), with a warning naming each query that lost genes.
-#' Anything else (e.g. \code{"Difexp"}) is an error. Defaults to \code{23467}.
+#' symbols fall back to \code{23467} with a warning. With a gene vector or
+#' \code{"difexp"}, a hypergeometric query is first reduced to the background
+#' genes, with a warning naming each query that lost genes: hypeR reduces only
+#' the genesets, and query genes outside the background would distort the
+#' p-values. Anything else (e.g. \code{"Difexp"}) is an error. Defaults to
+#' \code{23467}.
 #' @param power Exponent for the kstest score weights (kstest only). It changes
-#' only the enrichment \code{score}: \code{1} (default) weights hits by
-#' |score|, \code{0} is unweighted. The \code{pval} and \code{fdr} come from
-#' hypeR's unweighted, one-sided KS test and do not depend on \code{power} or
-#' \code{absolute}. That test finds genesets enriched toward the top of the
-#' ranking (the highest scores); genesets concentrated among the most negative
-#' scores cannot reach significance. To test that end, rank by a negated score
-#' column: add \code{difexp$neg_score <- -difexp$score} to your OmicSignature
-#' copy and pass \code{score_col = "neg_score"}. hypeR's kstest also cannot
-#' score a geneset whose hits in a query all have score 0 (\code{power != 0})
-#' or that contains every query gene (any power); such genesets are dropped for
-#' that query with a warning, which also removes them from the FDR adjustment.
-#' @param absolute Passed to \code{hypeR::hypeR()} (kstest only). Defaults to \code{FALSE}.
+#' only the enrichment \code{score}. \code{1} (default) weights hits by
+#' |score|. \code{0} runs hypeR's ranked (unweighted) signature: the query is
+#' passed as gene names in rank order, so \code{score} and
+#' \code{Signature Type = "ranked"} match hypeR's documented ranked test. The
+#' \code{pval} and \code{fdr} come from hypeR's unweighted, one-sided KS test
+#' and do not depend on \code{power} or \code{absolute}. That test finds
+#' genesets enriched toward the top of the ranking; use \code{direction} to
+#' test the other end. hypeR's kstest also cannot score a geneset whose hits in
+#' a query all have score 0 (\code{power != 0}) or that contains every query
+#' gene (any power); such genesets are dropped for that query with a warning,
+#' which also removes them from the FDR adjustment. They are listed in the
+#' result's \code{info} (see Value).
+#' @param absolute Passed to \code{hypeR::hypeR()} (kstest only). hypeR marks
+#' it as not fully implemented. Defaults to \code{FALSE}.
 #' @param pval Keep results with p-value at or below this. Defaults to \code{1}.
 #' @param fdr Keep results with FDR at or below this. Defaults to \code{1}.
-#' @param plotting Logical; generate hypeR's per-geneset plots. Defaults to \code{FALSE}.
+#' @param plotting Logical; generate hypeR's per-geneset plots. Defaults to
+#' \code{FALSE}, in which case the empty placeholder plots hypeR stores anyway
+#' are removed (they are most of the object's size).
 #' @param quiet Logical; suppress hypeR's logs. Defaults to \code{TRUE}.
 #'
-#' @return A \code{hypeR} \code{hyp} object when one query vector is produced,
-#' otherwise a \code{multihyp} named by query. Each \code{hyp$info} ends with
-#' \code{SigRepo Signature ID}, \code{SigRepo Signature Name},
-#' \code{Group Label} and \code{Symbol Source}. Signatures that cannot produce a
-#' query are skipped with a warning; if none can, an error is raised. A query
-#' left with no genesets or no genes (after the drops described under
-#' \code{power} and \code{background}) is skipped with a warning; if no query
-#' is left, an error is raised.
-#' Query names are unique but can be long; rename them as shown in the
-#' description before \code{hypeR::hyp_to_excel()}.
+#' @return A \code{hyp} when the input is a single signature (one
+#' \code{OmicSignature}, or one id or name) and the test builds one query by
+#' construction (\code{test = "kstest"} with \code{direction} \code{"up"} or
+#' \code{"down"}, or \code{split = FALSE}). Otherwise a \code{multihyp} named
+#' by query, even when only one query is left. This mirrors hypeR, where a
+#' vector gives a \code{hyp} and a named list a \code{multihyp}.
+#'
+#' Each \code{hyp$info} ends with these keys, in this order (\code{""} when a
+#' key does not apply): \code{SigRepo Signature ID},
+#' \code{SigRepo Signature Name}, \code{Group Label}, \code{Symbol Source},
+#' \code{SigRepo Direction}, \code{SigRepo Ranked Table},
+#' \code{SigRepo Score Column}, \code{SigRepo Split},
+#' \code{SigRepo Background Source} (\code{number}, \code{genes},
+#' \code{difexp}, or \code{difexp-fallback}), \code{SigRepo Features Unmapped},
+#' \code{SigRepo Query Genes Removed}, \code{SigRepo Genesets Dropped} and
+#' \code{SigRepo Genesets Dropped List}.
+#'
+#' Signatures that cannot produce a query are skipped with a warning; if none
+#' can, an error is raised. A query left with no genesets or no genes (after
+#' the drops described under \code{power} and \code{background}) is skipped
+#' with a warning; if no query is left, an error is raised.
 #'
 #' @examples
 #' \dontrun{
 #' utils::data("LLFS_Aging_Gene_2023", package = "SigRepo")
+#' hallmark <- SigRepo::getHypeRGenesets("msigdb", msigdb_collection = "H")
 #'
 #' hyp <- SigRepo::runHypeR(
 #'   omic_signature = LLFS_Aging_Gene_2023,
-#'   genesets = "msigdb",
-#'   msigdb_collection = "H",
+#'   genesets = hallmark,
 #'   fdr = 0.05
 #' )
 #' hypeR::hyp_dots(hyp)
+#' SigRepo::hypeRToExcel(hyp, file_path = "llfs_hallmark.xlsx")
 #'
 #' ranked <- SigRepo::runHypeR(
 #'   omic_signature = LLFS_Aging_Gene_2023,
-#'   genesets = "msigdb",
-#'   msigdb_collection = "H",
+#'   genesets = hallmark,
 #'   test = "kstest",
-#'   power = 0
+#'   direction = "both"
 #' )
 #' }
 #'
@@ -468,7 +524,10 @@ runHypeR <- function(
     msigdb_clean = FALSE,
     test = c("hypergeometric", "kstest"),
     split = TRUE,
+    direction = c("up", "down", "both"),
+    ks_source = c("difexp", "signature"),
     score_col = "score",
+    query_names = NULL,
     background = 23467,
     power = 1,
     absolute = FALSE,
@@ -483,8 +542,12 @@ runHypeR <- function(
   }
 
   test <- base::match.arg(test)
+  direction <- base::match.arg(direction)
+  ks_source <- base::match.arg(ks_source)
   checkHypeRBackground(background)
   checkHypeRSplit(split)
+  checkHypeRKstestArgs(test, direction, ks_source)
+  checkHypeRQueryNames(query_names)
 
   if (base::missing(genesets)) {
     genesets <- NULL
@@ -504,25 +567,29 @@ runHypeR <- function(
     omic_signature = omic_signature,
     verbose = verbose
   )
-  prepared <- buildHypeRQueries(inputs, test = test, split = split, score_col = score_col, conn_handler = conn_handler)
+  resolve_symbols <- newHypeRSymbolResolver(conn_handler)
+  prepared <- buildHypeRQueries(
+    inputs, test = test, split = split, score_col = score_col, resolve_symbols = resolve_symbols,
+    direction = direction, ks_source = ks_source, query_names = query_names
+  )
 
   warnSkippedHypeRSignatures(prepared$skipped)
   if (base::length(prepared$signatures) == 0) {
     base::stop("\nNo signature produced a hypeR query vector; see the warning for each signature's reason.\n")
   }
 
-  backgrounds <- resolveQueryBackgrounds(background, prepared$info, inputs, conn_handler)
+  backgrounds <- resolveQueryBackgrounds(background, prepared$info, inputs, resolve_symbols)
   queries <- prepared$signatures
-  query_names <- base::names(queries)
+  query_names_out <- base::names(queries)
 
   # hypeR reduces genesets to a gene-vector background but not the query, so a
-  # hypergeometric query gene outside its difexp background would distort the
-  # p-values. Keep each query inside its own measured genes.
-  if (base::identical(background, "difexp") && base::identical(test, "hypergeometric")) {
-    removed <- base::integer(base::length(queries))
+  # hypergeometric query gene outside the background would distort the
+  # p-values. Keep each query inside its background.
+  removed <- base::integer(base::length(queries))
+  if (base::identical(test, "hypergeometric")) {
     for (i in base::seq_along(queries)) {
-      if (base::is.character(backgrounds[[i]])) {
-        measured <- queries[[i]] %in% backgrounds[[i]]
+      if (base::is.character(backgrounds$values[[i]])) {
+        measured <- queries[[i]] %in% backgrounds$values[[i]]
         removed[i] <- base::sum(!measured)
         queries[[i]] <- queries[[i]][measured]
       }
@@ -530,9 +597,11 @@ runHypeR <- function(
     if (base::any(removed > 0)) {
       base::warning(
         base::sprintf(
-          "background = \"difexp\": removed %s query gene(s) not measured in difexp from: %s",
+          "%s: removed %s query gene(s) not %s from: %s",
+          if (base::identical(background, "difexp")) "background = \"difexp\"" else "background",
           base::sum(removed),
-          base::paste(base::sprintf("'%s' (%d)", query_names[removed > 0], removed[removed > 0]), collapse = ", ")
+          if (base::identical(background, "difexp")) "measured in difexp" else "in the background gene vector",
+          base::paste(base::sprintf("'%s' (%d)", query_names_out[removed > 0], removed[removed > 0]), collapse = ", ")
         ),
         call. = FALSE
       )
@@ -544,7 +613,7 @@ runHypeR <- function(
   # misaligns scores, so drop those per query before calling hypeR.
   query_genesets <- base::lapply(base::seq_along(queries), function(i) {
     if (base::identical(test, "kstest")) {
-      dropZeroWeightGenesets(resolved_genesets, queries[[i]], background = backgrounds[[i]], power = power)
+      dropZeroWeightGenesets(resolved_genesets, queries[[i]], background = backgrounds$values[[i]], power = power)
     } else {
       base::list(genesets = resolved_genesets, dropped = base::character())
     }
@@ -571,7 +640,7 @@ runHypeR <- function(
       base::sprintf(
         "Skipped %d query(ies) with nothing left to test after removing zero-weight genesets or unmeasured genes: %s",
         base::sum(!runnable),
-        base::paste(base::sprintf("'%s'", query_names[!runnable]), collapse = ", ")
+        base::paste(base::sprintf("'%s'", query_names_out[!runnable]), collapse = ", ")
       ),
       call. = FALSE
     )
@@ -583,13 +652,17 @@ runHypeR <- function(
 
   results <- base::lapply(run_idx, function(i) {
     if (!quiet && base::length(run_idx) > 1) {
-      base::cat(base::sprintf("\n%s\n", query_names[i]))
+      base::cat(base::sprintf("\n%s\n", query_names_out[i]))
     }
+    # A character vector in rank order takes hypeR's ranked (unweighted)
+    # branch; a named numeric vector at power 0 would take the weighted branch
+    # with all weights 1, which scores differently.
+    signature <- if (base::identical(test, "kstest") && power == 0) base::names(queries[[i]]) else queries[[i]]
     hyp_obj <- hypeR::hypeR(
-      signature = queries[[i]],
+      signature = signature,
       genesets = query_genesets[[i]]$genesets,
       test = test,
-      background = backgrounds[[i]],
+      background = backgrounds$values[[i]],
       power = power,
       absolute = absolute,
       pval = pval,
@@ -597,13 +670,133 @@ runHypeR <- function(
       plotting = plotting,
       quiet = quiet
     )
-    appendHypeRProvenance(hyp_obj, prepared$info[i, , drop = FALSE])
+    if (!plotting) {
+      # hypeR stores one empty ggplot per geneset even with plotting = FALSE
+      # (about 1.4 MB each serialized); nothing downstream reads them.
+      hyp_obj$plots <- base::list()
+    }
+    appendHypeRProvenance(hyp_obj, prepared$info[i, , drop = FALSE], base::list(
+      test = test,
+      split = split,
+      score_col = score_col,
+      ks_source = ks_source,
+      background_source = backgrounds$sources[i],
+      query_genes_removed = removed[i],
+      genesets_dropped = query_genesets[[i]]$dropped
+    ))
   })
-  base::names(results) <- query_names[run_idx]
+  base::names(results) <- query_names_out[run_idx]
 
-  if (base::length(results) == 1L) {
+  one_query_by_construction <- if (base::identical(test, "kstest")) !base::identical(direction, "both") else !split
+  if (inputs$single && one_query_by_construction) {
     return(results[[1]])
   }
 
   hypeR::multihyp$new(data = results)
+}
+
+#' Excel-safe, case-insensitively unique sheet names
+#'
+#' Excel sheet names are at most 31 characters, cannot contain
+#' \code{: \\ / ? * [ ]}, cannot start or end with an apostrophe, and are
+#' compared without regard to case.
+#' @noRd
+hypeRSheetNames <- function(x, reserved = base::character()) {
+  clean <- function(s) base::gsub("^'+|'+$", "", s)
+  x <- clean(base::trimws(base::gsub("[][*?/\\\\:]", "_", base::as.character(x))))
+  x[base::is.na(x) | !base::nzchar(x)] <- "sheet"
+
+  used <- base::tolower(reserved)
+  out <- base::character(base::length(x))
+  for (i in base::seq_along(x)) {
+    candidate <- clean(base::substr(x[i], 1L, 31L))
+    k <- 2L
+    while (!base::nzchar(candidate) || base::tolower(candidate) %in% used) {
+      suffix <- base::sprintf(" (%d)", k)
+      candidate <- base::paste0(clean(base::substr(x[i], 1L, 31L - base::nchar(suffix))), suffix)
+      k <- k + 1L
+    }
+    out[i] <- candidate
+    used <- c(used, base::tolower(candidate))
+  }
+  out
+}
+
+#' Write runHypeR() results to Excel with safe sheet names
+#'
+#' @description Writes a \code{hyp} or \code{multihyp} with
+#' \code{hypeR::hyp_to_excel()} after turning query names into valid Excel
+#' sheet names (at most 31 characters, none of \code{: \\ / ? * [ ]}, unique
+#' regardless of case). An \code{index} sheet, placed first, maps each sheet
+#' back to its full query name and SigRepo provenance. The object you pass is
+#' not modified.
+#'
+#' @param hyp_obj A \code{hyp} or \code{multihyp}, usually from \code{runHypeR()}.
+#' @param file_path Path of the \code{.xlsx} file to write (overwritten).
+#' @param cols Passed to \code{hypeR::hyp_to_excel()}: columns of each result
+#' table to write. Defaults to all.
+#' @param versioning Passed to \code{hypeR::hyp_to_excel()}: add hypeR's
+#' \code{versioning} sheet with each query's \code{info}. Defaults to \code{TRUE}.
+#' @param index Logical; add the \code{index} sheet. Defaults to \code{TRUE}.
+#'
+#' @return Invisibly, the index as a data frame: \code{sheet}, \code{query},
+#' \code{signature_id}, \code{signature_name}, \code{group_label},
+#' \code{direction}.
+#'
+#' @examples
+#' \dontrun{
+#' hyp <- SigRepo::runHypeR(omic_signature = sig, genesets = "msigdb", msigdb_collection = "H")
+#' SigRepo::hypeRToExcel(hyp, file_path = "results.xlsx")
+#' }
+#'
+#' @export
+hypeRToExcel <- function(hyp_obj, file_path, cols = NULL, versioning = TRUE, index = TRUE) {
+  for (pkg in c("hypeR", "openxlsx")) {
+    if (!base::requireNamespace(pkg, quietly = TRUE)) {
+      base::stop(base::sprintf("\nPackage '%s' is required for hypeRToExcel(). Please install it first.\n", pkg))
+    }
+  }
+
+  info_value <- function(h, key) {
+    value <- h$info[[key]]
+    if (base::is.null(value) || base::length(value) == 0 || base::is.na(value[1])) "" else base::as.character(value[1])
+  }
+
+  if (methods::is(hyp_obj, "multihyp")) {
+    data <- hyp_obj$data
+  } else if (methods::is(hyp_obj, "hyp")) {
+    parts <- c(info_value(hyp_obj, "SigRepo Signature Name"), info_value(hyp_obj, "Group Label"), info_value(hyp_obj, "SigRepo Direction"))
+    parts <- parts[base::nzchar(parts)]
+    data <- stats::setNames(base::list(hyp_obj), if (base::length(parts) > 0) base::paste(parts, collapse = " | ") else "results")
+  } else {
+    base::stop("\n'hyp_obj' must be a hypeR hyp or multihyp object.\n")
+  }
+
+  reserved <- c(if (index) "index", if (versioning) "versioning")
+  sheets <- hypeRSheetNames(base::names(data), reserved = reserved)
+  hypeR::hyp_to_excel(
+    hypeR::multihyp$new(data = stats::setNames(data, sheets)),
+    file_path = file_path, cols = cols, versioning = versioning
+  )
+
+  index_df <- base::data.frame(
+    sheet = sheets,
+    query = base::names(data),
+    signature_id = base::vapply(data, info_value, base::character(1), key = "SigRepo Signature ID", USE.NAMES = FALSE),
+    signature_name = base::vapply(data, info_value, base::character(1), key = "SigRepo Signature Name", USE.NAMES = FALSE),
+    group_label = base::vapply(data, info_value, base::character(1), key = "Group Label", USE.NAMES = FALSE),
+    direction = base::vapply(data, info_value, base::character(1), key = "SigRepo Direction", USE.NAMES = FALSE),
+    stringsAsFactors = FALSE
+  )
+
+  if (index) {
+    wb <- openxlsx::loadWorkbook(file_path)
+    openxlsx::addWorksheet(wb, sheetName = "index")
+    openxlsx::writeData(wb, sheet = "index", x = index_df, colNames = TRUE, rowNames = FALSE)
+    n_sheets <- base::length(base::names(wb))
+    openxlsx::worksheetOrder(wb) <- c(n_sheets, base::seq_len(n_sheets - 1L))
+    openxlsx::saveWorkbook(wb, file = file_path, overwrite = TRUE)
+  }
+
+  base::invisible(index_df)
 }

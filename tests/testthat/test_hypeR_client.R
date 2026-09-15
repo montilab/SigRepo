@@ -10,16 +10,20 @@ test_that("hypergeometric results match a direct hypeR::hypeR() call", {
   expect_equal(res$data, direct$data)
 })
 
-test_that("kstest results match a direct hypeR::hypeR() call at default power and power = 0", {
+test_that("kstest results match a direct hypeR::hypeR() call: weighted at power 1, ranked at power 0", {
   testthat::skip_if_not_installed("hypeR")
   sig <- make_hyper_sig(difexp = hyper_difexp_table())
   vec <- SigRepo::prepareHypeRSignatures(omic_signature = sig, test = "kstest", verbose = FALSE)$signatures[[1]]
 
-  for (pwr in c(1, 0)) {
-    direct <- hypeR::hypeR(vec, hyper_genesets(), test = "kstest", power = pwr)
-    res <- SigRepo::runHypeR(omic_signature = sig, genesets = hyper_genesets(), test = "kstest", power = pwr, verbose = FALSE)
-    expect_equal(res$data, direct$data)
-  }
+  weighted <- SigRepo::runHypeR(omic_signature = sig, genesets = hyper_genesets(), test = "kstest", power = 1, verbose = FALSE)
+  expect_equal(weighted$data, hypeR::hypeR(vec, hyper_genesets(), test = "kstest", power = 1)$data)
+  expect_equal(weighted$info[["Signature Type"]], "weighted")
+
+  # power = 0 is hypeR's ranked signature (gene names in rank order), not the
+  # weighted branch with all weights 1, which scores differently.
+  ranked <- SigRepo::runHypeR(omic_signature = sig, genesets = hyper_genesets(), test = "kstest", power = 0, verbose = FALSE)
+  expect_equal(ranked$data, hypeR::hypeR(names(vec), hyper_genesets(), test = "kstest")$data)
+  expect_equal(ranked$info[["Signature Type"]], "ranked")
 })
 
 test_that("split queries return a multihyp with aligned SigRepo provenance", {
@@ -30,9 +34,9 @@ test_that("split queries return a multihyp with aligned SigRepo provenance", {
   expect_true(inherits(res, "multihyp"))
   expect_equal(names(res$data), c("sig_a | Old", "sig_a | Young"))
 
-  provenance_keys <- c("SigRepo Signature ID", "SigRepo Signature Name", "Group Label", "Symbol Source")
+  provenance_keys <- SigRepo:::HYPER_PROVENANCE_KEYS
   for (hyp_obj in res$data) {
-    expect_equal(utils::tail(names(hyp_obj$info), 4), provenance_keys)
+    expect_equal(utils::tail(names(hyp_obj$info), length(provenance_keys)), provenance_keys)
   }
   expect_equal(res$data[["sig_a | Old"]]$info[["Group Label"]], "Old")
   expect_equal(res$data[["sig_a | Old"]]$info[["SigRepo Signature Name"]], "sig_a")
@@ -82,7 +86,9 @@ test_that("unusable signatures are skipped with a warning; all unusable is an er
                              genesets = hyper_genesets(), split = FALSE, verbose = FALSE),
     "Skipped 1 signature(s): 'bad' (no_gene_symbols", fixed = TRUE
   )
-  expect_true(inherits(res, "hyp"))
+  # A list input stays a multihyp even when only one signature survives.
+  expect_true(inherits(res, "multihyp"))
+  expect_equal(names(res$data), "good")
 
   expect_error(
     suppressWarnings(SigRepo::runHypeR(omic_signature = bad, genesets = hyper_genesets(), verbose = FALSE)),
@@ -161,32 +167,61 @@ test_that("B2: runHypeR multihyp names are unique", {
   expect_no_error(hypeR::hyp_to_excel(res, file_path = xlsx))
 })
 
-test_that("B1: the documented sheet-name workaround makes hyp_to_excel() work on long query names", {
+test_that("B1: hypeRToExcel() writes long and unsafe query names as safe, unique sheets with an index", {
   testthat::skip_if_not_installed("hypeR")
   testthat::skip_if_not_installed("openxlsx")
   gs <- list(SET1 = c("TP53", "MYC", "EGFR", "KRAS"), SET2 = c("GENE_A", "GENE_B", "BRCA1"))
-  long <- make_hyper_sig("Aging_Hs_SomeTissue_Treatment_vs_Control_Author2025", signature = data.frame(
+  arms <- function() data.frame(
     probe_id = c("p1", "p2"), feature_name = c("f1", "f2"), score = c(2, -2),
     group_label = factor(c("Up", "Down")), symbol = c("TP53", "MYC")
-  ))
-  colon <- make_hyper_sig("Aging: a/b [c]?*", signature = data.frame(
-    probe_id = c("p1", "p2"), feature_name = c("f1", "f2"), score = c(2, -2),
-    group_label = factor(c("Up", "Down")), symbol = c("TP53", "MYC")
-  ))
+  )
+  long <- make_hyper_sig("Aging_Hs_SomeTissue_Treatment_vs_Control_Author2025", signature = arms())
+  colon <- make_hyper_sig("Aging: a/b [c]?*", signature = arms())
   xlsx <- tempfile(fileext = ".xlsx")
   on.exit(unlink(xlsx), add = TRUE)
 
   hyp <- SigRepo::runHypeR(omic_signature = list(long, colon), genesets = gs, verbose = FALSE)
+  original_names <- names(hyp$data)
   expect_error(hypeR::hyp_to_excel(hyp, file_path = xlsx), "Max length is 31 characters", fixed = TRUE)
 
-  n <- names(hyp$data)
-  names(hyp$data) <- sprintf("%02d_%s", seq_along(n), substr(gsub("[][\\\\/?*:]", "_", sub(".* \\| ", "", n)), 1, 27))
-  expect_no_error(hypeR::hyp_to_excel(hyp, file_path = xlsx))
+  index <- SigRepo::hypeRToExcel(hyp, file_path = xlsx)
 
   sheets <- openxlsx::getSheetNames(xlsx)
-  expect_equal(sheets, c(names(hyp$data), "versioning"))
+  expect_equal(sheets, c("index", index$sheet, "versioning"))
   expect_true(all(nchar(sheets) <= 31))
   expect_false(any(grepl("[][\\\\/?*:]", sheets)))
+  expect_equal(anyDuplicated(tolower(sheets)), 0L)
+  # The two long names share their first 31 characters, so they differ only by suffix.
+  expect_equal(index$sheet[1:2], c("Aging_Hs_SomeTissue_Treatment_v", "Aging_Hs_SomeTissue_Treatme (2)"))
+  expect_equal(index$query, original_names)
+  expect_equal(index$group_label, c("Down", "Up", "Down", "Up"))
+  expect_equal(openxlsx::read.xlsx(xlsx, sheet = "index")$query, original_names)
+  # The caller's object keeps its names.
+  expect_equal(names(hyp$data), original_names)
+})
+
+test_that("hypeRSheetNames sanitises, truncates and de-duplicates without regard to case", {
+  out <- SigRepo:::hypeRSheetNames(
+    c("Index", "a/b", "A_B", "'quoted'", "", strrep("x", 40), strrep("X", 40)),
+    reserved = c("index", "versioning")
+  )
+  expect_equal(out, c("Index (2)", "a_b", "A_B (2)", "quoted", "sheet", strrep("x", 31), paste0(strrep("X", 27), " (2)")))
+  expect_true(all(nchar(out) <= 31))
+})
+
+test_that("hypeRToExcel() names a single hyp's sheet from its provenance and rejects other objects", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("openxlsx")
+  xlsx <- tempfile(fileext = ".xlsx")
+  on.exit(unlink(xlsx), add = TRUE)
+
+  res <- SigRepo::runHypeR(omic_signature = make_hyper_sig(), genesets = hyper_genesets(), split = FALSE, verbose = FALSE)
+  expect_true(inherits(res, "hyp"))
+  index <- SigRepo::hypeRToExcel(res, file_path = xlsx, index = FALSE)
+  expect_equal(openxlsx::getSheetNames(xlsx), c("sig_a", "versioning"))
+  expect_equal(index$signature_name, "sig_a")
+
+  expect_error(SigRepo::hypeRToExcel(list(), file_path = xlsx), "must be a hypeR hyp or multihyp", fixed = TRUE)
 })
 
 test_that("U1: weighted kstest drops genesets whose hits all score 0, with a warning", {
@@ -217,7 +252,7 @@ test_that("U1: power = 0 drops nothing and does not warn", {
                              test = "kstest", power = 0, verbose = FALSE)
   )
   expect_true("S2" %in% res$data$label)
-  expect_equal(res$data, hypeR::hypeR(vec, hyper_zero_score_genesets(), test = "kstest", power = 0)$data)
+  expect_equal(res$data, hypeR::hypeR(names(vec), hyper_zero_score_genesets(), test = "kstest")$data)
 })
 
 test_that("U1: dropZeroWeightGenesets keeps the input kind and returns it unchanged when nothing is dropped", {
@@ -331,9 +366,10 @@ test_that("F3: a query with no genesets left is skipped and the rest of the batc
   expect_match(warnings[1], "Dropped 2 geneset(s) that hypeR's kstest cannot score (all hits score 0, or the geneset covers every query gene): S2, S4", fixed = TRUE)
   expect_match(warnings[2], "Skipped 1 query(ies) with nothing left to test after removing zero-weight genesets or unmeasured genes: 'zero'", fixed = TRUE)
 
-  expect_true(inherits(res, "hyp"))
-  expect_equal(res$data, hypeR::hypeR(other_vec, gs, test = "kstest")$data)
-  expect_equal(res$info[["SigRepo Signature Name"]], "sig_a")
+  expect_true(inherits(res, "multihyp"))
+  expect_equal(names(res$data), "sig_a")
+  expect_equal(res$data[[1]]$data, hypeR::hypeR(other_vec, gs, test = "kstest")$data)
+  expect_equal(res$data[[1]]$info[["SigRepo Signature Name"]], "sig_a")
 })
 
 test_that("F3: every query skipped is a clear error", {
@@ -359,6 +395,237 @@ test_that("F4: kstest drops a geneset that covers every query gene, at power 1 a
       fixed = TRUE
     ))
     expect_false("ALL" %in% res$data$label)
-    expect_equal(res$data, hypeR::hypeR(vec, list(S2 = "A", S3 = "B"), test = "kstest", power = pwr)$data)
+    direct_sig <- if (pwr == 0) names(vec) else vec
+    expect_equal(res$data, hypeR::hypeR(direct_sig, list(S2 = "A", S3 = "B"), test = "kstest", power = pwr)$data)
   }
+})
+
+# ---- Evaluation fixes (W1-W15) ----
+
+test_that("W3: the return type follows the input, not how many queries survive", {
+  testthat::skip_if_not_installed("hypeR")
+  sig <- make_hyper_sig(difexp = hyper_difexp_table())
+  run <- function(...) SigRepo::runHypeR(genesets = hyper_genesets(), verbose = FALSE, ...)
+
+  expect_true(inherits(run(omic_signature = sig), "multihyp"))
+  expect_true(inherits(run(omic_signature = sig, split = FALSE), "hyp"))
+  expect_true(inherits(run(omic_signature = sig, test = "kstest"), "hyp"))
+  expect_true(inherits(run(omic_signature = sig, test = "kstest", direction = "down"), "hyp"))
+  expect_true(inherits(run(omic_signature = sig, test = "kstest", direction = "both"), "multihyp"))
+  expect_true(inherits(run(omic_signature = list(sig), split = FALSE), "multihyp"))
+  expect_true(inherits(run(omic_signature = list(sig), test = "kstest"), "multihyp"))
+
+  # A signature without group_label still gives a multihyp when split = TRUE.
+  tbl <- hyper_sig_table()
+  tbl$group_label <- NULL
+  uni <- make_hyper_sig(signature = tbl, direction_type = "uni-directional")
+  uni_res <- run(omic_signature = uni)
+  expect_true(inherits(uni_res, "multihyp"))
+  expect_equal(names(uni_res$data), "sig_a")
+})
+
+test_that("W3: one id is a single input; several ids give a multihyp", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::local_mocked_bindings(
+    getSignature = function(conn_handler, signature_id = NULL, signature_name = NULL, verbose = TRUE) {
+      list(make_hyper_sig(paste0("db_", signature_id)))
+    },
+    .package = "SigRepo"
+  )
+  one <- SigRepo::runHypeR(conn_handler = list(), signature_id = 7, genesets = hyper_genesets(), split = FALSE, verbose = FALSE)
+  expect_true(inherits(one, "hyp"))
+  expect_equal(one$info[["SigRepo Signature ID"]], "7")
+
+  two <- SigRepo::runHypeR(conn_handler = list(), signature_id = c(7, 8), genesets = hyper_genesets(), split = FALSE, verbose = FALSE)
+  expect_true(inherits(two, "multihyp"))
+  expect_equal(names(two$data), c("db_7", "db_8"))
+})
+
+test_that("W1: direction = \"down\" and \"both\" rank the negated scores and match hypeR", {
+  testthat::skip_if_not_installed("hypeR")
+  sig <- make_hyper_sig(difexp = hyper_difexp_table())
+  up_vec <- SigRepo::prepareHypeRSignatures(omic_signature = sig, test = "kstest", verbose = FALSE)$signatures[[1]]
+  down_vec <- sort(-up_vec, decreasing = TRUE)
+
+  down <- SigRepo::runHypeR(omic_signature = sig, genesets = hyper_genesets(), test = "kstest", direction = "down", verbose = FALSE)
+  expect_equal(down$data, hypeR::hypeR(down_vec, hyper_genesets(), test = "kstest")$data)
+  expect_equal(down$info[["SigRepo Direction"]], "down")
+
+  both <- SigRepo::runHypeR(omic_signature = sig, genesets = hyper_genesets(), test = "kstest", direction = "both", verbose = FALSE)
+  expect_equal(names(both$data), c("sig_a | up", "sig_a | down"))
+  expect_equal(both$data[["sig_a | up"]]$data, hypeR::hypeR(up_vec, hyper_genesets(), test = "kstest")$data)
+  expect_equal(both$data[["sig_a | down"]]$data, down$data)
+  expect_equal(unname(vapply(both$data, function(h) h$info[["SigRepo Direction"]], "")), c("up", "down"))
+})
+
+test_that("W1/W5: direction and ks_source are rejected for a hypergeometric test", {
+  testthat::skip_if_not_installed("hypeR")
+  for (args in list(list(direction = "down"), list(ks_source = "signature"))) {
+    expect_error(
+      do.call(SigRepo::runHypeR, c(list(omic_signature = make_hyper_sig(), genesets = hyper_genesets(), verbose = FALSE), args)),
+      "'direction' and 'ks_source' only apply when test = \"kstest\"", fixed = TRUE
+    )
+  }
+})
+
+test_that("W5: ks_source = \"signature\" runs kstest on a signature without difexp", {
+  testthat::skip_if_not_installed("hypeR")
+  sig <- make_hyper_sig()
+  expect_error(
+    suppressWarnings(SigRepo::runHypeR(omic_signature = sig, genesets = hyper_genesets(), test = "kstest", verbose = FALSE)),
+    "No signature produced a hypeR query vector", fixed = TRUE
+  )
+
+  res <- SigRepo::runHypeR(omic_signature = sig, genesets = hyper_genesets(), test = "kstest", ks_source = "signature", verbose = FALSE)
+  expect_equal(res$data, hypeR::hypeR(c(A = 3, B = 2, C = -2, D = -3), hyper_genesets(), test = "kstest")$data)
+  expect_equal(res$info[["SigRepo Ranked Table"]], "signature")
+  expect_equal(res$info[["Symbol Source"]], "signature$symbol")
+})
+
+test_that("W6: provenance records background source, split, score column and dropped genesets", {
+  testthat::skip_if_not_installed("hypeR")
+
+  hyper <- SigRepo::runHypeR(omic_signature = make_hyper_sig(), genesets = hyper_genesets(), verbose = FALSE)$data[[1]]$info
+  expect_equal(
+    unlist(hyper[SigRepo:::HYPER_PROVENANCE_KEYS[5:13]], use.names = FALSE),
+    c("", "", "", "TRUE", "number", "0", "0", "0", "")
+  )
+
+  expect_warning(
+    ks <- SigRepo::runHypeR(omic_signature = make_hyper_zero_score_sig(), genesets = hyper_zero_score_genesets(),
+                            test = "kstest", background = "difexp", verbose = FALSE),
+    "Dropped 1 geneset(s)", fixed = TRUE
+  )
+  expect_equal(
+    unlist(ks$info[SigRepo:::HYPER_PROVENANCE_KEYS[5:13]], use.names = FALSE),
+    c("up", "difexp", "score", "", "difexp", "0", "0", "1", "S2")
+  )
+
+  expect_warning(
+    fallback <- SigRepo::runHypeR(omic_signature = make_hyper_sig(), genesets = hyper_genesets(),
+                                  background = "difexp", split = FALSE, verbose = FALSE),
+    "no difexp gene symbols", fixed = TRUE
+  )
+  expect_equal(fallback$info[["SigRepo Background Source"]], "difexp-fallback")
+  expect_equal(fallback$info[["SigRepo Split"]], "FALSE")
+})
+
+test_that("W6: unmapped features and removed query genes are recorded per query", {
+  testthat::skip_if_not_installed("hypeR")
+  sig_tbl <- hyper_sig_table()
+  sig_tbl$symbol <- c("A", NA, "C", "Z")
+  sig <- make_hyper_sig(signature = sig_tbl, difexp = hyper_difexp_table())
+
+  expect_warning(
+    res <- SigRepo::runHypeR(omic_signature = sig, genesets = hyper_genesets(), background = "difexp", verbose = FALSE),
+    "removed 1 query gene(s) not measured in difexp from: 'sig_a | Young' (1)", fixed = TRUE
+  )
+  expect_equal(res$data[["sig_a | Old"]]$info[["SigRepo Features Unmapped"]], "1")
+  expect_equal(res$data[["sig_a | Old"]]$info[["SigRepo Query Genes Removed"]], "0")
+  expect_equal(res$data[["sig_a | Young"]]$info[["SigRepo Features Unmapped"]], "0")
+  expect_equal(res$data[["sig_a | Young"]]$info[["SigRepo Query Genes Removed"]], "1")
+})
+
+test_that("W13: a gene-vector background also removes hypergeometric query genes outside it", {
+  testthat::skip_if_not_installed("hypeR")
+  bg <- c("A", "B", "C", "X1", "X2", "X3")
+
+  expect_warning(
+    res <- SigRepo::runHypeR(omic_signature = make_hyper_sig(), genesets = hyper_genesets(), background = bg,
+                             split = FALSE, verbose = FALSE),
+    "background: removed 1 query gene(s) not in the background gene vector from: 'sig_a' (1)", fixed = TRUE
+  )
+  expect_equal(res$data, hypeR::hypeR(c("A", "B", "C"), hyper_genesets(), background = bg)$data)
+  expect_equal(res$info[["SigRepo Background Source"]], "genes")
+  expect_equal(res$info[["SigRepo Query Genes Removed"]], "1")
+})
+
+test_that("W8: empty placeholder plots are removed unless plotting = TRUE", {
+  testthat::skip_if_not_installed("hypeR")
+  sig <- make_hyper_sig()
+
+  plain <- SigRepo::runHypeR(omic_signature = sig, genesets = hyper_genesets(), split = FALSE, verbose = FALSE)
+  expect_length(plain$plots, 0L)
+  expect_equal(plain$data, hypeR::hypeR(c("A", "B", "C", "D"), hyper_genesets())$data)
+
+  plotted <- SigRepo::runHypeR(omic_signature = sig, genesets = hyper_genesets(), split = FALSE, plotting = TRUE, verbose = FALSE)
+  expect_gt(length(plotted$plots), 0L)
+})
+
+test_that("W14: difexp symbols are resolved once per signature for kstest with background = \"difexp\"", {
+  testthat::skip_if_not_installed("hypeR")
+  calls <- 0L
+  testthat::local_mocked_bindings(
+    lookupReferenceSymbols = function(conn_handler, assay_type, organism, feature_names) {
+      calls <<- calls + 1L
+      c(f1 = "A", f2 = "B", f3 = "C", f4 = "D", f5 = "E", f6 = "E")
+    },
+    .package = "SigRepo"
+  )
+  difexp <- hyper_difexp_table()
+  difexp$gene_symbol <- NULL
+  sig <- make_hyper_sig(difexp = difexp)
+
+  res <- SigRepo::runHypeR(conn_handler = NULL, omic_signature = sig, genesets = hyper_genesets(),
+                           test = "kstest", background = "difexp", verbose = FALSE)
+  expect_equal(calls, 1L)
+  expect_equal(res$info$Background, "5")
+  expect_equal(res$info[["Symbol Source"]], "reference feature_name")
+})
+
+test_that("W2: query_names renames queries before hypeR runs", {
+  testthat::skip_if_not_installed("hypeR")
+  res <- SigRepo::runHypeR(
+    omic_signature = list(make_hyper_sig("first"), make_hyper_sig("second")), genesets = hyper_genesets(),
+    query_names = function(info) substr(info$group_label, 1, 1), verbose = FALSE
+  )
+  expect_equal(names(res$data), c("O", "Y", "O (2)", "Y (2)"))
+  expect_equal(res$data[["O (2)"]]$info[["SigRepo Signature Name"]], "second")
+
+  expect_error(
+    SigRepo::runHypeR(omic_signature = make_hyper_sig(), genesets = hyper_genesets(), query_names = "{label}", verbose = FALSE),
+    "'query_names' must be NULL or a function", fixed = TRUE
+  )
+})
+
+test_that("W11: hypeR's downstream functions accept runHypeR() results", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("igraph")
+  testthat::skip_if_not_installed("visNetwork")
+  testthat::skip_if_not_installed("reactable")
+  gs <- list(
+    SET_AB = c("A", "B", "X1", "X2"), SET_ABX = c("A", "B", "X1", "X3"), SET_CD = c("C", "D", "X3"),
+    SET_CDX = c("C", "D", "X4", "X5"), SET_E = c("E", "X4", "X5"), SET_AE = c("A", "E", "X6")
+  )
+  sig <- make_hyper_sig(difexp = hyper_difexp_table())
+  res <- SigRepo::runHypeR(omic_signature = sig, genesets = gs, verbose = FALSE)
+
+  expect_no_error(hypeR::hyp_emap(res, top = 6, similarity_cutoff = 0.1))
+  expect_no_error(hypeR::hyp_dots(res, merge = TRUE))
+  expect_no_error(hypeR::hyp_show(res$data[[1]]))
+  expect_true(inherits(hypeR::rctbl_build(res), "shiny.tag"))
+
+  table_dir <- tempfile()
+  on.exit(unlink(table_dir, recursive = TRUE), add = TRUE)
+  hypeR::hyp_to_table(res, file_path = table_dir)
+  expect_setequal(list.files(table_dir), paste0(names(res$data), ".txt"))
+
+  nodes <- data.frame(label = names(gs), row.names = paste0("n", seq_along(gs)))
+  edges <- data.frame(from = c("n1", "n3"), to = c("n2", "n4"))
+  rg <- hypeR::rgsets$new(gs, nodes, edges, name = "toy", version = "v1", quiet = TRUE)
+  res_rg <- SigRepo::runHypeR(omic_signature = sig, genesets = rg, test = "kstest", verbose = FALSE)
+  expect_no_error(hypeR::hyp_hmap(res_rg, top = 6))
+  expect_no_error(hypeR::hyp_to_graph(res_rg))
+})
+
+test_that("W11: hyp_to_rmd() renders a runHypeR() multihyp", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("rmarkdown")
+  testthat::skip_if_not(rmarkdown::pandoc_available())
+  res <- SigRepo::runHypeR(omic_signature = make_hyper_sig(), genesets = hyper_genesets(), verbose = FALSE)
+  html <- tempfile(fileext = ".html")
+  on.exit(unlink(html), add = TRUE)
+
+  utils::capture.output(hypeR::hyp_to_rmd(res, file_path = html, title = "SigRepo hypeR"))
+  expect_true(file.exists(html))
 })

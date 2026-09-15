@@ -247,3 +247,74 @@ test_that("B5/E10: omic_signature together with signature_id or signature_name i
                                     omic_signature = make_hyper_sig(), verbose = FALSE)
   )
 })
+
+# ---- Evaluation fixes (W1, W2, W5) ----
+
+test_that("W1: direction = \"down\" ranks the negated scores; \"both\" builds one query per direction", {
+  sig <- make_hyper_sig(difexp = hyper_difexp_table())
+
+  down <- SigRepo::prepareHypeRSignatures(omic_signature = sig, test = "kstest", direction = "down", verbose = FALSE)
+  expect_equal(names(down$signatures), "sig_a")
+  expect_equal(down$signatures[["sig_a"]], c(D = 3, C = 2, E = 1, B = -2, A = -3))
+  expect_equal(down$info$direction, "down")
+
+  both <- SigRepo::prepareHypeRSignatures(omic_signature = sig, test = "kstest", direction = "both", verbose = FALSE)
+  expect_equal(names(both$signatures), c("sig_a | up", "sig_a | down"))
+  expect_equal(both$signatures[["sig_a | up"]], c(A = 3, B = 2, E = -1, C = -2, D = -3))
+  expect_equal(both$signatures[["sig_a | down"]], down$signatures[["sig_a"]])
+  expect_equal(both$info$direction, c("up", "down"))
+  expect_equal(both$info$query, names(both$signatures))
+
+  hyper <- SigRepo::prepareHypeRSignatures(omic_signature = sig, verbose = FALSE)
+  expect_true(all(is.na(hyper$info$direction)))
+})
+
+test_that("W5: ks_source = \"signature\" ranks the signature table and reports its own skip reasons", {
+  prepared <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(), test = "kstest",
+                                              ks_source = "signature", verbose = FALSE)
+  expect_equal(prepared$signatures[["sig_a"]], c(A = 3, B = 2, C = -2, D = -3))
+  expect_equal(prepared$info$symbol_source, "signature$symbol")
+
+  no_score <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(), test = "kstest",
+                                              ks_source = "signature", score_col = "logFC", verbose = FALSE)
+  expect_equal(no_score$skipped$reason, "missing_score_col")
+  expect_match(no_score$skipped$message, "signature has no 'logFC' column", fixed = TRUE)
+})
+
+test_that("W1/W5: kstest-only arguments are rejected for hypergeometric", {
+  expect_error(
+    SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(), direction = "both", verbose = FALSE),
+    "'direction' and 'ks_source' only apply when test = \"kstest\"", fixed = TRUE
+  )
+  expect_error(
+    SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(), test = "kstest", direction = "sideways", verbose = FALSE),
+    "should be one of"
+  )
+})
+
+test_that("W2: query_names receives the info table and its names are validated and de-duplicated", {
+  seen <- NULL
+  prepared <- SigRepo::prepareHypeRSignatures(
+    omic_signature = make_hyper_sig(),
+    query_names = function(info) {
+      seen <<- info
+      rep("same", nrow(info))
+    },
+    verbose = FALSE
+  )
+  expect_equal(seen$query, c("sig_a | Old", "sig_a | Young"))
+  expect_equal(names(prepared$signatures), c("same", "same (2)"))
+  expect_equal(prepared$info$query, c("same", "same (2)"))
+
+  for (bad in list(function(info) "one", function(info) c("a", NA), function(info) c("a", ""), function(info) 1:2)) {
+    expect_error(
+      SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(), query_names = bad, verbose = FALSE),
+      "'query_names' must return a character vector of 2 non-empty name(s)", fixed = TRUE
+    )
+  }
+})
+
+test_that("collectHypeRSignatures marks a single OmicSignature as a single input and a list as not", {
+  expect_true(SigRepo:::collectHypeRSignatures(NULL, NULL, NULL, make_hyper_sig(), FALSE)$single)
+  expect_false(SigRepo:::collectHypeRSignatures(NULL, NULL, NULL, list(make_hyper_sig()), FALSE)$single)
+})

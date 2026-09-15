@@ -11,7 +11,10 @@ prepareHypeRSignatures(
   omic_signature = NULL,
   test = c("hypergeometric", "kstest"),
   split = TRUE,
+  direction = c("up", "down", "both"),
+  ks_source = c("difexp", "signature"),
   score_col = "score",
+  query_names = NULL,
   verbose = TRUE
 )
 }
@@ -28,17 +31,36 @@ names, when given, become the query labels.}
 
 \item{test}{\code{"hypergeometric"} (a character vector of symbols from the
 signature table) or \code{"kstest"} (a named numeric vector ranked by
-\code{score_col} from the full difexp table).}
+\code{score_col}, from the table named by \code{ks_source}).}
 
 \item{split}{Logical; for \code{"hypergeometric"}, build one vector per
 \code{group_label} (e.g. one per arm of a bi-directional signature). Ignored by
-\code{"kstest"}, which ranks the whole difexp in one vector by signed score;
-its test finds genesets enriched toward the top of that ranking only (see
-\code{power} in \code{runHypeR()}).
-Defaults to \code{TRUE}.}
+\code{"kstest"}, which ranks the whole table in one vector per
+\code{direction}. Defaults to \code{TRUE}.}
 
-\item{score_col}{difexp column used to rank genes for \code{"kstest"}.
-Defaults to \code{"score"}.}
+\item{direction}{For \code{"kstest"} only: which end of the ranking to test.
+hypeR's KS test only finds genesets enriched toward the top of the ranking.
+\code{"up"} (default) ranks by \code{score_col}, highest first;
+\code{"down"} ranks by the negated \code{score_col}, so the lowest scores
+come first; \code{"both"} builds one query per direction, named
+\code{"<label> | up"} and \code{"<label> | down"}.}
+
+\item{ks_source}{For \code{"kstest"} only: the table to rank.
+\code{"difexp"} (default) ranks every measured gene. \code{"signature"}
+ranks only the signature table, for signatures stored without a difexp; the
+KS test then compares genesets against the signature's genes rather than
+against everything measured, so its p-values answer a narrower question.}
+
+\item{score_col}{Column used to rank genes for \code{"kstest"}, in the table
+named by \code{ks_source}. Defaults to \code{"score"}.}
+
+\item{query_names}{\code{NULL} (default) for names built as
+\code{"<label> | <group_label>"}, \code{"<label> | <direction>"} or
+\code{"<label>"}, or a function that takes the query info data frame (the
+\code{info} element described under Value, with those default names in
+\code{query}) and returns one non-empty name per row. Duplicates are made
+unique as \code{name (2)}. For example
+\code{function(info) paste(info$signature_id, info$group_label, sep = "_")}.}
 
 \item{verbose}{Logical; print messages while fetching signatures.}
 }
@@ -47,7 +69,8 @@ A list with
 \describe{
   \item{\code{signatures}}{Named list of query vectors, ready for \code{hypeR::hypeR()}.}
   \item{\code{info}}{Data frame, one row per query: \code{query}, \code{signature_id},
-  \code{signature_name}, \code{group_label}, \code{n_features}, \code{n_dropped},
+  \code{signature_name}, \code{group_label}, \code{direction} (kstest only),
+  \code{n_features}, \code{n_dropped} (rows without a gene symbol or score),
   \code{symbol_source}.}
   \item{\code{skipped}}{Data frame of signatures that produced no query:
   \code{signature}, \code{reason}, \code{message}.}
@@ -61,8 +84,8 @@ inspect exactly what \code{runHypeR()} will test.
 \details{
 Gene symbols come from the first source that works: a symbol column
 (\code{gene_symbol}, \code{symbol}, \code{geneSymbol}, \code{gene},
-\code{hgnc_symbol}, \code{mgi_symbol}) in the table itself; for
-\code{"hypergeometric"}, the difexp's symbol column joined on \code{probe_id};
+\code{hgnc_symbol}, \code{mgi_symbol}) in the table itself; for the
+signature table, the difexp's symbol column joined on \code{probe_id};
 then the reference feature table by \code{feature_name} and organism (needs
 \code{conn_handler}). \code{probe_id} is never read as a symbol.
 }

@@ -16,7 +16,10 @@ runHypeR(
   msigdb_clean = FALSE,
   test = c("hypergeometric", "kstest"),
   split = TRUE,
+  direction = c("up", "down", "both"),
+  ks_source = c("difexp", "signature"),
   score_col = "score",
+  query_names = NULL,
   background = 23467,
   power = 1,
   absolute = FALSE,
@@ -57,100 +60,135 @@ named list of character vectors, a \code{hypeR::gsets} object, or a
 
 \item{test}{\code{"hypergeometric"} (a character vector of symbols from the
 signature table) or \code{"kstest"} (a named numeric vector ranked by
-\code{score_col} from the full difexp table).}
+\code{score_col}, from the table named by \code{ks_source}).}
 
 \item{split}{Logical; for \code{"hypergeometric"}, build one vector per
 \code{group_label} (e.g. one per arm of a bi-directional signature). Ignored by
-\code{"kstest"}, which ranks the whole difexp in one vector by signed score;
-its test finds genesets enriched toward the top of that ranking only (see
-\code{power} in \code{runHypeR()}).
-Defaults to \code{TRUE}.}
+\code{"kstest"}, which ranks the whole table in one vector per
+\code{direction}. Defaults to \code{TRUE}.}
 
-\item{score_col}{difexp column used to rank genes for \code{"kstest"}.
-Defaults to \code{"score"}.}
+\item{direction}{For \code{"kstest"} only: which end of the ranking to test.
+hypeR's KS test only finds genesets enriched toward the top of the ranking.
+\code{"up"} (default) ranks by \code{score_col}, highest first;
+\code{"down"} ranks by the negated \code{score_col}, so the lowest scores
+come first; \code{"both"} builds one query per direction, named
+\code{"<label> | up"} and \code{"<label> | down"}.}
+
+\item{ks_source}{For \code{"kstest"} only: the table to rank.
+\code{"difexp"} (default) ranks every measured gene. \code{"signature"}
+ranks only the signature table, for signatures stored without a difexp; the
+KS test then compares genesets against the signature's genes rather than
+against everything measured, so its p-values answer a narrower question.}
+
+\item{score_col}{Column used to rank genes for \code{"kstest"}, in the table
+named by \code{ks_source}. Defaults to \code{"score"}.}
+
+\item{query_names}{\code{NULL} (default) for names built as
+\code{"<label> | <group_label>"}, \code{"<label> | <direction>"} or
+\code{"<label>"}, or a function that takes the query info data frame (the
+\code{info} element described under Value, with those default names in
+\code{query}) and returns one non-empty name per row. Duplicates are made
+unique as \code{name (2)}. For example
+\code{function(info) paste(info$signature_id, info$group_label, sep = "_")}.}
 
 \item{background}{hypeR's background: a single number (population size), a
 character vector of background genes, or \code{"difexp"} to use each
 signature's measured genes from its difexp table. Signatures without difexp
-symbols fall back to \code{23467} with a warning. With \code{"difexp"}, a
-hypergeometric query is first reduced to its measured genes (hypeR reduces
-only the genesets), with a warning naming each query that lost genes.
-Anything else (e.g. \code{"Difexp"}) is an error. Defaults to \code{23467}.}
+symbols fall back to \code{23467} with a warning. With a gene vector or
+\code{"difexp"}, a hypergeometric query is first reduced to the background
+genes, with a warning naming each query that lost genes: hypeR reduces only
+the genesets, and query genes outside the background would distort the
+p-values. Anything else (e.g. \code{"Difexp"}) is an error. Defaults to
+\code{23467}.}
 
 \item{power}{Exponent for the kstest score weights (kstest only). It changes
-only the enrichment \code{score}: \code{1} (default) weights hits by
-|score|, \code{0} is unweighted. The \code{pval} and \code{fdr} come from
-hypeR's unweighted, one-sided KS test and do not depend on \code{power} or
-\code{absolute}. That test finds genesets enriched toward the top of the
-ranking (the highest scores); genesets concentrated among the most negative
-scores cannot reach significance. To test that end, rank by a negated score
-column: add \code{difexp$neg_score <- -difexp$score} to your OmicSignature
-copy and pass \code{score_col = "neg_score"}. hypeR's kstest also cannot
-score a geneset whose hits in a query all have score 0 (\code{power != 0})
-or that contains every query gene (any power); such genesets are dropped for
-that query with a warning, which also removes them from the FDR adjustment.}
+only the enrichment \code{score}. \code{1} (default) weights hits by
+|score|. \code{0} runs hypeR's ranked (unweighted) signature: the query is
+passed as gene names in rank order, so \code{score} and
+\code{Signature Type = "ranked"} match hypeR's documented ranked test. The
+\code{pval} and \code{fdr} come from hypeR's unweighted, one-sided KS test
+and do not depend on \code{power} or \code{absolute}. That test finds
+genesets enriched toward the top of the ranking; use \code{direction} to
+test the other end. hypeR's kstest also cannot score a geneset whose hits in
+a query all have score 0 (\code{power != 0}) or that contains every query
+gene (any power); such genesets are dropped for that query with a warning,
+which also removes them from the FDR adjustment. They are listed in the
+result's \code{info} (see Value).}
 
-\item{absolute}{Passed to \code{hypeR::hypeR()} (kstest only). Defaults to \code{FALSE}.}
+\item{absolute}{Passed to \code{hypeR::hypeR()} (kstest only). hypeR marks
+it as not fully implemented. Defaults to \code{FALSE}.}
 
 \item{pval}{Keep results with p-value at or below this. Defaults to \code{1}.}
 
 \item{fdr}{Keep results with FDR at or below this. Defaults to \code{1}.}
 
-\item{plotting}{Logical; generate hypeR's per-geneset plots. Defaults to \code{FALSE}.}
+\item{plotting}{Logical; generate hypeR's per-geneset plots. Defaults to
+\code{FALSE}, in which case the empty placeholder plots hypeR stores anyway
+are removed (they are most of the object's size).}
 
 \item{quiet}{Logical; suppress hypeR's logs. Defaults to \code{TRUE}.}
 
 \item{verbose}{Logical; print messages while fetching signatures.}
 }
 \value{
-A \code{hypeR} \code{hyp} object when one query vector is produced,
-otherwise a \code{multihyp} named by query. Each \code{hyp$info} ends with
-\code{SigRepo Signature ID}, \code{SigRepo Signature Name},
-\code{Group Label} and \code{Symbol Source}. Signatures that cannot produce a
-query are skipped with a warning; if none can, an error is raised. A query
-left with no genesets or no genes (after the drops described under
-\code{power} and \code{background}) is skipped with a warning; if no query
-is left, an error is raised.
-Query names are unique but can be long; rename them as shown in the
-description before \code{hypeR::hyp_to_excel()}.
+A \code{hyp} when the input is a single signature (one
+\code{OmicSignature}, or one id or name) and the test builds one query by
+construction (\code{test = "kstest"} with \code{direction} \code{"up"} or
+\code{"down"}, or \code{split = FALSE}). Otherwise a \code{multihyp} named
+by query, even when only one query is left. This mirrors hypeR, where a
+vector gives a \code{hyp} and a named list a \code{multihyp}.
+
+Each \code{hyp$info} ends with these keys, in this order (\code{""} when a
+key does not apply): \code{SigRepo Signature ID},
+\code{SigRepo Signature Name}, \code{Group Label}, \code{Symbol Source},
+\code{SigRepo Direction}, \code{SigRepo Ranked Table},
+\code{SigRepo Score Column}, \code{SigRepo Split},
+\code{SigRepo Background Source} (\code{number}, \code{genes},
+\code{difexp}, or \code{difexp-fallback}), \code{SigRepo Features Unmapped},
+\code{SigRepo Query Genes Removed}, \code{SigRepo Genesets Dropped} and
+\code{SigRepo Genesets Dropped List}.
+
+Signatures that cannot produce a query are skipped with a warning; if none
+can, an error is raised. A query left with no genesets or no genes (after
+the drops described under \code{power} and \code{background}) is skipped
+with a warning; if no query is left, an error is raised.
 }
 \description{
 Builds hypeR query vectors from SigRepo signatures (see
 \code{prepareHypeRSignatures()}) and runs \code{hypeR::hypeR()} on them. The
-arguments after \code{score_col} are hypeR's own, with hypeR's defaults, and
-the result is hypeR's own object, so \code{hypeR::hyp_dots()},
-\code{hyp_show()}, \code{hyp_emap()}, \code{hyp_to_excel()} and
-\code{hyp_to_rmd()} work on it directly.
+arguments after \code{query_names} are hypeR's own, with hypeR's defaults,
+and the result is hypeR's own object, so \code{hypeR::hyp_dots()},
+\code{hyp_emap()}, \code{hyp_to_rmd()}, \code{hyp_to_table()} and
+\code{rctbl_build()} work on it directly, and \code{hyp_hmap()} does when
+\code{genesets} is a \code{hypeR::rgsets}. \code{hyp_show()} takes a single
+\code{hyp}, so pass one element of a \code{multihyp}, e.g.
+\code{hypeR::hyp_show(res$data[[1]])}; \code{hyp_to_graph()} also needs
+\code{rgsets} genesets.
 
-\code{hyp_to_excel()} uses each query name as an Excel sheet name, which
-must be at most 31 characters and cannot contain \code{: \\ / ? * [ ]}.
-Query names built from long signature names break that, so make the names
-sheet-safe first. This keeps the group label (the part after \code{" | "}),
-so arms stay distinguishable, and numbers the sheets so they stay unique:
-\preformatted{
-n <- names(hyp$data)
-names(hyp$data) <- sprintf("\%02d_\%s", seq_along(n), substr(gsub("[][\\\\\\\\/?*:]", "_", sub(".* \\\\| ", "", n)), 1, 27))
-hypeR::hyp_to_excel(hyp, file_path = "results.xlsx")
-}
+\code{hypeR::hyp_to_excel()} uses each query name as an Excel sheet name,
+which must be at most 31 characters and cannot contain
+\code{: \\ / ? * [ ]}; most SigRepo signature names are longer. Use
+\code{hypeRToExcel()}, which makes the sheet names safe and adds an index
+sheet, or shorten the names with \code{query_names}.
 }
 \examples{
 \dontrun{
 utils::data("LLFS_Aging_Gene_2023", package = "SigRepo")
+hallmark <- SigRepo::getHypeRGenesets("msigdb", msigdb_collection = "H")
 
 hyp <- SigRepo::runHypeR(
   omic_signature = LLFS_Aging_Gene_2023,
-  genesets = "msigdb",
-  msigdb_collection = "H",
+  genesets = hallmark,
   fdr = 0.05
 )
 hypeR::hyp_dots(hyp)
+SigRepo::hypeRToExcel(hyp, file_path = "llfs_hallmark.xlsx")
 
 ranked <- SigRepo::runHypeR(
   omic_signature = LLFS_Aging_Gene_2023,
-  genesets = "msigdb",
-  msigdb_collection = "H",
+  genesets = hallmark,
   test = "kstest",
-  power = 0
+  direction = "both"
 )
 }
 
