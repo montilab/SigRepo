@@ -33,11 +33,12 @@ make_hyper_sig <- function(name = "sig_a",
                            signature = hyper_sig_table(),
                            difexp = NULL,
                            direction_type = "bi-directional",
-                           organism = "Homo sapiens") {
+                           organism = "Homo sapiens",
+                           assay_type = "transcriptomics") {
   OmicSignature::OmicSignature$new(
     metadata = list(
       signature_name = name,
-      assay_type = "transcriptomics",
+      assay_type = assay_type,
       phenotype = "test_phenotype",
       organism = organism,
       direction_type = direction_type,
@@ -93,4 +94,54 @@ make_hyper_cover_sig <- function() {
       p_value = 0.01, adj_p = 0.05, group_label = factor(c("Up", "Up", "Down"))
     )
   )
+}
+
+# runHypeR() for the toy fixtures. Their hypergeometric queries hold 1-4 genes,
+# below runHypeR()'s default min_query_genes = 4, so tests about anything else
+# lower it; every other argument keeps runHypeR()'s defaults.
+runToyHypeR <- function(..., min_query_genes = 1) {
+  SigRepo::runHypeR(..., min_query_genes = min_query_genes)
+}
+
+# Categorical signature with two categories (red, white). Signature table:
+# red up A, red down B, red C scores 0; white up D and F, white down E.
+# Difexp is long: one row per gene per category, each with that category's
+# signed score. `red_difexp_scores` overrides red's difexp scores (A-F).
+make_hyper_categorical_sig <- function(red_difexp_scores = c(2, -1, 0.5, -0.3, 0.2, 0.1)) {
+  OmicSignature::OmicSignature$new(
+    metadata = list(
+      signature_name = "cat",
+      assay_type = "transcriptomics",
+      phenotype = "test_phenotype",
+      organism = "Homo sapiens",
+      direction_type = "categorical",
+      category_num = 2,
+      others = list()
+    ),
+    signature = data.frame(
+      probe_id = paste0("p", 1:6), feature_name = paste0("f", 1:6), symbol = c("A", "B", "C", "D", "E", "F"),
+      score = c(2, -1, 0, 3, -2, 1), group_label = factor(rep(c("red", "white"), each = 3)),
+      stringsAsFactors = FALSE
+    ),
+    difexp = data.frame(
+      probe_id = rep(paste0("p", 1:6), 2), feature_name = rep(paste0("f", 1:6), 2),
+      gene_symbol = rep(c("A", "B", "C", "D", "E", "F"), 2),
+      score = c(red_difexp_scores, -1, 0.4, -2, 3, 1, -0.5),
+      p_value = 0.01, adj_p = 0.05, group_label = factor(rep(c("red", "white"), each = 6)),
+      stringsAsFactors = FALSE
+    ),
+    print_message = FALSE
+  )
+}
+
+# A difexp the default background accepts as complete: proteomics (no
+# transcriptome row minimum), more than twice the 4-row signature, and p-values
+# up to 0.6. Measures A-E plus G-J.
+hyper_complete_difexp_table <- function() {
+  extra <- data.frame(
+    probe_id = paste0("p", 7:10), feature_name = paste0("f", 7:10), gene_symbol = c("G", "H", "I", "J"),
+    score = c(1.5, -1.5, 0.3, -0.3), p_value = 0.4, adj_p = 0.5, group_label = factor(c("Old", "Young", "Old", "Young")),
+    stringsAsFactors = FALSE
+  )
+  rbind(hyper_difexp_table(), extra)
 }

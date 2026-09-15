@@ -45,16 +45,25 @@ signature table) or \code{"kstest"} (a named numeric vector ranked by
 \code{score_col}, from the table named by \code{ks_source}).}
 
 \item{split}{Logical; for \code{"hypergeometric"}, build one vector per
-\code{group_label} (e.g. one per arm of a bi-directional signature). Ignored by
-\code{"kstest"}, which ranks the whole table in one vector per
-\code{direction}. Defaults to \code{TRUE}.}
+\code{group_label} (e.g. one per arm of a bi-directional signature). A
+categorical signature's groups are categories rather than directions, so when
+its signature table has scores each category is also split by score sign:
+\code{"<label> | <group> | up"} (score > 0) and \code{"... | down"}
+(score < 0); rows scoring exactly 0 join neither. Ignored by
+\code{"kstest"}. Defaults to \code{TRUE}.}
 
 \item{direction}{For \code{"kstest"} only: which end of the ranking to test.
 hypeR's KS test only finds genesets enriched toward the top of the ranking.
 \code{"up"} (default) ranks by \code{score_col}, highest first;
 \code{"down"} ranks by the negated \code{score_col}, so the lowest scores
 come first; \code{"both"} builds one query per direction, named
-\code{"<label> | up"} and \code{"<label> | down"}.}
+\code{"<label> | up"} and \code{"<label> | down"}. A categorical signature
+is ranked separately within each \code{group_label}, using only that
+category's rows (\code{"<label> | <group>"}, plus \code{" | up"} /
+\code{" | down"} with \code{"both"}). A ranking needs a signed score: one
+whose scores are all equal (\code{constant_score}) or all one sign
+(\code{unsigned_score}) is skipped, per category for categorical
+signatures.}
 
 \item{ks_source}{For \code{"kstest"} only: the table to rank.
 \code{"difexp"} (default) ranks every measured gene. \code{"signature"}
@@ -83,8 +92,12 @@ A list with
   \code{signature_name}, \code{group_label}, \code{direction} (kstest only),
   \code{n_features}, \code{n_dropped} (rows without a gene symbol or score),
   \code{symbol_source}.}
-  \item{\code{skipped}}{Data frame of signatures that produced no query:
-  \code{signature}, \code{reason}, \code{message}.}
+  \item{\code{skipped}}{Data frame of signatures (or, for a categorical
+  kstest, \code{"<label> | <group>"} categories) that produced no query:
+  \code{signature}, \code{reason} (\code{empty_signature},
+  \code{no_gene_symbols}, \code{no_difexp}, \code{missing_score_col},
+  \code{no_group_label}, \code{constant_score}, \code{unsigned_score}),
+  \code{message}.}
 }
 }
 \description{

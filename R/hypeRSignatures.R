@@ -284,7 +284,58 @@ hypeRSkip <- function(reason, message) {
   base::list(queries = base::list(), info = NULL, skip = base::list(reason = reason, message = message))
 }
 
+#' TRUE when a signature's metadata marks it categorical
+#' @noRd
+isCategoricalHypeRSignature <- function(omic_signature) {
+  type <- base::tryCatch(omic_signature$metadata$direction_type, error = function(e) NULL)
+  base::length(type) > 0 && base::identical(base::tolower(base::trimws(base::as.character(type[1]))), "categorical")
+}
+
+#' Trimmed group labels for a table's rows ("" when missing)
+#' @noRd
+hypeRGroupLabels <- function(tbl) {
+  if (!"group_label" %in% base::colnames(tbl)) {
+    return(base::rep("", base::nrow(tbl)))
+  }
+  groups <- base::trimws(base::as.character(tbl$group_label))
+  groups[base::is.na(groups)] <- ""
+  groups
+}
+
+#' Why a ranking cannot carry a direction, or NULL when it can
+#'
+#' A ranked test needs a signed differential score (e.g. a t statistic): the
+#' top of the list is one class and the bottom the other. A constant score
+#' gives an arbitrary order, and all-positive (or all-negative) scores rank
+#' effect size without saying which side each gene is on.
+#' @return NULL or list(reason, message)
+#' @noRd
+hypeRRankingProblem <- function(scores, where) {
+  if (base::length(base::unique(scores)) <= 1L) {
+    return(base::list(
+      reason = "constant_score",
+      message = base::sprintf("Every score in %s is the same, so a ranking has no order.", where)
+    ))
+  }
+  if (base::all(scores >= 0) || base::all(scores <= 0)) {
+    return(base::list(
+      reason = "unsigned_score",
+      message = base::sprintf(
+        "Scores in %s are all %s 0; a ranked test needs a signed differential score (e.g. a t statistic or logFC).",
+        where, if (base::all(scores >= 0)) ">=" else "<="
+      )
+    ))
+  }
+  NULL
+}
+
 #' Hypergeometric query vectors for one signature
+#'
+#' split = TRUE gives one query per group_label. Uni- and bi-directional
+#' signatures carry their direction in group_label already; a categorical
+#' signature's group is a category, so when it has scores each category is
+#' further split by score sign into "<group> | up" (score > 0) and
+#' "<group> | down" (score < 0). Rows scoring exactly 0 join neither.
 #' @noRd
 buildHypergeometricQueries <- function(omic_signature, label, signature_id, split, resolve_symbols) {
   tbl <- omic_signature$signature
@@ -297,12 +348,15 @@ buildHypergeometricQueries <- function(omic_signature, label, signature_id, spli
     return(hypeRSkip("no_gene_symbols", "No gene symbols in the signature, its difexp, or the reference tables."))
   }
 
-  groups <- if (base::isTRUE(split) && "group_label" %in% base::colnames(tbl)) {
-    base::trimws(base::as.character(tbl$group_label))
+  groups <- if (base::isTRUE(split)) hypeRGroupLabels(tbl) else base::rep("", base::nrow(tbl))
+  scores <- if ("score" %in% base::colnames(tbl)) base::suppressWarnings(base::as.numeric(tbl$score)) else NULL
+  by_sign <- base::isTRUE(split) && isCategoricalHypeRSignature(omic_signature) &&
+    !base::is.null(scores) && base::any(!base::is.na(scores))
+  signs <- if (by_sign) {
+    base::ifelse(base::is.na(scores) | scores == 0, NA_character_, base::ifelse(scores > 0, "up", "down"))
   } else {
     base::rep("", base::nrow(tbl))
   }
-  groups[base::is.na(groups)] <- ""
 
   queries <- base::list()
   info <- base::list()
@@ -311,19 +365,25 @@ buildHypergeometricQueries <- function(omic_signature, label, signature_id, spli
   # Sort query vectors so output is deterministic regardless of that ordering
   # (the hypergeometric test treats a query as an unordered set anyway).
   for (group in base::sort(base::unique(groups))) {
-    group_symbols <- resolved$symbols[groups == group]
-    query <- base::sort(base::unique(group_symbols[!base::is.na(group_symbols)]))
-    if (base::length(query) == 0) {
-      next
+    in_group <- groups == group
+    for (sign in if (by_sign) c("up", "down") else "") {
+      rows <- in_group & if (by_sign) (!base::is.na(signs) & signs == sign) else TRUE
+      group_symbols <- resolved$symbols[rows]
+      query <- base::sort(base::unique(group_symbols[!base::is.na(group_symbols)]))
+      if (base::length(query) == 0) {
+        next
+      }
+      query_name <- base::paste(c(label, if (base::nzchar(group)) group, if (by_sign) sign), collapse = " | ")
+      queries[[query_name]] <- query
+      info[[base::length(info) + 1]] <- hypeRInfoRow(
+        query = query_name, signature_id = signature_id, label = label,
+        group_label = if (base::nzchar(group)) group else NA_character_,
+        direction = if (by_sign) sign else NA_character_,
+        n_features = base::length(query),
+        n_dropped = base::sum(base::is.na(group_symbols)),
+        symbol_source = resolved$source
+      )
     }
-    query_name <- if (base::nzchar(group)) base::sprintf("%s | %s", label, group) else label
-    queries[[query_name]] <- query
-    info[[base::length(info) + 1]] <- hypeRInfoRow(
-      query = query_name, signature_id = signature_id, label = label,
-      group_label = if (base::nzchar(group)) group else NA_character_, direction = NA_character_,
-      n_features = base::length(query), n_dropped = base::sum(base::is.na(group_symbols)),
-      symbol_source = resolved$source
-    )
   }
 
   base::list(queries = queries, info = base::do.call(base::rbind, info), skip = NULL)
@@ -334,7 +394,11 @@ buildHypergeometricQueries <- function(omic_signature, label, signature_id, spli
 #' Ranks `ks_source`'s table by `score_col`. "up" puts the highest scores
 #' first; "down" ranks the negated scores so the lowest come first (hypeR's
 #' one-sided test only finds enrichment at the top); "both" returns one query
-#' per direction, named "<label> | up" and "<label> | down".
+#' per direction, named "<label> | up" and "<label> | down". A categorical
+#' signature is ranked once per group_label, using only that group's rows
+#' ("<label> | <group>", plus " | up"/" | down" for "both"), because its
+#' groups are separate contrasts. A ranking whose scores are constant or all
+#' one sign is skipped (see hypeRRankingProblem()).
 #' @noRd
 buildKstestQueries <- function(omic_signature, label, signature_id, score_col, direction, ks_source, resolve_symbols) {
   tbl <- omic_signature[[ks_source]]
@@ -358,27 +422,57 @@ buildKstestQueries <- function(omic_signature, label, signature_id, score_col, d
     return(hypeRSkip("no_gene_symbols", base::sprintf("No %s row has both a gene symbol and a numeric score.", ks_source)))
   }
 
-  best <- base::vapply(
-    base::split(scores[keep], resolved$symbols[keep]),
-    # On an opposite-sign |score| tie keep the positive value, so the result
-    # does not depend on row order.
-    function(x) base::max(x[base::abs(x) == base::max(base::abs(x))]),
-    base::numeric(1)
-  )
+  categorical <- isCategoricalHypeRSignature(omic_signature)
+  groups <- if (categorical) hypeRGroupLabels(tbl) else base::rep("", base::nrow(tbl))
+  if (categorical && !base::any(base::nzchar(groups[keep]))) {
+    return(hypeRSkip("no_group_label", base::sprintf("A categorical signature needs group_label in %s to rank each category.", ks_source)))
+  }
 
   directions <- if (base::identical(direction, "both")) c("up", "down") else direction
   queries <- base::list()
   info <- base::list()
-  for (d in directions) {
-    query_name <- if (base::identical(direction, "both")) base::sprintf("%s | %s", label, d) else label
-    queries[[query_name]] <- base::sort(if (base::identical(d, "down")) -best else best, decreasing = TRUE)
-    info[[base::length(info) + 1]] <- hypeRInfoRow(
-      query = query_name, signature_id = signature_id, label = label, group_label = NA_character_,
-      direction = d, n_features = base::length(best), n_dropped = base::sum(!keep), symbol_source = resolved$source
+  group_skips <- base::list()
+  for (group in base::sort(base::unique(groups[keep & (base::nzchar(groups) | !categorical)]))) {
+    rows <- keep & groups == group
+    where <- if (categorical) base::sprintf("%s group '%s'", ks_source, group) else ks_source
+    problem <- hypeRRankingProblem(scores[rows], where)
+    if (!base::is.null(problem)) {
+      if (!categorical) {
+        return(hypeRSkip(problem$reason, problem$message))
+      }
+      group_skips[[base::length(group_skips) + 1]] <- base::data.frame(
+        signature = base::sprintf("%s | %s", label, group), reason = problem$reason, message = problem$message,
+        stringsAsFactors = FALSE
+      )
+      next
+    }
+
+    best <- base::vapply(
+      base::split(scores[rows], resolved$symbols[rows]),
+      # On an opposite-sign |score| tie keep the positive value, so the result
+      # does not depend on row order.
+      function(x) base::max(x[base::abs(x) == base::max(base::abs(x))]),
+      base::numeric(1)
     )
+    for (d in directions) {
+      query_name <- base::paste(c(label, if (categorical) group, if (base::identical(direction, "both")) d), collapse = " | ")
+      queries[[query_name]] <- base::sort(if (base::identical(d, "down")) -best else best, decreasing = TRUE)
+      info[[base::length(info) + 1]] <- hypeRInfoRow(
+        query = query_name, signature_id = signature_id, label = label,
+        group_label = if (categorical) group else NA_character_, direction = d,
+        n_features = base::length(best), n_dropped = base::sum(!keep & groups == group), symbol_source = resolved$source
+      )
+    }
   }
 
-  base::list(queries = queries, info = base::do.call(base::rbind, info), skip = NULL)
+  if (base::length(queries) == 0) {
+    first <- group_skips[[1]]
+    return(hypeRSkip(first$reason, base::paste(base::vapply(group_skips, `[[`, "", "message"), collapse = " ")))
+  }
+  base::list(
+    queries = queries, info = base::do.call(base::rbind, info), skip = NULL,
+    group_skips = if (base::length(group_skips) > 0) base::do.call(base::rbind, group_skips) else NULL
+  )
 }
 
 #' Build query vectors for already-collected signatures
@@ -406,6 +500,9 @@ buildHypeRQueries <- function(inputs, test, split, score_col, resolve_symbols,
 
     queries <- c(queries, built$queries)
     info[[base::length(info) + 1]] <- built$info
+    if (!base::is.null(built$group_skips)) {
+      skipped[[base::length(skipped) + 1]] <- built$group_skips
+    }
   }
 
   info <- if (base::length(info) > 0) base::do.call(base::rbind, info) else emptyHypeRInfo()
@@ -651,15 +748,24 @@ getHypeRDifexp <- function(
 #' signature table) or \code{"kstest"} (a named numeric vector ranked by
 #' \code{score_col}, from the table named by \code{ks_source}).
 #' @param split Logical; for \code{"hypergeometric"}, build one vector per
-#' \code{group_label} (e.g. one per arm of a bi-directional signature). Ignored by
-#' \code{"kstest"}, which ranks the whole table in one vector per
-#' \code{direction}. Defaults to \code{TRUE}.
+#' \code{group_label} (e.g. one per arm of a bi-directional signature). A
+#' categorical signature's groups are categories rather than directions, so when
+#' its signature table has scores each category is also split by score sign:
+#' \code{"<label> | <group> | up"} (score > 0) and \code{"... | down"}
+#' (score < 0); rows scoring exactly 0 join neither. Ignored by
+#' \code{"kstest"}. Defaults to \code{TRUE}.
 #' @param direction For \code{"kstest"} only: which end of the ranking to test.
 #' hypeR's KS test only finds genesets enriched toward the top of the ranking.
 #' \code{"up"} (default) ranks by \code{score_col}, highest first;
 #' \code{"down"} ranks by the negated \code{score_col}, so the lowest scores
 #' come first; \code{"both"} builds one query per direction, named
-#' \code{"<label> | up"} and \code{"<label> | down"}.
+#' \code{"<label> | up"} and \code{"<label> | down"}. A categorical signature
+#' is ranked separately within each \code{group_label}, using only that
+#' category's rows (\code{"<label> | <group>"}, plus \code{" | up"} /
+#' \code{" | down"} with \code{"both"}). A ranking needs a signed score: one
+#' whose scores are all equal (\code{constant_score}) or all one sign
+#' (\code{unsigned_score}) is skipped, per category for categorical
+#' signatures.
 #' @param ks_source For \code{"kstest"} only: the table to rank.
 #' \code{"difexp"} (default) ranks every measured gene. \code{"signature"}
 #' ranks only the signature table, for signatures stored without a difexp; the
@@ -690,8 +796,12 @@ getHypeRDifexp <- function(
 #'   \code{signature_name}, \code{group_label}, \code{direction} (kstest only),
 #'   \code{n_features}, \code{n_dropped} (rows without a gene symbol or score),
 #'   \code{symbol_source}.}
-#'   \item{\code{skipped}}{Data frame of signatures that produced no query:
-#'   \code{signature}, \code{reason}, \code{message}.}
+#'   \item{\code{skipped}}{Data frame of signatures (or, for a categorical
+#'   kstest, \code{"<label> | <group>"} categories) that produced no query:
+#'   \code{signature}, \code{reason} (\code{empty_signature},
+#'   \code{no_gene_symbols}, \code{no_difexp}, \code{missing_score_col},
+#'   \code{no_group_label}, \code{constant_score}, \code{unsigned_score}),
+#'   \code{message}.}
 #' }
 #'
 #' @examples

@@ -214,6 +214,38 @@ resolveHypeRSignatureLabels <- function(omic_signatures) {
 }
 
 
+# A full transcriptomics difexp covers the measured transcriptome; on production
+# (2026-09) every transcriptomics difexp has either > 10,000 rows or <= 5,000.
+HYPER_MIN_TRANSCRIPTOME_DIFEXP_ROWS <- 10000L
+
+#' Why a difexp looks filtered rather than a full list of measured genes, or NULL
+#'
+#' The default background uses a signature's difexp genes as the measured
+#' universe (BS831: "the number of annotated genes in the dataset"), which is
+#' only right when the difexp is complete. A truncated one shrinks the
+#' background and hides real enrichment.
+#' @noRd
+hypeRDifexpTruncation <- function(omic_signature) {
+  difexp <- omic_signature$difexp
+  n_difexp <- base::nrow(difexp)
+  n_signature <- if (methods::is(omic_signature$signature, "data.frame")) base::nrow(omic_signature$signature) else 0L
+  assay <- base::tolower(base::as.character(omic_signature$metadata$assay_type)[1])
+
+  if (base::identical(assay, "transcriptomics") && n_difexp < HYPER_MIN_TRANSCRIPTOME_DIFEXP_ROWS) {
+    return(base::sprintf("%d rows, fewer than a transcriptome's %d", n_difexp, HYPER_MIN_TRANSCRIPTOME_DIFEXP_ROWS))
+  }
+  if (n_signature > 0 && n_difexp <= 2L * n_signature) {
+    return(base::sprintf("%d rows for a %d-feature signature", n_difexp, n_signature))
+  }
+  for (col in base::intersect(c("p_value", "pvalue", "adj_p"), base::colnames(difexp))) {
+    p <- base::suppressWarnings(base::as.numeric(difexp[[col]]))
+    if (base::any(!base::is.na(p)) && base::max(p, na.rm = TRUE) <= 0.05) {
+      return(base::sprintf("every %s <= 0.05", col))
+    }
+  }
+  NULL
+}
+
 #' Background for each query vector
 #'
 #' A number or gene vector is passed through for every query. "difexp" gives
@@ -224,8 +256,14 @@ resolveHypeRSignatureLabels <- function(omic_signatures) {
 #'
 #' @param inputs list(signatures, ids, labels) for every supplied signature,
 #'   including ones that built no query.
+#' NULL (the default) means "difexp" where a signature has a complete difexp
+#' with gene symbols and hypeR's 23467 otherwise: silently when there is no
+#' difexp, with a warning when the difexp looks filtered
+#' (hypeRDifexpTruncation()). An explicit "difexp" uses any difexp.
+#'
 #' @return list(values = unnamed list, one background per row of `info`;
-#'   sources = chr per row: "number", "genes", "difexp" or "difexp-fallback")
+#'   sources = chr per row: "number", "genes", "difexp", "difexp-fallback" or
+#'   "difexp-truncated")
 #' @noRd
 resolveQueryBackgrounds <- function(background, info, inputs, resolve_symbols) {
   if (base::is.list(background)) {
@@ -260,18 +298,36 @@ resolveQueryBackgrounds <- function(background, info, inputs, resolve_symbols) {
   values <- base::vector("list", base::nrow(info))
   sources <- base::character(base::nrow(info))
 
+  warn_fallback <- base::character()
+  truncated <- base::character()
+  truncation_notes <- base::character()
   for (i in base::seq_len(base::nrow(info))) {
     spec <- specs[[i]]
-    if (!base::identical(spec, "difexp")) {
+    is_default <- base::is.null(spec)
+    if (is_default && base::is.null(inputs$signatures)) {
+      # hypeR-native input has no difexp to default to.
+      is_default <- FALSE
+      spec <- HYPER_DEFAULT_BACKGROUND
+    }
+    if (!is_default && !base::identical(spec, "difexp")) {
       values[i] <- base::list(spec)
       sources[i] <- if (base::is.character(spec)) "genes" else "number"
       next
     }
 
     label <- info$signature_name[i]
+    sig <- signatures_by_label[[label]]
+    has_difexp <- methods::is(sig$difexp, "data.frame") && base::nrow(sig$difexp) > 0
+    if (base::is.null(universes[[label]]) && is_default && has_difexp) {
+      note <- hypeRDifexpTruncation(sig)
+      if (!base::is.null(note)) {
+        truncated <- c(truncated, label)
+        truncation_notes <- c(truncation_notes, base::sprintf("'%s' (%s)", label, note))
+        universes[[label]] <- HYPER_DEFAULT_BACKGROUND
+      }
+    }
     if (base::is.null(universes[[label]])) {
-      sig <- signatures_by_label[[label]]
-      symbols <- if (methods::is(sig$difexp, "data.frame") && base::nrow(sig$difexp) > 0) {
+      symbols <- if (has_difexp) {
         resolve_symbols(sig, "difexp", label)$symbols
       } else {
         NA_character_
@@ -279,20 +335,33 @@ resolveQueryBackgrounds <- function(background, info, inputs, resolve_symbols) {
       symbols <- base::unique(symbols[!base::is.na(symbols)])
       if (base::length(symbols) == 0) {
         fell_back <- c(fell_back, label)
+        if (!is_default) {
+          warn_fallback <- c(warn_fallback, label)
+        }
         universes[[label]] <- HYPER_DEFAULT_BACKGROUND
       } else {
         universes[[label]] <- symbols
       }
     }
     values[i] <- base::list(universes[[label]])
-    sources[i] <- if (label %in% fell_back) "difexp-fallback" else "difexp"
+    sources[i] <- if (label %in% truncated) "difexp-truncated" else if (label %in% fell_back) "difexp-fallback" else "difexp"
   }
 
-  if (base::length(fell_back) > 0) {
+  if (base::length(truncation_notes) > 0) {
+    base::warning(
+      base::sprintf(
+        "Default background: the difexp looks filtered for %s, so it is not the measured gene universe; used background = %s instead. Pass background = \"difexp\" to use it anyway.",
+        base::paste(truncation_notes, collapse = ", "), HYPER_DEFAULT_BACKGROUND
+      ),
+      call. = FALSE
+    )
+  }
+
+  if (base::length(warn_fallback) > 0) {
     base::warning(
       base::sprintf(
         "background = \"difexp\": no difexp gene symbols for %s; used background = %s instead.",
-        base::paste(base::sprintf("'%s'", fell_back), collapse = ", "),
+        base::paste(base::sprintf("'%s'", base::unique(warn_fallback)), collapse = ", "),
         HYPER_DEFAULT_BACKGROUND
       ),
       call. = FALSE
@@ -313,7 +382,8 @@ HYPER_INFO_MAX_CHARS <- 32000L
 #'
 #' @param info_row One row of the prepared info data frame.
 #' @param run list(ranked_table, score_col, split (all chr, "" when not
-#'   applicable), background_source, query_genes_removed, genesets_dropped = chr).
+#'   applicable), background_source, query_genes_removed, genesets_dropped = chr,
+#'   fdr_scope).
 #' @noRd
 appendHypeRProvenance <- function(hyp_obj, info_row, run) {
   blank_na <- function(x) if (base::is.na(x)) "" else base::as.character(x)
@@ -335,7 +405,8 @@ appendHypeRProvenance <- function(hyp_obj, info_row, run) {
     "SigRepo Features Unmapped" = base::as.character(info_row$n_dropped),
     "SigRepo Query Genes Removed" = base::as.character(run$query_genes_removed),
     "SigRepo Genesets Dropped" = base::as.character(base::length(run$genesets_dropped)),
-    "SigRepo Genesets Dropped List" = dropped_list
+    "SigRepo Genesets Dropped List" = dropped_list,
+    "SigRepo FDR Scope" = run$fdr_scope
   ))
   hyp_obj
 }
@@ -344,7 +415,7 @@ HYPER_PROVENANCE_KEYS <- c(
   "SigRepo Signature ID", "SigRepo Signature Name", "Group Label", "Symbol Source",
   "SigRepo Direction", "SigRepo Ranked Table", "SigRepo Score Column", "SigRepo Split",
   "SigRepo Background Source", "SigRepo Features Unmapped", "SigRepo Query Genes Removed",
-  "SigRepo Genesets Dropped", "SigRepo Genesets Dropped List"
+  "SigRepo Genesets Dropped", "SigRepo Genesets Dropped List", "SigRepo FDR Scope"
 )
 
 isHypeRBackgroundValue <- function(background) {
@@ -354,10 +425,13 @@ isHypeRBackgroundValue <- function(background) {
   is_number || is_genes || base::identical(background, "difexp")
 }
 
-#' Error unless background is a positive number, a gene vector, "difexp", or a
-#' named list of those
+#' Error unless background is NULL, a positive number, a gene vector, "difexp",
+#' or a named list of those
 #' @noRd
 checkHypeRBackground <- function(background) {
+  if (base::is.null(background)) {
+    return(base::invisible(background))
+  }
   if (base::is.list(background)) {
     keys <- base::names(background)
     if (base::length(background) == 0 || base::is.null(keys) || base::any(base::is.na(keys) | !base::nzchar(keys)) ||
@@ -465,6 +539,37 @@ warnSkippedHypeRSignatures <- function(skipped) {
   )
 }
 
+#' FDR across every query of a run, then hypeR's pval/fdr filters
+#'
+#' BS831's hyperEnrichment() (mht = TRUE) adjusts p-values across all
+#' signatures x genesets tested, not per signature. hypeR keeps only p-values
+#' rounded to 2 significant digits, so the pooled FDR is computed from those,
+#' as hyperEnrichment() does. With a single query the FDR hypeR computed is
+#' kept. hypeR ran with pval = fdr = 1, so the filters are applied here and
+#' the hyp's args and info record the requested cutoffs.
+#' @noRd
+applyRunHypeRFdr <- function(results, pval, fdr) {
+  if (base::length(results) > 1L) {
+    n_rows <- base::vapply(results, function(h) base::nrow(h$data), base::integer(1))
+    pooled <- stats::p.adjust(base::unlist(base::lapply(results, function(h) h$data$pval), use.names = FALSE), method = "fdr")
+    ends <- base::cumsum(n_rows)
+    for (k in base::seq_along(results)) {
+      if (n_rows[k] > 0) {
+        results[[k]]$data$fdr <- base::signif(pooled[(ends[k] - n_rows[k] + 1L):ends[k]], 2)
+      }
+    }
+  }
+  for (k in base::seq_along(results)) {
+    data <- results[[k]]$data
+    results[[k]]$data <- data[data$pval <= pval & data$fdr <= fdr, , drop = FALSE]
+    results[[k]]$args$pval <- pval
+    results[[k]]$args$fdr <- fdr
+    results[[k]]$info[["P-Value"]] <- base::as.character(pval)
+    results[[k]]$info[["FDR"]] <- base::as.character(fdr)
+  }
+  results
+}
+
 #' Run hypeR enrichment on SigRepo signatures
 #'
 #' @description Builds hypeR query vectors from SigRepo signatures (see
@@ -486,9 +591,29 @@ warnSkippedHypeRSignatures <- function(skipped) {
 #'
 #' @inheritParams prepareHypeRSignatures
 #' @inheritParams getHypeRGenesets
-#' @param background hypeR's background: a single number (population size), a
+#' @param min_query_genes Hypergeometric only: skip, with a warning, a query
+#' with fewer than this many genes found in the genesets. Defaults to \code{4},
+#' the \code{min.drawsize} of BS831's \code{hyperEnrichment()}.
+#' @param fdr_scope \code{"run"} (default) adjusts p-values for multiple testing
+#' across every query and geneset in the call, as BS831's
+#' \code{hyperEnrichment()} does across signatures; \code{"query"} adjusts
+#' within each query, as \code{hypeR::hypeR()} does for a named list. With one
+#' query both are the same. The pooled FDR is computed from hypeR's p-values,
+#' which are rounded to 2 significant digits. \code{pval} and \code{fdr} filter
+#' on the FDR of the chosen scope.
+#' @param background \code{NULL} (default) uses each signature's measured genes
+#' from its difexp table when it has difexp gene symbols, and \code{23467}
+#' otherwise (always \code{23467} for \code{signature} input). A difexp that
+#' looks filtered is not a measured-gene universe, so the default also uses
+#' \code{23467}, with a warning, when a transcriptomics difexp has fewer than
+#' 10,000 rows, a difexp has no more than twice its signature's rows, or every
+#' \code{p_value}, \code{pvalue} or \code{adj_p} is at most 0.05. For
+#' \code{test = "kstest"} the default is \code{23467}: the ranked list is the
+#' universe, so the background does not enter the test. Otherwise
+#' hypeR's background: a single number (population size), a
 #' character vector of background genes, or \code{"difexp"} to use each
-#' signature's measured genes from its difexp table. Signatures without difexp
+#' signature's measured genes from its difexp table. With an explicit
+#' \code{"difexp"}, signatures without difexp
 #' symbols fall back to \code{23467} with a warning. For a different background
 #' per signature, pass a named list of those forms, one element per signature,
 #' named by signature label (see \code{prepareHypeRSignatures()$info$signature_name};
@@ -498,8 +623,7 @@ warnSkippedHypeRSignatures <- function(skipped) {
 #' \code{"difexp"}, a hypergeometric query is first reduced to the background
 #' genes, with a warning naming each query that lost genes: hypeR reduces only
 #' the genesets, and query genes outside the background would distort the
-#' p-values. Anything else (e.g. \code{"Difexp"}) is an error. Defaults to
-#' \code{23467}.
+#' p-values. Anything else (e.g. \code{"Difexp"}) is an error.
 #' @param power Exponent for the kstest score weights (kstest only). It changes
 #' only the enrichment \code{score}. \code{1} (default) weights hits by
 #' |score|. \code{0} runs hypeR's ranked (unweighted) signature: the query is
@@ -524,8 +648,9 @@ warnSkippedHypeRSignatures <- function(skipped) {
 #'
 #' @return A \code{hyp} when the input is a single vector in \code{signature},
 #' or a single signature (one \code{OmicSignature}, or one id or name) and the
-#' test builds one query by construction (\code{test = "kstest"} with \code{direction} \code{"up"} or
-#' \code{"down"}, or \code{split = FALSE}). Otherwise a \code{multihyp} named
+#' test builds one query by construction (\code{split = FALSE}, or
+#' \code{test = "kstest"} with \code{direction} \code{"up"} or \code{"down"}
+#' on a signature that is not categorical). Otherwise a \code{multihyp} named
 #' by query, even when only one query is left. This mirrors hypeR, where a
 #' vector gives a \code{hyp} and a named list a \code{multihyp}.
 #'
@@ -535,14 +660,16 @@ warnSkippedHypeRSignatures <- function(skipped) {
 #' \code{SigRepo Direction}, \code{SigRepo Ranked Table},
 #' \code{SigRepo Score Column}, \code{SigRepo Split},
 #' \code{SigRepo Background Source} (\code{number}, \code{genes},
-#' \code{difexp}, or \code{difexp-fallback}), \code{SigRepo Features Unmapped},
-#' \code{SigRepo Query Genes Removed}, \code{SigRepo Genesets Dropped} and
-#' \code{SigRepo Genesets Dropped List}.
+#' \code{difexp}, \code{difexp-fallback} or \code{difexp-truncated}),
+#' \code{SigRepo Features Unmapped}, \code{SigRepo Query Genes Removed},
+#' \code{SigRepo Genesets Dropped}, \code{SigRepo Genesets Dropped List} and
+#' \code{SigRepo FDR Scope}.
 #'
 #' Signatures that cannot produce a query are skipped with a warning; if none
 #' can, an error is raised. A query left with no genesets or no genes (after
-#' the drops described under \code{power} and \code{background}) is skipped
-#' with a warning; if no query is left, an error is raised.
+#' the drops described under \code{power} and \code{background}), or a
+#' hypergeometric query below \code{min_query_genes}, is skipped with a
+#' warning; if no query is left, an error is raised.
 #'
 #' @examples
 #' \dontrun{
@@ -583,7 +710,9 @@ runHypeR <- function(
     ks_source = c("difexp", "signature"),
     score_col = "score",
     query_names = NULL,
-    background = 23467,
+    min_query_genes = 4,
+    fdr_scope = c("run", "query"),
+    background = NULL,
     power = 1,
     absolute = FALSE,
     pval = 1,
@@ -599,10 +728,14 @@ runHypeR <- function(
   test <- base::match.arg(test)
   direction <- base::match.arg(direction)
   ks_source <- base::match.arg(ks_source)
+  fdr_scope <- base::match.arg(fdr_scope)
   checkHypeRBackground(background)
   checkHypeRSplit(split)
   checkHypeRKstestArgs(test, direction, ks_source)
   checkHypeRQueryNames(query_names)
+  if (!(base::is.numeric(min_query_genes) && base::length(min_query_genes) == 1L && !base::is.na(min_query_genes) && min_query_genes >= 1)) {
+    base::stop("\n'min_query_genes' must be a single number of at least 1.\n")
+  }
 
   if (base::missing(genesets)) {
     genesets <- NULL
@@ -635,6 +768,11 @@ runHypeR <- function(
     base::stop("\nNo signature produced a hypeR query vector; see the warning for each signature's reason.\n")
   }
 
+  # The default difexp universe matters for the hypergeometric test only; a
+  # ranked test's universe is its ranked list, so it keeps hypeR's number.
+  if (base::is.null(background) && base::identical(test, "kstest")) {
+    background <- HYPER_DEFAULT_BACKGROUND
+  }
   backgrounds <- resolveQueryBackgrounds(background, prepared$info, inputs, resolve_symbols)
   queries <- prepared$signatures
   query_names_out <- base::names(queries)
@@ -658,7 +796,7 @@ runHypeR <- function(
         base::warning(
           base::sprintf(
             "%s: removed %s query gene(s) not %s from: %s",
-            if (kind == "difexp") "background = \"difexp\"" else "background",
+            if (kind == "genes") "background" else if (base::identical(background, "difexp")) "background = \"difexp\"" else "background (difexp)",
             base::sum(removed[hit]),
             if (kind == "difexp") "measured in difexp" else "in the background gene vector",
             base::paste(base::sprintf("'%s' (%d)", query_names_out[hit], removed[hit]), collapse = ", ")
@@ -706,6 +844,29 @@ runHypeR <- function(
       call. = FALSE
     )
   }
+  # BS831's hyperEnrichment() skips a draw with fewer than min.drawsize (4)
+  # genes found among the genesets: a p-value from one or two hits says little.
+  if (base::identical(test, "hypergeometric")) {
+    members <- if (methods::is(resolved_genesets, "gsets") || methods::is(resolved_genesets, "rgsets")) {
+      resolved_genesets$genesets
+    } else {
+      resolved_genesets
+    }
+    annotated <- base::unique(base::unlist(members, use.names = FALSE))
+    n_found <- base::vapply(queries, function(q) base::sum(q %in% annotated), base::integer(1))
+    too_small <- runnable & n_found < min_query_genes
+    if (base::any(too_small)) {
+      base::warning(
+        base::sprintf(
+          "Skipped %d query(ies) with fewer than min_query_genes = %s genes found in the genesets: %s",
+          base::sum(too_small), min_query_genes,
+          base::paste(base::sprintf("'%s' (%d)", query_names_out[too_small], n_found[too_small]), collapse = ", ")
+        ),
+        call. = FALSE
+      )
+      runnable <- runnable & !too_small
+    }
+  }
   if (!base::any(runnable)) {
     base::stop("\nNo query had genesets left to test; see the warnings for the dropped genesets and skipped queries.\n")
   }
@@ -727,8 +888,10 @@ runHypeR <- function(
       background = backgrounds$values[[i]],
       power = power,
       absolute = absolute,
-      pval = pval,
-      fdr = fdr,
+      # With fdr_scope = "run" the FDR is recomputed across every query below,
+      # so hypeR must keep every row until then.
+      pval = if (fdr_scope == "run") 1 else pval,
+      fdr = if (fdr_scope == "run") 1 else fdr,
       plotting = plotting,
       quiet = quiet
     )
@@ -743,12 +906,19 @@ runHypeR <- function(
       split = if (is_kstest || collected$native) "" else base::as.character(split),
       background_source = backgrounds$sources[i],
       query_genes_removed = removed[i],
-      genesets_dropped = query_genesets[[i]]$dropped
+      genesets_dropped = query_genesets[[i]]$dropped,
+      fdr_scope = fdr_scope
     ))
   })
   base::names(results) <- query_names_out[run_idx]
 
-  one_query_by_construction <- collected$native || (if (is_kstest) !base::identical(direction, "both") else !split)
+  if (fdr_scope == "run") {
+    results <- applyRunHypeRFdr(results, pval = pval, fdr = fdr)
+  }
+
+  categorical <- !collected$native && base::length(inputs$signatures) == 1L && isCategoricalHypeRSignature(inputs$signatures[[1]])
+  one_query_by_construction <- collected$native ||
+    (if (is_kstest) !base::identical(direction, "both") && !categorical else !split)
   if (inputs$single && one_query_by_construction) {
     return(results[[1]])
   }

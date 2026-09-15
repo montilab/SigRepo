@@ -21,7 +21,9 @@ runHypeR(
   ks_source = c("difexp", "signature"),
   score_col = "score",
   query_names = NULL,
-  background = 23467,
+  min_query_genes = 4,
+  fdr_scope = c("run", "query"),
+  background = NULL,
   power = 1,
   absolute = FALSE,
   pval = 1,
@@ -74,16 +76,25 @@ signature table) or \code{"kstest"} (a named numeric vector ranked by
 \code{score_col}, from the table named by \code{ks_source}).}
 
 \item{split}{Logical; for \code{"hypergeometric"}, build one vector per
-\code{group_label} (e.g. one per arm of a bi-directional signature). Ignored by
-\code{"kstest"}, which ranks the whole table in one vector per
-\code{direction}. Defaults to \code{TRUE}.}
+\code{group_label} (e.g. one per arm of a bi-directional signature). A
+categorical signature's groups are categories rather than directions, so when
+its signature table has scores each category is also split by score sign:
+\code{"<label> | <group> | up"} (score > 0) and \code{"... | down"}
+(score < 0); rows scoring exactly 0 join neither. Ignored by
+\code{"kstest"}. Defaults to \code{TRUE}.}
 
 \item{direction}{For \code{"kstest"} only: which end of the ranking to test.
 hypeR's KS test only finds genesets enriched toward the top of the ranking.
 \code{"up"} (default) ranks by \code{score_col}, highest first;
 \code{"down"} ranks by the negated \code{score_col}, so the lowest scores
 come first; \code{"both"} builds one query per direction, named
-\code{"<label> | up"} and \code{"<label> | down"}.}
+\code{"<label> | up"} and \code{"<label> | down"}. A categorical signature
+is ranked separately within each \code{group_label}, using only that
+category's rows (\code{"<label> | <group>"}, plus \code{" | up"} /
+\code{" | down"} with \code{"both"}). A ranking needs a signed score: one
+whose scores are all equal (\code{constant_score}) or all one sign
+(\code{unsigned_score}) is skipped, per category for categorical
+signatures.}
 
 \item{ks_source}{For \code{"kstest"} only: the table to rank.
 \code{"difexp"} (default) ranks every measured gene. \code{"signature"}
@@ -102,9 +113,31 @@ named by \code{ks_source}. Defaults to \code{"score"}.}
 unique as \code{name (2)}. For example
 \code{function(info) paste(info$signature_id, info$group_label, sep = "_")}.}
 
-\item{background}{hypeR's background: a single number (population size), a
+\item{min_query_genes}{Hypergeometric only: skip, with a warning, a query
+with fewer than this many genes found in the genesets. Defaults to \code{4},
+the \code{min.drawsize} of BS831's \code{hyperEnrichment()}.}
+
+\item{fdr_scope}{\code{"run"} (default) adjusts p-values for multiple testing
+across every query and geneset in the call, as BS831's
+\code{hyperEnrichment()} does across signatures; \code{"query"} adjusts
+within each query, as \code{hypeR::hypeR()} does for a named list. With one
+query both are the same. The pooled FDR is computed from hypeR's p-values,
+which are rounded to 2 significant digits. \code{pval} and \code{fdr} filter
+on the FDR of the chosen scope.}
+
+\item{background}{\code{NULL} (default) uses each signature's measured genes
+from its difexp table when it has difexp gene symbols, and \code{23467}
+otherwise (always \code{23467} for \code{signature} input). A difexp that
+looks filtered is not a measured-gene universe, so the default also uses
+\code{23467}, with a warning, when a transcriptomics difexp has fewer than
+10,000 rows, a difexp has no more than twice its signature's rows, or every
+\code{p_value}, \code{pvalue} or \code{adj_p} is at most 0.05. For
+\code{test = "kstest"} the default is \code{23467}: the ranked list is the
+universe, so the background does not enter the test. Otherwise
+hypeR's background: a single number (population size), a
 character vector of background genes, or \code{"difexp"} to use each
-signature's measured genes from its difexp table. Signatures without difexp
+signature's measured genes from its difexp table. With an explicit
+\code{"difexp"}, signatures without difexp
 symbols fall back to \code{23467} with a warning. For a different background
 per signature, pass a named list of those forms, one element per signature,
 named by signature label (see \code{prepareHypeRSignatures()$info$signature_name};
@@ -114,8 +147,7 @@ signature with no entry, is an error. With a gene vector or
 \code{"difexp"}, a hypergeometric query is first reduced to the background
 genes, with a warning naming each query that lost genes: hypeR reduces only
 the genesets, and query genes outside the background would distort the
-p-values. Anything else (e.g. \code{"Difexp"}) is an error. Defaults to
-\code{23467}.}
+p-values. Anything else (e.g. \code{"Difexp"}) is an error.}
 
 \item{power}{Exponent for the kstest score weights (kstest only). It changes
 only the enrichment \code{score}. \code{1} (default) weights hits by
@@ -149,8 +181,9 @@ are removed (they are most of the object's size).}
 \value{
 A \code{hyp} when the input is a single vector in \code{signature},
 or a single signature (one \code{OmicSignature}, or one id or name) and the
-test builds one query by construction (\code{test = "kstest"} with \code{direction} \code{"up"} or
-\code{"down"}, or \code{split = FALSE}). Otherwise a \code{multihyp} named
+test builds one query by construction (\code{split = FALSE}, or
+\code{test = "kstest"} with \code{direction} \code{"up"} or \code{"down"}
+on a signature that is not categorical). Otherwise a \code{multihyp} named
 by query, even when only one query is left. This mirrors hypeR, where a
 vector gives a \code{hyp} and a named list a \code{multihyp}.
 
@@ -160,14 +193,16 @@ key does not apply): \code{SigRepo Signature ID},
 \code{SigRepo Direction}, \code{SigRepo Ranked Table},
 \code{SigRepo Score Column}, \code{SigRepo Split},
 \code{SigRepo Background Source} (\code{number}, \code{genes},
-\code{difexp}, or \code{difexp-fallback}), \code{SigRepo Features Unmapped},
-\code{SigRepo Query Genes Removed}, \code{SigRepo Genesets Dropped} and
-\code{SigRepo Genesets Dropped List}.
+\code{difexp}, \code{difexp-fallback} or \code{difexp-truncated}),
+\code{SigRepo Features Unmapped}, \code{SigRepo Query Genes Removed},
+\code{SigRepo Genesets Dropped}, \code{SigRepo Genesets Dropped List} and
+\code{SigRepo FDR Scope}.
 
 Signatures that cannot produce a query are skipped with a warning; if none
 can, an error is raised. A query left with no genesets or no genes (after
-the drops described under \code{power} and \code{background}) is skipped
-with a warning; if no query is left, an error is raised.
+the drops described under \code{power} and \code{background}), or a
+hypergeometric query below \code{min_query_genes}, is skipped with a
+warning; if no query is left, an error is raised.
 }
 \description{
 Builds hypeR query vectors from SigRepo signatures (see

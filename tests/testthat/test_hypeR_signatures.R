@@ -381,3 +381,79 @@ test_that("W4: getHypeRDifexp adds resolved symbols and leaves out signatures wi
   expect_equal(tbl$resolved_symbol[match(c("f1", "f2", "f3"), tbl$feature_name)], c("A", "B", NA))
   expect_true(all(tbl$resolved_symbol_source == "reference feature_name"))
 })
+
+# ---- Direction types and ranking checks ----
+
+test_that("categorical hypergeometric splits each category by score sign; zero scores join neither", {
+  prepared <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_categorical_sig(), verbose = FALSE)
+
+  expect_equal(names(prepared$signatures), c("cat | red | up", "cat | red | down", "cat | white | up", "cat | white | down"))
+  expect_equal(unname(prepared$signatures), list("A", "B", c("D", "F"), "E"))
+  expect_equal(prepared$info$group_label, c("red", "red", "white", "white"))
+  expect_equal(prepared$info$direction, c("up", "down", "up", "down"))
+  expect_false("C" %in% unlist(prepared$signatures))
+})
+
+test_that("categorical hypergeometric without scores splits by category only; split = FALSE gives one query", {
+  sig <- make_hyper_categorical_sig()
+  tbl <- sig$signature
+  tbl$score <- NA_real_
+  no_score <- list(metadata = sig$metadata, signature = tbl, difexp = sig$difexp)
+
+  by_group <- SigRepo:::buildHypergeometricQueries(no_score, "cat", NA_character_, TRUE, SigRepo:::newHypeRSymbolResolver(NULL))
+  expect_equal(names(by_group$queries), c("cat | red", "cat | white"))
+  expect_true(all(is.na(by_group$info$direction)))
+
+  one <- SigRepo::prepareHypeRSignatures(omic_signature = sig, split = FALSE, verbose = FALSE)
+  expect_equal(one$signatures, list(cat = c("A", "B", "C", "D", "E", "F")))
+})
+
+test_that("bi-directional hypergeometric still splits by group_label only, not by sign", {
+  prepared <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(), verbose = FALSE)
+  expect_equal(names(prepared$signatures), c("sig_a | Old", "sig_a | Young"))
+})
+
+test_that("categorical kstest ranks each category's own difexp rows, in both directions", {
+  prepared <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_categorical_sig(), test = "kstest",
+                                              direction = "both", verbose = FALSE)
+
+  expect_equal(names(prepared$signatures), c("cat | red | up", "cat | red | down", "cat | white | up", "cat | white | down"))
+  expect_equal(prepared$signatures[["cat | red | up"]], c(A = 2, C = 0.5, E = 0.2, F = 0.1, D = -0.3, B = -1))
+  expect_equal(prepared$signatures[["cat | white | down"]], c(C = 2, A = 1, F = 0.5, B = -0.4, E = -1, D = -3))
+  expect_equal(prepared$info$group_label, c("red", "red", "white", "white"))
+
+  up_only <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_categorical_sig(), test = "kstest", verbose = FALSE)
+  expect_equal(names(up_only$signatures), c("cat | red", "cat | white"))
+})
+
+test_that("a categorical category with unsigned scores is skipped; the other categories still run", {
+  prepared <- SigRepo::prepareHypeRSignatures(
+    omic_signature = make_hyper_categorical_sig(c(2, 1, 0.5, 0.3, 0.2, 0.1)), test = "kstest", verbose = FALSE
+  )
+  expect_equal(names(prepared$signatures), "cat | white")
+  expect_equal(prepared$skipped$signature, "cat | red")
+  expect_equal(prepared$skipped$reason, "unsigned_score")
+})
+
+test_that("a categorical difexp without group_label is skipped for kstest", {
+  sig <- make_hyper_categorical_sig()
+  difexp <- sig$difexp
+  difexp$group_label <- NA
+  bare <- list(metadata = sig$metadata, signature = sig$signature, difexp = difexp)
+  built <- SigRepo:::buildKstestQueries(bare, "cat", NA_character_, "score", "up", "difexp", SigRepo:::newHypeRSymbolResolver(NULL))
+  expect_equal(built$skip$reason, "no_group_label")
+})
+
+test_that("kstest skips a ranking with constant or one-signed scores", {
+  unsigned <- hyper_difexp_table()
+  unsigned$score <- abs(unsigned$score)
+  skipped <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(difexp = unsigned), test = "kstest", verbose = FALSE)
+  expect_equal(skipped$skipped$reason, "unsigned_score")
+  expect_match(skipped$skipped$message, "all >= 0", fixed = TRUE)
+
+  tbl <- hyper_sig_table()
+  tbl$score <- 1
+  constant <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(signature = tbl, direction_type = "uni-directional"),
+                                              test = "kstest", ks_source = "signature", verbose = FALSE)
+  expect_equal(constant$skipped$reason, "constant_score")
+})
