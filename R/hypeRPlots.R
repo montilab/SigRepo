@@ -193,3 +193,106 @@ plotHypeREnrichment <- function(hyp_obj, geneset, query = NULL, title = NULL) {
   }
   plot
 }
+
+#' Whether any pair of genesets reaches the similarity cutoff, as hypeR computes it
+#' @noRd
+hypeRAnyMapEdge <- function(members, similarity_metric, similarity_cutoff) {
+  if (base::length(members) < 2) {
+    return(FALSE)
+  }
+  for (i in base::seq_len(base::length(members) - 1L)) {
+    for (j in (i + 1L):base::length(members)) {
+      shared <- base::length(base::intersect(members[[i]], members[[j]]))
+      similarity <- if (base::identical(similarity_metric, "jaccard_similarity")) {
+        shared / base::length(base::union(members[[i]], members[[j]]))
+      } else {
+        shared / base::min(base::length(members[[i]]), base::length(members[[j]]))
+      }
+      if (similarity > 0 && similarity >= similarity_cutoff) {
+        return(TRUE)
+      }
+    }
+  }
+  FALSE
+}
+
+#' One query's map, or NULL with a warning when hypeR could not draw it
+#' @noRd
+plotHypeRMapOne <- function(name, hyp, type, val, pval, fdr, top, similarity_metric, similarity_cutoff) {
+  if (base::identical(type, "hmap") && !methods::is(hyp$args$genesets, "rgsets")) {
+    base::stop("\ntype = \"hmap\" needs rgsets genesets (e.g. hypeR::hyperdb_rgsets()).\n")
+  }
+  data <- hyp$data
+  keep <- data$pval <= pval & data$fdr <= fdr
+  data <- utils::head(data[!base::is.na(keep) & keep, , drop = FALSE], top)
+  if (base::nrow(data) == 0) {
+    base::warning(base::sprintf("No genesets pass the cutoffs for '%s'.", name), call. = FALSE)
+    return(NULL)
+  }
+  if (base::identical(type, "hmap")) {
+    return(hypeR::hyp_hmap(hyp, pval = pval, fdr = fdr, val = val, top = top))
+  }
+  members <- hyp$args$genesets$genesets[data$label]
+  if (!hypeRAnyMapEdge(members, similarity_metric, similarity_cutoff)) {
+    base::warning(base::sprintf(
+      "No geneset pair in '%s' reaches similarity_cutoff = %s; lower it to draw a map.",
+      name, similarity_cutoff
+    ), call. = FALSE)
+    return(NULL)
+  }
+  hypeR::hyp_emap(hyp, similarity_metric = similarity_metric, similarity_cutoff = similarity_cutoff,
+                  pval = pval, fdr = fdr, val = val, top = top)
+}
+
+#' Enrichment or hierarchy map of runHypeR() results
+#'
+#' @description Draws hypeR's enrichment map (\code{hypeR::hyp_emap()}, genesets
+#' linked by shared genes) or hierarchy map (\code{hypeR::hyp_hmap()}, needs
+#' \code{rgsets} genesets), after checking the cases where hypeR would fail:
+#' no geneset passing the cutoffs, or no pair of genesets reaching
+#' \code{similarity_cutoff}. Those return \code{NULL} with a warning instead of
+#' an error.
+#'
+#' @inheritParams hypeRDotData
+#' @param type \code{"emap"} (default) or \code{"hmap"}.
+#' @param query Query name; with \code{NULL} a \code{multihyp} of several queries
+#' gives a named list with one map per query.
+#' @param top Maximum genesets drawn per map. Default \code{25}.
+#' @param similarity_metric,similarity_cutoff Passed to \code{hypeR::hyp_emap()}.
+#'
+#' @return A \code{visNetwork} widget, \code{NULL} (with a warning) when there is
+#' nothing to draw, or a named list of those for several queries.
+#'
+#' @examples
+#' \dontrun{
+#' SigRepo::plotHypeRMap(hyp, query = "LLFS_Aging_Gene_2023 | Group1", fdr = 0.05)
+#' }
+#'
+#' @export
+plotHypeRMap <- function(
+    hyp_obj,
+    type = c("emap", "hmap"),
+    query = NULL,
+    val = c("fdr", "pval"),
+    pval = 1,
+    fdr = 1,
+    top = 25,
+    similarity_metric = c("jaccard_similarity", "overlap_similarity"),
+    similarity_cutoff = 0.2
+) {
+  type <- base::match.arg(type)
+  val <- base::match.arg(val)
+  similarity_metric <- base::match.arg(similarity_metric)
+  checkHypeRNumber(top, "top", 1)
+  checkHypeRNumber(similarity_cutoff, "similarity_cutoff", 0)
+
+  hyps <- hypeRResultHyps(hyp_obj)
+  draw <- function(name, hyp) {
+    plotHypeRMapOne(name, hyp, type, val, pval, fdr, top, similarity_metric, similarity_cutoff)
+  }
+  if (!base::is.null(query) || base::length(hyps) == 1L) {
+    selected <- hypeRSelectHyp(hyp_obj, query)
+    return(draw(selected$name, selected$hyp))
+  }
+  stats::setNames(base::lapply(base::names(hyps), function(name) draw(name, hyps[[name]])), base::names(hyps))
+}

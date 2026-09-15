@@ -238,3 +238,50 @@ test_that("plotHypeREnrichment labels a kstest down ranking and draws a Venn for
                                             format(signif(hyper$data$a$data$pval[hyper$data$a$data$label == "SET_AB"], 2)),
                                             format(signif(hyper$data$a$data$fdr[hyper$data$a$data$label == "SET_AB"], 2))))
 })
+
+# ---- plotHypeRMap() ----
+
+test_that("plotHypeRMap returns hypeR's enrichment map when geneset pairs share genes", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("visNetwork")
+  hyper <- runToyHypeR(signature = list(a = sprintf("G%02d", 1:12), b = sprintf("G%02d", 29:40)),
+                       genesets = hyper_fgsea_genesets(), verbose = FALSE)
+
+  expect_true(inherits(SigRepo::plotHypeRMap(hyper, query = "a"), "visNetwork"))
+  both <- SigRepo::plotHypeRMap(hyper)
+  expect_equal(names(both), c("a", "b"))
+  expect_true(all(vapply(both, inherits, TRUE, "visNetwork")))
+})
+
+test_that("plotHypeRMap returns NULL with a warning when hypeR would fail", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("visNetwork")
+  disjoint <- list(A = c("X1", "X2", "X3"), B = c("Y1", "Y2", "Y3"), C = c("Z1", "Z2", "Z3"))
+  hyper <- runToyHypeR(signature = c("X1", "Y1", "Z1", "Q"), genesets = disjoint, verbose = FALSE)
+
+  expect_warning(
+    no_edges <- SigRepo::plotHypeRMap(hyper),
+    "No geneset pair in 'signature' reaches similarity_cutoff = 0.2; lower it to draw a map.", fixed = TRUE
+  )
+  expect_null(no_edges)
+  expect_warning(
+    no_rows <- SigRepo::plotHypeRMap(hyper, fdr = 1e-12),
+    "No genesets pass the cutoffs for 'signature'.", fixed = TRUE
+  )
+  expect_null(no_rows)
+})
+
+test_that("plotHypeRMap hierarchy maps need rgsets genesets", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("visNetwork")
+  testthat::skip_if_not_installed("igraph")
+  gs <- hyper_fgsea_genesets()
+  hyper <- runToyHypeR(signature = sprintf("G%02d", 1:12), genesets = gs, verbose = FALSE)
+  expect_error(SigRepo::plotHypeRMap(hyper, type = "hmap"), "type = \"hmap\" needs rgsets genesets", fixed = TRUE)
+
+  nodes <- data.frame(label = names(gs), row.names = paste0("n", seq_along(gs)))
+  edges <- data.frame(from = c("n1", "n3"), to = c("n2", "n4"))
+  rg <- hypeR::rgsets$new(gs, nodes, edges, name = "toy", version = "v1", quiet = TRUE)
+  hierarchical <- runToyHypeR(signature = sprintf("G%02d", 1:12), genesets = rg, verbose = FALSE)
+  expect_true(inherits(SigRepo::plotHypeRMap(hierarchical, type = "hmap"), "visNetwork"))
+})
