@@ -318,3 +318,66 @@ test_that("collectHypeRSignatures marks a single OmicSignature as a single input
   expect_true(SigRepo:::collectHypeRSignatures(NULL, NULL, NULL, make_hyper_sig(), FALSE)$single)
   expect_false(SigRepo:::collectHypeRSignatures(NULL, NULL, NULL, list(make_hyper_sig()), FALSE)$single)
 })
+
+# ---- W4: hypeR-native input and getHypeRDifexp() ----
+
+test_that("W4: a character vector is used as given, minus NA/empty symbols and repeats", {
+  prepared <- SigRepo::prepareHypeRSignatures(signature = c("B", NA, " ", "A", "B"), verbose = FALSE)
+  expect_equal(prepared$signatures, list(signature = c("B", "A")))
+  expect_equal(prepared$info$n_dropped, 2L)
+  expect_equal(prepared$info$symbol_source, "supplied")
+  expect_true(is.na(prepared$info$signature_id))
+})
+
+test_that("W4: a named list gives one query per element; a weighted vector keeps its order", {
+  prepared <- SigRepo::prepareHypeRSignatures(
+    signature = list(up = c("A", "B"), ranked = c(C = -1, A = 2, B = NA)),
+    test = "kstest", verbose = FALSE
+  )
+  expect_equal(names(prepared$signatures), c("up", "ranked"))
+  expect_equal(prepared$signatures$ranked, c(C = -1, A = 2))
+  expect_equal(prepared$info$n_dropped, c(0L, 1L))
+})
+
+test_that("W4: invalid hypeR-native input is rejected with a clear message", {
+  prep <- function(...) SigRepo::prepareHypeRSignatures(verbose = FALSE, ...)
+
+  expect_error(prep(signature = list(c("A", "B"))), "must be non-empty with a unique, non-empty name", fixed = TRUE)
+  expect_error(prep(signature = list(a = "A", a = "B")), "must be non-empty with a unique, non-empty name", fixed = TRUE)
+  expect_error(prep(signature = c(A = 1, B = 2)), "test = \"hypergeometric\" needs a character vector", fixed = TRUE)
+  expect_error(prep(signature = c(1, 2), test = "kstest"), "must be a character vector of gene symbols or a named numeric", fixed = TRUE)
+  expect_error(prep(signature = c(A = 1, A = 2), test = "kstest"), "has duplicated gene names", fixed = TRUE)
+  expect_error(prep(signature = "A", omic_signature = make_hyper_sig()), "Supply either 'signature' or SigRepo signatures", fixed = TRUE)
+  expect_error(prep(signature = "A", signature_id = 5), "Supply either 'signature' or SigRepo signatures", fixed = TRUE)
+  expect_error(prep(signature = "A", test = "kstest", direction = "down"), "with 'signature', order the vector yourself", fixed = TRUE)
+})
+
+test_that("W4: an all-NA element is skipped, and query_names applies to native input", {
+  prepared <- SigRepo::prepareHypeRSignatures(
+    signature = list(a = c("A", "B"), empty = NA_character_),
+    query_names = function(info) toupper(info$query), verbose = FALSE
+  )
+  expect_equal(names(prepared$signatures), "A")
+  expect_equal(prepared$skipped$signature, "empty")
+  expect_equal(prepared$skipped$reason, "empty_signature")
+})
+
+test_that("W4: getHypeRDifexp adds resolved symbols and leaves out signatures without difexp", {
+  testthat::local_mocked_bindings(
+    lookupReferenceSymbols = function(conn_handler, assay_type, organism, feature_names) c(f1 = "A", f2 = "B"),
+    .package = "SigRepo"
+  )
+  difexp <- hyper_difexp_table()
+  difexp$gene_symbol <- NULL
+  with_difexp <- make_hyper_sig("with", difexp = difexp)
+
+  expect_warning(
+    tables <- SigRepo::getHypeRDifexp(omic_signature = list(with_difexp, make_hyper_sig("without")), verbose = FALSE),
+    "No difexp table for 'without'; left out.", fixed = TRUE
+  )
+  expect_equal(names(tables), "with")
+  tbl <- tables$with
+  expect_equal(nrow(tbl), nrow(difexp))
+  expect_equal(tbl$resolved_symbol[match(c("f1", "f2", "f3"), tbl$feature_name)], c("A", "B", NA))
+  expect_true(all(tbl$resolved_symbol_source == "reference feature_name"))
+})

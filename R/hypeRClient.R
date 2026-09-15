@@ -218,39 +218,74 @@ resolveHypeRSignatureLabels <- function(omic_signatures) {
 #'
 #' A number or gene vector is passed through for every query. "difexp" gives
 #' each query its own signature's measured genes; signatures without difexp
-#' symbols fall back to hypeR's default with one warning.
+#' symbols fall back to hypeR's default with one warning. A named list gives
+#' each signature its own background (any of those three forms), looked up by
+#' signature label, then by signature ID.
 #'
+#' @param inputs list(signatures, ids, labels) for every supplied signature,
+#'   including ones that built no query.
 #' @return list(values = unnamed list, one background per row of `info`;
 #'   sources = chr per row: "number", "genes", "difexp" or "difexp-fallback")
 #' @noRd
 resolveQueryBackgrounds <- function(background, info, inputs, resolve_symbols) {
-  n <- base::nrow(info)
-  if (!base::identical(background, "difexp")) {
-    return(base::list(
-      values = base::rep(base::list(background), n),
-      sources = base::rep(if (base::is.character(background)) "genes" else "number", n)
-    ))
+  if (base::is.list(background)) {
+    keys <- base::names(background)
+    unused <- keys[!keys %in% c(inputs$labels, inputs$ids[!base::is.na(inputs$ids)])]
+    if (base::length(unused) > 0) {
+      base::stop(base::sprintf(
+        "\nbackground names %s match no signature label or ID (labels: %s).\n",
+        base::paste(base::sprintf("'%s'", unused), collapse = ", "),
+        base::paste(base::sprintf("'%s'", inputs$labels), collapse = ", ")
+      ))
+    }
+    row_keys <- base::ifelse(
+      info$signature_name %in% keys, info$signature_name,
+      base::ifelse(!base::is.na(info$signature_id) & info$signature_id %in% keys, info$signature_id, NA_character_)
+    )
+    if (base::anyNA(row_keys)) {
+      base::stop(base::sprintf(
+        "\nThe background list has no entry for %s; name each element by signature label or ID.\n",
+        base::paste(base::sprintf("'%s'", base::unique(info$signature_name[base::is.na(row_keys)])), collapse = ", ")
+      ))
+    }
+    specs <- base::unname(background[row_keys])
+  } else {
+    specs <- base::rep(base::list(background), base::nrow(info))
   }
 
-  signatures_by_label <- stats::setNames(inputs$signatures, inputs$labels)
+  # NULL for hypeR-native input, which cannot use "difexp".
+  signatures_by_label <- if (base::is.null(inputs$signatures)) base::list() else stats::setNames(inputs$signatures, inputs$labels)
   universes <- base::list()
   fell_back <- base::character()
+  values <- base::vector("list", base::nrow(info))
+  sources <- base::character(base::nrow(info))
 
-  for (label in base::unique(info$signature_name)) {
-    sig <- signatures_by_label[[label]]
-    symbols <- if (methods::is(sig$difexp, "data.frame") && base::nrow(sig$difexp) > 0) {
-      resolve_symbols(sig, "difexp", label)$symbols
-    } else {
-      NA_character_
+  for (i in base::seq_len(base::nrow(info))) {
+    spec <- specs[[i]]
+    if (!base::identical(spec, "difexp")) {
+      values[i] <- base::list(spec)
+      sources[i] <- if (base::is.character(spec)) "genes" else "number"
+      next
     }
-    symbols <- base::unique(symbols[!base::is.na(symbols)])
 
-    if (base::length(symbols) == 0) {
-      fell_back <- c(fell_back, label)
-      universes[[label]] <- HYPER_DEFAULT_BACKGROUND
-    } else {
-      universes[[label]] <- symbols
+    label <- info$signature_name[i]
+    if (base::is.null(universes[[label]])) {
+      sig <- signatures_by_label[[label]]
+      symbols <- if (methods::is(sig$difexp, "data.frame") && base::nrow(sig$difexp) > 0) {
+        resolve_symbols(sig, "difexp", label)$symbols
+      } else {
+        NA_character_
+      }
+      symbols <- base::unique(symbols[!base::is.na(symbols)])
+      if (base::length(symbols) == 0) {
+        fell_back <- c(fell_back, label)
+        universes[[label]] <- HYPER_DEFAULT_BACKGROUND
+      } else {
+        universes[[label]] <- symbols
+      }
     }
+    values[i] <- base::list(universes[[label]])
+    sources[i] <- if (label %in% fell_back) "difexp-fallback" else "difexp"
   }
 
   if (base::length(fell_back) > 0) {
@@ -264,10 +299,7 @@ resolveQueryBackgrounds <- function(background, info, inputs, resolve_symbols) {
     )
   }
 
-  base::list(
-    values = base::unname(universes[info$signature_name]),
-    sources = base::ifelse(info$signature_name %in% fell_back, "difexp-fallback", "difexp")
-  )
+  base::list(values = values, sources = sources)
 }
 
 # Excel caps a cell at 32767 characters; the dropped-geneset list goes into
@@ -277,16 +309,14 @@ HYPER_INFO_MAX_CHARS <- 32000L
 #' Append SigRepo provenance to a hyp object's info, in a fixed order
 #'
 #' hypeR::hyp_to_excel() stacks info across a multihyp with mapply(), so every
-#' hyp must carry the same keys in the same order. Keys that do not apply to
-#' the test are "".
+#' hyp must carry the same keys in the same order. Keys that do not apply are "".
 #'
 #' @param info_row One row of the prepared info data frame.
-#' @param run list(test, split, score_col, ks_source, background_source,
-#'   query_genes_removed, genesets_dropped = chr).
+#' @param run list(ranked_table, score_col, split (all chr, "" when not
+#'   applicable), background_source, query_genes_removed, genesets_dropped = chr).
 #' @noRd
 appendHypeRProvenance <- function(hyp_obj, info_row, run) {
   blank_na <- function(x) if (base::is.na(x)) "" else base::as.character(x)
-  is_kstest <- base::identical(run$test, "kstest")
   dropped_list <- base::paste(run$genesets_dropped, collapse = "; ")
   if (base::nchar(dropped_list) > HYPER_INFO_MAX_CHARS) {
     dropped_list <- base::paste0(base::substr(dropped_list, 1L, HYPER_INFO_MAX_CHARS), " ...")
@@ -298,9 +328,9 @@ appendHypeRProvenance <- function(hyp_obj, info_row, run) {
     "Group Label" = blank_na(info_row$group_label),
     "Symbol Source" = blank_na(info_row$symbol_source),
     "SigRepo Direction" = blank_na(info_row$direction),
-    "SigRepo Ranked Table" = if (is_kstest) run$ks_source else "",
-    "SigRepo Score Column" = if (is_kstest) run$score_col else "",
-    "SigRepo Split" = if (is_kstest) "" else base::as.character(run$split),
+    "SigRepo Ranked Table" = run$ranked_table,
+    "SigRepo Score Column" = run$score_col,
+    "SigRepo Split" = run$split,
     "SigRepo Background Source" = run$background_source,
     "SigRepo Features Unmapped" = base::as.character(info_row$n_dropped),
     "SigRepo Query Genes Removed" = base::as.character(run$query_genes_removed),
@@ -317,15 +347,34 @@ HYPER_PROVENANCE_KEYS <- c(
   "SigRepo Genesets Dropped", "SigRepo Genesets Dropped List"
 )
 
-#' Error unless background is a single positive number, a gene vector, or "difexp"
-#' @noRd
-checkHypeRBackground <- function(background) {
+isHypeRBackgroundValue <- function(background) {
   is_number <- base::is.numeric(background) && base::length(background) == 1L &&
     base::is.finite(background) && background > 0
   is_genes <- base::is.character(background) && base::length(background) >= 2L
-  is_difexp <- base::identical(background, "difexp")
-  if (!(is_number || is_genes || is_difexp)) {
-    base::stop("\nbackground must be a number, a gene vector, or \"difexp\".\n")
+  is_number || is_genes || base::identical(background, "difexp")
+}
+
+#' Error unless background is a positive number, a gene vector, "difexp", or a
+#' named list of those
+#' @noRd
+checkHypeRBackground <- function(background) {
+  if (base::is.list(background)) {
+    keys <- base::names(background)
+    if (base::length(background) == 0 || base::is.null(keys) || base::any(base::is.na(keys) | !base::nzchar(keys)) ||
+        base::anyDuplicated(keys)) {
+      base::stop("\nA background list must name every element uniquely, by signature label or signature ID.\n")
+    }
+    bad <- keys[!base::vapply(background, isHypeRBackgroundValue, base::logical(1))]
+    if (base::length(bad) > 0) {
+      base::stop(base::sprintf(
+        "\nbackground must be a number, a gene vector, or \"difexp\" for every list element; not for %s.\n",
+        base::paste(base::sprintf("'%s'", bad), collapse = ", ")
+      ))
+    }
+    return(base::invisible(background))
+  }
+  if (!isHypeRBackgroundValue(background)) {
+    base::stop("\nbackground must be a number, a gene vector, or \"difexp\" (or a named list of those, one per signature).\n")
   }
   base::invisible(background)
 }
@@ -440,7 +489,12 @@ warnSkippedHypeRSignatures <- function(skipped) {
 #' @param background hypeR's background: a single number (population size), a
 #' character vector of background genes, or \code{"difexp"} to use each
 #' signature's measured genes from its difexp table. Signatures without difexp
-#' symbols fall back to \code{23467} with a warning. With a gene vector or
+#' symbols fall back to \code{23467} with a warning. For a different background
+#' per signature, pass a named list of those forms, one element per signature,
+#' named by signature label (see \code{prepareHypeRSignatures()$info$signature_name};
+#' with \code{signature}, the list names) or by signature ID; arms of a split
+#' signature share its background. A name that matches no signature, or a
+#' signature with no entry, is an error. With a gene vector or
 #' \code{"difexp"}, a hypergeometric query is first reduced to the background
 #' genes, with a warning naming each query that lost genes: hypeR reduces only
 #' the genesets, and query genes outside the background would distort the
@@ -468,9 +522,9 @@ warnSkippedHypeRSignatures <- function(skipped) {
 #' are removed (they are most of the object's size).
 #' @param quiet Logical; suppress hypeR's logs. Defaults to \code{TRUE}.
 #'
-#' @return A \code{hyp} when the input is a single signature (one
-#' \code{OmicSignature}, or one id or name) and the test builds one query by
-#' construction (\code{test = "kstest"} with \code{direction} \code{"up"} or
+#' @return A \code{hyp} when the input is a single vector in \code{signature},
+#' or a single signature (one \code{OmicSignature}, or one id or name) and the
+#' test builds one query by construction (\code{test = "kstest"} with \code{direction} \code{"up"} or
 #' \code{"down"}, or \code{split = FALSE}). Otherwise a \code{multihyp} named
 #' by query, even when only one query is left. This mirrors hypeR, where a
 #' vector gives a \code{hyp} and a named list a \code{multihyp}.
@@ -517,6 +571,7 @@ runHypeR <- function(
     signature_id = NULL,
     signature_name = NULL,
     omic_signature = NULL,
+    signature = NULL,
     genesets,
     msigdb_species = NULL,
     msigdb_collection = NULL,
@@ -560,18 +615,20 @@ runHypeR <- function(
     msigdb_clean = msigdb_clean
   )
 
-  inputs <- collectHypeRSignatures(
-    conn_handler = conn_handler,
-    signature_id = signature_id,
-    signature_name = signature_name,
-    omic_signature = omic_signature,
-    verbose = verbose
-  )
+  if (!base::is.null(signature) &&
+      (base::identical(background, "difexp") || (base::is.list(background) && base::any(base::vapply(background, base::identical, base::logical(1), "difexp"))))) {
+    base::stop("\nbackground = \"difexp\" needs SigRepo signatures; 'signature' input has no difexp. Pass a number or gene vector.\n")
+  }
+
   resolve_symbols <- newHypeRSymbolResolver(conn_handler)
-  prepared <- buildHypeRQueries(
-    inputs, test = test, split = split, score_col = score_col, resolve_symbols = resolve_symbols,
-    direction = direction, ks_source = ks_source, query_names = query_names
+  collected <- collectAndBuildHypeRQueries(
+    conn_handler = conn_handler, signature_id = signature_id, signature_name = signature_name,
+    omic_signature = omic_signature, signature = signature, test = test, split = split,
+    direction = direction, ks_source = ks_source, score_col = score_col, query_names = query_names,
+    resolve_symbols = resolve_symbols, verbose = verbose
   )
+  inputs <- collected$inputs
+  prepared <- collected$prepared
 
   warnSkippedHypeRSignatures(prepared$skipped)
   if (base::length(prepared$signatures) == 0) {
@@ -594,17 +651,21 @@ runHypeR <- function(
         queries[[i]] <- queries[[i]][measured]
       }
     }
-    if (base::any(removed > 0)) {
-      base::warning(
-        base::sprintf(
-          "%s: removed %s query gene(s) not %s from: %s",
-          if (base::identical(background, "difexp")) "background = \"difexp\"" else "background",
-          base::sum(removed),
-          if (base::identical(background, "difexp")) "measured in difexp" else "in the background gene vector",
-          base::paste(base::sprintf("'%s' (%d)", query_names_out[removed > 0], removed[removed > 0]), collapse = ", ")
-        ),
-        call. = FALSE
-      )
+    # One warning per background kind, so each names what the genes were missing from.
+    for (kind in c("difexp", "genes")) {
+      hit <- removed > 0 & base::startsWith(backgrounds$sources, kind)
+      if (base::any(hit)) {
+        base::warning(
+          base::sprintf(
+            "%s: removed %s query gene(s) not %s from: %s",
+            if (kind == "difexp") "background = \"difexp\"" else "background",
+            base::sum(removed[hit]),
+            if (kind == "difexp") "measured in difexp" else "in the background gene vector",
+            base::paste(base::sprintf("'%s' (%d)", query_names_out[hit], removed[hit]), collapse = ", ")
+          ),
+          call. = FALSE
+        )
+      }
     }
   }
 
@@ -649,6 +710,7 @@ runHypeR <- function(
     base::stop("\nNo query had genesets left to test; see the warnings for the dropped genesets and skipped queries.\n")
   }
   run_idx <- base::which(runnable)
+  is_kstest <- base::identical(test, "kstest")
 
   results <- base::lapply(run_idx, function(i) {
     if (!quiet && base::length(run_idx) > 1) {
@@ -657,9 +719,9 @@ runHypeR <- function(
     # A character vector in rank order takes hypeR's ranked (unweighted)
     # branch; a named numeric vector at power 0 would take the weighted branch
     # with all weights 1, which scores differently.
-    signature <- if (base::identical(test, "kstest") && power == 0) base::names(queries[[i]]) else queries[[i]]
+    query <- if (is_kstest && power == 0) base::names(queries[[i]]) else queries[[i]]
     hyp_obj <- hypeR::hypeR(
-      signature = signature,
+      signature = query,
       genesets = query_genesets[[i]]$genesets,
       test = test,
       background = backgrounds$values[[i]],
@@ -676,10 +738,9 @@ runHypeR <- function(
       hyp_obj$plots <- base::list()
     }
     appendHypeRProvenance(hyp_obj, prepared$info[i, , drop = FALSE], base::list(
-      test = test,
-      split = split,
-      score_col = score_col,
-      ks_source = ks_source,
+      ranked_table = if (is_kstest && !collected$native) ks_source else "",
+      score_col = if (is_kstest && !collected$native) score_col else "",
+      split = if (is_kstest || collected$native) "" else base::as.character(split),
       background_source = backgrounds$sources[i],
       query_genes_removed = removed[i],
       genesets_dropped = query_genesets[[i]]$dropped
@@ -687,7 +748,7 @@ runHypeR <- function(
   })
   base::names(results) <- query_names_out[run_idx]
 
-  one_query_by_construction <- if (base::identical(test, "kstest")) !base::identical(direction, "both") else !split
+  one_query_by_construction <- collected$native || (if (is_kstest) !base::identical(direction, "both") else !split)
   if (inputs$single && one_query_by_construction) {
     return(results[[1]])
   }

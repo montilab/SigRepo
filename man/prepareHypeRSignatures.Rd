@@ -9,6 +9,7 @@ prepareHypeRSignatures(
   signature_id = NULL,
   signature_name = NULL,
   omic_signature = NULL,
+  signature = NULL,
   test = c("hypergeometric", "kstest"),
   split = TRUE,
   direction = c("up", "down", "both"),
@@ -28,6 +29,16 @@ Needed to fetch signatures by id/name and for reference-table symbol lookup.}
 
 \item{omic_signature}{An \code{OmicSignature} object or a list of them. List
 names, when given, become the query labels.}
+
+\item{signature}{hypeR-native input instead of SigRepo signatures: a
+character vector of gene symbols, a named numeric vector of scores (kstest
+only), or a named list of those, as \code{hypeR::hypeR()} takes. A vector is
+used in the order given (it is the ranking for kstest); NA and empty symbols
+are removed. Cannot be combined with \code{omic_signature},
+\code{signature_id} or \code{signature_name}; \code{split},
+\code{score_col} are ignored and \code{direction}, \code{ks_source} must
+stay at their defaults. Use \code{getHypeRDifexp()} to build a gene list from
+a signature's difexp with your own cutoffs.}
 
 \item{test}{\code{"hypergeometric"} (a character vector of symbols from the
 signature table) or \code{"kstest"} (a named numeric vector ranked by

@@ -431,6 +431,201 @@ buildHypeRQueries <- function(inputs, test, split, score_col, resolve_symbols,
   )
 }
 
+#' Query vectors from hypeR-native input
+#'
+#' A character vector is a symbol set (hypergeometric) or a ranked list in the
+#' given order (kstest); a named numeric vector is a weighted kstest signature,
+#' used in the given order as hypeR does. A named list of those gives one query
+#' per element. NA and empty symbols are removed (counted in n_dropped), and a
+#' character vector keeps the first occurrence of each symbol.
+#'
+#' @return list(prepared = list(signatures, info, skipped), inputs = list(signatures
+#'   = NULL, ids, labels, single))
+#' @noRd
+buildNativeHypeRQueries <- function(signature, test, query_names) {
+  single <- !base::is.list(signature)
+  if (single) {
+    signature <- base::list(signature = signature)
+  } else {
+    labels <- base::names(signature)
+    if (base::length(signature) == 0 || base::is.null(labels) || base::any(base::is.na(labels) | !base::nzchar(labels)) ||
+        base::anyDuplicated(labels)) {
+      base::stop("\nA 'signature' list must be non-empty with a unique, non-empty name for every element.\n")
+    }
+  }
+
+  queries <- base::list()
+  info <- base::list()
+  skipped <- base::list()
+  for (label in base::names(signature)) {
+    x <- signature[[label]]
+    if (base::is.character(x) && !base::is.list(x)) {
+      symbols <- cleanHypeRSymbols(x)
+      query <- base::unique(symbols[!base::is.na(symbols)])
+      n_dropped <- base::sum(base::is.na(symbols))
+    } else if (base::is.numeric(x) && !base::is.null(base::names(x))) {
+      if (base::identical(test, "hypergeometric")) {
+        base::stop(base::sprintf(
+          "\n'signature' element '%s' is a named numeric vector; test = \"hypergeometric\" needs a character vector of gene symbols.\n",
+          label
+        ))
+      }
+      symbols <- cleanHypeRSymbols(base::names(x))
+      keep <- !base::is.na(symbols) & !base::is.na(x)
+      if (base::anyDuplicated(symbols[keep])) {
+        base::stop(base::sprintf("\n'signature' element '%s' has duplicated gene names; a weighted signature needs one score per gene.\n", label))
+      }
+      query <- stats::setNames(base::as.numeric(x[keep]), symbols[keep])
+      n_dropped <- base::sum(!keep)
+    } else {
+      base::stop(base::sprintf(
+        "\n'signature' element '%s' must be a character vector of gene symbols or a named numeric vector of scores.\n",
+        label
+      ))
+    }
+
+    if (base::length(query) == 0) {
+      skipped[[base::length(skipped) + 1]] <- base::data.frame(
+        signature = label, reason = "empty_signature", message = "No gene symbols left after removing NA and empty values.",
+        stringsAsFactors = FALSE
+      )
+      next
+    }
+    queries[[label]] <- query
+    info[[base::length(info) + 1]] <- hypeRInfoRow(
+      query = label, signature_id = NA_character_, label = label, group_label = NA_character_, direction = NA_character_,
+      n_features = base::length(query), n_dropped = n_dropped, symbol_source = "supplied"
+    )
+  }
+
+  info <- if (base::length(info) > 0) base::do.call(base::rbind, info) else emptyHypeRInfo()
+  if (base::length(queries) > 0 && !base::is.null(query_names)) {
+    base::names(queries) <- disambiguateHypeRLabels(applyHypeRQueryNames(query_names, info))
+    info$query <- base::names(queries)
+  }
+
+  base::list(
+    prepared = base::list(
+      signatures = queries,
+      info = info,
+      skipped = if (base::length(skipped) > 0) {
+        base::do.call(base::rbind, skipped)
+      } else {
+        base::data.frame(signature = base::character(), reason = base::character(), message = base::character(), stringsAsFactors = FALSE)
+      }
+    ),
+    inputs = base::list(
+      signatures = NULL, ids = base::rep(NA_character_, base::length(signature)),
+      labels = base::names(signature), single = single
+    )
+  )
+}
+
+#' Collect signatures (SigRepo or hypeR-native) and build their query vectors
+#'
+#' Shared by prepareHypeRSignatures() and runHypeR().
+#' @return list(prepared, inputs, native = logical)
+#' @noRd
+collectAndBuildHypeRQueries <- function(conn_handler, signature_id, signature_name, omic_signature, signature,
+                                        test, split, direction, ks_source, score_col, query_names,
+                                        resolve_symbols, verbose) {
+  if (!base::is.null(signature)) {
+    supplied <- function(x) base::length(x) > 0 && base::any(!x %in% c("", NA))
+    if (!base::is.null(omic_signature) || supplied(signature_id) || supplied(signature_name)) {
+      base::stop("\nSupply either 'signature' or SigRepo signatures ('omic_signature', 'signature_id', 'signature_name'), not both.\n")
+    }
+    if (!base::identical(direction, "up") || !base::identical(ks_source, "difexp")) {
+      base::stop("\n'direction' and 'ks_source' apply to SigRepo signatures; with 'signature', order the vector yourself.\n")
+    }
+    native <- buildNativeHypeRQueries(signature, test, query_names)
+    return(c(native, base::list(native = TRUE)))
+  }
+
+  inputs <- collectHypeRSignatures(
+    conn_handler = conn_handler,
+    signature_id = signature_id,
+    signature_name = signature_name,
+    omic_signature = omic_signature,
+    verbose = verbose
+  )
+  prepared <- buildHypeRQueries(
+    inputs, test = test, split = split, score_col = score_col, resolve_symbols = resolve_symbols,
+    direction = direction, ks_source = ks_source, query_names = query_names
+  )
+  base::list(prepared = prepared, inputs = inputs, native = FALSE)
+}
+
+#' Difexp tables with resolved gene symbols
+#'
+#' @description Returns each signature's difexp table with the gene symbol
+#' \code{runHypeR()} would use for every row, so you can apply your own cutoffs
+#' (e.g. a stricter FDR or a fold-change threshold) and pass the resulting gene
+#' list to \code{runHypeR(signature = ...)}.
+#'
+#' @inheritParams prepareHypeRSignatures
+#'
+#' @return A named list with one data frame per signature that has a difexp,
+#' named by signature label (list name, else \code{signature_name}). Each is the
+#' difexp table plus \code{resolved_symbol} (\code{NA} where no symbol was
+#' found) and \code{resolved_symbol_source}. Signatures without a difexp are
+#' left out with a warning.
+#'
+#' @details Symbols come from the difexp's own symbol column, else the
+#' reference feature table by \code{feature_name} and organism (needs
+#' \code{conn_handler}). \code{probe_id} is never read as a symbol.
+#' \code{runHypeR(signature = ...)} records \code{Symbol Source = "supplied"}
+#' and no signature ID, so keep the signature id with your results if you need
+#' it.
+#'
+#' @examples
+#' \dontrun{
+#' difexp <- SigRepo::getHypeRDifexp(omic_signature = sig)[[1]]
+#' strict_up <- difexp$resolved_symbol[difexp$adj_p < 0.001 & difexp$score > 0]
+#' hyp <- SigRepo::runHypeR(signature = list(strict_up = strict_up), genesets = hallmark)
+#' }
+#'
+#' @export
+getHypeRDifexp <- function(
+    conn_handler = NULL,
+    signature_id = NULL,
+    signature_name = NULL,
+    omic_signature = NULL,
+    verbose = TRUE
+) {
+  inputs <- collectHypeRSignatures(
+    conn_handler = conn_handler,
+    signature_id = signature_id,
+    signature_name = signature_name,
+    omic_signature = omic_signature,
+    verbose = verbose
+  )
+  resolve_symbols <- newHypeRSymbolResolver(conn_handler)
+
+  tables <- base::list()
+  no_difexp <- base::character()
+  for (i in base::seq_along(inputs$signatures)) {
+    sig <- inputs$signatures[[i]]
+    label <- inputs$labels[i]
+    if (!methods::is(sig$difexp, "data.frame") || base::nrow(sig$difexp) == 0) {
+      no_difexp <- c(no_difexp, label)
+      next
+    }
+    resolved <- resolve_symbols(sig, "difexp", label)
+    tbl <- sig$difexp
+    tbl$resolved_symbol <- resolved$symbols
+    tbl$resolved_symbol_source <- base::rep(resolved$source, base::nrow(tbl))
+    tables[[label]] <- tbl
+  }
+
+  if (base::length(no_difexp) > 0) {
+    base::warning(
+      base::sprintf("No difexp table for %s; left out.", base::paste(base::sprintf("'%s'", no_difexp), collapse = ", ")),
+      call. = FALSE
+    )
+  }
+  tables
+}
+
 #' Build hypeR query vectors from SigRepo signatures
 #'
 #' @description Turns SigRepo signatures into the query vectors
@@ -443,6 +638,15 @@ buildHypeRQueries <- function(inputs, test, split, score_col, resolve_symbols,
 #' @param signature_name One or more SigRepo signature names.
 #' @param omic_signature An \code{OmicSignature} object or a list of them. List
 #' names, when given, become the query labels.
+#' @param signature hypeR-native input instead of SigRepo signatures: a
+#' character vector of gene symbols, a named numeric vector of scores (kstest
+#' only), or a named list of those, as \code{hypeR::hypeR()} takes. A vector is
+#' used in the order given (it is the ranking for kstest); NA and empty symbols
+#' are removed. Cannot be combined with \code{omic_signature},
+#' \code{signature_id} or \code{signature_name}; \code{split},
+#' \code{score_col} are ignored and \code{direction}, \code{ks_source} must
+#' stay at their defaults. Use \code{getHypeRDifexp()} to build a gene list from
+#' a signature's difexp with your own cutoffs.
 #' @param test \code{"hypergeometric"} (a character vector of symbols from the
 #' signature table) or \code{"kstest"} (a named numeric vector ranked by
 #' \code{score_col}, from the table named by \code{ks_source}).
@@ -501,6 +705,7 @@ prepareHypeRSignatures <- function(
     signature_id = NULL,
     signature_name = NULL,
     omic_signature = NULL,
+    signature = NULL,
     test = c("hypergeometric", "kstest"),
     split = TRUE,
     direction = c("up", "down", "both"),
@@ -516,17 +721,10 @@ prepareHypeRSignatures <- function(
   checkHypeRKstestArgs(test, direction, ks_source)
   checkHypeRQueryNames(query_names)
 
-  inputs <- collectHypeRSignatures(
-    conn_handler = conn_handler,
-    signature_id = signature_id,
-    signature_name = signature_name,
-    omic_signature = omic_signature,
-    verbose = verbose
-  )
-
-  buildHypeRQueries(
-    inputs, test = test, split = split, score_col = score_col,
-    resolve_symbols = newHypeRSymbolResolver(conn_handler),
-    direction = direction, ks_source = ks_source, query_names = query_names
-  )
+  collectAndBuildHypeRQueries(
+    conn_handler = conn_handler, signature_id = signature_id, signature_name = signature_name,
+    omic_signature = omic_signature, signature = signature, test = test, split = split,
+    direction = direction, ks_source = ks_source, score_col = score_col, query_names = query_names,
+    resolve_symbols = newHypeRSymbolResolver(conn_handler), verbose = verbose
+  )$prepared
 }

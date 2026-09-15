@@ -9,6 +9,7 @@ runHypeR(
   signature_id = NULL,
   signature_name = NULL,
   omic_signature = NULL,
+  signature = NULL,
   genesets,
   msigdb_species = NULL,
   msigdb_collection = NULL,
@@ -40,6 +41,16 @@ Needed to fetch signatures by id/name and for reference-table symbol lookup.}
 
 \item{omic_signature}{An \code{OmicSignature} object or a list of them. List
 names, when given, become the query labels.}
+
+\item{signature}{hypeR-native input instead of SigRepo signatures: a
+character vector of gene symbols, a named numeric vector of scores (kstest
+only), or a named list of those, as \code{hypeR::hypeR()} takes. A vector is
+used in the order given (it is the ranking for kstest); NA and empty symbols
+are removed. Cannot be combined with \code{omic_signature},
+\code{signature_id} or \code{signature_name}; \code{split},
+\code{score_col} are ignored and \code{direction}, \code{ks_source} must
+stay at their defaults. Use \code{getHypeRDifexp()} to build a gene list from
+a signature's difexp with your own cutoffs.}
 
 \item{genesets}{Either the string \code{"msigdb"}, or your own genesets: a
 named list of character vectors, a \code{hypeR::gsets} object, or a
@@ -94,7 +105,12 @@ unique as \code{name (2)}. For example
 \item{background}{hypeR's background: a single number (population size), a
 character vector of background genes, or \code{"difexp"} to use each
 signature's measured genes from its difexp table. Signatures without difexp
-symbols fall back to \code{23467} with a warning. With a gene vector or
+symbols fall back to \code{23467} with a warning. For a different background
+per signature, pass a named list of those forms, one element per signature,
+named by signature label (see \code{prepareHypeRSignatures()$info$signature_name};
+with \code{signature}, the list names) or by signature ID; arms of a split
+signature share its background. A name that matches no signature, or a
+signature with no entry, is an error. With a gene vector or
 \code{"difexp"}, a hypergeometric query is first reduced to the background
 genes, with a warning naming each query that lost genes: hypeR reduces only
 the genesets, and query genes outside the background would distort the
@@ -131,9 +147,9 @@ are removed (they are most of the object's size).}
 \item{verbose}{Logical; print messages while fetching signatures.}
 }
 \value{
-A \code{hyp} when the input is a single signature (one
-\code{OmicSignature}, or one id or name) and the test builds one query by
-construction (\code{test = "kstest"} with \code{direction} \code{"up"} or
+A \code{hyp} when the input is a single vector in \code{signature},
+or a single signature (one \code{OmicSignature}, or one id or name) and the
+test builds one query by construction (\code{test = "kstest"} with \code{direction} \code{"up"} or
 \code{"down"}, or \code{split = FALSE}). Otherwise a \code{multihyp} named
 by query, even when only one query is left. This mirrors hypeR, where a
 vector gives a \code{hyp} and a named list a \code{multihyp}.
