@@ -198,3 +198,43 @@ test_that("plotHypeRDots shows an empty-state plot and angles labels for many qu
   expect_equal(SigRepo::plotHypeRDots(many)$theme$axis.text.x$angle, 45)
   expect_null(SigRepo::plotHypeRDots(hypeR::multihyp$new(data = list(q1 = make_dot_hyp("A", 0.01))))$theme$axis.text.x$angle)
 })
+
+# ---- plotHypeREnrichment() ----
+
+test_that("plotHypeREnrichment draws the running score, hits and ES for fgsea", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("ggplot2")
+  testthat::skip_if_not_installed("fgsea")
+  res <- SigRepo::runHypeR(omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(), test = "fgsea", verbose = FALSE)
+  plot <- SigRepo::plotHypeREnrichment(res, "TOP", query = "fg | up")
+
+  geoms <- unname(vapply(plot$layers, function(layer) class(layer$geom)[1], ""))
+  expect_equal(geoms, c("GeomHline", "GeomLine", "GeomSegment", "GeomVline"))
+  expect_equal(plot$labels$title, "TOP")
+  expect_match(plot$labels$subtitle, "^fg \\| up\nES = 1, NES = [0-9.]+, p = .+, FDR = .+$")
+  expect_equal(plot$labels$x, "Rank in ranking")
+  expect_no_error(ggplot2::ggplot_build(plot))
+
+  filtered <- SigRepo::runHypeR(omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(), test = "fgsea",
+                                fdr = 1e-12, verbose = FALSE)
+  expect_match(SigRepo::plotHypeREnrichment(filtered, "TOP", query = "fg | up")$labels$subtitle, "not in results after cutoffs", fixed = TRUE)
+
+  tie <- suppressWarnings(SigRepo::runHypeR(signature = hyper_tie_stats(), genesets = hyper_tie_genesets(), test = "fgsea", verbose = FALSE))
+  tie_geoms <- unname(vapply(SigRepo::plotHypeREnrichment(tie, "TIE", query = "signature | up")$layers, function(layer) class(layer$geom)[1], ""))
+  expect_false("GeomVline" %in% tie_geoms)
+})
+
+test_that("plotHypeREnrichment labels a kstest down ranking and draws a Venn for hypergeometric", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("ggplot2")
+  ks <- suppressWarnings(SigRepo::runHypeR(omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(),
+                                           test = "kstest", direction = "both", verbose = FALSE))
+  expect_equal(SigRepo::plotHypeREnrichment(ks, "BOTTOM", query = "fg | down")$labels$x, "Rank in ranking (negated scores)")
+
+  hyper <- runToyHypeR(signature = list(a = c("A", "B", "X1"), b = c("C", "D")), genesets = hyper_genesets(), verbose = FALSE)
+  venn <- SigRepo::plotHypeREnrichment(hyper, "SET_AB", query = "a", title = "custom")
+  expect_equal(unname(vapply(venn$layers, function(layer) class(layer$geom)[1], ""))[1], "GeomCircle")
+  expect_equal(venn$labels$subtitle, sprintf("a\noverlap = 3, p = %s, FDR = %s",
+                                            format(signif(hyper$data$a$data$pval[hyper$data$a$data$label == "SET_AB"], 2)),
+                                            format(signif(hyper$data$a$data$fdr[hyper$data$a$data$label == "SET_AB"], 2))))
+})

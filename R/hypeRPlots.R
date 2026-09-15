@@ -106,3 +106,90 @@ plotHypeRDots <- function(
   }
   plot
 }
+
+#' Format a number for a plot subtitle
+#' @noRd
+formatHypeRNumber <- function(x) base::format(base::signif(x, 2))
+
+#' Enrichment figure for one geneset of a runHypeR() result
+#'
+#' @description For kstest and fgsea results, the running enrichment score
+#' along the ranking with the geneset's hits marked below it (leading edge
+#' highlighted). For hypergeometric results, hypeR's Venn diagram of the query
+#' and the geneset. Both are drawn from the result itself, so they work for any
+#' geneset without \code{runHypeR(plotting = TRUE)} storing every plot.
+#'
+#' @inheritParams hypeREnrichmentData
+#' @param title Plot title; defaults to the geneset label.
+#'
+#' @return A \code{ggplot}.
+#'
+#' @examples
+#' \dontrun{
+#' SigRepo::plotHypeREnrichment(gsea, "HALLMARK_MYC_TARGETS_V1", query = "LLFS_Aging_Gene_2023 | up")
+#' }
+#'
+#' @export
+plotHypeREnrichment <- function(hyp_obj, geneset, query = NULL, title = NULL) {
+  requireHypeRGgplot("plotHypeREnrichment")
+  selected <- hypeRSelectHyp(hyp_obj, query)
+  hyp <- selected$hyp
+  plot_title <- if (base::is.null(title)) geneset else title
+
+  if (base::identical(hypeRInfoValue(hyp, "Test"), "hypergeometric")) {
+    members <- hypeRGenesetMembers(hyp, geneset)
+    row <- hyp$data[hyp$data$label == geneset, , drop = FALSE]
+    subtitle <- if (base::nrow(row) > 0) {
+      base::sprintf("%s\noverlap = %s, p = %s, FDR = %s", selected$name, row$overlap[1],
+                    formatHypeRNumber(row$pval[1]), formatHypeRNumber(row$fdr[1]))
+    } else {
+      base::sprintf("%s\nnot in results after cutoffs", selected$name)
+    }
+    return(hypeR::ggvenn(hyp$args$signature, members, "Query", "Geneset", plot_title) +
+             ggplot2::labs(subtitle = subtitle))
+  }
+
+  enrichment <- hypeREnrichmentData(hyp_obj, geneset, query = selected$name)
+  summary <- enrichment$summary
+  subtitle <- base::paste0(selected$name, "\nES = ", formatHypeRNumber(summary$es))
+  if (base::is.na(summary$pval)) {
+    subtitle <- base::paste0(subtitle, ", not in results after cutoffs")
+  } else {
+    if (base::identical(summary$test, "fgsea")) {
+      subtitle <- base::paste0(subtitle, ", NES = ", formatHypeRNumber(summary$nes))
+    }
+    subtitle <- base::paste0(subtitle, ", p = ", formatHypeRNumber(summary$pval), ", FDR = ", formatHypeRNumber(summary$fdr))
+  }
+  negated <- base::identical(summary$test, "kstest") && base::identical(summary$direction, "down")
+
+  curve <- enrichment$curve
+  ticks <- enrichment$ticks
+  score_range <- base::range(c(curve$running_score, 0))
+  tick_height <- base::diff(score_range) * 0.08
+  ticks$y_start <- score_range[1] - tick_height * 0.5
+  ticks$y_end <- score_range[1] - tick_height * 1.5
+  ticks$hit_group <- base::factor(base::ifelse(ticks$leading_edge, "Leading edge", "Other hits"),
+                                  levels = c("Leading edge", "Other hits"))
+
+  plot <- ggplot2::ggplot(curve, ggplot2::aes(x = .data$position, y = .data$running_score)) +
+    ggplot2::geom_hline(yintercept = 0, colour = "grey60") +
+    ggplot2::geom_line(colour = "#1F4E79") +
+    ggplot2::geom_segment(
+      data = ticks,
+      ggplot2::aes(x = .data$position, xend = .data$position, y = .data$y_start, yend = .data$y_end, colour = .data$hit_group),
+      inherit.aes = FALSE
+    ) +
+    ggplot2::scale_colour_manual(values = c("Leading edge" = "#D04A02", "Other hits" = "#6C8AA5"), name = NULL, drop = FALSE) +
+    ggplot2::coord_cartesian(clip = "off") +
+    ggplot2::labs(
+      title = plot_title, subtitle = subtitle,
+      x = if (negated) "Rank in ranking (negated scores)" else "Rank in ranking",
+      y = "Running enrichment score"
+    ) +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(legend.position = "top")
+  if (!base::is.na(summary$es_position)) {
+    plot <- plot + ggplot2::geom_vline(xintercept = summary$es_position, linetype = "dashed", colour = "grey40")
+  }
+  plot
+}
