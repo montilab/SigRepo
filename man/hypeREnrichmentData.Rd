@@ -13,7 +13,10 @@ hypeREnrichmentData(hyp_obj, geneset, query = NULL)
 \item{geneset}{Geneset label, e.g. \code{"HALLMARK_MYC_TARGETS_V1"}.}
 
 \item{query}{Query name (\code{names(hyp_obj$data)}); required for a
-\code{multihyp} with more than one query.}
+\code{multihyp} with more than one query. For fgsea, whose
+\code{"<ranking> | up"} and \code{"<ranking> | down"} queries come from one
+run on one ranking, the ranking name alone also works: the side whose table
+holds \code{geneset} is used.}
 }
 \value{
 A list with \code{curve} (data frame: \code{position},
@@ -21,7 +24,9 @@ A list with \code{curve} (data frame: \code{position},
 points, positions \code{0} to \code{N+1}, not one row per ranked gene
 \code{1..N}), \code{ticks} (data frame: \code{position},
 \code{gene}, \code{score}, \code{leading_edge}) and \code{summary} (list:
-\code{query}, \code{geneset}, \code{test}, \code{direction}, \code{n_ranked},
+\code{query}, \code{ranking} (the ranking the curve walks: for fgsea the
+query name without \code{" | up"}/\code{" | down"}, otherwise the query),
+\code{geneset}, \code{test}, \code{direction}, \code{n_ranked},
 \code{n_hits}, \code{es}, \code{es_position}, \code{leading_edge_genes},
 \code{pval}, \code{fdr}, \code{nes}, \code{score}; the last four are
 \code{NA} when the geneset is not in the result table).
@@ -54,7 +59,7 @@ for them.
 }
 \examples{
 \dontrun{
-curve <- SigRepo::hypeREnrichmentData(gsea, "HALLMARK_MYC_TARGETS_V1", query = "LLFS_Aging_Gene_2023 | up")
+curve <- SigRepo::hypeREnrichmentData(gsea, "HALLMARK_MYC_TARGETS_V1", query = "LLFS_Aging_Gene_2023")
 }
 
 }

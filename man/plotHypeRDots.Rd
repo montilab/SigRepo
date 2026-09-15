@@ -12,6 +12,7 @@ plotHypeRDots(
   top = 20,
   color_by = c("significance", "score"),
   size_by = c("geneset", "overlap", "none"),
+  signature_key = TRUE,
   query_labels = NULL,
   abrv = 50,
   title = NULL
@@ -37,8 +38,13 @@ results.}
 \item{size_by}{\code{"geneset"} (geneset size, default), \code{"overlap"} or
 \code{"none"}: what the \code{size} column holds.}
 
-\item{query_labels}{\code{NULL} (default) for query names wrapped to 25
-characters per line, or a function that takes the query info data frame
+\item{signature_key}{\code{TRUE} (default) labels queries by a short
+signature code and group, \code{"S1 | Old"}, with the codes listed by
+\code{hypeRSignatureKey()}; for a single signature the label is the group
+alone (\code{"Old"}). \code{FALSE} uses the full query names.}
+
+\item{query_labels}{\code{NULL} (default) for the labels chosen by
+\code{signature_key}, or a function that takes the query info data frame
 (\code{query}, \code{signature_id}, \code{signature_name},
 \code{group_label}, \code{direction}, \code{test}) and returns one non-empty
 label per row. Duplicates become \code{"label (2)"}.}
@@ -46,7 +52,8 @@ label per row. Duplicates become \code{"label (2)"}.}
 \item{abrv}{Geneset labels longer than this many characters are truncated
 with \code{"..."}. Default \code{50}.}
 
-\item{title}{Optional plot title.}
+\item{title}{Plot title; defaults to the test that was run
+(\code{"Hypergeometric test"}, \code{"KS test"} or \code{"GSEA (fgsea)"}).}
 }
 \value{
 A \code{ggplot}. When nothing passes the cutoffs, a blank plot that
@@ -61,10 +68,18 @@ drawn as -log10 values on a plain scale, so axes and legends stay readable
 whatever the ggplot2 version. See \code{hypeRDotData()} for the data.
 }
 \details{
-Save with \code{ggplot2::ggsave()}. A readable size is roughly
+With \code{signature_key = TRUE} (the default) and several
+signatures, each signature's columns sit together under its code
+(\code{S1}, \code{S2}, ...), labelled by group or direction at 45 degrees,
+and the caption lists what each code stands for. A single signature is named
+in the subtitle, with its group labels horizontal while they fit. With
+\code{signature_key = FALSE} or \code{query_labels}, the labels are drawn
+at 45 degrees and the left margin grows when they reach past the geneset
+labels. Save with
+\code{ggplot2::ggsave()}. A readable size is roughly
 width = 5 + 0.085 x (longest geneset label, in characters) + 1.2 x (queries)
-inches, clamped to 7-20, and height = 1.6 + 0.30 x (genesets) inches, clamped
-to 3.2-22.
+inches, clamped to 7-20, and height = 1.6 + 0.30 x (genesets) + 0.05 x
+(longest query name, in characters) inches, clamped to 3.2-22.
 }
 \examples{
 \dontrun{

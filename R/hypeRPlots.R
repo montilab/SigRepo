@@ -10,6 +10,18 @@ requireHypeRGgplot <- function(caller) {
   base::invisible(NULL)
 }
 
+#' Default plot title: the test(s) behind the hyps, e.g. "KS test"
+#' @noRd
+hypeRTestTitle <- function(hyps) {
+  tests <- base::vapply(hyps, hypeRInfoValue, base::character(1), key = "Test", USE.NAMES = FALSE)
+  tests <- base::unique(tests[!base::is.na(tests)])
+  if (base::length(tests) == 0) {
+    return("Enrichment")
+  }
+  known <- c(hypergeometric = "Hypergeometric test", kstest = "KS test", fgsea = "GSEA (fgsea)")
+  base::paste(base::ifelse(tests %in% base::names(known), known[tests], tests), collapse = ", ")
+}
+
 #' Dot plot of runHypeR() results across queries
 #'
 #' @description One column per query and one row per geneset, for a
@@ -24,12 +36,21 @@ requireHypeRGgplot <- function(caller) {
 #' \code{"score"} (NES for fgsea, the enrichment score for kstest) on a
 #' diverging scale centred at 0. \code{"score"} is an error for hypergeometric
 #' results.
-#' @param title Optional plot title.
+#' @param title Plot title; defaults to the test that was run
+#' (\code{"Hypergeometric test"}, \code{"KS test"} or \code{"GSEA (fgsea)"}).
 #'
-#' @details Save with \code{ggplot2::ggsave()}. A readable size is roughly
+#' @details With \code{signature_key = TRUE} (the default) and several
+#' signatures, each signature's columns sit together under its code
+#' (\code{S1}, \code{S2}, ...), labelled by group or direction at 45 degrees,
+#' and the caption lists what each code stands for. A single signature is named
+#' in the subtitle, with its group labels horizontal while they fit. With
+#' \code{signature_key = FALSE} or \code{query_labels}, the labels are drawn
+#' at 45 degrees and the left margin grows when they reach past the geneset
+#' labels. Save with
+#' \code{ggplot2::ggsave()}. A readable size is roughly
 #' width = 5 + 0.085 x (longest geneset label, in characters) + 1.2 x (queries)
-#' inches, clamped to 7-20, and height = 1.6 + 0.30 x (genesets) inches, clamped
-#' to 3.2-22.
+#' inches, clamped to 7-20, and height = 1.6 + 0.30 x (genesets) + 0.05 x
+#' (longest query name, in characters) inches, clamped to 3.2-22.
 #'
 #' @return A \code{ggplot}. When nothing passes the cutoffs, a blank plot that
 #' says so.
@@ -49,6 +70,7 @@ plotHypeRDots <- function(
     top = 20,
     color_by = c("significance", "score"),
     size_by = c("geneset", "overlap", "none"),
+    signature_key = TRUE,
     query_labels = NULL,
     abrv = 50,
     title = NULL
@@ -63,9 +85,12 @@ plotHypeRDots <- function(
   if (base::identical(color_by, "score") && !base::all(tests %in% c("kstest", "fgsea"))) {
     base::stop("\ncolor_by = \"score\" needs kstest or fgsea results.\n")
   }
+  if (base::is.null(title)) {
+    title <- hypeRTestTitle(hyps)
+  }
 
   dots <- hypeRDotData(hyp_obj, val = val, pval = pval, fdr = fdr, top = top, size_by = size_by,
-                       query_labels = query_labels, abrv = abrv)
+                       signature_key = signature_key, query_labels = query_labels, abrv = abrv)
   if (base::nrow(dots) == 0) {
     return(
       ggplot2::ggplot() +
@@ -81,11 +106,52 @@ plotHypeRDots <- function(
     ggplot2::aes(colour = .data[[if (base::identical(color_by, "score")) "score" else "significance"]], size = .data$size)
   }
 
+  # With the signature key, each signature is a facet named by its code (listed
+  # in the caption) and its queries are labelled by group; a single signature
+  # is named in the subtitle instead. Otherwise the query labels are drawn as they are.
+  info <- hypeRQueryInfo(hyps)
+  use_key <- base::isTRUE(signature_key) && base::is.null(query_labels)
+  signatures <- hypeRQuerySignatures(info)
+  groups <- hypeRQueryGroups(info)
+  query_levels <- base::levels(dots$query_label)
+  facet <- use_key && base::nrow(signatures$key) > 1 && base::any(base::nzchar(groups))
+  single_signature <- use_key && base::nrow(signatures$key) == 1
+  axis_text <- if (facet || single_signature) {
+    # The code (facet strip) or the subtitle already names the signature.
+    stats::setNames(groups, query_levels)
+  } else if (use_key) {
+    stats::setNames(base::ifelse(base::nzchar(groups), groups, query_levels), query_levels)
+  } else {
+    stats::setNames(query_levels, query_levels)
+  }
+
+  dots$signature_code <- base::factor(dots$signature_code, levels = signatures$key$signature_code)
   plot <- ggplot2::ggplot(dots, ggplot2::aes(x = .data$query_label, y = .data$label_abrv)) +
     (if (base::identical(size_by, "none")) ggplot2::geom_point(point_aes, size = 3) else ggplot2::geom_point(point_aes)) +
-    ggplot2::scale_x_discrete(drop = FALSE) +
     ggplot2::labs(x = NULL, y = NULL, title = title) +
     ggplot2::theme_minimal()
+
+  if (facet) {
+    # Free x scales drop unused levels, so a blank layer keeps every query's column.
+    all_queries <- base::data.frame(
+      query_label = base::factor(query_levels, levels = query_levels),
+      label_abrv = base::factor(base::levels(dots$label_abrv)[1], levels = base::levels(dots$label_abrv)),
+      signature_code = base::factor(signatures$code, levels = signatures$key$signature_code)
+    )
+    plot <- plot +
+      ggplot2::geom_blank(data = all_queries) +
+      ggplot2::facet_grid(cols = ggplot2::vars(.data$signature_code), scales = "free_x", space = "free_x", switch = "x") +
+      ggplot2::scale_x_discrete(labels = function(x) base::unname(axis_text[x]))
+  } else {
+    plot <- plot + ggplot2::scale_x_discrete(drop = FALSE, labels = function(x) base::unname(axis_text[x]))
+  }
+  if (use_key && base::nrow(signatures$key) > 1) {
+    plot <- plot + ggplot2::labs(caption = base::paste(
+      base::sprintf("%s = %s", signatures$key$signature_code, signatures$key$signature_name), collapse = "\n"
+    ))
+  } else if (use_key) {
+    plot <- plot + ggplot2::labs(subtitle = signatures$key$signature_name)
+  }
 
   plot <- if (base::identical(color_by, "score")) {
     plot + ggplot2::scale_colour_gradient2(
@@ -101,10 +167,31 @@ plotHypeRDots <- function(
   if (!base::identical(size_by, "none")) {
     plot <- plot + ggplot2::scale_size_continuous(name = if (base::identical(size_by, "geneset")) "Geneset size" else "Overlap")
   }
-  if (base::nlevels(dots$query_label) > 4) {
-    plot <- plot + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+
+  # A single signature's group labels stay horizontal while they fit (about 40
+  # characters across all columns, e.g. Old/Young or up/down); any other labels
+  # are angled at 45 degrees, and the left margin grows by however far the
+  # longest one reaches past the geneset labels (estimated at 0.6 em per
+  # character) so it is not cut off. Legends hang from the top of the panel so a
+  # tall stack is not clipped.
+  horizontal <- single_signature &&
+    base::length(axis_text) * (base::max(base::nchar(axis_text)) + 2) <= 40
+  char_pt <- 0.6 * 8.8
+  overhang <- if (horizontal) {
+    0
+  } else {
+    base::max(base::nchar(axis_text)) * char_pt * base::sqrt(0.5) - base::max(base::nchar(base::levels(dots$label_abrv))) * char_pt
   }
-  plot
+  plot + ggplot2::theme(
+    axis.text.x = if (horizontal) ggplot2::element_text() else ggplot2::element_text(angle = 45, hjust = 1),
+    legend.justification = "top",
+    plot.margin = ggplot2::margin(5.5, 5.5, 5.5, 5.5 + base::max(0, overhang)),
+    plot.caption = ggplot2::element_text(hjust = 0, lineheight = 1.1),
+    plot.caption.position = "plot",
+    strip.placement = "outside",
+    strip.text = ggplot2::element_text(face = "bold"),
+    panel.spacing.x = grid::unit(6, "pt")
+  )
 }
 
 #' Format a number for a plot subtitle
@@ -120,30 +207,32 @@ formatHypeRNumber <- function(x) base::format(base::signif(x, 2))
 #' geneset without \code{runHypeR(plotting = TRUE)} storing every plot.
 #'
 #' @inheritParams hypeREnrichmentData
-#' @param title Plot title; defaults to the geneset label.
+#' @param title Plot title; defaults to the test that was run
+#' (\code{"Hypergeometric test"}, \code{"KS test"} or \code{"GSEA (fgsea)"}).
+#' The geneset label is the first line of the subtitle.
 #'
 #' @return A \code{ggplot}.
 #'
 #' @examples
 #' \dontrun{
-#' SigRepo::plotHypeREnrichment(gsea, "HALLMARK_MYC_TARGETS_V1", query = "LLFS_Aging_Gene_2023 | up")
+#' SigRepo::plotHypeREnrichment(gsea, "HALLMARK_MYC_TARGETS_V1", query = "LLFS_Aging_Gene_2023")
 #' }
 #'
 #' @export
 plotHypeREnrichment <- function(hyp_obj, geneset, query = NULL, title = NULL) {
   requireHypeRGgplot("plotHypeREnrichment")
-  selected <- hypeRSelectHyp(hyp_obj, query)
+  selected <- hypeRSelectHyp(hyp_obj, query, geneset)
   hyp <- selected$hyp
-  plot_title <- if (base::is.null(title)) geneset else title
+  plot_title <- if (base::is.null(title)) hypeRTestTitle(base::list(hyp)) else title
 
   if (base::identical(hypeRInfoValue(hyp, "Test"), "hypergeometric")) {
     members <- hypeRGenesetMembers(hyp, geneset)
     row <- hyp$data[hyp$data$label == geneset, , drop = FALSE]
     subtitle <- if (base::nrow(row) > 0) {
-      base::sprintf("%s\noverlap = %s, p = %s, FDR = %s", selected$name, row$overlap[1],
+      base::sprintf("%s\n%s\noverlap = %s, p = %s, FDR = %s", geneset, selected$name, row$overlap[1],
                     formatHypeRNumber(row$pval[1]), formatHypeRNumber(row$fdr[1]))
     } else {
-      base::sprintf("%s\nnot in the result table", selected$name)
+      base::sprintf("%s\n%s\nnot in the result table", geneset, selected$name)
     }
     return(hypeR::ggvenn(hyp$args$signature, members, "Query", "Geneset", plot_title) +
              ggplot2::labs(subtitle = subtitle))
@@ -151,7 +240,9 @@ plotHypeREnrichment <- function(hyp_obj, geneset, query = NULL, title = NULL) {
 
   enrichment <- hypeREnrichmentData(hyp_obj, geneset, query = selected$name)
   summary <- enrichment$summary
-  subtitle <- base::paste0(selected$name, "\nES = ", formatHypeRNumber(summary$es))
+  # fgsea's up and down queries share one ranking, so the subtitle names the
+  # ranking; the sign of ES and NES gives the direction.
+  subtitle <- base::paste0(geneset, "\n", summary$ranking, "\nES = ", formatHypeRNumber(summary$es))
   if (base::is.na(summary$pval)) {
     subtitle <- base::paste0(subtitle, ", not in the result table")
   } else {
@@ -216,9 +307,23 @@ hypeRAnyMapEdge <- function(members, similarity_metric, similarity_cutoff) {
   FALSE
 }
 
+#' Title a visNetwork map: the test (or `title`) above the query name
+#' @noRd
+titleHypeRMap <- function(map, name, hyp, title) {
+  map$x$main <- base::list(
+    text = if (base::is.null(title)) hypeRTestTitle(base::list(hyp)) else title,
+    style = "font-family:Helvetica, Arial, sans-serif;font-weight:bold;font-size:18px;text-align:center;"
+  )
+  map$x$submain <- base::list(
+    text = name,
+    style = "font-family:Helvetica, Arial, sans-serif;font-size:13px;text-align:center;"
+  )
+  map
+}
+
 #' One query's map, or NULL with a warning when hypeR could not draw it
 #' @noRd
-plotHypeRMapOne <- function(name, hyp, type, val, pval, fdr, top, similarity_metric, similarity_cutoff) {
+plotHypeRMapOne <- function(name, hyp, type, val, pval, fdr, top, similarity_metric, similarity_cutoff, title = NULL) {
   if (base::identical(type, "hmap") && !methods::is(hyp$args$genesets, "rgsets")) {
     base::stop("\ntype = \"hmap\" needs rgsets genesets (e.g. hypeR::hyperdb_rgsets()).\n")
   }
@@ -236,7 +341,7 @@ plotHypeRMapOne <- function(name, hyp, type, val, pval, fdr, top, similarity_met
     return(NULL)
   }
   if (base::identical(type, "hmap")) {
-    return(hypeR::hyp_hmap(hyp, pval = pval, fdr = fdr, val = val, top = top))
+    return(titleHypeRMap(hypeR::hyp_hmap(hyp, pval = pval, fdr = fdr, val = val, top = top), name, hyp, title))
   }
   members <- hyp$args$genesets$genesets[data$label]
   if (!hypeRAnyMapEdge(members, similarity_metric, similarity_cutoff)) {
@@ -246,8 +351,9 @@ plotHypeRMapOne <- function(name, hyp, type, val, pval, fdr, top, similarity_met
     ), call. = FALSE)
     return(NULL)
   }
-  hypeR::hyp_emap(hyp, similarity_metric = similarity_metric, similarity_cutoff = similarity_cutoff,
-                  pval = pval, fdr = fdr, val = val, top = top)
+  map <- hypeR::hyp_emap(hyp, similarity_metric = similarity_metric, similarity_cutoff = similarity_cutoff,
+                         pval = pval, fdr = fdr, val = val, top = top)
+  titleHypeRMap(map, name, hyp, title)
 }
 
 #' Enrichment or hierarchy map of runHypeR() results
@@ -269,6 +375,9 @@ plotHypeRMapOne <- function(name, hyp, type, val, pval, fdr, top, similarity_met
 #' @param top The first \code{top} rows of each result table after the
 #' cutoffs, in table order (not chosen by \code{val}). Default \code{25}.
 #' @param similarity_metric,similarity_cutoff Passed to \code{hypeR::hyp_emap()}.
+#' @param title Map title; defaults to the test that was run
+#' (\code{"Hypergeometric test"}, \code{"KS test"} or \code{"GSEA (fgsea)"}),
+#' with the query name below it.
 #'
 #' @return A \code{visNetwork} widget, \code{NULL} (with a warning) when there is
 #' nothing to draw, or a named list of those for several queries.
@@ -288,7 +397,8 @@ plotHypeRMap <- function(
     fdr = 1,
     top = 25,
     similarity_metric = c("jaccard_similarity", "overlap_similarity"),
-    similarity_cutoff = 0.2
+    similarity_cutoff = 0.2,
+    title = NULL
 ) {
   type <- base::match.arg(type)
   val <- base::match.arg(val)
@@ -300,7 +410,7 @@ plotHypeRMap <- function(
 
   hyps <- hypeRResultHyps(hyp_obj)
   draw <- function(name, hyp) {
-    plotHypeRMapOne(name, hyp, type, val, pval, fdr, top, similarity_metric, similarity_cutoff)
+    plotHypeRMapOne(name, hyp, type, val, pval, fdr, top, similarity_metric, similarity_cutoff, title)
   }
   if (!base::is.null(query) || base::length(hyps) == 1L) {
     selected <- hypeRSelectHyp(hyp_obj, query)

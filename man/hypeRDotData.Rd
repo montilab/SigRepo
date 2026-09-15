@@ -11,6 +11,7 @@ hypeRDotData(
   fdr = 1,
   top = 20,
   size_by = c("geneset", "overlap", "none"),
+  signature_key = TRUE,
   query_labels = NULL,
   abrv = 50
 )
@@ -30,8 +31,13 @@ Default \code{20}.}
 \item{size_by}{\code{"geneset"} (geneset size, default), \code{"overlap"} or
 \code{"none"}: what the \code{size} column holds.}
 
-\item{query_labels}{\code{NULL} (default) for query names wrapped to 25
-characters per line, or a function that takes the query info data frame
+\item{signature_key}{\code{TRUE} (default) labels queries by a short
+signature code and group, \code{"S1 | Old"}, with the codes listed by
+\code{hypeRSignatureKey()}; for a single signature the label is the group
+alone (\code{"Old"}). \code{FALSE} uses the full query names.}
+
+\item{query_labels}{\code{NULL} (default) for the labels chosen by
+\code{signature_key}, or a function that takes the query info data frame
 (\code{query}, \code{signature_id}, \code{signature_name},
 \code{group_label}, \code{direction}, \code{test}) and returns one non-empty
 label per row. Duplicates become \code{"label (2)"}.}
@@ -41,7 +47,10 @@ with \code{"..."}. Default \code{50}.}
 }
 \value{
 A data frame with \code{query}, \code{query_label} (factor in query
-order), \code{signature_name}, \code{group_label}, \code{direction},
+order), \code{signature_code} (\code{"S1"}, \code{"S2"}, ...; see
+\code{hypeRSignatureKey()}), \code{query_group} (the group label and
+direction that set the query apart within its signature, or \code{""}),
+\code{signature_name}, \code{group_label}, \code{direction},
 \code{test}, \code{label}, \code{label_abrv} (factor ordered so the most
 significant geneset is the last level, i.e. the top row of a plot),
 \code{pval}, \code{fdr}, \code{significance} (-log10 of \code{val}; values of

@@ -121,7 +121,7 @@ which SigRepo's plotting functions (see "Plotting results") and hypeR's own
 functions accept:
 
 ```{r, fig.width = 7, fig.height = 5}
-SigRepo::plotHypeRDots(hyp, top = 10, title = "LLFS aging, Hallmark")
+SigRepo::plotHypeRDots(hyp, top = 10)
 ```
 
 `hyp_show()` takes a single `hyp`, so pass one arm:
@@ -211,7 +211,7 @@ session's state. `fgsea_args` passes other `fgseaMultilevel()` options, e.g.
 results can be coloured by NES:
 
 ```{r, fig.width = 7, fig.height = 5, eval = requireNamespace("hypeR", quietly = TRUE) && requireNamespace("msigdbr", quietly = TRUE) && requireNamespace("fgsea", quietly = TRUE)}
-SigRepo::plotHypeRDots(gsea, color_by = "score", fdr = 0.25, title = "LLFS aging, Hallmark GSEA")
+SigRepo::plotHypeRDots(gsea, color_by = "score", fdr = 0.25)
 ```
 
 ## Plotting results
@@ -223,16 +223,25 @@ SigRepo draws its figures from the result objects, so they work for any
   query shows the same `top` genesets (the best by FDR across all queries), and
   a blank cell means the geneset did not pass the cutoffs for that query.
   `color_by = "score"` shows NES (fgsea) or the enrichment score (kstest).
+  Every plot is titled with the test that was run. With several signatures,
+  each signature's columns sit together under a short code (`S1`, `S2`, ...)
+  labelled by group or direction, and the caption lists the full names
+  (`hypeRSignatureKey()` returns the same table); a single signature is named
+  in the subtitle. `signature_key = FALSE` draws the full query names instead.
 - `plotHypeREnrichment()` draws one geneset: the running enrichment score with
   its hits and leading edge for kstest and fgsea, or a Venn diagram of the query
-  and the geneset for hypergeometric results.
+  and the geneset for hypergeometric results. fgsea tests the whole ranking in
+  one run and only files each geneset under `| up` or `| down` by the sign of
+  its enrichment score, so pass the signature name as `query` (the side holding
+  the geneset is used) and the plot names the whole signature. A kstest
+  `| down` query ranks the negated scores, so it keeps its side.
 - `plotHypeRMap()` draws hypeR's enrichment map (genesets linked by shared
   genes). When nothing passes the cutoffs, or no pair of genesets reaches
   `similarity_cutoff`, it returns `NULL` with a warning instead of an error.
 
 ```{r, fig.width = 7, fig.height = 4.5, eval = requireNamespace("hypeR", quietly = TRUE) && requireNamespace("msigdbr", quietly = TRUE) && requireNamespace("fgsea", quietly = TRUE)}
 top_up <- gsea$data[["LLFS_Aging_Gene_2023 | up"]]$data$label[1]
-SigRepo::plotHypeREnrichment(gsea, top_up, query = "LLFS_Aging_Gene_2023 | up")
+SigRepo::plotHypeREnrichment(gsea, top_up, query = "LLFS_Aging_Gene_2023")
 ```
 
 ```{r, fig.width = 6, fig.height = 4.5}

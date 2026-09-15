@@ -13,7 +13,8 @@ plotHypeRMap(
   fdr = 1,
   top = 25,
   similarity_metric = c("jaccard_similarity", "overlap_similarity"),
-  similarity_cutoff = 0.2
+  similarity_cutoff = 0.2,
+  title = NULL
 )
 }
 \arguments{
@@ -34,6 +35,10 @@ choose \code{top}.}
 cutoffs, in table order (not chosen by \code{val}). Default \code{25}.}
 
 \item{similarity_metric, similarity_cutoff}{Passed to \code{hypeR::hyp_emap()}.}
+
+\item{title}{Map title; defaults to the test that was run
+(\code{"Hypergeometric test"}, \code{"KS test"} or \code{"GSEA (fgsea)"}),
+with the query name below it.}
 }
 \value{
 A \code{visNetwork} widget, \code{NULL} (with a warning) when there is

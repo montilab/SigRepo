@@ -122,6 +122,7 @@ reference:
       - '`plotHypeREnrichment`'
       - '`plotHypeRMap`'
       - '`hypeRDotData`'
+      - '`hypeRSignatureKey`'
       - '`hypeREnrichmentData`'
       - '`runHyperGEM`'
       - '`hypergemAvailable`'

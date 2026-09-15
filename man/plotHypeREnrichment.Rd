@@ -13,9 +13,14 @@ plotHypeREnrichment(hyp_obj, geneset, query = NULL, title = NULL)
 \item{geneset}{Geneset label, e.g. \code{"HALLMARK_MYC_TARGETS_V1"}.}
 
 \item{query}{Query name (\code{names(hyp_obj$data)}); required for a
-\code{multihyp} with more than one query.}
+\code{multihyp} with more than one query. For fgsea, whose
+\code{"<ranking> | up"} and \code{"<ranking> | down"} queries come from one
+run on one ranking, the ranking name alone also works: the side whose table
+holds \code{geneset} is used.}
 
-\item{title}{Plot title; defaults to the geneset label.}
+\item{title}{Plot title; defaults to the test that was run
+(\code{"Hypergeometric test"}, \code{"KS test"} or \code{"GSEA (fgsea)"}).
+The geneset label is the first line of the subtitle.}
 }
 \value{
 A \code{ggplot}.
@@ -29,7 +34,7 @@ geneset without \code{runHypeR(plotting = TRUE)} storing every plot.
 }
 \examples{
 \dontrun{
-SigRepo::plotHypeREnrichment(gsea, "HALLMARK_MYC_TARGETS_V1", query = "LLFS_Aging_Gene_2023 | up")
+SigRepo::plotHypeREnrichment(gsea, "HALLMARK_MYC_TARGETS_V1", query = "LLFS_Aging_Gene_2023")
 }
 
 }

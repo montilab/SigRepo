@@ -9,7 +9,7 @@ test_that("hypeRDotData keeps the top genesets by their best value across querie
   expect_equal(dots$query, c("q1", "q1", "q2"))
   expect_equal(dots$label, c("S2", "S1", "S2"))
   expect_equal(levels(dots$label_abrv), c("S1", "S2"))
-  expect_equal(levels(dots$query_label), c("q1", "q2"))
+  expect_equal(levels(dots$query_label), c("S1", "S2"))
   expect_equal(dots$significance, -log10(c(0.5, 0.01, 0.001)))
   expect_equal(dots$size, c(20, 10, 10))
 })
@@ -22,7 +22,7 @@ test_that("hypeRDotData applies the cutoffs per query and floors zero values", {
 
   expect_equal(dots$label, c("S1", "S1", "S3"))
   expect_equal(dots$significance[1], -log10(0.02 / 10))
-  expect_equal(levels(dots$query_label), c("q1", "q2"))
+  expect_equal(levels(dots$query_label), c("S1", "S2"))
 
   all_zero <- SigRepo::hypeRDotData(make_dot_hyp("S1", 0))
   expect_equal(all_zero$significance, 300)
@@ -46,7 +46,8 @@ test_that("hypeRDotData returns a 0-row frame with the same columns when nothing
   testthat::skip_if_not_installed("hypeR")
   dots <- SigRepo::hypeRDotData(make_dot_hyp(c("A", "B"), c(0.5, 0.6)), fdr = 0.05)
   expect_equal(nrow(dots), 0L)
-  expect_equal(colnames(dots), c("query", "query_label", "signature_name", "group_label", "direction", "test",
+  expect_equal(colnames(dots), c("query", "query_label", "signature_code", "query_group", "signature_name",
+                                 "group_label", "direction", "test",
                                  "label", "label_abrv", "pval", "fdr", "significance", "score", "size"))
 })
 
@@ -57,12 +58,41 @@ test_that("hypeRDotData truncates long geneset labels and keeps them unique", {
   expect_equal(as.character(dots$label_abrv), c("HALLMARK_V...", "HALLMARK_V... (2)", "SHORT"))
 })
 
-test_that("hypeRDotData labels queries by wrapped name, a function, or errors on bad labels", {
+test_that("hypeRDotData labels queries by signature code and group", {
+  testthat::skip_if_not_installed("hypeR")
+  hyp <- function(signature, group = NULL, direction = NULL, fdr = 0.01) {
+    make_dot_hyp("A", fdr, info = c(list("SigRepo Signature Name" = signature), if (!is.null(group)) list("Group Label" = group),
+                                   if (!is.null(direction)) list("SigRepo Direction" = direction)))
+  }
+  bi <- hypeR::multihyp$new(data = list(
+    "sigA | Old" = hyp("sigA", "Old"), "sigA | Young" = hyp("sigA", "Young"),
+    "sigB | Old" = hyp("sigB", "Old"), "sigB | Young" = hyp("sigB", "Young")
+  ))
+  dots <- SigRepo::hypeRDotData(bi)
+  expect_equal(levels(dots$query_label), c("S1 | Old", "S1 | Young", "S2 | Old", "S2 | Young"))
+  expect_equal(dots$signature_code, c("S1", "S1", "S2", "S2"))
+  expect_equal(dots$query_group, c("Old", "Young", "Old", "Young"))
+  expect_equal(SigRepo::hypeRSignatureKey(bi), data.frame(signature_code = c("S1", "S2"), signature_name = c("sigA", "sigB")))
+  expect_equal(levels(SigRepo::hypeRDotData(bi, signature_key = FALSE)$query_label), names(bi$data))
+
+  categorical <- hypeR::multihyp$new(data = list(x = hyp("sigC", "Subtype_A", "up"), y = hyp("sigD", NULL, "down")))
+  expect_equal(levels(SigRepo::hypeRDotData(categorical)$query_label), c("S1 | Subtype_A up", "S2 | down"))
+
+  one_each <- hypeR::multihyp$new(data = list("sigA" = hyp("sigA"), "sigB" = hyp("sigB")))
+  expect_equal(levels(SigRepo::hypeRDotData(one_each)$query_label), c("S1", "S2"))
+
+  unnamed <- hypeR::multihyp$new(data = list(q1 = make_dot_hyp("A", 0.01), q2 = make_dot_hyp("A", 0.01)))
+  expect_equal(SigRepo::hypeRSignatureKey(unnamed)$signature_name, c("q1", "q2"))
+})
+
+test_that("hypeRDotData labels one signature by group, full name, a function, or errors on bad labels", {
   testthat::skip_if_not_installed("hypeR")
   info <- list("SigRepo Signature Name" = "LLFS_Aging_Gene_2023", "Group Label" = "Group1", "SigRepo Direction" = "")
   single <- make_dot_hyp("A", 0.01, info = info)
   expect_equal(SigRepo::hypeRDotData(single)$query, "LLFS_Aging_Gene_2023 | Group1")
-  expect_equal(as.character(SigRepo::hypeRDotData(single)$query_label), "LLFS_Aging_Gene_2023 |\nGroup1")
+  expect_equal(as.character(SigRepo::hypeRDotData(single)$query_label), "Group1")
+  expect_equal(as.character(SigRepo::hypeRDotData(single, signature_key = FALSE)$query_label), "LLFS_Aging_Gene_2023 | Group1")
+  expect_equal(as.character(SigRepo::hypeRDotData(make_dot_hyp("A", 0.01, info = info[1]))$query_label), "LLFS_Aging_Gene_2023")
 
   pair <- hypeR::multihyp$new(data = list(a = make_dot_hyp("A", 0.01, info = info), b = make_dot_hyp("A", 0.02, info = info)))
   by_group <- SigRepo::hypeRDotData(pair, query_labels = function(info) info$group_label)
@@ -236,7 +266,8 @@ test_that("plotHypeRDots draws one column per query, including a one-query multi
 
   expect_equal(nrow(built$data[[1]]), 3L)
   expect_equal(built$layout$panel_params[[1]]$y$get_labels(), c("C", "B", "A"))
-  expect_equal(built$layout$panel_params[[1]]$x$get_labels(), "only")
+  expect_equal(built$layout$panel_params[[1]]$x$get_labels(), "")
+  expect_equal(plot$labels$subtitle, "only")
   expect_equal(rlang::as_label(plot$layers[[1]]$mapping$colour), "significance")
   expect_equal(plot$scales$get_scales("colour")$name, "-log10(FDR)")
   expect_equal(plot$scales$get_scales("colour")$get_transformation()$name, "identity")
@@ -258,7 +289,7 @@ test_that("plotHypeRDots colours by score for ranked tests and rejects it for hy
                "color_by = \"score\" needs kstest or fgsea results", fixed = TRUE)
 })
 
-test_that("plotHypeRDots shows an empty-state plot and angles labels for many queries", {
+test_that("plotHypeRDots shows an empty-state plot and angles all but one signature's group labels", {
   testthat::skip_if_not_installed("hypeR")
   testthat::skip_if_not_installed("ggplot2")
   empty <- SigRepo::plotHypeRDots(make_dot_hyp("A", 0.5), fdr = 0.05)
@@ -267,9 +298,94 @@ test_that("plotHypeRDots shows an empty-state plot and angles labels for many qu
   many <- hypeR::multihyp$new(data = stats::setNames(lapply(1:5, function(i) make_dot_hyp("A", 0.01)), paste0("q", 1:5)))
   expect_equal(SigRepo::plotHypeRDots(many)$theme$axis.text.x$angle, 45)
   expect_null(SigRepo::plotHypeRDots(hypeR::multihyp$new(data = list(q1 = make_dot_hyp("A", 0.01))))$theme$axis.text.x$angle)
+  expect_null(SigRepo::plotHypeRDots(make_dot_hyp("A", 0.01))$theme$axis.text.x$angle)
+  expect_equal(SigRepo::plotHypeRDots(make_dot_hyp("A", 0.01), signature_key = FALSE)$theme$axis.text.x$angle, 45)
+  expect_equal(SigRepo::plotHypeRDots(many)$theme$legend.justification, "top")
+})
+
+test_that("plots are titled with the test unless a title is given", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("ggplot2")
+  expect_equal(SigRepo::plotHypeRDots(make_dot_hyp("A", 0.01))$labels$title, "Hypergeometric test")
+  kstest <- make_dot_hyp("A", 0.01, test = "kstest", extra = list(score = 0.5))
+  expect_equal(SigRepo::plotHypeRDots(kstest)$labels$title, "KS test")
+  fgsea <- make_dot_hyp("A", 0.01, test = "fgsea", extra = list(nes = 1.5))
+  expect_equal(SigRepo::plotHypeRDots(fgsea)$labels$title, "GSEA (fgsea)")
+  expect_equal(SigRepo::plotHypeRDots(fgsea, title = "custom")$labels$title, "custom")
+  expect_equal(SigRepo::plotHypeRDots(make_dot_hyp("A", 0.5), fdr = 0.05)$labels$title, "Hypergeometric test")
+})
+
+test_that("plotHypeRDots widens the left margin for query labels longer than the geneset labels", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("ggplot2")
+  left_margin <- function(plot) as.numeric(plot$theme$plot.margin)[4]
+  long_query <- hypeR::multihyp$new(data = list(Aging_Hs_PeripheralBlood_LLFS_Aging_MontiLab_Old = make_dot_hyp("A", 0.01)))
+  expect_gt(left_margin(SigRepo::plotHypeRDots(long_query, signature_key = FALSE)), 5.5)
+  expect_equal(left_margin(SigRepo::plotHypeRDots(long_query)), 5.5)
+  short_query <- hypeR::multihyp$new(data = list(q = make_dot_hyp("HALLMARK_INTERFERON_GAMMA_RESPONSE", 0.01)))
+  expect_equal(left_margin(SigRepo::plotHypeRDots(short_query, signature_key = FALSE)), 5.5)
+})
+
+test_that("plotHypeRDots groups several signatures under their codes with a key, and names one signature in the subtitle", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("ggplot2")
+  hyp <- function(signature, group, fdr = 0.01) {
+    make_dot_hyp(c("A", "B"), c(fdr, fdr), info = list("SigRepo Signature Name" = signature, "Group Label" = group))
+  }
+  bi <- hypeR::multihyp$new(data = list(
+    "sigA | Old" = hyp("sigA", "Old"), "sigA | Young" = hyp("sigA", "Young", fdr = 0.9),
+    "sigB | Old" = hyp("sigB", "Old"), "sigB | Young" = hyp("sigB", "Young")
+  ))
+  plot <- SigRepo::plotHypeRDots(bi, fdr = 0.05)
+  expect_s3_class(plot$facet, "FacetGrid")
+  expect_equal(plot$labels$caption, "S1 = sigA\nS2 = sigB")
+  expect_null(plot$labels$subtitle)
+  built <- ggplot2::ggplot_build(plot)
+  expect_equal(nrow(built$layout$layout), 2L)
+  # sigA | Young passes nothing but keeps its column in S1's panel.
+  expect_equal(built$layout$panel_params[[1]]$x$get_labels(), c("Old", "Young"))
+  expect_equal(built$layout$panel_params[[2]]$x$get_labels(), c("Old", "Young"))
+  expect_equal(plot$theme$axis.text.x$angle, 45)
+
+  one <- SigRepo::plotHypeRDots(hypeR::multihyp$new(data = bi$data[1:2]))
+  expect_equal(one$labels$subtitle, "sigA")
+  expect_null(one$labels$caption)
+  expect_false(inherits(one$facet, "FacetGrid"))
+  expect_equal(ggplot2::ggplot_build(one)$layout$panel_params[[1]]$x$get_labels(), c("Old", "Young"))
+  expect_null(one$theme$axis.text.x$angle)
+  categories <- stats::setNames(lapply(paste0("Subtype_", LETTERS[1:3]), function(g) hyp("sigC", g)), paste0("Subtype_", LETTERS[1:3]))
+  categories <- c(categories, stats::setNames(lapply(paste0("Subtype_", LETTERS[1:3]), function(g) hyp("sigC", g)), paste0("x", 1:3)))
+  expect_equal(SigRepo::plotHypeRDots(hypeR::multihyp$new(data = categories))$theme$axis.text.x$angle, 45)
+
+  off <- SigRepo::plotHypeRDots(bi, signature_key = FALSE)
+  expect_false(inherits(off$facet, "FacetGrid"))
+  expect_null(off$labels$caption)
+  expect_equal(ggplot2::ggplot_build(off)$layout$panel_params[[1]]$x$get_labels(), names(bi$data))
 })
 
 # ---- plotHypeREnrichment() ----
+
+test_that("fgsea enrichment data and plots take the ranking name and use the side holding the geneset", {
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("ggplot2")
+  testthat::skip_if_not_installed("fgsea")
+  res <- SigRepo::runHypeR(omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(), test = "fgsea", verbose = FALSE)
+
+  top <- SigRepo::hypeREnrichmentData(res, "TOP", query = "fg")
+  expect_equal(top$summary$query, "fg | up")
+  expect_equal(top$summary$ranking, "fg")
+  expect_equal(top, SigRepo::hypeREnrichmentData(res, "TOP", query = "fg | up"))
+
+  bottom <- SigRepo::hypeREnrichmentData(res, "BOTTOM", query = "fg")
+  expect_equal(bottom$summary$query, "fg | down")
+  expect_true(bottom$summary$nes < 0)
+  expect_equal(SigRepo::hypeREnrichmentData(res, "BOTTOM", query = "fg | down")$summary$ranking, "fg")
+
+  plot <- SigRepo::plotHypeREnrichment(res, "BOTTOM", query = "fg")
+  expect_match(plot$labels$subtitle, "^BOTTOM\nfg\nES = -1, NES = -[0-9.]+, p = .+, FDR = .+$")
+  expect_error(SigRepo::hypeREnrichmentData(res, "TOP", query = "nope"), "'query' must be one of", fixed = TRUE)
+})
+
 
 test_that("plotHypeREnrichment draws the running score, hits and ES for fgsea", {
   testthat::skip_if_not_installed("hypeR")
@@ -280,14 +396,15 @@ test_that("plotHypeREnrichment draws the running score, hits and ES for fgsea", 
 
   geoms <- unname(vapply(plot$layers, function(layer) class(layer$geom)[1], ""))
   expect_equal(geoms, c("GeomHline", "GeomLine", "GeomSegment", "GeomVline"))
-  expect_equal(plot$labels$title, "TOP")
-  expect_match(plot$labels$subtitle, "^fg \\| up\nES = 1, NES = [0-9.]+, p = .+, FDR = .+$")
+  expect_equal(plot$labels$title, "GSEA (fgsea)")
+  expect_match(plot$labels$subtitle, "^TOP\nfg\nES = 1, NES = [0-9.]+, p = .+, FDR = .+$")
   expect_equal(plot$labels$x, "Rank in ranking")
   expect_no_error(ggplot2::ggplot_build(plot))
 
   filtered <- SigRepo::runHypeR(omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(), test = "fgsea",
                                 fdr = 1e-12, verbose = FALSE)
   expect_match(SigRepo::plotHypeREnrichment(filtered, "TOP", query = "fg | up")$labels$subtitle, "not in the result table", fixed = TRUE)
+  expect_match(SigRepo::plotHypeREnrichment(filtered, "TOP", query = "fg")$labels$subtitle, "^TOP\nfg\nES = 1, not in the result table$")
 
   tie <- suppressWarnings(SigRepo::runHypeR(signature = hyper_tie_stats(), genesets = hyper_tie_genesets(), test = "fgsea", verbose = FALSE))
   tie_geoms <- unname(vapply(SigRepo::plotHypeREnrichment(tie, "TIE", query = "signature | up")$layers, function(layer) class(layer$geom)[1], ""))
@@ -299,12 +416,16 @@ test_that("plotHypeREnrichment labels a kstest down ranking and draws a Venn for
   testthat::skip_if_not_installed("ggplot2")
   ks <- suppressWarnings(SigRepo::runHypeR(omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(),
                                            test = "kstest", direction = "both", verbose = FALSE))
-  expect_equal(SigRepo::plotHypeREnrichment(ks, "BOTTOM", query = "fg | down")$labels$x, "Rank in ranking (negated scores)")
+  ks_down <- SigRepo::plotHypeREnrichment(ks, "BOTTOM", query = "fg | down")
+  expect_equal(ks_down$labels$x, "Rank in ranking (negated scores)")
+  # A kstest down query is its own (negated) ranking, so it keeps its side.
+  expect_match(ks_down$labels$subtitle, "^BOTTOM\nfg \\| down\n")
+  expect_error(SigRepo::plotHypeREnrichment(ks, "BOTTOM", query = "fg"), "'query' must be one of", fixed = TRUE)
 
   hyper <- runToyHypeR(signature = list(a = c("A", "B", "X1"), b = c("C", "D")), genesets = hyper_genesets(), verbose = FALSE)
   venn <- SigRepo::plotHypeREnrichment(hyper, "SET_AB", query = "a", title = "custom")
   expect_equal(unname(vapply(venn$layers, function(layer) class(layer$geom)[1], ""))[1], "GeomCircle")
-  expect_equal(venn$labels$subtitle, sprintf("a\noverlap = 3, p = %s, FDR = %s",
+  expect_equal(venn$labels$subtitle, sprintf("SET_AB\na\noverlap = 3, p = %s, FDR = %s",
                                             format(signif(hyper$data$a$data$pval[hyper$data$a$data$label == "SET_AB"], 2)),
                                             format(signif(hyper$data$a$data$fdr[hyper$data$a$data$label == "SET_AB"], 2))))
 })
@@ -317,7 +438,11 @@ test_that("plotHypeRMap returns hypeR's enrichment map when geneset pairs share 
   hyper <- runToyHypeR(signature = list(a = sprintf("G%02d", 1:12), b = sprintf("G%02d", 29:40)),
                        genesets = hyper_fgsea_genesets(), verbose = FALSE)
 
-  expect_true(inherits(SigRepo::plotHypeRMap(hyper, query = "a"), "visNetwork"))
+  map <- SigRepo::plotHypeRMap(hyper, query = "a")
+  expect_true(inherits(map, "visNetwork"))
+  expect_equal(map$x$main$text, "Hypergeometric test")
+  expect_equal(map$x$submain$text, "a")
+  expect_equal(SigRepo::plotHypeRMap(hyper, query = "a", title = "custom")$x$main$text, "custom")
   both <- SigRepo::plotHypeRMap(hyper)
   expect_equal(names(both), c("a", "b"))
   expect_true(all(vapply(both, inherits, TRUE, "visNetwork")))

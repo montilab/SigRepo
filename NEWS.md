@@ -68,8 +68,18 @@
   enrichment score with the leading edge for kstest and fgsea, Venn diagram for
   hypergeometric, for any geneset without `plotting = TRUE`) and
   `plotHypeRMap()` (hypeR's enrichment/hierarchy maps, returning `NULL` with a
-  warning where hypeR would error). `hypeRDotData()` and
-  `hypeREnrichmentData()` return the underlying data. `ggplot2` is in Suggests.
+  warning where hypeR would error). Every plot is titled with the test that was
+  run ("Hypergeometric test", "KS test", "GSEA (fgsea)") unless `title` is
+  given. Dot plots of several signatures group each signature's columns under
+  a short code (`S1`, `S2`, ...) labelled by group or direction, with the full
+  names in the caption (`hypeRSignatureKey()` returns that key); a single
+  signature is named in the subtitle. `signature_key = FALSE` draws full query
+  names at 45 degrees instead, without clipping. For fgsea,
+  `plotHypeREnrichment()` and `hypeREnrichmentData()` take the signature name
+  as `query` and name the whole ranking rather than its up/down side
+  (`summary$ranking`).
+  `hypeRDotData()` and `hypeREnrichmentData()` return the underlying data.
+  `ggplot2` is in Suggests.
 
 - `runHypeR(test = "fgsea")` runs GSEA with `fgsea::fgseaMultilevel()`, ported
   from hypeR's fgsea vignette wrapper. Unlike hypeR's kstest, whose p-values

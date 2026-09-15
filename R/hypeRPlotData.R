@@ -51,16 +51,46 @@ hypeRQueryInfo <- function(hyps) {
   )
 }
 
-#' Display labels for queries: wrapped names, or a user function of the info
+#' Signature of each query (its SigRepo name, or the query name when none is
+#' recorded) and its code, "S1", "S2", ... in order of first appearance
 #' @noRd
-hypeRQueryLabels <- function(info, query_labels) {
-  if (base::is.null(query_labels)) {
-    labels <- base::vapply(
-      info$query,
-      function(query) base::paste(base::strwrap(query, width = 25), collapse = "\n"),
-      base::character(1),
-      USE.NAMES = FALSE
+hypeRQuerySignatures <- function(info) {
+  signature <- base::ifelse(base::is.na(info$signature_name), info$query, info$signature_name)
+  signatures <- base::unique(signature)
+  base::list(
+    code = base::paste0("S", base::match(signature, signatures)),
+    key = base::data.frame(
+      signature_code = base::paste0("S", base::seq_along(signatures)), signature_name = signatures,
+      stringsAsFactors = FALSE
     )
+  )
+}
+
+#' What sets a query apart within its signature: group label and direction,
+#' e.g. "Old", "up" or "Subtype_A up"; "" when neither is recorded
+#' @noRd
+hypeRQueryGroups <- function(info) {
+  base::vapply(base::seq_len(base::nrow(info)), function(i) {
+    parts <- c(info$group_label[i], info$direction[i])
+    base::paste(parts[!base::is.na(parts)], collapse = " ")
+  }, base::character(1))
+}
+
+#' Display labels for queries: signature code and group ("S1 | Old"), the group
+#' alone for a single signature, the full names, or a user function of the info
+#' @noRd
+hypeRQueryLabels <- function(info, query_labels, signature_key = TRUE) {
+  if (base::is.null(query_labels)) {
+    labels <- info$query
+    if (base::isTRUE(signature_key)) {
+      signatures <- hypeRQuerySignatures(info)
+      groups <- hypeRQueryGroups(info)
+      labels <- if (base::nrow(signatures$key) > 1) {
+        base::ifelse(base::nzchar(groups), base::paste(signatures$code, groups, sep = " | "), signatures$code)
+      } else {
+        base::ifelse(base::nzchar(groups), groups, info$query)
+      }
+    }
   } else {
     if (!base::is.function(query_labels)) {
       base::stop("\n'query_labels' must be NULL or a function that takes the query info data frame and returns one label per row.\n")
@@ -97,7 +127,8 @@ checkHypeRNumber <- function(x, name, min) {
 #' @noRd
 emptyHypeRDotData <- function() {
   base::data.frame(
-    query = base::character(), query_label = base::factor(), signature_name = base::character(),
+    query = base::character(), query_label = base::factor(), signature_code = base::character(),
+    query_group = base::character(), signature_name = base::character(),
     group_label = base::character(), direction = base::character(), test = base::character(),
     label = base::character(), label_abrv = base::factor(), pval = base::numeric(), fdr = base::numeric(),
     significance = base::numeric(), score = base::numeric(), size = base::numeric(),
@@ -121,8 +152,12 @@ emptyHypeRDotData <- function() {
 #' Default \code{20}.
 #' @param size_by \code{"geneset"} (geneset size, default), \code{"overlap"} or
 #' \code{"none"}: what the \code{size} column holds.
-#' @param query_labels \code{NULL} (default) for query names wrapped to 25
-#' characters per line, or a function that takes the query info data frame
+#' @param signature_key \code{TRUE} (default) labels queries by a short
+#' signature code and group, \code{"S1 | Old"}, with the codes listed by
+#' \code{hypeRSignatureKey()}; for a single signature the label is the group
+#' alone (\code{"Old"}). \code{FALSE} uses the full query names.
+#' @param query_labels \code{NULL} (default) for the labels chosen by
+#' \code{signature_key}, or a function that takes the query info data frame
 #' (\code{query}, \code{signature_id}, \code{signature_name},
 #' \code{group_label}, \code{direction}, \code{test}) and returns one non-empty
 #' label per row. Duplicates become \code{"label (2)"}.
@@ -130,7 +165,10 @@ emptyHypeRDotData <- function() {
 #' with \code{"..."}. Default \code{50}.
 #'
 #' @return A data frame with \code{query}, \code{query_label} (factor in query
-#' order), \code{signature_name}, \code{group_label}, \code{direction},
+#' order), \code{signature_code} (\code{"S1"}, \code{"S2"}, ...; see
+#' \code{hypeRSignatureKey()}), \code{query_group} (the group label and
+#' direction that set the query apart within its signature, or \code{""}),
+#' \code{signature_name}, \code{group_label}, \code{direction},
 #' \code{test}, \code{label}, \code{label_abrv} (factor ordered so the most
 #' significant geneset is the last level, i.e. the top row of a plot),
 #' \code{pval}, \code{fdr}, \code{significance} (-log10 of \code{val}; values of
@@ -153,6 +191,7 @@ hypeRDotData <- function(
     fdr = 1,
     top = 20,
     size_by = c("geneset", "overlap", "none"),
+    signature_key = TRUE,
     query_labels = NULL,
     abrv = 50
 ) {
@@ -165,7 +204,9 @@ hypeRDotData <- function(
 
   hyps <- hypeRResultHyps(hyp_obj)
   info <- hypeRQueryInfo(hyps)
-  query_label <- hypeRQueryLabels(info, query_labels)
+  query_label <- hypeRQueryLabels(info, query_labels, signature_key)
+  signature_code <- hypeRQuerySignatures(info)$code
+  query_group <- hypeRQueryGroups(info)
 
   rows <- base::lapply(base::seq_along(hyps), function(i) {
     data <- hyps[[i]]$data
@@ -185,7 +226,8 @@ hypeRDotData <- function(
       NA_real_
     }
     base::data.frame(
-      query = info$query[i], query_label = query_label[i], signature_name = info$signature_name[i],
+      query = info$query[i], query_label = query_label[i], signature_code = signature_code[i],
+      query_group = query_group[i], signature_name = info$signature_name[i],
       group_label = info$group_label[i], direction = info$direction[i], test = info$test[i],
       label = base::as.character(data$label), pval = data$pval, fdr = data$fdr, value = data[[val]],
       score = base::as.numeric(score),
@@ -219,9 +261,47 @@ hypeRDotData <- function(
   dots[, base::colnames(emptyHypeRDotData())]
 }
 
-#' The hyp for one query of a result, with its name
+#' Signature codes used in dot-plot labels
+#'
+#' @description The key behind \code{hypeRDotData()}'s and
+#' \code{plotHypeRDots()}'s short query labels: one row per signature, coded
+#' \code{"S1"}, \code{"S2"}, ... in the order the signatures first appear in
+#' the result. A query without a recorded SigRepo signature name counts as its
+#' own signature, named by the query.
+#'
+#' @param hyp_obj A \code{hyp} or \code{multihyp}, usually from \code{runHypeR()}.
+#'
+#' @return A data frame with \code{signature_code} and \code{signature_name}.
+#'
+#' @examples
+#' \dontrun{
+#' SigRepo::hypeRSignatureKey(hyp)
+#' }
+#'
+#' @export
+hypeRSignatureKey <- function(hyp_obj) {
+  hypeRQuerySignatures(hypeRQueryInfo(hypeRResultHyps(hyp_obj)))$key
+}
+
+#' Name of the ranking behind a query. fgsea's "<ranking> | up" and
+#' "<ranking> | down" hyps come from one run on one ranking, so for them this is
+#' the query name without the side; any other query is its own ranking
+#' (a kstest "down" query ranks the negated scores).
 #' @noRd
-hypeRSelectHyp <- function(hyp_obj, query) {
+hypeRRankingName <- function(name, hyp) {
+  direction <- hypeRInfoValue(hyp, "SigRepo Direction")
+  if (!base::identical(hypeRInfoValue(hyp, "Test"), "fgsea") || !direction %in% c("up", "down")) {
+    return(name)
+  }
+  suffix <- base::paste0(" | ", direction)
+  if (base::endsWith(name, suffix)) base::substr(name, 1L, base::nchar(name) - base::nchar(suffix)) else name
+}
+
+#' The hyp for one query of a result, with its name. With `geneset`, an fgsea
+#' ranking name (the query name without " | up"/" | down") also selects: the
+#' side whose table holds the geneset, else the up side.
+#' @noRd
+hypeRSelectHyp <- function(hyp_obj, query, geneset = NULL) {
   hyps <- hypeRResultHyps(hyp_obj)
   if (base::is.null(query)) {
     if (base::length(hyps) == 1L) {
@@ -231,6 +311,15 @@ hypeRSelectHyp <- function(hyp_obj, query) {
       "\n'query' is required for a result with %d queries: %s.\n",
       base::length(hyps), base::paste(base::sprintf("'%s'", base::names(hyps)), collapse = ", ")
     ))
+  }
+  if (!base::is.null(geneset) && base::is.character(query) && base::length(query) == 1L && !query %in% base::names(hyps)) {
+    sides <- base::paste(query, c("up", "down"), sep = " | ")
+    sides <- sides[sides %in% base::names(hyps)]
+    sides <- sides[base::vapply(sides, function(side) base::identical(hypeRRankingName(side, hyps[[side]]), query), base::logical(1))]
+    if (base::length(sides) > 0) {
+      holding <- sides[base::vapply(sides, function(side) geneset %in% hyps[[side]]$data$label, base::logical(1))]
+      query <- if (base::length(holding) > 0) holding[1] else sides[1]
+    }
   }
   if (!(base::is.character(query) && base::length(query) == 1L && query %in% base::names(hyps))) {
     base::stop(base::sprintf(
@@ -329,7 +418,10 @@ hypeRFgseaCurve <- function(stats, members, power) {
 #' \code{test = "kstest"} or \code{"fgsea"}.
 #' @param geneset Geneset label, e.g. \code{"HALLMARK_MYC_TARGETS_V1"}.
 #' @param query Query name (\code{names(hyp_obj$data)}); required for a
-#' \code{multihyp} with more than one query.
+#' \code{multihyp} with more than one query. For fgsea, whose
+#' \code{"<ranking> | up"} and \code{"<ranking> | down"} queries come from one
+#' run on one ranking, the ranking name alone also works: the side whose table
+#' holds \code{geneset} is used.
 #'
 #' @details The curve reproduces each test's own arithmetic, so \code{es}
 #' matches the result's \code{score} (kstest) or \code{es} (fgsea) to their 2
@@ -356,19 +448,21 @@ hypeRFgseaCurve <- function(stats, members, power) {
 #' points, positions \code{0} to \code{N+1}, not one row per ranked gene
 #' \code{1..N}), \code{ticks} (data frame: \code{position},
 #' \code{gene}, \code{score}, \code{leading_edge}) and \code{summary} (list:
-#' \code{query}, \code{geneset}, \code{test}, \code{direction}, \code{n_ranked},
+#' \code{query}, \code{ranking} (the ranking the curve walks: for fgsea the
+#' query name without \code{" | up"}/\code{" | down"}, otherwise the query),
+#' \code{geneset}, \code{test}, \code{direction}, \code{n_ranked},
 #' \code{n_hits}, \code{es}, \code{es_position}, \code{leading_edge_genes},
 #' \code{pval}, \code{fdr}, \code{nes}, \code{score}; the last four are
 #' \code{NA} when the geneset is not in the result table).
 #'
 #' @examples
 #' \dontrun{
-#' curve <- SigRepo::hypeREnrichmentData(gsea, "HALLMARK_MYC_TARGETS_V1", query = "LLFS_Aging_Gene_2023 | up")
+#' curve <- SigRepo::hypeREnrichmentData(gsea, "HALLMARK_MYC_TARGETS_V1", query = "LLFS_Aging_Gene_2023")
 #' }
 #'
 #' @export
 hypeREnrichmentData <- function(hyp_obj, geneset, query = NULL) {
-  selected <- hypeRSelectHyp(hyp_obj, query)
+  selected <- hypeRSelectHyp(hyp_obj, query, geneset)
   hyp <- selected$hyp
   test <- hypeRInfoValue(hyp, "Test")
   if (!test %in% c("kstest", "fgsea")) {
@@ -422,7 +516,8 @@ hypeREnrichmentData <- function(hyp_obj, geneset, query = NULL) {
     curve = base::data.frame(position = curve$positions, running_score = curve$running),
     ticks = ticks,
     summary = base::list(
-      query = selected$name, geneset = geneset, test = test, direction = hypeRInfoValue(hyp, "SigRepo Direction"),
+      query = selected$name, ranking = hypeRRankingName(selected$name, hyp), geneset = geneset, test = test,
+      direction = hypeRInfoValue(hyp, "SigRepo Direction"),
       n_ranked = base::length(ranked_genes), n_hits = base::length(hit_positions),
       es = curve$es, es_position = curve$es_position,
       leading_edge_genes = ticks$gene[ticks$leading_edge],
