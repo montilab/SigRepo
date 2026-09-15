@@ -583,11 +583,14 @@ applyRunHypeRFdr <- function(results, pval, fdr) {
 #'   construction, otherwise a multihyp.
 #' @noRd
 finishHypeRRun <- function(results, fdr_scope, pval, fdr, test, direction, split, inputs, native) {
-  if (fdr_scope == "run") {
-    results <- applyRunHypeRFdr(results, pval = pval, fdr = fdr)
-  } else if (base::identical(test, "fgsea")) {
-    # hypeR filtered its own results already; fgsea results are unfiltered.
+  if (base::identical(test, "fgsea")) {
+    # runFgseaQueries() already pooled the FDR (fdr_scope = "run", across
+    # every up/down side of every ranking, before direction dropped any) or
+    # kept fgsea's own per-ranking padj (fdr_scope = "query"); only the
+    # pval/fdr cutoffs remain to apply here, for both scopes.
     results <- filterHypeRResults(results, pval = pval, fdr = fdr)
+  } else if (fdr_scope == "run") {
+    results <- applyRunHypeRFdr(results, pval = pval, fdr = fdr)
   }
 
   categorical <- !native && base::length(inputs$signatures) == 1L && isCategoricalHypeRSignature(inputs$signatures[[1]])
@@ -644,7 +647,10 @@ finishHypeRRun <- function(results, fdr_scope, pval, fdr, test, direction, split
 #' within each query, as \code{hypeR::hypeR()} does for a named list. With one
 #' query both are the same. The pooled FDR is computed from hypeR's p-values,
 #' which are rounded to 2 significant digits. \code{pval} and \code{fdr} filter
-#' on the FDR of the chosen scope.
+#' on the FDR of the chosen scope. For \code{test = "fgsea"}, \code{"run"}
+#' pools the up and down sides of every ranking in the call, regardless of
+#' \code{direction} (also with a single ranking); \code{"query"} keeps
+#' fgsea's own per-ranking \code{padj}, which already covers both sides.
 #' @param background \code{NULL} (default) uses each signature's measured genes
 #' from its difexp table when it has difexp gene symbols, and \code{23467}
 #' otherwise (always \code{23467} for \code{signature} input). A difexp that
@@ -653,7 +659,11 @@ finishHypeRRun <- function(results, fdr_scope, pval, fdr, test, direction, split
 #' 10,000 rows, a difexp has no more than twice its signature's rows, or every
 #' \code{p_value}, \code{pvalue} or \code{adj_p} is at most 0.05. For
 #' \code{test = "kstest"} the default is \code{23467}: the ranked list is the
-#' universe, so the background does not enter the test. Otherwise
+#' universe, so the background does not enter the test. \code{test = "fgsea"}
+#' defaults to \code{23467} as well and for the same reason (the ranking is
+#' the universe): a number has no effect on the fgsea result, while a gene
+#' vector or \code{"difexp"} still reduces the genesets to those genes (the
+#' \code{geneset} column) as hypeR does. Otherwise
 #' hypeR's background: a single number (population size), a
 #' character vector of background genes, or \code{"difexp"} to use each
 #' signature's measured genes from its difexp table. With an explicit
@@ -691,7 +701,9 @@ finishHypeRRun <- function(results, fdr_scope, pval, fdr, test, direction, split
 #' \code{FALSE}, in which case the empty placeholder plots hypeR stores anyway
 #' are removed (they are most of the object's size). fgsea makes no plots, so
 #' \code{TRUE} with \code{test = "fgsea"} warns and is ignored.
-#' @param quiet Logical; suppress hypeR's logs. Defaults to \code{TRUE}.
+#' @param quiet Logical; suppress hypeR's logs. Defaults to \code{TRUE}. With
+#' \code{test = "fgsea"} this also suppresses fgsea's own console output
+#' (its progress bars).
 #'
 #' @return A \code{hyp} when the input is a single vector in \code{signature},
 #' or a single signature (one \code{OmicSignature}, or one id or name) and the

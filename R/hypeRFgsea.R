@@ -28,11 +28,15 @@ withHypeRSeed <- function(seed, expr) {
 #'
 #' Columns follow hypeR's fgsea vignette wrapper, plus `hits` (the leading edge
 #' in hypeR's " , " format) so rctbl_build() works. Rows with an NA p-value are
-#' removed.
+#' removed. A 0-row `raw` (e.g. every pathway dropped by `minSize`, or a
+#' background sharing no genes with the genesets) returns a 0-row table with
+#' the same 11 columns instead of erroring: `data.frame()` would otherwise try
+#' to recycle the scalar `signature` column against 0 rows.
 #' @noRd
 fgseaHypeRTable <- function(raw, stats, pathways) {
   raw <- raw[!base::is.na(raw$pval), , drop = FALSE]
   leading_edge <- raw$leadingEdge
+  n <- base::nrow(raw)
   base::data.frame(
     label = base::as.character(raw$pathway),
     pval = base::signif(raw$pval, 2),
@@ -40,8 +44,8 @@ fgseaHypeRTable <- function(raw, stats, pathways) {
     lte = raw$log2err,
     es = raw$ES,
     nes = raw$NES,
-    signature = base::length(stats),
-    geneset = base::vapply(base::as.character(raw$pathway), function(x) base::length(pathways[[x]]), base::integer(1), USE.NAMES = FALSE),
+    signature = base::rep(base::length(stats), n),
+    geneset = base::as.integer(base::unname(base::lengths(pathways)[base::as.character(raw$pathway)])),
     overlap = base::as.integer(raw$size),
     le = base::vapply(leading_edge, function(x) base::paste(x, collapse = ","), base::character(1)),
     hits = base::vapply(leading_edge, function(x) base::paste(x, collapse = " , "), base::character(1)),
@@ -151,10 +155,10 @@ checkHypeRFgseaArgs <- function(absolute, seed, fgsea_args, plotting) {
       (base::length(fgsea_args) > 0 && (base::is.null(arg_names) || base::any(base::is.na(arg_names) | !base::nzchar(arg_names))))) {
     base::stop("\n'fgsea_args' must be a named list of fgsea::fgseaMultilevel() arguments.\n")
   }
-  reserved <- base::intersect(arg_names, c("stats", "pathways", "gseaParam"))
+  reserved <- base::intersect(arg_names, c("stats", "pathways", "gseaParam", "scoreType"))
   if (base::length(reserved) > 0) {
     base::stop(base::sprintf(
-      "\n'fgsea_args' cannot set %s; runHypeR() supplies them (gseaParam comes from 'power').\n",
+      "\n'fgsea_args' cannot set %s; runHypeR() supplies them (gseaParam comes from 'power'; scoreType would change the ES-sign split runHypeR() relies on).\n",
       base::paste(base::sprintf("'%s'", reserved), collapse = ", ")
     ))
   }
@@ -166,27 +170,34 @@ checkHypeRFgseaArgs <- function(absolute, seed, fgsea_args, plotting) {
 
 #' Run fgsea on every prepared ranking and build named, provenance-tagged hyps
 #'
+#' The multiple-testing family for `fdr_scope = "run"` is the up and down sides
+#' of every ranking in the call, regardless of `direction`: every ranking
+#' always runs both sides here, and the pooled FDR (via `applyRunHypeRFdr()`,
+#' the same BH-over-2-significant-digit-pval pooling `finishHypeRRun()` uses)
+#' is computed before `direction` drops the side(s) not asked for. Otherwise a
+#' `direction` other than "both" would silently halve or skew the pool.
+#'
 #' @return Named list of hyp objects: "<query> | up" / "<query> | down" for
 #'   direction "both", "<query>" otherwise.
 #' @noRd
 runFgseaQueries <- function(prepared, backgrounds, genesets, direction, power, seed, fgsea_args, quiet,
                             native, ks_source, score_col, fdr_scope) {
-  results <- base::list()
+  side_results <- base::list()
   fgsea_warnings <- base::character()
 
   for (i in base::seq_along(prepared$signatures)) {
     query_name <- base::names(prepared$signatures)[i]
     run <- runFgseaHyps(
       stats = prepared$signatures[[i]], genesets = genesets, background = backgrounds$values[[i]],
-      direction = direction, power = power, seed = seed, fgsea_args = fgsea_args, quiet = quiet
+      direction = "both", power = power, seed = seed, fgsea_args = fgsea_args, quiet = quiet
     )
     fgsea_warnings <- c(fgsea_warnings, run$warnings)
 
     for (side in base::names(run$hyps)) {
       info_row <- prepared$info[i, , drop = FALSE]
       info_row$direction <- side
-      hyp_name <- if (base::identical(direction, "both")) base::sprintf("%s | %s", query_name, side) else query_name
-      results[[hyp_name]] <- appendHypeRProvenance(run$hyps[[side]], info_row, base::list(
+      hyp_name <- base::sprintf("%s | %s", query_name, side)
+      side_results[[hyp_name]] <- appendHypeRProvenance(run$hyps[[side]], info_row, base::list(
         ranked_table = if (native) "" else ks_source,
         score_col = if (native) "" else score_col,
         split = "",
@@ -201,6 +212,21 @@ runFgseaQueries <- function(prepared, backgrounds, genesets, direction, power, s
   for (message in base::unique(fgsea_warnings)) {
     base::warning(base::paste0("fgsea: ", message), call. = FALSE)
   }
+
+  if (base::identical(fdr_scope, "run")) {
+    # pval = fdr = 1 here: this only pools and stamps `data$fdr`; the caller's
+    # pval/fdr cutoffs are applied later by finishHypeRRun().
+    side_results <- applyRunHypeRFdr(side_results, pval = 1, fdr = 1)
+  }
+
+  if (base::identical(direction, "both")) {
+    results <- side_results
+  } else {
+    keep <- base::endsWith(base::names(side_results), base::paste0(" | ", direction))
+    results <- side_results[keep]
+    base::names(results) <- base::sub(base::paste0(" \\| ", direction, "$"), "", base::names(results))
+  }
+
   base::names(results) <- disambiguateHypeRLabels(base::names(results))
   results
 }

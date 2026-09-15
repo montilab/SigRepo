@@ -55,7 +55,7 @@ categorical signature's groups are categories rather than directions, so when
 its signature table has scores each category is also split by score sign:
 \code{"<label> | <group> | up"} (score > 0) and \code{"... | down"}
 (score < 0); rows scoring exactly 0 join neither. Ignored by
-\code{"kstest"}. Defaults to \code{TRUE}.}
+\code{"kstest"} and \code{"fgsea"}. Defaults to \code{TRUE}.}
 
 \item{direction}{For \code{"kstest"} only: which end of the ranking to test.
 hypeR's KS test only finds genesets enriched toward the top of the ranking.
@@ -74,14 +74,15 @@ signatures. For \code{"fgsea"}, which tests both tails in one run,
 for \code{"fgsea"} when \code{direction} is not passed; it is allowed with
 \code{signature} input.}
 
-\item{ks_source}{For \code{"kstest"} only: the table to rank.
-\code{"difexp"} (default) ranks every measured gene. \code{"signature"}
+\item{ks_source}{For \code{"kstest"} and \code{"fgsea"} only: the table to
+rank. \code{"difexp"} (default) ranks every measured gene. \code{"signature"}
 ranks only the signature table, for signatures stored without a difexp; the
 KS test then compares genesets against the signature's genes rather than
 against everything measured, so its p-values answer a narrower question.}
 
-\item{score_col}{Column used to rank genes for \code{"kstest"}, in the table
-named by \code{ks_source}. Defaults to \code{"score"}.}
+\item{score_col}{Column used to rank genes for \code{"kstest"} and
+\code{"fgsea"}, in the table named by \code{ks_source}. Defaults to
+\code{"score"}.}
 
 \item{query_names}{\code{NULL} (default) for names built as
 \code{"<label> | <group_label>"}, \code{"<label> | <direction>"} or

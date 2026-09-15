@@ -179,7 +179,7 @@ checkHypeRSplit <- function(split) {
 #' @noRd
 checkHypeRKstestArgs <- function(test, direction, ks_source) {
   if (base::identical(test, "hypergeometric") && (!base::identical(direction, "up") || !base::identical(ks_source, "difexp"))) {
-    base::stop("\n'direction' and 'ks_source' only apply when test = \"kstest\".\n")
+    base::stop("\n'direction' and 'ks_source' only apply when test = \"kstest\" or \"fgsea\".\n")
   }
   base::invisible(NULL)
 }
@@ -774,7 +774,7 @@ getHypeRDifexp <- function(
 #' its signature table has scores each category is also split by score sign:
 #' \code{"<label> | <group> | up"} (score > 0) and \code{"... | down"}
 #' (score < 0); rows scoring exactly 0 join neither. Ignored by
-#' \code{"kstest"}. Defaults to \code{TRUE}.
+#' \code{"kstest"} and \code{"fgsea"}. Defaults to \code{TRUE}.
 #' @param direction For \code{"kstest"} only: which end of the ranking to test.
 #' hypeR's KS test only finds genesets enriched toward the top of the ranking.
 #' \code{"up"} (default) ranks by \code{score_col}, highest first;
@@ -791,13 +791,14 @@ getHypeRDifexp <- function(
 #' \code{"up"} (ES > 0), \code{"down"} (ES < 0) or \code{"both"}, the default
 #' for \code{"fgsea"} when \code{direction} is not passed; it is allowed with
 #' \code{signature} input.
-#' @param ks_source For \code{"kstest"} only: the table to rank.
-#' \code{"difexp"} (default) ranks every measured gene. \code{"signature"}
+#' @param ks_source For \code{"kstest"} and \code{"fgsea"} only: the table to
+#' rank. \code{"difexp"} (default) ranks every measured gene. \code{"signature"}
 #' ranks only the signature table, for signatures stored without a difexp; the
 #' KS test then compares genesets against the signature's genes rather than
 #' against everything measured, so its p-values answer a narrower question.
-#' @param score_col Column used to rank genes for \code{"kstest"}, in the table
-#' named by \code{ks_source}. Defaults to \code{"score"}.
+#' @param score_col Column used to rank genes for \code{"kstest"} and
+#' \code{"fgsea"}, in the table named by \code{ks_source}. Defaults to
+#' \code{"score"}.
 #' @param query_names \code{NULL} (default) for names built as
 #' \code{"<label> | <group_label>"}, \code{"<label> | <direction>"} or
 #' \code{"<label>"}, or a function that takes the query info data frame (the

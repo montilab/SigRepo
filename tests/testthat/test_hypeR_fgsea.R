@@ -92,6 +92,28 @@ test_that("runFgseaHyps reduces genesets to a gene-vector background and records
   expect_equal(sized$hyps$up$info[["Min Size"]], "6")
 })
 
+test_that("runFgseaHyps returns 0-row hyps instead of erroring when fgsea drops every pathway", {
+  testthat::skip_if_not_installed("fgsea")
+  testthat::skip_if_not_installed("hypeR")
+  run <- SigRepo:::runFgseaHyps(hyper_fgsea_stats(), hyper_fgsea_genesets(), 23467, "both", 1, 1, list(minSize = 50), TRUE)
+  cols <- c("label", "pval", "fdr", "lte", "es", "nes", "signature", "geneset", "overlap", "le", "hits")
+  expect_equal(names(run$hyps), c("up", "down"))
+  expect_equal(nrow(run$hyps$up$data), 0L)
+  expect_equal(nrow(run$hyps$down$data), 0L)
+  expect_equal(colnames(run$hyps$up$data), cols)
+  expect_equal(colnames(run$hyps$down$data), cols)
+  expect_equal(run$dropped, names(hyper_fgsea_genesets()))
+})
+
+test_that("runFgseaHyps keeps a 0-row hyp for the empty side rather than dropping it", {
+  testthat::skip_if_not_installed("fgsea")
+  testthat::skip_if_not_installed("hypeR")
+  gs <- hyper_fgsea_genesets()[c("TOP", "TOP_MIX")]
+  run <- SigRepo:::runFgseaHyps(hyper_fgsea_stats(), gs, 23467, "both", 1, 1, list(), TRUE)
+  expect_equal(nrow(run$hyps$down$data), 0L)
+  expect_equal(nrow(run$hyps$up$data), 2L)
+})
+
 test_that("runFgseaHyps hyps carry hypeR's info keys first, then fgsea's, and gsets in args", {
   testthat::skip_if_not_installed("fgsea")
   testthat::skip_if_not_installed("hypeR")
@@ -209,6 +231,42 @@ test_that("runHypeR fgsea pools FDR across sides and rankings by default and fil
   expect_equal(query_filtered$data[["b | down"]]$args$fdr, 0.001)
 })
 
+test_that("runHypeR fgsea returns 0-row hyps instead of erroring when fgsea drops every pathway", {
+  testthat::skip_if_not_installed("fgsea")
+  testthat::skip_if_not_installed("hypeR")
+  res <- SigRepo::runHypeR(omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(), test = "fgsea",
+                           fgsea_args = list(minSize = 50), verbose = FALSE)
+  expect_true(inherits(res, "multihyp"))
+  expect_true(all(vapply(res$data, function(h) nrow(h$data) == 0L, logical(1))))
+})
+
+test_that("runHypeR fgsea's default run-scope FDR does not depend on direction", {
+  testthat::skip_if_not_installed("fgsea")
+  testthat::skip_if_not_installed("hypeR")
+  sigs <- list(a = make_hyper_fgsea_sig("a"), b = make_hyper_fgsea_sig("b"))
+  gs <- hyper_fgsea_genesets()
+
+  both <- SigRepo::runHypeR(omic_signature = sigs, genesets = gs, test = "fgsea", verbose = FALSE)
+  up_only <- SigRepo::runHypeR(omic_signature = sigs, genesets = gs, test = "fgsea", direction = "up", verbose = FALSE)
+
+  expect_equal(names(up_only$data), c("a", "b"))
+  expect_identical(up_only$data[["a"]]$data$fdr, both$data[["a | up"]]$data$fdr)
+  expect_identical(up_only$data[["b"]]$data$fdr, both$data[["b | up"]]$data$fdr)
+})
+
+test_that("runHypeR fgsea single-signature direction = up FDR matches the both-sides pooled FDR", {
+  testthat::skip_if_not_installed("fgsea")
+  testthat::skip_if_not_installed("hypeR")
+  sig <- make_hyper_fgsea_sig()
+  gs <- hyper_fgsea_genesets()
+
+  both <- SigRepo::runHypeR(omic_signature = sig, genesets = gs, test = "fgsea", verbose = FALSE)
+  up_only <- SigRepo::runHypeR(omic_signature = sig, genesets = gs, test = "fgsea", direction = "up", verbose = FALSE)
+
+  expect_true(inherits(up_only, "hyp"))
+  expect_identical(up_only$data$fdr, both$data[["fg | up"]]$data$fdr)
+})
+
 test_that("runHypeR fgsea runs each category of a categorical signature", {
   testthat::skip_if_not_installed("fgsea")
   testthat::skip_if_not_installed("hypeR")
@@ -230,6 +288,7 @@ test_that("runHypeR fgsea rejects absolute, bad seeds and reserved fgsea_args, a
   }
   expect_error(run(fgsea_args = list(15)), "'fgsea_args' must be a named list", fixed = TRUE)
   expect_error(run(fgsea_args = list(gseaParam = 2, stats = 1)), "'fgsea_args' cannot set 'gseaParam', 'stats'", fixed = TRUE)
+  expect_error(run(fgsea_args = list(scoreType = "pos")), "'fgsea_args' cannot set 'scoreType'", fixed = TRUE)
   expect_warning(run(plotting = TRUE), "fgsea makes no per-geneset plots; plotting is ignored.", fixed = TRUE)
 })
 

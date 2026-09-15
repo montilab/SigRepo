@@ -88,7 +88,7 @@ categorical signature's groups are categories rather than directions, so when
 its signature table has scores each category is also split by score sign:
 \code{"<label> | <group> | up"} (score > 0) and \code{"... | down"}
 (score < 0); rows scoring exactly 0 join neither. Ignored by
-\code{"kstest"}. Defaults to \code{TRUE}.}
+\code{"kstest"} and \code{"fgsea"}. Defaults to \code{TRUE}.}
 
 \item{direction}{For \code{"kstest"} only: which end of the ranking to test.
 hypeR's KS test only finds genesets enriched toward the top of the ranking.
@@ -107,14 +107,15 @@ signatures. For \code{"fgsea"}, which tests both tails in one run,
 for \code{"fgsea"} when \code{direction} is not passed; it is allowed with
 \code{signature} input.}
 
-\item{ks_source}{For \code{"kstest"} only: the table to rank.
-\code{"difexp"} (default) ranks every measured gene. \code{"signature"}
+\item{ks_source}{For \code{"kstest"} and \code{"fgsea"} only: the table to
+rank. \code{"difexp"} (default) ranks every measured gene. \code{"signature"}
 ranks only the signature table, for signatures stored without a difexp; the
 KS test then compares genesets against the signature's genes rather than
 against everything measured, so its p-values answer a narrower question.}
 
-\item{score_col}{Column used to rank genes for \code{"kstest"}, in the table
-named by \code{ks_source}. Defaults to \code{"score"}.}
+\item{score_col}{Column used to rank genes for \code{"kstest"} and
+\code{"fgsea"}, in the table named by \code{ks_source}. Defaults to
+\code{"score"}.}
 
 \item{query_names}{\code{NULL} (default) for names built as
 \code{"<label> | <group_label>"}, \code{"<label> | <direction>"} or
@@ -134,7 +135,10 @@ across every query and geneset in the call, as BS831's
 within each query, as \code{hypeR::hypeR()} does for a named list. With one
 query both are the same. The pooled FDR is computed from hypeR's p-values,
 which are rounded to 2 significant digits. \code{pval} and \code{fdr} filter
-on the FDR of the chosen scope.}
+on the FDR of the chosen scope. For \code{test = "fgsea"}, \code{"run"}
+pools the up and down sides of every ranking in the call, regardless of
+\code{direction} (also with a single ranking); \code{"query"} keeps
+fgsea's own per-ranking \code{padj}, which already covers both sides.}
 
 \item{seed}{\code{test = "fgsea"} only: fgsea's p-values come from random
 sampling, so each ranking's run starts from \code{set.seed(seed)} and the
@@ -156,7 +160,11 @@ looks filtered is not a measured-gene universe, so the default also uses
 10,000 rows, a difexp has no more than twice its signature's rows, or every
 \code{p_value}, \code{pvalue} or \code{adj_p} is at most 0.05. For
 \code{test = "kstest"} the default is \code{23467}: the ranked list is the
-universe, so the background does not enter the test. Otherwise
+universe, so the background does not enter the test. \code{test = "fgsea"}
+defaults to \code{23467} as well and for the same reason (the ranking is
+the universe): a number has no effect on the fgsea result, while a gene
+vector or \code{"difexp"} still reduces the genesets to those genes (the
+\code{geneset} column) as hypeR does. Otherwise
 hypeR's background: a single number (population size), a
 character vector of background genes, or \code{"difexp"} to use each
 signature's measured genes from its difexp table. With an explicit
@@ -200,7 +208,9 @@ it as not fully implemented; \code{TRUE} is an error with
 are removed (they are most of the object's size). fgsea makes no plots, so
 \code{TRUE} with \code{test = "fgsea"} warns and is ignored.}
 
-\item{quiet}{Logical; suppress hypeR's logs. Defaults to \code{TRUE}.}
+\item{quiet}{Logical; suppress hypeR's logs. Defaults to \code{TRUE}. With
+\code{test = "fgsea"} this also suppresses fgsea's own console output
+(its progress bars).}
 
 \item{verbose}{Logical; print messages while fetching signatures.}
 }
