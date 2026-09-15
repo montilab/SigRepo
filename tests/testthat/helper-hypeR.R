@@ -145,3 +145,38 @@ hyper_complete_difexp_table <- function() {
   )
   rbind(hyper_difexp_table(), extra)
 }
+
+# ---- fgsea fixtures ----
+
+# 40 genes G01-G40 with distinct signed scores, highest first: G01-G20 score
+# 4.0 down to 0.2, G21-G40 score -0.1 down to -3.9 (no score is 0).
+hyper_fgsea_stats <- function() {
+  stats::setNames(c(seq(4, 0.2, by = -0.2), seq(-0.1, -3.9, by = -0.2)), sprintf("G%02d", 1:40))
+}
+
+# TOP/TOP_MIX sit at the top (ES > 0) and share 4 genes; BOTTOM/BOTTOM_MIX sit
+# at the bottom (ES < 0) and share 4 genes, so hyp_emap() has an edge on each
+# side. MIDDLE straddles the centre symmetrically, so fgsea gives it ES = 0.
+hyper_fgsea_genesets <- function() {
+  genes <- sprintf("G%02d", 1:40)
+  list(
+    TOP = genes[1:8],
+    TOP_MIX = c(genes[1:4], genes[9:12]),
+    BOTTOM = genes[33:40],
+    BOTTOM_MIX = c(genes[37:40], genes[29:32]),
+    MIDDLE = genes[17:24],
+    SPREAD = genes[c(2, 11, 20, 29, 38)]
+  )
+}
+
+# Bi-directional signature whose difexp ranks to hyper_fgsea_stats().
+make_hyper_fgsea_sig <- function(name = "fg") {
+  stats <- hyper_fgsea_stats()
+  difexp <- data.frame(
+    probe_id = paste0("p", 1:40), feature_name = paste0("f", 1:40), gene_symbol = names(stats),
+    score = unname(stats), p_value = 0.01, adj_p = 0.05,
+    group_label = factor(ifelse(stats > 0, "Up", "Down")), stringsAsFactors = FALSE
+  )
+  make_hyper_sig(name, signature = difexp[c(1:4, 37:40), c("probe_id", "feature_name", "score", "group_label", "gene_symbol")],
+                 difexp = difexp)
+}
