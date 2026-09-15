@@ -206,7 +206,8 @@ it as not fully implemented; \code{TRUE} is an error with
 \item{plotting}{Logical; generate hypeR's per-geneset plots. Defaults to
 \code{FALSE}, in which case the empty placeholder plots hypeR stores anyway
 are removed (they are most of the object's size). fgsea makes no plots, so
-\code{TRUE} with \code{test = "fgsea"} warns and is ignored.}
+\code{TRUE} with \code{test = "fgsea"} warns and is ignored. To plot one
+geneset without storing every plot, use \code{plotHypeREnrichment()}.}
 
 \item{quiet}{Logical; suppress hypeR's logs. Defaults to \code{TRUE}. With
 \code{test = "fgsea"} this also suppresses fgsea's own console output
@@ -259,7 +260,9 @@ warning; if no query is left, an error is raised.
 Builds hypeR query vectors from SigRepo signatures (see
 \code{prepareHypeRSignatures()}) and runs \code{hypeR::hypeR()} on them. The
 arguments after \code{query_names} are hypeR's own, with hypeR's defaults,
-and the result is hypeR's own object, so \code{hypeR::hyp_dots()},
+and the result is hypeR's own object. Plot it with \code{plotHypeRDots()},
+\code{plotHypeREnrichment()} and \code{plotHypeRMap()}; hypeR's own
+\code{hypeR::hyp_dots()},
 \code{hyp_emap()}, \code{hyp_to_rmd()}, \code{hyp_to_table()} and
 \code{rctbl_build()} work on it directly, and \code{hyp_hmap()} does when
 \code{genesets} is a \code{hypeR::rgsets}. \code{hyp_show()} takes a single

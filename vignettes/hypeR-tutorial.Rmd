@@ -117,10 +117,11 @@ background warns that the difexp looks filtered and uses 23467 instead: a
 trimmed difexp is not the set of genes the study measured. As in hypeR, `fdr`
 and `pval` default to `1`, so every geneset is kept; pass `fdr = 0.05` to
 filter. The FDR is adjusted across both arms together (`fdr_scope = "run"`). The result is a hypeR `multihyp` (one `hyp` per arm),
-so hypeR's functions work on it directly:
+which SigRepo's plotting functions (see "Plotting results") and hypeR's own
+functions accept:
 
 ```{r, fig.width = 7, fig.height = 5}
-hypeR::hyp_dots(hyp, merge = TRUE, top = 10, title = "LLFS aging, Hallmark")
+SigRepo::plotHypeRDots(hyp, top = 10, title = "LLFS aging, Hallmark")
 ```
 
 `hyp_show()` takes a single `hyp`, so pass one arm:
@@ -207,11 +208,47 @@ call reproducible without changing your session's random-number state; a
 different `seed` gives slightly different p-values, and `seed = NULL` uses the
 session's state. `fgsea_args` passes other `fgseaMultilevel()` options, e.g.
 `minSize = 15, maxSize = 500` to test only pathways of typical size. The
-results work with hypeR's functions:
+results can be coloured by NES:
 
 ```{r, fig.width = 7, fig.height = 5, eval = requireNamespace("hypeR", quietly = TRUE) && requireNamespace("msigdbr", quietly = TRUE) && requireNamespace("fgsea", quietly = TRUE)}
-hypeR::hyp_dots(gsea, merge = TRUE, top = 10, title = "LLFS aging, Hallmark GSEA")
+SigRepo::plotHypeRDots(gsea, color_by = "score", fdr = 0.25, title = "LLFS aging, Hallmark GSEA")
 ```
+
+## Plotting results
+
+SigRepo draws its figures from the result objects, so they work for any
+`runHypeR()` result without `plotting = TRUE`:
+
+- `plotHypeRDots()` gives one column per query and one row per geneset. Every
+  query shows the same `top` genesets (the best by FDR across all queries), and
+  a blank cell means the geneset did not pass the cutoffs for that query.
+  `color_by = "score"` shows NES (fgsea) or the enrichment score (kstest).
+- `plotHypeREnrichment()` draws one geneset: the running enrichment score with
+  its hits and leading edge for kstest and fgsea, or a Venn diagram of the query
+  and the geneset for hypergeometric results.
+- `plotHypeRMap()` draws hypeR's enrichment map (genesets linked by shared
+  genes). When nothing passes the cutoffs, or no pair of genesets reaches
+  `similarity_cutoff`, it returns `NULL` with a warning instead of an error.
+
+```{r, fig.width = 7, fig.height = 4.5, eval = requireNamespace("hypeR", quietly = TRUE) && requireNamespace("msigdbr", quietly = TRUE) && requireNamespace("fgsea", quietly = TRUE)}
+top_up <- gsea$data[["LLFS_Aging_Gene_2023 | up"]]$data$label[1]
+SigRepo::plotHypeREnrichment(gsea, top_up, query = "LLFS_Aging_Gene_2023 | up")
+```
+
+```{r, fig.width = 6, fig.height = 4.5}
+SigRepo::plotHypeREnrichment(hyp, hyp$data[[1]]$data$label[1], query = names(hyp$data)[1])
+```
+
+```{r}
+SigRepo::plotHypeRMap(hyp, query = names(hyp$data)[1], top = 20, similarity_cutoff = 0.1)
+```
+
+`hypeRDotData()` and `hypeREnrichmentData()` return the numbers behind the
+first two figures, for your own plots. hypeR's `hyp_dots()`, `hyp_emap()` and
+`hyp_to_rmd()` still work on these results, but in hypeR 2.0.0 a single-query
+`hyp_dots()` mislabels its significance axis under ggplot2 4, `merge = TRUE`
+fails on a one-query result, and `hyp_emap()` errors when no geneset pair
+reaches the similarity cutoff.
 
 ## Direction types
 

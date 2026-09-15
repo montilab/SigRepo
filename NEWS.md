@@ -61,6 +61,16 @@
 
 ## New
 
+- Plotting for `runHypeR()` results, drawn from the result objects:
+  `plotHypeRDots()` (one column per query with the same top genesets for every
+  query, a readable -log10 significance scale, one-query results supported, and
+  `color_by = "score"` for NES/score), `plotHypeREnrichment()` (running
+  enrichment score with the leading edge for kstest and fgsea, Venn diagram for
+  hypergeometric, for any geneset without `plotting = TRUE`) and
+  `plotHypeRMap()` (hypeR's enrichment/hierarchy maps, returning `NULL` with a
+  warning where hypeR would error). `hypeRDotData()` and
+  `hypeREnrichmentData()` return the underlying data. `ggplot2` is in Suggests.
+
 - `runHypeR(test = "fgsea")` runs GSEA with `fgsea::fgseaMultilevel()`, ported
   from hypeR's fgsea vignette wrapper. Unlike hypeR's kstest, whose p-values
   ignore the score weights and test only the top of the ranking, fgsea gives
