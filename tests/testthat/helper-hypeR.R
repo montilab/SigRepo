@@ -180,3 +180,19 @@ make_hyper_fgsea_sig <- function(name = "fg") {
   make_hyper_sig(name, signature = difexp[c(1:4, 37:40), c("probe_id", "feature_name", "score", "group_label", "gene_symbol")],
                  difexp = difexp)
 }
+
+# ---- plotting fixtures ----
+
+# A hypeR hyp built directly from a results table, for plot-data tests that
+# need exact p-values/FDRs. `extra` adds columns (e.g. nes, score); `info`
+# adds info keys on top of Test.
+make_dot_hyp <- function(labels, fdr, test = "hypergeometric", extra = list(), info = list()) {
+  data <- data.frame(
+    label = labels, pval = fdr / 2, fdr = fdr,
+    geneset = seq_along(labels) * 10L, overlap = seq_along(labels), stringsAsFactors = FALSE
+  )
+  for (column in names(extra)) {
+    data[[column]] <- extra[[column]]
+  }
+  hypeR::hyp$new(data = data, info = c(list(Test = test), info))
+}
