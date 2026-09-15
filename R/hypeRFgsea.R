@@ -133,3 +133,74 @@ runFgseaHyps <- function(stats, genesets, background, direction, power, seed, fg
 
   base::list(hyps = hyps, dropped = dropped, warnings = base::unique(warnings))
 }
+
+#' Error or warn on arguments test = "fgsea" cannot use
+#' @noRd
+checkHypeRFgseaArgs <- function(absolute, seed, fgsea_args, plotting) {
+  if (!base::requireNamespace("fgsea", quietly = TRUE)) {
+    base::stop("\nPackage 'fgsea' is required for test = \"fgsea\". Please install it first.\n")
+  }
+  if (base::isTRUE(absolute)) {
+    base::stop("\n'absolute' applies to test = \"kstest\" only.\n")
+  }
+  if (!base::is.null(seed) && !(base::is.numeric(seed) && base::length(seed) == 1L && base::is.finite(seed))) {
+    base::stop("\n'seed' must be NULL or a single number.\n")
+  }
+  arg_names <- base::names(fgsea_args)
+  if (!base::is.list(fgsea_args) ||
+      (base::length(fgsea_args) > 0 && (base::is.null(arg_names) || base::any(base::is.na(arg_names) | !base::nzchar(arg_names))))) {
+    base::stop("\n'fgsea_args' must be a named list of fgsea::fgseaMultilevel() arguments.\n")
+  }
+  reserved <- base::intersect(arg_names, c("stats", "pathways", "gseaParam"))
+  if (base::length(reserved) > 0) {
+    base::stop(base::sprintf(
+      "\n'fgsea_args' cannot set %s; runHypeR() supplies them (gseaParam comes from 'power').\n",
+      base::paste(base::sprintf("'%s'", reserved), collapse = ", ")
+    ))
+  }
+  if (base::isTRUE(plotting)) {
+    base::warning("fgsea makes no per-geneset plots; plotting is ignored.", call. = FALSE)
+  }
+  base::invisible(NULL)
+}
+
+#' Run fgsea on every prepared ranking and build named, provenance-tagged hyps
+#'
+#' @return Named list of hyp objects: "<query> | up" / "<query> | down" for
+#'   direction "both", "<query>" otherwise.
+#' @noRd
+runFgseaQueries <- function(prepared, backgrounds, genesets, direction, power, seed, fgsea_args, quiet,
+                            native, ks_source, score_col, fdr_scope) {
+  results <- base::list()
+  fgsea_warnings <- base::character()
+
+  for (i in base::seq_along(prepared$signatures)) {
+    query_name <- base::names(prepared$signatures)[i]
+    run <- runFgseaHyps(
+      stats = prepared$signatures[[i]], genesets = genesets, background = backgrounds$values[[i]],
+      direction = direction, power = power, seed = seed, fgsea_args = fgsea_args, quiet = quiet
+    )
+    fgsea_warnings <- c(fgsea_warnings, run$warnings)
+
+    for (side in base::names(run$hyps)) {
+      info_row <- prepared$info[i, , drop = FALSE]
+      info_row$direction <- side
+      hyp_name <- if (base::identical(direction, "both")) base::sprintf("%s | %s", query_name, side) else query_name
+      results[[hyp_name]] <- appendHypeRProvenance(run$hyps[[side]], info_row, base::list(
+        ranked_table = if (native) "" else ks_source,
+        score_col = if (native) "" else score_col,
+        split = "",
+        background_source = backgrounds$sources[i],
+        query_genes_removed = 0L,
+        genesets_dropped = run$dropped,
+        fdr_scope = fdr_scope
+      ))
+    }
+  }
+
+  for (message in base::unique(fgsea_warnings)) {
+    base::warning(base::paste0("fgsea: ", message), call. = FALSE)
+  }
+  base::names(results) <- disambiguateHypeRLabels(base::names(results))
+  results
+}

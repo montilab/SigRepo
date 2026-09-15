@@ -15,7 +15,7 @@ runHypeR(
   msigdb_collection = NULL,
   msigdb_subcollection = NULL,
   msigdb_clean = FALSE,
-  test = c("hypergeometric", "kstest"),
+  test = c("hypergeometric", "kstest", "fgsea"),
   split = TRUE,
   direction = c("up", "down", "both"),
   ks_source = c("difexp", "signature"),
@@ -23,6 +23,8 @@ runHypeR(
   query_names = NULL,
   min_query_genes = 4,
   fdr_scope = c("run", "query"),
+  seed = 1,
+  fgsea_args = base::list(),
   background = NULL,
   power = 1,
   absolute = FALSE,
@@ -72,8 +74,13 @@ named list of character vectors, a \code{hypeR::gsets} object, or a
 \code{hypeR::gsets$new(clean = TRUE)}. Defaults to \code{FALSE}.}
 
 \item{test}{\code{"hypergeometric"} (a character vector of symbols from the
-signature table) or \code{"kstest"} (a named numeric vector ranked by
-\code{score_col}, from the table named by \code{ks_source}).}
+signature table), \code{"kstest"} (a named numeric vector ranked by
+\code{score_col}, from the table named by \code{ks_source}) or
+\code{"fgsea"} (the same ranking as \code{"kstest"} with
+\code{direction = "up"}; one ranking per signature, or per category for a
+categorical signature, and \code{info$direction} holds the requested
+direction). With \code{"fgsea"}, \code{signature} input must be named numeric
+vectors.}
 
 \item{split}{Logical; for \code{"hypergeometric"}, build one vector per
 \code{group_label} (e.g. one per arm of a bi-directional signature). A
@@ -94,7 +101,11 @@ category's rows (\code{"<label> | <group>"}, plus \code{" | up"} /
 \code{" | down"} with \code{"both"}). A ranking needs a signed score: one
 whose scores are all equal (\code{constant_score}) or all one sign
 (\code{unsigned_score}) is skipped, per category for categorical
-signatures.}
+signatures. For \code{"fgsea"}, which tests both tails in one run,
+\code{direction} chooses which result sides \code{runHypeR()} returns:
+\code{"up"} (ES > 0), \code{"down"} (ES < 0) or \code{"both"}, the default
+for \code{"fgsea"} when \code{direction} is not passed; it is allowed with
+\code{signature} input.}
 
 \item{ks_source}{For \code{"kstest"} only: the table to rank.
 \code{"difexp"} (default) ranks every measured gene. \code{"signature"}
@@ -125,6 +136,18 @@ query both are the same. The pooled FDR is computed from hypeR's p-values,
 which are rounded to 2 significant digits. \code{pval} and \code{fdr} filter
 on the FDR of the chosen scope.}
 
+\item{seed}{\code{test = "fgsea"} only: fgsea's p-values come from random
+sampling, so each ranking's run starts from \code{set.seed(seed)} and the
+caller's random-number state is restored afterwards. Defaults to \code{1};
+\code{NULL} uses the session's random-number state. Recorded as \code{Seed}
+in \code{info}.}
+
+\item{fgsea_args}{\code{test = "fgsea"} only: a named list of
+\code{fgsea::fgseaMultilevel()} arguments merged over the defaults
+\code{sampleSize = 101, minSize = 1, maxSize = Inf}, e.g.
+\code{list(minSize = 15, maxSize = 500, nproc = 4)}. \code{stats},
+\code{pathways} and \code{gseaParam} (set by \code{power}) cannot be given.}
+
 \item{background}{\code{NULL} (default) uses each signature's measured genes
 from its difexp table when it has difexp gene symbols, and \code{23467}
 otherwise (always \code{23467} for \code{signature} input). A difexp that
@@ -149,7 +172,8 @@ genes, with a warning naming each query that lost genes: hypeR reduces only
 the genesets, and query genes outside the background would distort the
 p-values. Anything else (e.g. \code{"Difexp"}) is an error.}
 
-\item{power}{Exponent for the kstest score weights (kstest only). It changes
+\item{power}{Exponent for the score weights: fgsea's \code{gseaParam} with
+\code{test = "fgsea"}, where it does change the p-values. For kstest it changes
 only the enrichment \code{score}. \code{1} (default) weights hits by
 |score|. \code{0} runs hypeR's ranked (unweighted) signature: the query is
 passed as gene names in rank order, so \code{score} and
@@ -164,7 +188,8 @@ which also removes them from the FDR adjustment. They are listed in the
 result's \code{info} (see Value).}
 
 \item{absolute}{Passed to \code{hypeR::hypeR()} (kstest only). hypeR marks
-it as not fully implemented. Defaults to \code{FALSE}.}
+it as not fully implemented; \code{TRUE} is an error with
+\code{test = "fgsea"}. Defaults to \code{FALSE}.}
 
 \item{pval}{Keep results with p-value at or below this. Defaults to \code{1}.}
 
@@ -172,7 +197,8 @@ it as not fully implemented. Defaults to \code{FALSE}.}
 
 \item{plotting}{Logical; generate hypeR's per-geneset plots. Defaults to
 \code{FALSE}, in which case the empty placeholder plots hypeR stores anyway
-are removed (they are most of the object's size).}
+are removed (they are most of the object's size). fgsea makes no plots, so
+\code{TRUE} with \code{test = "fgsea"} warns and is ignored.}
 
 \item{quiet}{Logical; suppress hypeR's logs. Defaults to \code{TRUE}.}
 
@@ -182,10 +208,25 @@ are removed (they are most of the object's size).}
 A \code{hyp} when the input is a single vector in \code{signature},
 or a single signature (one \code{OmicSignature}, or one id or name) and the
 test builds one query by construction (\code{split = FALSE}, or
-\code{test = "kstest"} with \code{direction} \code{"up"} or \code{"down"}
-on a signature that is not categorical). Otherwise a \code{multihyp} named
+\code{test = "kstest"} or \code{"fgsea"} with \code{direction} \code{"up"}
+or \code{"down"} on a signature that is not categorical; a single
+\code{signature} vector gives a \code{multihyp} only for fgsea with
+\code{"both"}). Otherwise a \code{multihyp} named
 by query, even when only one query is left. This mirrors hypeR, where a
 vector gives a \code{hyp} and a named list a \code{multihyp}.
+
+With \code{test = "fgsea"}, each ranking runs
+\code{fgsea::fgseaMultilevel()} once, and its pathways are split by the sign
+of their enrichment score into \code{"<query> | up"} (ES > 0) and
+\code{"<query> | down"} (ES < 0) hyps (just \code{"<query>"} for
+\code{direction} \code{"up"} or \code{"down"}); pathways with ES = 0 join
+neither. Their \code{data} has \code{label}, \code{pval}, \code{fdr},
+\code{lte} (log2err), \code{es}, \code{nes}, \code{signature},
+\code{geneset}, \code{overlap}, \code{le} and \code{hits} (the leading
+edge), and \code{info} adds \code{fgsea}, \code{Sample Size},
+\code{Min Size}, \code{Max Size}, \code{Seed} and \code{fgsea Args}
+before the SigRepo keys. fgsea's own FDR covers every pathway of the
+ranking, both sides.
 
 Each \code{hyp$info} ends with these keys, in this order (\code{""} when a
 key does not apply): \code{SigRepo Signature ID},

@@ -539,6 +539,20 @@ warnSkippedHypeRSignatures <- function(skipped) {
   )
 }
 
+#' Apply pval/fdr cutoffs to hyp results and record them in args and info
+#' @noRd
+filterHypeRResults <- function(results, pval, fdr) {
+  for (k in base::seq_along(results)) {
+    data <- results[[k]]$data
+    results[[k]]$data <- data[data$pval <= pval & data$fdr <= fdr, , drop = FALSE]
+    results[[k]]$args$pval <- pval
+    results[[k]]$args$fdr <- fdr
+    results[[k]]$info[["P-Value"]] <- base::as.character(pval)
+    results[[k]]$info[["FDR"]] <- base::as.character(fdr)
+  }
+  results
+}
+
 #' FDR across every query of a run, then hypeR's pval/fdr filters
 #'
 #' BS831's hyperEnrichment() (mht = TRUE) adjusts p-values across all
@@ -559,15 +573,35 @@ applyRunHypeRFdr <- function(results, pval, fdr) {
       }
     }
   }
-  for (k in base::seq_along(results)) {
-    data <- results[[k]]$data
-    results[[k]]$data <- data[data$pval <= pval & data$fdr <= fdr, , drop = FALSE]
-    results[[k]]$args$pval <- pval
-    results[[k]]$args$fdr <- fdr
-    results[[k]]$info[["P-Value"]] <- base::as.character(pval)
-    results[[k]]$info[["FDR"]] <- base::as.character(fdr)
+  filterHypeRResults(results, pval, fdr)
+}
+
+#' FDR scope, filters and return type shared by every test in runHypeR()
+#'
+#' @param results Named list of hyp objects, one per query (or fgsea side).
+#' @return A hyp when the input is single and the call yields one hyp by
+#'   construction, otherwise a multihyp.
+#' @noRd
+finishHypeRRun <- function(results, fdr_scope, pval, fdr, test, direction, split, inputs, native) {
+  if (fdr_scope == "run") {
+    results <- applyRunHypeRFdr(results, pval = pval, fdr = fdr)
+  } else if (base::identical(test, "fgsea")) {
+    # hypeR filtered its own results already; fgsea results are unfiltered.
+    results <- filterHypeRResults(results, pval = pval, fdr = fdr)
   }
-  results
+
+  categorical <- !native && base::length(inputs$signatures) == 1L && isCategoricalHypeRSignature(inputs$signatures[[1]])
+  one_by_construction <- if (native) {
+    !(base::identical(test, "fgsea") && base::identical(direction, "both"))
+  } else if (test %in% c("kstest", "fgsea")) {
+    !base::identical(direction, "both") && !categorical
+  } else {
+    !split
+  }
+  if (inputs$single && one_by_construction) {
+    return(results[[1]])
+  }
+  hypeR::multihyp$new(data = results)
 }
 
 #' Run hypeR enrichment on SigRepo signatures
@@ -591,6 +625,16 @@ applyRunHypeRFdr <- function(results, pval, fdr) {
 #'
 #' @inheritParams prepareHypeRSignatures
 #' @inheritParams getHypeRGenesets
+#' @param seed \code{test = "fgsea"} only: fgsea's p-values come from random
+#' sampling, so each ranking's run starts from \code{set.seed(seed)} and the
+#' caller's random-number state is restored afterwards. Defaults to \code{1};
+#' \code{NULL} uses the session's random-number state. Recorded as \code{Seed}
+#' in \code{info}.
+#' @param fgsea_args \code{test = "fgsea"} only: a named list of
+#' \code{fgsea::fgseaMultilevel()} arguments merged over the defaults
+#' \code{sampleSize = 101, minSize = 1, maxSize = Inf}, e.g.
+#' \code{list(minSize = 15, maxSize = 500, nproc = 4)}. \code{stats},
+#' \code{pathways} and \code{gseaParam} (set by \code{power}) cannot be given.
 #' @param min_query_genes Hypergeometric only: skip, with a warning, a query
 #' with fewer than this many genes found in the genesets. Defaults to \code{4},
 #' the \code{min.drawsize} of BS831's \code{hyperEnrichment()}.
@@ -624,7 +668,8 @@ applyRunHypeRFdr <- function(results, pval, fdr) {
 #' genes, with a warning naming each query that lost genes: hypeR reduces only
 #' the genesets, and query genes outside the background would distort the
 #' p-values. Anything else (e.g. \code{"Difexp"}) is an error.
-#' @param power Exponent for the kstest score weights (kstest only). It changes
+#' @param power Exponent for the score weights: fgsea's \code{gseaParam} with
+#' \code{test = "fgsea"}, where it does change the p-values. For kstest it changes
 #' only the enrichment \code{score}. \code{1} (default) weights hits by
 #' |score|. \code{0} runs hypeR's ranked (unweighted) signature: the query is
 #' passed as gene names in rank order, so \code{score} and
@@ -638,21 +683,38 @@ applyRunHypeRFdr <- function(results, pval, fdr) {
 #' which also removes them from the FDR adjustment. They are listed in the
 #' result's \code{info} (see Value).
 #' @param absolute Passed to \code{hypeR::hypeR()} (kstest only). hypeR marks
-#' it as not fully implemented. Defaults to \code{FALSE}.
+#' it as not fully implemented; \code{TRUE} is an error with
+#' \code{test = "fgsea"}. Defaults to \code{FALSE}.
 #' @param pval Keep results with p-value at or below this. Defaults to \code{1}.
 #' @param fdr Keep results with FDR at or below this. Defaults to \code{1}.
 #' @param plotting Logical; generate hypeR's per-geneset plots. Defaults to
 #' \code{FALSE}, in which case the empty placeholder plots hypeR stores anyway
-#' are removed (they are most of the object's size).
+#' are removed (they are most of the object's size). fgsea makes no plots, so
+#' \code{TRUE} with \code{test = "fgsea"} warns and is ignored.
 #' @param quiet Logical; suppress hypeR's logs. Defaults to \code{TRUE}.
 #'
 #' @return A \code{hyp} when the input is a single vector in \code{signature},
 #' or a single signature (one \code{OmicSignature}, or one id or name) and the
 #' test builds one query by construction (\code{split = FALSE}, or
-#' \code{test = "kstest"} with \code{direction} \code{"up"} or \code{"down"}
-#' on a signature that is not categorical). Otherwise a \code{multihyp} named
+#' \code{test = "kstest"} or \code{"fgsea"} with \code{direction} \code{"up"}
+#' or \code{"down"} on a signature that is not categorical; a single
+#' \code{signature} vector gives a \code{multihyp} only for fgsea with
+#' \code{"both"}). Otherwise a \code{multihyp} named
 #' by query, even when only one query is left. This mirrors hypeR, where a
 #' vector gives a \code{hyp} and a named list a \code{multihyp}.
+#'
+#' With \code{test = "fgsea"}, each ranking runs
+#' \code{fgsea::fgseaMultilevel()} once, and its pathways are split by the sign
+#' of their enrichment score into \code{"<query> | up"} (ES > 0) and
+#' \code{"<query> | down"} (ES < 0) hyps (just \code{"<query>"} for
+#' \code{direction} \code{"up"} or \code{"down"}); pathways with ES = 0 join
+#' neither. Their \code{data} has \code{label}, \code{pval}, \code{fdr},
+#' \code{lte} (log2err), \code{es}, \code{nes}, \code{signature},
+#' \code{geneset}, \code{overlap}, \code{le} and \code{hits} (the leading
+#' edge), and \code{info} adds \code{fgsea}, \code{Sample Size},
+#' \code{Min Size}, \code{Max Size}, \code{Seed} and \code{fgsea Args}
+#' before the SigRepo keys. fgsea's own FDR covers every pathway of the
+#' ranking, both sides.
 #'
 #' Each \code{hyp$info} ends with these keys, in this order (\code{""} when a
 #' key does not apply): \code{SigRepo Signature ID},
@@ -704,7 +766,7 @@ runHypeR <- function(
     msigdb_collection = NULL,
     msigdb_subcollection = NULL,
     msigdb_clean = FALSE,
-    test = c("hypergeometric", "kstest"),
+    test = c("hypergeometric", "kstest", "fgsea"),
     split = TRUE,
     direction = c("up", "down", "both"),
     ks_source = c("difexp", "signature"),
@@ -712,6 +774,8 @@ runHypeR <- function(
     query_names = NULL,
     min_query_genes = 4,
     fdr_scope = c("run", "query"),
+    seed = 1,
+    fgsea_args = base::list(),
     background = NULL,
     power = 1,
     absolute = FALSE,
@@ -725,10 +789,14 @@ runHypeR <- function(
     base::stop("\nPackage 'hypeR' is required for runHypeR(). Please install it first.\n")
   }
 
+  direction_missing <- base::missing(direction)
   test <- base::match.arg(test)
-  direction <- base::match.arg(direction)
+  direction <- if (base::identical(test, "fgsea") && direction_missing) "both" else base::match.arg(direction)
   ks_source <- base::match.arg(ks_source)
   fdr_scope <- base::match.arg(fdr_scope)
+  if (base::identical(test, "fgsea")) {
+    checkHypeRFgseaArgs(absolute = absolute, seed = seed, fgsea_args = fgsea_args, plotting = plotting)
+  }
   checkHypeRBackground(background)
   checkHypeRSplit(split)
   checkHypeRKstestArgs(test, direction, ks_source)
@@ -770,10 +838,20 @@ runHypeR <- function(
 
   # The default difexp universe matters for the hypergeometric test only; a
   # ranked test's universe is its ranked list, so it keeps hypeR's number.
-  if (base::is.null(background) && base::identical(test, "kstest")) {
+  if (base::is.null(background) && test %in% c("kstest", "fgsea")) {
     background <- HYPER_DEFAULT_BACKGROUND
   }
   backgrounds <- resolveQueryBackgrounds(background, prepared$info, inputs, resolve_symbols)
+
+  if (base::identical(test, "fgsea")) {
+    results <- runFgseaQueries(
+      prepared = prepared, backgrounds = backgrounds, genesets = resolved_genesets, direction = direction,
+      power = power, seed = seed, fgsea_args = fgsea_args, quiet = quiet, native = collected$native,
+      ks_source = ks_source, score_col = score_col, fdr_scope = fdr_scope
+    )
+    return(finishHypeRRun(results, fdr_scope, pval, fdr, test, direction, split, inputs, collected$native))
+  }
+
   queries <- prepared$signatures
   query_names_out <- base::names(queries)
 
@@ -912,18 +990,7 @@ runHypeR <- function(
   })
   base::names(results) <- query_names_out[run_idx]
 
-  if (fdr_scope == "run") {
-    results <- applyRunHypeRFdr(results, pval = pval, fdr = fdr)
-  }
-
-  categorical <- !collected$native && base::length(inputs$signatures) == 1L && isCategoricalHypeRSignature(inputs$signatures[[1]])
-  one_query_by_construction <- collected$native ||
-    (if (is_kstest) !base::identical(direction, "both") && !categorical else !split)
-  if (inputs$single && one_query_by_construction) {
-    return(results[[1]])
-  }
-
-  hypeR::multihyp$new(data = results)
+  finishHypeRRun(results, fdr_scope, pval, fdr, test, direction, split, inputs, collected$native)
 }
 
 #' Excel-safe, case-insensitively unique sheet names

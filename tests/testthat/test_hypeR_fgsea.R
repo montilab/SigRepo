@@ -142,3 +142,130 @@ test_that("fgsea native input must be named numeric; direction is allowed, ks_so
     "'direction' and 'ks_source' apply to SigRepo signatures", fixed = TRUE
   )
 })
+
+# ---- runHypeR(test = "fgsea") ----
+
+test_that("runHypeR fgsea defaults to both sides and matches runFgseaHyps with provenance appended", {
+  testthat::skip_if_not_installed("fgsea")
+  testthat::skip_if_not_installed("hypeR")
+  sig <- make_hyper_fgsea_sig()
+  ranking <- SigRepo::prepareHypeRSignatures(omic_signature = sig, test = "fgsea", verbose = FALSE)$signatures[[1]]
+
+  res <- SigRepo::runHypeR(omic_signature = sig, genesets = hyper_fgsea_genesets(), test = "fgsea",
+                           fdr_scope = "query", verbose = FALSE)
+  engine <- SigRepo:::runFgseaHyps(ranking, hyper_fgsea_genesets(), 23467, "both", 1, 1, list(), TRUE)
+
+  expect_true(inherits(res, "multihyp"))
+  expect_equal(names(res$data), c("fg | up", "fg | down"))
+  expect_equal(res$data[["fg | up"]]$data, engine$hyps$up$data)
+  expect_equal(res$data[["fg | down"]]$data, engine$hyps$down$data)
+
+  info <- res$data[["fg | down"]]$info
+  expect_equal(utils::tail(names(info), length(SigRepo:::HYPER_PROVENANCE_KEYS)), SigRepo:::HYPER_PROVENANCE_KEYS)
+  expect_equal(
+    unlist(info[c("Test", "SigRepo Direction", "SigRepo Ranked Table", "SigRepo Score Column", "SigRepo Split",
+                  "SigRepo Background Source", "SigRepo FDR Scope")], use.names = FALSE),
+    c("fgsea", "down", "difexp", "score", "", "number", "query")
+  )
+})
+
+test_that("runHypeR fgsea returns a hyp for a single signature and one side", {
+  testthat::skip_if_not_installed("fgsea")
+  testthat::skip_if_not_installed("hypeR")
+  up <- SigRepo::runHypeR(omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(), test = "fgsea",
+                          direction = "up", verbose = FALSE)
+  expect_true(inherits(up, "hyp"))
+  expect_true(all(up$data$es > 0))
+
+  native <- SigRepo::runHypeR(signature = hyper_fgsea_stats(), genesets = hyper_fgsea_genesets(), test = "fgsea", verbose = FALSE)
+  expect_true(inherits(native, "multihyp"))
+  expect_equal(names(native$data), c("signature | up", "signature | down"))
+  expect_equal(native$data[[1]]$info[["SigRepo Ranked Table"]], "")
+})
+
+test_that("runHypeR fgsea pools FDR across sides and rankings by default and filters on it", {
+  testthat::skip_if_not_installed("fgsea")
+  testthat::skip_if_not_installed("hypeR")
+  sigs <- list(a = make_hyper_fgsea_sig("a"), b = make_hyper_fgsea_sig("b"))
+  gs <- hyper_fgsea_genesets()
+
+  per_query <- SigRepo::runHypeR(omic_signature = sigs, genesets = gs, test = "fgsea", fdr_scope = "query", verbose = FALSE)
+  pooled <- SigRepo::runHypeR(omic_signature = sigs, genesets = gs, test = "fgsea", verbose = FALSE)
+
+  all_p <- unlist(lapply(per_query$data, function(h) h$data$pval), use.names = FALSE)
+  expect_equal(unlist(lapply(pooled$data, function(h) h$data$fdr), use.names = FALSE), signif(p.adjust(all_p, method = "fdr"), 2))
+  expect_equal(pooled$data[["a | up"]]$info[["SigRepo FDR Scope"]], "run")
+
+  filtered <- SigRepo::runHypeR(omic_signature = sigs, genesets = gs, test = "fgsea", fdr = 0.001, verbose = FALSE)
+  for (nm in names(pooled$data)) {
+    keep <- pooled$data[[nm]]$data$fdr <= 0.001
+    expect_equal(filtered$data[[nm]]$data, pooled$data[[nm]]$data[keep, , drop = FALSE])
+    expect_equal(filtered$data[[nm]]$info$FDR, "0.001")
+  }
+
+  query_filtered <- SigRepo::runHypeR(omic_signature = sigs, genesets = gs, test = "fgsea", fdr_scope = "query",
+                                      fdr = 0.001, verbose = FALSE)
+  expect_true(all(query_filtered$data[["b | down"]]$data$fdr <= 0.001))
+  expect_equal(query_filtered$data[["b | down"]]$args$fdr, 0.001)
+})
+
+test_that("runHypeR fgsea runs each category of a categorical signature", {
+  testthat::skip_if_not_installed("fgsea")
+  testthat::skip_if_not_installed("hypeR")
+  gs <- list(S1 = c("A", "C"), S2 = c("B", "D"), S3 = c("E", "F"))
+  res <- suppressWarnings(SigRepo::runHypeR(omic_signature = make_hyper_categorical_sig(), genesets = gs, test = "fgsea", verbose = FALSE))
+  expect_equal(names(res$data), c("cat | red | up", "cat | red | down", "cat | white | up", "cat | white | down"))
+  expect_equal(res$data[["cat | white | down"]]$info[["Group Label"]], "white")
+})
+
+test_that("runHypeR fgsea rejects absolute, bad seeds and reserved fgsea_args, and warns on plotting", {
+  testthat::skip_if_not_installed("fgsea")
+  testthat::skip_if_not_installed("hypeR")
+  run <- function(...) SigRepo::runHypeR(omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(),
+                                         test = "fgsea", verbose = FALSE, ...)
+
+  expect_error(run(absolute = TRUE), "'absolute' applies to test = \"kstest\" only", fixed = TRUE)
+  for (bad in list("1", c(1, 2), NA_real_, Inf)) {
+    expect_error(run(seed = bad), "'seed' must be NULL or a single number", fixed = TRUE)
+  }
+  expect_error(run(fgsea_args = list(15)), "'fgsea_args' must be a named list", fixed = TRUE)
+  expect_error(run(fgsea_args = list(gseaParam = 2, stats = 1)), "'fgsea_args' cannot set 'gseaParam', 'stats'", fixed = TRUE)
+  expect_warning(run(plotting = TRUE), "fgsea makes no per-geneset plots; plotting is ignored.", fixed = TRUE)
+})
+
+test_that("runHypeR fgsea re-emits fgsea's warnings once with an fgsea: prefix", {
+  testthat::skip_if_not_installed("fgsea")
+  testthat::skip_if_not_installed("hypeR")
+  tied <- hyper_fgsea_stats()
+  tied[1:10] <- 2
+  warnings <- testthat::capture_warnings(
+    SigRepo::runHypeR(signature = list(x = tied, y = tied), genesets = hyper_fgsea_genesets(), test = "fgsea", verbose = FALSE)
+  )
+  ties <- grep("^fgsea: There are ties in the preranked stats", warnings, value = TRUE)
+  expect_length(ties, 1L)
+})
+
+test_that("runHypeR fgsea results work with hypeR's tooling and hypeRToExcel()", {
+  testthat::skip_if_not_installed("fgsea")
+  testthat::skip_if_not_installed("hypeR")
+  testthat::skip_if_not_installed("reactable")
+  testthat::skip_if_not_installed("visNetwork")
+  testthat::skip_if_not_installed("openxlsx")
+  res <- SigRepo::runHypeR(omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(), test = "fgsea", verbose = FALSE)
+
+  expect_no_error(hypeR::hyp_dots(res, merge = TRUE))
+  expect_true(inherits(hypeR::rctbl_build(res), "shiny.tag"))
+  expect_no_error(hypeR::hyp_emap(res))
+  xlsx <- tempfile(fileext = ".xlsx")
+  on.exit(unlink(xlsx), add = TRUE)
+  index <- SigRepo::hypeRToExcel(res, file_path = xlsx)
+  expect_equal(openxlsx::getSheetNames(xlsx), c("index", "fg | up", "fg | down", "versioning"))
+  expect_equal(index$direction, c("up", "down"))
+
+  testthat::skip_if_not_installed("rmarkdown")
+  testthat::skip_if_not(rmarkdown::pandoc_available())
+  html <- tempfile(fileext = ".html")
+  on.exit(unlink(html), add = TRUE)
+  utils::capture.output(hypeR::hyp_to_rmd(res, file_path = html, title = "fgsea"))
+  expect_true(file.exists(html))
+})

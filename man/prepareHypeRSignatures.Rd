@@ -10,7 +10,7 @@ prepareHypeRSignatures(
   signature_name = NULL,
   omic_signature = NULL,
   signature = NULL,
-  test = c("hypergeometric", "kstest"),
+  test = c("hypergeometric", "kstest", "fgsea"),
   split = TRUE,
   direction = c("up", "down", "both"),
   ks_source = c("difexp", "signature"),
@@ -41,8 +41,13 @@ stay at their defaults. Use \code{getHypeRDifexp()} to build a gene list from
 a signature's difexp with your own cutoffs.}
 
 \item{test}{\code{"hypergeometric"} (a character vector of symbols from the
-signature table) or \code{"kstest"} (a named numeric vector ranked by
-\code{score_col}, from the table named by \code{ks_source}).}
+signature table), \code{"kstest"} (a named numeric vector ranked by
+\code{score_col}, from the table named by \code{ks_source}) or
+\code{"fgsea"} (the same ranking as \code{"kstest"} with
+\code{direction = "up"}; one ranking per signature, or per category for a
+categorical signature, and \code{info$direction} holds the requested
+direction). With \code{"fgsea"}, \code{signature} input must be named numeric
+vectors.}
 
 \item{split}{Logical; for \code{"hypergeometric"}, build one vector per
 \code{group_label} (e.g. one per arm of a bi-directional signature). A
@@ -63,7 +68,11 @@ category's rows (\code{"<label> | <group>"}, plus \code{" | up"} /
 \code{" | down"} with \code{"both"}). A ranking needs a signed score: one
 whose scores are all equal (\code{constant_score}) or all one sign
 (\code{unsigned_score}) is skipped, per category for categorical
-signatures.}
+signatures. For \code{"fgsea"}, which tests both tails in one run,
+\code{direction} chooses which result sides \code{runHypeR()} returns:
+\code{"up"} (ES > 0), \code{"down"} (ES < 0) or \code{"both"}, the default
+for \code{"fgsea"} when \code{direction} is not passed; it is allowed with
+\code{signature} input.}
 
 \item{ks_source}{For \code{"kstest"} only: the table to rank.
 \code{"difexp"} (default) ranks every measured gene. \code{"signature"}
