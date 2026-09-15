@@ -16,7 +16,7 @@
   `Symbol Source`, `SigRepo Direction`, `SigRepo Ranked Table`,
   `SigRepo Score Column`, `SigRepo Split`, `SigRepo Background Source`,
   `SigRepo Features Unmapped`, `SigRepo Query Genes Removed`,
-  `SigRepo Genesets Dropped`, `SigRepo Genesets Dropped List`.
+  `SigRepo Genesets Dropped`, `SigRepo Genesets Dropped List`, `SigRepo FDR Scope`.
 - `method` is now `test = c("hypergeometric", "kstest")`. The `"hypergeo"`,
   `"ks"` and `"gsea"` aliases are gone; use `test = "kstest"` for a ranked test.
   `power` changes only the kstest `score`: `1`, the default, weights hits by
@@ -25,8 +25,21 @@
   come from hypeR's unweighted, one-sided KS test and do not depend on `power`
   or `absolute`; it finds genesets enriched toward the top of the ranking, and
   `direction` chooses which end that is.
-- Defaults match `hypeR::hypeR()`: `fdr = 1` (was 0.05), `pval = 1` (new),
-  `background = 23467`. `background = "difexp"` uses each signature's measured genes.
+- `fdr = 1` (was 0.05) and `pval = 1` (new) match `hypeR::hypeR()`.
+- Hypergeometric runs follow the BS831 `hyperEnrichment()` conventions
+  (montilab.github.io/BS831), which differ from plain hypeR:
+  - `background = NULL` (the default) uses each signature's measured genes from
+    its difexp, "the number of annotated genes in the dataset". It uses 23467
+    instead when there is no difexp (silently) or when the difexp looks filtered
+    (with a warning): a transcriptomics difexp under 10,000 rows, a difexp no
+    more than twice its signature, or every `p_value`/`pvalue`/`adj_p` at most
+    0.05. kstest keeps 23467, since the ranked list is its universe. Pass
+    `background = 23467` for hypeR's behaviour or `"difexp"` to force the difexp.
+  - `min_query_genes = 4` skips, with a warning, a query with fewer than 4 genes
+    found in the genesets (`min.drawsize`).
+  - `fdr_scope = "run"` adjusts p-values across every query and geneset in the
+    call (`mht = TRUE`); `fdr_scope = "query"` adjusts within each query, as
+    hypeR does. `pval`/`fdr` filter on the chosen FDR.
   With a gene-vector or `"difexp"` background, a hypergeometric query is first
   reduced to the background genes (hypeR reduces only the genesets), with a
   warning, so a gene-vector background can give different p-values than a
@@ -35,7 +48,13 @@
   (and optional `msigdb_species`, `msigdb_subcollection`), or your own named
   list / `hypeR::gsets` / `hypeR::rgsets`. `msigdb_*` without `"msigdb"` is an error.
 - `split_by_group` is now `split` and defaults to `TRUE` (one hypergeometric
-  vector per `group_label`). `split_by_direction`, `feature_col` and `...` are removed.
+  vector per `group_label`). Categorical signatures with scores are split by
+  category and score sign (`"<label> | <group> | up"`/`"| down"`), and kstest
+  ranks each category's own difexp rows; a single categorical signature
+  therefore returns a `multihyp` for kstest.
+- kstest skips a ranking whose scores are all equal (`constant_score`) or all
+  one sign (`unsigned_score`), per category for categorical signatures: such a
+  ranking cannot say which class a geneset is enriched in. `split_by_direction`, `feature_col` and `...` are removed.
 - `prepareHypeRSignatures()` returns `list(signatures, info, skipped)`.
 - Signatures that cannot produce a query are skipped with a warning instead of
   aborting the run.
