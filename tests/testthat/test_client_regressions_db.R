@@ -4,7 +4,7 @@
 # stack via SIGREPO_TEST_*), never production.
 
 skip_unless_test_database <- function(){
-  test_conn <- SigRepo::test_conn_handler
+  test_conn <- test_database_conn()
   testthat::skip_if(
     test_conn$host %in% c("sigrepo.org", "142.93.67.157"),
     "refusing to run database tests against production at sigrepo.org / 142.93.67.157"

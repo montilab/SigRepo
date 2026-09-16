@@ -2,7 +2,7 @@
 # searchSampleTypes
 
 test_that("searchSampleType returns a data frame", {
-  test_conn <- SigRepo::test_conn_handler
+  test_conn <- test_database_conn()
   
   sample_type_table <- SigRepo::searchSampleType(
     conn_handler = test_conn
@@ -12,7 +12,7 @@ test_that("searchSampleType returns a data frame", {
 })
 
 test_that("searchSampleType returns expected columns", {
-  test_conn <- SigRepo::test_conn_handler
+  test_conn <- test_database_conn()
   
   sample_type_table <- SigRepo::searchSampleType(
     conn_handler = test_conn
@@ -26,7 +26,7 @@ test_that("searchSampleType returns expected columns", {
 })
 
 test_that("searchSampleType handles specific sample type search", {
-  test_conn <- SigRepo::test_conn_handler
+  test_conn <- test_database_conn()
   
   # Test searching for a specific sample type (adjust if your function has filter parameters)
   sample_type_table <- SigRepo::searchSampleType(
@@ -40,7 +40,7 @@ test_that("searchSampleType handles specific sample type search", {
 
 
 test_that("searchSampleType returns consistent results", {
-  test_conn <- SigRepo::test_conn_handler
+  test_conn <- test_database_conn()
   
   # Run search twice
   result1 <- SigRepo::searchSampleType(conn_handler = test_conn)
@@ -52,7 +52,7 @@ test_that("searchSampleType returns consistent results", {
 })
 
 test_that("searchSampleType data types are correct", {
-  test_conn <- SigRepo::test_conn_handler
+  test_conn <- test_database_conn()
   
   sample_type_table <- SigRepo::searchSampleType(
     conn_handler = test_conn
@@ -70,7 +70,7 @@ test_that("searchSampleType data types are correct", {
 })
 
 test_that("searchSampleType returns unique sample types", {
-  test_conn <- SigRepo::test_conn_handler
+  test_conn <- test_database_conn()
   
   sample_type_table <- SigRepo::searchSampleType(
     conn_handler = test_conn

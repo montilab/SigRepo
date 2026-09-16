@@ -23,6 +23,11 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
+      # The vignettes run their examples only when a dedicated test account is
+      # configured (see ?SigRepo::test_conn_handler). Without these secrets
+      # the site shows the example code without output.
+      SIGREPO_TEST_DB_USER: ${{ secrets.SIGREPO_TEST_DB_USER }}
+      SIGREPO_TEST_DB_PASSWORD: ${{ secrets.SIGREPO_TEST_DB_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 

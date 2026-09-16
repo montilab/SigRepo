@@ -3,7 +3,7 @@
 
 test_that("addCollection correctly adds a signature into the database", {
   
-  test_conn <- SigRepo::test_conn_handler
+  test_conn <- test_database_conn()
   
   expect_no_error({
     test_collection_sig <- base::readRDS(
@@ -63,7 +63,7 @@ test_that("addCollection correctly adds a signature into the database", {
 
 test_that("searchSignature correctly searches for the desired signature",{
   
-  test_conn <- SigRepo::test_conn_handler
+  test_conn <- test_database_conn()
   
   # create the test collection
   
@@ -128,7 +128,7 @@ test_that("searchSignature correctly searches for the desired signature",{
 # searchCollection correctly returns all collections when no filters are provided.
 
 test_that("searchCollection returns all signatures when no filters provided",{
-  test_conn <- SigRepo::test_conn_handler
+  test_conn <- test_database_conn()
   
   all_collections <- SigRepo::searchCollection(
     conn_handler = test_conn,
@@ -144,7 +144,7 @@ test_that("searchCollection returns all signatures when no filters provided",{
  
 
 test_that("searchCollection returns empty result for non-existent signature", {
-  test_conn <- SigRepo::test_conn_handler
+  test_conn <- test_database_conn()
   
   collection_search <- SigRepo::searchCollection(
     conn_handler = test_conn,
@@ -221,7 +221,7 @@ test_that("searchCollection returns empty result for non-existent signature", {
 
 
 test_that("searchCollection returns consistent results", {
-  test_conn <- SigRepo::test_conn_handler
+  test_conn <- test_database_conn()
   
   # Run search twice with same parameters
   result1 <- SigRepo::searchSignature(
