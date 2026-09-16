@@ -32,6 +32,16 @@ highlighted). For hypergeometric results, hypeR's Venn diagram of the query
 and the geneset. Both are drawn from the result itself, so they work for any
 geneset without \code{runHypeR(plotting = TRUE)} storing every plot.
 }
+\section{Required and optional arguments}{
+
+\code{hyp_obj} and \code{geneset} (a geneset label from the result) are
+required. \code{query} is required only when \code{hyp_obj} holds more than
+one query; for a single \code{hyp}, or a \code{multihyp} with one query, it
+can be left out. For fgsea the ranking name without \code{" | up"} or
+\code{" | down"} is enough. \code{title} is optional and defaults to the test
+that was run. ggplot2 must be installed.
+}
+
 \examples{
 \dontrun{
 SigRepo::plotHypeREnrichment(gsea, "HALLMARK_MYC_TARGETS_V1", query = "LLFS_Aging_Gene_2023")

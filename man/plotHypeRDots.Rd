@@ -81,6 +81,17 @@ width = 5 + 0.085 x (longest geneset label, in characters) + 1.2 x (queries)
 inches, clamped to 7-20, and height = 1.6 + 0.30 x (genesets) + 0.05 x
 (longest query name, in characters) inches, clamped to 3.2-22.
 }
+\section{Required and optional arguments}{
+
+Only \code{hyp_obj} is required, so \code{plotHypeRDots(hyp)} works on any
+\code{runHypeR()} result. Every other argument is optional and has the
+default listed with it: the 20 best genesets by FDR with no cutoff, coloured
+by significance and sized by geneset size, with the title naming the test.
+\code{title = NULL} and \code{query_labels = NULL} mean "choose for me", not
+"none". \code{color_by = "score"} needs kstest or fgsea results. ggplot2 must
+be installed.
+}
+
 \examples{
 \dontrun{
 SigRepo::plotHypeRDots(hyp, fdr = 0.05)

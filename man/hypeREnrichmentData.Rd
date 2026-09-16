@@ -57,6 +57,14 @@ column, which always counts from the top.
 as \code{max(z) - min(z)}, which has no running-sum curve, so this errors
 for them.
 }
+\section{Required and optional arguments}{
+
+\code{hyp_obj} (a kstest or fgsea result) and \code{geneset} are required.
+\code{query} is required only when \code{hyp_obj} holds more than one query;
+for a single \code{hyp}, or a \code{multihyp} with one query, it can be left
+out. For hypergeometric results use \code{plotHypeREnrichment()} instead.
+}
+
 \examples{
 \dontrun{
 curve <- SigRepo::hypeREnrichmentData(gsea, "HALLMARK_MYC_TARGETS_V1", query = "LLFS_Aging_Gene_2023")

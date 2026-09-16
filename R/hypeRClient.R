@@ -1066,6 +1066,13 @@ hypeRSheetNames <- function(x, reserved = base::character()) {
 #' back to its full query name and SigRepo provenance. The object you pass is
 #' not modified.
 #'
+#' @section Required and optional arguments:
+#' \code{hyp_obj} and \code{file_path} are required. \code{cols},
+#' \code{versioning} and \code{index} are optional: by default every column is
+#' written, with hypeR's \code{versioning} sheet and the SigRepo \code{index}
+#' sheet. \code{cols = NULL} means "all columns", not "none". The hypeR and
+#' openxlsx packages must be installed.
+#'
 #' @param hyp_obj A \code{hyp} or \code{multihyp}, usually from \code{runHypeR()}.
 #' @param file_path Path of the \code{.xlsx} file to write (overwritten).
 #' @param cols Passed to \code{hypeR::hyp_to_excel()}: columns of each result

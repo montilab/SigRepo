@@ -46,6 +46,19 @@ reference feature table by \code{feature_name} and organism (needs
 and no signature ID, so keep the signature id with your results if you need
 it.
 }
+\section{Required and optional arguments}{
+
+The signatures are required, as exactly one of \code{signature_id} or
+\code{signature_name} (each with \code{conn_handler}), or
+\code{omic_signature}; they cannot be combined. \code{signature} is not
+accepted here, because a plain gene vector has no difexp table. Everything
+else is optional: \code{verbose} defaults to \code{TRUE}. With
+\code{omic_signature}, \code{conn_handler} is still worth passing when the
+difexp has no symbol column of its own, since it is what looks symbols up in
+the reference feature table; without it those rows get
+\code{resolved_symbol = NA}.
+}
+
 \examples{
 \dontrun{
 difexp <- SigRepo::getHypeRDifexp(omic_signature = sig)[[1]]

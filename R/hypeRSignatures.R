@@ -675,6 +675,17 @@ collectAndBuildHypeRQueries <- function(conn_handler, signature_id, signature_na
 #' (e.g. a stricter FDR or a fold-change threshold) and pass the resulting gene
 #' list to \code{runHypeR(signature = ...)}.
 #'
+#' @section Required and optional arguments:
+#' The signatures are required, as exactly one of \code{signature_id} or
+#' \code{signature_name} (each with \code{conn_handler}), or
+#' \code{omic_signature}; they cannot be combined. \code{signature} is not
+#' accepted here, because a plain gene vector has no difexp table. Everything
+#' else is optional: \code{verbose} defaults to \code{TRUE}. With
+#' \code{omic_signature}, \code{conn_handler} is still worth passing when the
+#' difexp has no symbol column of its own, since it is what looks symbols up in
+#' the reference feature table; without it those rows get
+#' \code{resolved_symbol = NA}.
+#'
 #' @inheritParams prepareHypeRSignatures
 #'
 #' @return A named list with one data frame per signature that has a difexp,

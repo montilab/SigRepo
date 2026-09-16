@@ -143,6 +143,14 @@ emptyHypeRDotData <- function() {
 #' shared by every query. Use it to draw your own figure or to serve the numbers
 #' to another front end.
 #'
+#' @section Required and optional arguments:
+#' Only \code{hyp_obj} is required. Every other argument is optional and has the
+#' default listed with it: genesets ranked by FDR, no p-value or FDR cutoff
+#' (\code{pval = 1}, \code{fdr = 1}), the 20 best genesets, sized by geneset
+#' size, queries labelled with signature codes. \code{query_labels = NULL} means
+#' "use the labels chosen by \code{signature_key}", not "no labels". Pass
+#' \code{fdr} (e.g. \code{0.05}) to keep only significant genesets.
+#'
 #' @param hyp_obj A \code{hyp} or \code{multihyp}, usually from \code{runHypeR()}.
 #' @param val \code{"fdr"} (default) or \code{"pval"}: the value used to rank
 #' genesets and to compute \code{significance}.
@@ -268,6 +276,9 @@ hypeRDotData <- function(
 #' \code{"S1"}, \code{"S2"}, ... in the order the signatures first appear in
 #' the result. A query without a recorded SigRepo signature name counts as its
 #' own signature, named by the query.
+#'
+#' @section Required and optional arguments:
+#' \code{hyp_obj} is the only argument, and it is required.
 #'
 #' @param hyp_obj A \code{hyp} or \code{multihyp}, usually from \code{runHypeR()}.
 #'
@@ -413,6 +424,12 @@ hypeRFgseaCurve <- function(stats, members, power) {
 #' @description Recomputes the running-sum curve behind one geneset's
 #' enrichment score from the result itself (the ranking and genesets stored in
 #' \code{hyp$args}), so no per-geneset plots need to be kept.
+#'
+#' @section Required and optional arguments:
+#' \code{hyp_obj} (a kstest or fgsea result) and \code{geneset} are required.
+#' \code{query} is required only when \code{hyp_obj} holds more than one query;
+#' for a single \code{hyp}, or a \code{multihyp} with one query, it can be left
+#' out. For hypergeometric results use \code{plotHypeREnrichment()} instead.
 #'
 #' @param hyp_obj A \code{hyp} or \code{multihyp} from \code{runHypeR()} with
 #' \code{test = "kstest"} or \code{"fgsea"}.

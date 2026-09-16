@@ -52,6 +52,17 @@ no geneset passing the cutoffs, or no pair of genesets reaching
 \code{similarity_cutoff}. Those return \code{NULL} with a warning instead of
 an error.
 }
+\section{Required and optional arguments}{
+
+Only \code{hyp_obj} is required. Every other argument is optional and has the
+default listed with it: an enrichment map (\code{type = "emap"}) of the
+first 25 rows with no p-value or FDR cutoff, nodes coloured by FDR, and edges
+where the Jaccard similarity is at least 0.2. \code{query = NULL} draws every
+query (one map for a single query, a named list for several), not "none".
+\code{type = "hmap"} also needs results run on \code{hypeR::rgsets}
+genesets.
+}
+
 \examples{
 \dontrun{
 SigRepo::plotHypeRMap(hyp, query = "LLFS_Aging_Gene_2023 | Group1", fdr = 0.05)

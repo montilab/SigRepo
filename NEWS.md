@@ -64,7 +64,11 @@
 - `runHypeR()`, `prepareHypeRSignatures()` and `getHypeRGenesets()` document
   which arguments are required (the signatures, and the genesets) and which are
   optional with a default, including what `NULL` means for `background`,
-  `query_names` and `seed`. The hypeR tutorial says the same up front, and the
+  `query_names` and `seed`. `getHypeRDifexp()`, `hypeRToExcel()`,
+  `hypeRDotData()`, `hypeREnrichmentData()`, `hypeRSignatureKey()`,
+  `plotHypeRDots()`, `plotHypeREnrichment()` and `plotHypeRMap()` have the same
+  section; most need only the result object, and the enrichment functions also
+  need `geneset` (and `query` for a result with several queries). The hypeR tutorial says the same up front, and the
   error for a call with no signatures now names `signature` alongside
   `signature_id`, `signature_name` and `omic_signature`.
 

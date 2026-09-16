@@ -32,6 +32,15 @@ regardless of case). An \code{index} sheet, placed first, maps each sheet
 back to its full query name and SigRepo provenance. The object you pass is
 not modified.
 }
+\section{Required and optional arguments}{
+
+\code{hyp_obj} and \code{file_path} are required. \code{cols},
+\code{versioning} and \code{index} are optional: by default every column is
+written, with hypeR's \code{versioning} sheet and the SigRepo \code{index}
+sheet. \code{cols = NULL} means "all columns", not "none". The hypeR and
+openxlsx packages must be installed.
+}
+
 \examples{
 \dontrun{
 hyp <- SigRepo::runHypeR(omic_signature = sig, genesets = "msigdb", msigdb_collection = "H")

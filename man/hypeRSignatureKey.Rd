@@ -19,6 +19,11 @@ The key behind \code{hypeRDotData()}'s and
 the result. A query without a recorded SigRepo signature name counts as its
 own signature, named by the query.
 }
+\section{Required and optional arguments}{
+
+\code{hyp_obj} is the only argument, and it is required.
+}
+
 \examples{
 \dontrun{
 SigRepo::hypeRSignatureKey(hyp)

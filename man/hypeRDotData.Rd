@@ -66,6 +66,16 @@ geneset that passes the cutoffs, restricted to the \code{top} genesets
 shared by every query. Use it to draw your own figure or to serve the numbers
 to another front end.
 }
+\section{Required and optional arguments}{
+
+Only \code{hyp_obj} is required. Every other argument is optional and has the
+default listed with it: genesets ranked by FDR, no p-value or FDR cutoff
+(\code{pval = 1}, \code{fdr = 1}), the 20 best genesets, sized by geneset
+size, queries labelled with signature codes. \code{query_labels = NULL} means
+"use the labels chosen by \code{signature_key}", not "no labels". Pass
+\code{fdr} (e.g. \code{0.05}) to keep only significant genesets.
+}
+
 \examples{
 \dontrun{
 dots <- SigRepo::hypeRDotData(hyp, fdr = 0.05, top = 15)

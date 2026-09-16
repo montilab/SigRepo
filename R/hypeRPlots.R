@@ -31,6 +31,15 @@ hypeRTestTitle <- function(hyps) {
 #' drawn as -log10 values on a plain scale, so axes and legends stay readable
 #' whatever the ggplot2 version. See \code{hypeRDotData()} for the data.
 #'
+#' @section Required and optional arguments:
+#' Only \code{hyp_obj} is required, so \code{plotHypeRDots(hyp)} works on any
+#' \code{runHypeR()} result. Every other argument is optional and has the
+#' default listed with it: the 20 best genesets by FDR with no cutoff, coloured
+#' by significance and sized by geneset size, with the title naming the test.
+#' \code{title = NULL} and \code{query_labels = NULL} mean "choose for me", not
+#' "none". \code{color_by = "score"} needs kstest or fgsea results. ggplot2 must
+#' be installed.
+#'
 #' @inheritParams hypeRDotData
 #' @param color_by \code{"significance"} (default: -log10 of \code{val}) or
 #' \code{"score"} (NES for fgsea, the enrichment score for kstest) on a
@@ -206,6 +215,14 @@ formatHypeRNumber <- function(x) base::format(base::signif(x, 2))
 #' and the geneset. Both are drawn from the result itself, so they work for any
 #' geneset without \code{runHypeR(plotting = TRUE)} storing every plot.
 #'
+#' @section Required and optional arguments:
+#' \code{hyp_obj} and \code{geneset} (a geneset label from the result) are
+#' required. \code{query} is required only when \code{hyp_obj} holds more than
+#' one query; for a single \code{hyp}, or a \code{multihyp} with one query, it
+#' can be left out. For fgsea the ranking name without \code{" | up"} or
+#' \code{" | down"} is enough. \code{title} is optional and defaults to the test
+#' that was run. ggplot2 must be installed.
+#'
 #' @inheritParams hypeREnrichmentData
 #' @param title Plot title; defaults to the test that was run
 #' (\code{"Hypergeometric test"}, \code{"KS test"} or \code{"GSEA (fgsea)"}).
@@ -364,6 +381,15 @@ plotHypeRMapOne <- function(name, hyp, type, val, pval, fdr, top, similarity_met
 #' no geneset passing the cutoffs, or no pair of genesets reaching
 #' \code{similarity_cutoff}. Those return \code{NULL} with a warning instead of
 #' an error.
+#'
+#' @section Required and optional arguments:
+#' Only \code{hyp_obj} is required. Every other argument is optional and has the
+#' default listed with it: an enrichment map (\code{type = "emap"}) of the
+#' first 25 rows with no p-value or FDR cutoff, nodes coloured by FDR, and edges
+#' where the Jaccard similarity is at least 0.2. \code{query = NULL} draws every
+#' query (one map for a single query, a named list for several), not "none".
+#' \code{type = "hmap"} also needs results run on \code{hypeR::rgsets}
+#' genesets.
 #'
 #' @inheritParams hypeRDotData
 #' @param val \code{"fdr"} (default) or \code{"pval"}: the value that colours
