@@ -745,6 +745,14 @@ getHypeRDifexp <- function(
 #' \code{hypeR::hypeR()} takes, and reports how each was built. Use it to
 #' inspect exactly what \code{runHypeR()} will test.
 #'
+#' @section Required and optional arguments:
+#' The signatures are required, as exactly one of \code{signature_id} or
+#' \code{signature_name} (each with \code{conn_handler}),
+#' \code{omic_signature}, or \code{signature}; they cannot be combined. Every
+#' other argument is optional and has the default listed with it, which is what
+#' \code{runHypeR()} uses unless you pass something else. No genesets are
+#' needed: this builds the queries, it does not test them.
+#'
 #' @param conn_handler An R object obtained from \code{SigRepo::newConnHandler()}.
 #' Needed to fetch signatures by id/name and for reference-table symbol lookup.
 #' @param signature_id One or more SigRepo signature IDs.

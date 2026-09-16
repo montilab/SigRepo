@@ -61,6 +61,13 @@
 
 ## New
 
+- `runHypeR()`, `prepareHypeRSignatures()` and `getHypeRGenesets()` document
+  which arguments are required (the signatures, and the genesets) and which are
+  optional with a default, including what `NULL` means for `background`,
+  `query_names` and `seed`. The hypeR tutorial says the same up front, and the
+  error for a call with no signatures now names `signature` alongside
+  `signature_id`, `signature_name` and `omic_signature`.
+
 - Plotting for `runHypeR()` results, drawn from the result objects:
   `plotHypeRDots()` (one column per query with the same top genesets for every
   query, a readable -log10 significance scale, one-query results supported, and

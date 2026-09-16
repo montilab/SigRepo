@@ -276,6 +276,30 @@ which must be at most 31 characters and cannot contain
 \code{hypeRToExcel()}, which makes the sheet names safe and adds an index
 sheet, or shorten the names with \code{query_names}.
 }
+\section{Required and optional arguments}{
+
+Only two things are required: the signatures to test, and the genesets to
+test them against.
+\itemize{
+  \item \strong{Signatures}, as exactly one of: \code{signature_id} or
+  \code{signature_name} (each with \code{conn_handler}),
+  \code{omic_signature}, or \code{signature} (hypeR-native gene symbols or
+  a named score vector). They cannot be combined.
+  \item \strong{\code{genesets}}: \code{"msigdb"} together with
+  \code{msigdb_collection}, or your own genesets (a named list,
+  \code{hypeR::gsets} or \code{hypeR::rgsets}).
+}
+
+Every other argument is optional: each has a default, listed with it below,
+and leaving it alone runs the lab's conventions (see the Details of
+\code{background}, \code{min_query_genes} and \code{fdr_scope}). The
+arguments that take \code{NULL} treat it as "choose for me" rather than
+"nothing": \code{background = NULL} picks the background per signature,
+\code{query_names = NULL} builds the default query names,
+\code{seed = NULL} leaves fgsea on the session's random-number state, and
+the \code{msigdb_*} arguments apply only with \code{genesets = "msigdb"}.
+}
+
 \examples{
 \dontrun{
 utils::data("LLFS_Aging_Gene_2023", package = "SigRepo")

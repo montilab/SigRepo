@@ -30,6 +30,27 @@ sig <- LLFS_Aging_Gene_2023
 expects, runs hypeR, and returns hypeR's own object. The arguments from `power`
 on are hypeR's, with hypeR's defaults.
 
+### Required and optional arguments
+
+Only two things are required:
+
+- **The signatures to test**, as exactly one of `signature_id` or
+  `signature_name` (each with `conn_handler`), `omic_signature` (one object or a
+  named list), or `signature` (hypeR-native gene symbols, or a named score
+  vector for the ranked tests). These cannot be combined: a run tests one source.
+- **`genesets`**: either `"msigdb"` with `msigdb_collection`, or your own
+  genesets (a named list, `hypeR::gsets` or `hypeR::rgsets`).
+
+Everything else is optional. Each argument documents its own default, and
+leaving it alone gives the conventions below. The arguments that accept `NULL`
+read it as "choose for me", not as "nothing": `background = NULL` picks a
+background per signature, `query_names = NULL` builds the default query names,
+and `seed = NULL` leaves fgsea on the session's random-number state.
+
+The shortest call there is names one signature and one geneset collection:
+`runHypeR(omic_signature = sig, genesets = hallmark)`, which the next two
+sections build up.
+
 Three defaults follow the enrichment conventions taught in BS831
 ([hypergeometric](https://montilab.github.io/BS831/articles/docs/HyperEnrichment.html),
 [KS](https://montilab.github.io/BS831/articles/docs/KS_Enrichment.html))

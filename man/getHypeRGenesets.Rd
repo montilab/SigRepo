@@ -46,6 +46,15 @@ Mouse-native collections (\code{MH}, \code{M1}-\code{M8}) use the
 mouse MSigDB database; mouse requests for human collections and all other
 species use the human database with ortholog mapping.
 }
+\section{Required and optional arguments}{
+
+\code{genesets} is required, and \code{msigdb_collection} is required with
+\code{genesets = "msigdb"}. The other \code{msigdb_*} arguments are
+optional (species defaults to \code{"Homo sapiens"}, no subcollection, no
+label cleaning) and apply only to \code{"msigdb"}; passing them with your
+own genesets is an error.
+}
+
 \examples{
 \dontrun{
 hallmark <- SigRepo::getHypeRGenesets("msigdb", msigdb_collection = "H")

@@ -123,6 +123,16 @@ signature table, the difexp's symbol column joined on \code{probe_id};
 then the reference feature table by \code{feature_name} and organism (needs
 \code{conn_handler}). \code{probe_id} is never read as a symbol.
 }
+\section{Required and optional arguments}{
+
+The signatures are required, as exactly one of \code{signature_id} or
+\code{signature_name} (each with \code{conn_handler}),
+\code{omic_signature}, or \code{signature}; they cannot be combined. Every
+other argument is optional and has the default listed with it, which is what
+\code{runHypeR()} uses unless you pass something else. No genesets are
+needed: this builds the queries, it does not test them.
+}
+
 \examples{
 utils::data("LLFS_Aging_Gene_2023", package = "SigRepo")
 prepared <- SigRepo::prepareHypeRSignatures(omic_signature = LLFS_Aging_Gene_2023, verbose = FALSE)

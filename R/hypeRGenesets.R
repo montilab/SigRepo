@@ -77,6 +77,13 @@ genesetsFormError <- function() {
 #' \code{msigdb_species}, \code{msigdb_subcollection}) to fetch an MSigDB
 #' collection, or pass your own genesets object.
 #'
+#' @section Required and optional arguments:
+#' \code{genesets} is required, and \code{msigdb_collection} is required with
+#' \code{genesets = "msigdb"}. The other \code{msigdb_*} arguments are
+#' optional (species defaults to \code{"Homo sapiens"}, no subcollection, no
+#' label cleaning) and apply only to \code{"msigdb"}; passing them with your
+#' own genesets is an error.
+#'
 #' @param genesets Either the string \code{"msigdb"}, or your own genesets: a
 #' named list of character vectors, a \code{hypeR::gsets} object, or a
 #' \code{hypeR::rgsets} object.
