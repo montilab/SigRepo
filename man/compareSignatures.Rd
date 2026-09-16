@@ -171,6 +171,52 @@ See \code{?OmicSignature::compare_omic_signatures} for the full
   description of every comparison argument, of how uni-directional
   signatures are handled, and of the result.
 }
+\section{Required and optional arguments}{
+
+Only the signatures are required. Every other argument is optional.
+\itemize{
+  \item \strong{First list} (required): any mix of \code{signature_ids},
+  \code{signature_names} and \code{omic_signatures}. On its own it must hold
+  at least two signatures, since each is compared with the others.
+  \item \strong{Second list} (optional): any mix of
+  \code{signature_ids2}, \code{signature_names2} and
+  \code{omic_signatures2}. With a second list, one signature per list is
+  enough.
+  \item \strong{\code{conn_handler}}: required only when a signature is
+  requested by id or name. Comparing supplied OmicSignature objects needs
+  no connection.
+}
+
+So the smallest calls are
+\code{compareSignatures(conn_handler, signature_ids = c(12, 34))} and
+\code{compareSignatures(omic_signatures = list(a = sig_a, b = sig_b))}.
+
+Leaving the other arguments alone runs an overlap (Fisher's exact) test on
+each signature's features. For each signature it keeps features with
+\code{adj_p} at most 0.05 (\code{adj_p_cutoff}) and no score cutoff
+(\code{score_cutoff = 0}). It uses at least 5 (\code{min_features}) and at
+most 500 (\code{max_feature}) features, and reads the standard SigRepo
+columns (\code{feature_name}, \code{score}, \code{adj_p}, \code{p_value},
+\code{group_label}). Change the column arguments only when your tables name
+them differently. The arguments that take \code{NULL} treat it as "choose for
+me" rather than "nothing":
+\itemize{
+  \item \code{background = NULL} uses every feature in the compared
+  signatures' signature and difexp tables.
+  \item \code{label_pairing = NULL} pairs each bi-directional signature's
+  two \code{group_label} levels by position (level 1 with level 1). A
+  warning says when that may not line up; pass \code{label_pairing} to pin
+  the pairs.
+  \item Leaving the \code{*2} arguments out runs a self-comparison.
+}
+
+\code{method = "ks_rank"}, \code{"ks_score"} and \code{"gsea"} also need a
+ranking signature: at least one bi-directional signature with a difexp table
+in the second list, or in the first list for a self-comparison.
+\code{"gsea"} needs the fgsea package. Categorical signatures are not
+supported by any method.
+}
+
 \examples{
 # The bundled example signatures need no database
 utils::data("omic_signature_1", "omic_signature_2", "omic_signature_3", package = "SigRepo")
