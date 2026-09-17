@@ -68,6 +68,11 @@ library(OmicSignature)
 ```{r, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 # Get the test connection handler
 conn_handler <- SigRepo::test_conn_handler
+
+# The examples below add, update and delete data in the database. Run them only
+# when a dedicated test account is configured through SIGREPO_TEST_DB_USER and
+# SIGREPO_TEST_DB_PASSWORD; otherwise show the code without running it.
+knitr::opts_chunk$set(eval = base::nzchar(conn_handler$user) && base::nzchar(conn_handler$password))
 ```
 
 ```

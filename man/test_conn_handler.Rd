@@ -7,9 +7,18 @@
 test_conn_handler
 }
 \description{
-A test connection handler for the package. Points at the shared
-sigrepo.org test instance by default; set the `SIGREPO_TEST_DB_*` /
-`SIGREPO_TEST_API_*` environment variables before loading the package to
-point it at a different (e.g. local, ephemeral) SigRepo stack instead.
+A connection handler for the package's tests and vignettes, built from
+environment variables each time it is used:
+\code{SIGREPO_TEST_DB_USER} and \code{SIGREPO_TEST_DB_PASSWORD} (required,
+no defaults), and optionally \code{SIGREPO_TEST_DB_NAME},
+\code{SIGREPO_TEST_DB_HOST}, \code{SIGREPO_TEST_DB_PORT},
+\code{SIGREPO_TEST_API_HOST} and \code{SIGREPO_TEST_API_PORT}, which default
+to sigrepo.org. When the user or password is unset, \code{user} and
+\code{password} are empty, the database tests skip, and the vignettes show
+their code without running it.
+}
+\details{
+Use a dedicated test account that owns only toy data, never a personal or
+admin login.
 }
 \keyword{internal}

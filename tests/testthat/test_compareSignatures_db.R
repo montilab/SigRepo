@@ -5,7 +5,7 @@
 # end to end against SigRepo::test_conn_handler.
 
 test_that("compareSignatures compares signatures fetched from the database", {
-  test_conn <- SigRepo::test_conn_handler
+  test_conn <- test_database_conn()
 
   # This test writes (uploads, then deletes) two signatures. The production
   # database is read-only for testing purposes, so only run against a test
