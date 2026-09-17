@@ -242,7 +242,7 @@ res2$comparisons$level1_vs_level1$score
 \dontrun{
 conn_handler <- SigRepo::newConnHandler(
   dbname = "sigrepo", host = "localhost", port = 3306,
-  user = "montilab", password = "sigrepo"
+  user = "your_username", password = "your_password"
 )
 
 # Signatures stored in the database, by id and by name
