@@ -403,9 +403,6 @@ hypeRRankedCurve <- function(ranked_genes, members) {
 #' fgsea's running sum and ES (calcGseaStat tie rule: an exact tie gives 0)
 #' @noRd
 hypeRFgseaCurve <- function(stats, members, power) {
-  if (!base::requireNamespace("fgsea", quietly = TRUE)) {
-    base::stop("\nPackage 'fgsea' is required to draw fgsea enrichment curves. Please install it first.\n")
-  }
   plot_data <- fgsea::plotEnrichmentData(pathway = members, stats = stats, gseaParam = power)
   curve <- base::as.data.frame(plot_data$curve)
   es <- if (plot_data$posES > -plot_data$negES) {
@@ -450,8 +447,8 @@ hypeRFgseaCurve <- function(stats, members, power) {
 #'   \item fgsea: \code{fgsea::plotEnrichmentData()}; an exact tie between the
 #'   positive and negative extremum gives 0, as fgsea does.
 #' }
-#' The ranking is the one tested: for a kstest \code{direction = "down"} query
-#' it is the negated score. The leading edge follows the GSEA convention (hits
+#' The ranking is the one tested: for a kstest \code{"| down"} query it is the
+#' negated score. The leading edge follows the GSEA convention (hits
 #' up to the extremum for a positive score, from it for a negative score); for
 #' kstest with a negative score this can differ from hypeR's \code{hits}
 #' column, which always counts from the top.

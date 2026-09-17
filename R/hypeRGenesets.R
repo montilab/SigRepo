@@ -27,12 +27,6 @@ callMsigdbr <- function(args) {
 #' Fetch an MSigDB collection as a hypeR gsets object
 #' @noRd
 fetchMsigdbGsets <- function(species, collection, subcollection = NULL, clean = FALSE) {
-  for (pkg in c("msigdbr", "hypeR")) {
-    if (!base::requireNamespace(pkg, quietly = TRUE)) {
-      base::stop(base::sprintf("\nPackage '%s' is required when genesets = \"msigdb\". Please install it first.\n", pkg))
-    }
-  }
-
   args <- base::list(
     species = species,
     db_species = msigdbDbSpecies(species, collection),

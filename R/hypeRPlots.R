@@ -1,15 +1,6 @@
 #' @importFrom rlang .data
 NULL
 
-#' Error unless ggplot2 is installed
-#' @noRd
-requireHypeRGgplot <- function(caller) {
-  if (!base::requireNamespace("ggplot2", quietly = TRUE)) {
-    base::stop(base::sprintf("\nPackage 'ggplot2' is required for %s(). Please install it first.\n", caller))
-  }
-  base::invisible(NULL)
-}
-
 #' Default plot title: the test(s) behind the hyps, e.g. "KS test"
 #' @noRd
 hypeRTestTitle <- function(hyps) {
@@ -37,8 +28,7 @@ hypeRTestTitle <- function(hyps) {
 #' default listed with it: the 20 best genesets by FDR with no cutoff, coloured
 #' by significance and sized by geneset size, with the title naming the test.
 #' \code{title = NULL} and \code{query_labels = NULL} mean "choose for me", not
-#' "none". \code{color_by = "score"} needs kstest or fgsea results. ggplot2 must
-#' be installed.
+#' "none". \code{color_by = "score"} needs kstest or fgsea results.
 #'
 #' @inheritParams hypeRDotData
 #' @param color_by \code{"significance"} (default: -log10 of \code{val}) or
@@ -84,7 +74,6 @@ plotHypeRDots <- function(
     abrv = 50,
     title = NULL
 ) {
-  requireHypeRGgplot("plotHypeRDots")
   val <- base::match.arg(val)
   color_by <- base::match.arg(color_by)
   size_by <- base::match.arg(size_by)
@@ -221,7 +210,7 @@ formatHypeRNumber <- function(x) base::format(base::signif(x, 2))
 #' one query; for a single \code{hyp}, or a \code{multihyp} with one query, it
 #' can be left out. For fgsea the ranking name without \code{" | up"} or
 #' \code{" | down"} is enough. \code{title} is optional and defaults to the test
-#' that was run. ggplot2 must be installed.
+#' that was run.
 #'
 #' @inheritParams hypeREnrichmentData
 #' @param title Plot title; defaults to the test that was run
@@ -237,7 +226,6 @@ formatHypeRNumber <- function(x) base::format(base::signif(x, 2))
 #'
 #' @export
 plotHypeREnrichment <- function(hyp_obj, geneset, query = NULL, title = NULL) {
-  requireHypeRGgplot("plotHypeREnrichment")
   selected <- hypeRSelectHyp(hyp_obj, query, geneset)
   hyp <- selected$hyp
   plot_title <- if (base::is.null(title)) hypeRTestTitle(base::list(hyp)) else title

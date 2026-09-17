@@ -199,7 +199,7 @@ reference:
 navbar:
   title: SigRepo
   structure:
-    left: [home, signature, collection, reference, change_log]
+    left: [home, signature, collection, annotation, reference, change_log]
     right: [search, github, lightswitch]
   components:
     signature:
@@ -208,6 +208,9 @@ navbar:
     collection:
       text: "Upload Collection"
       href: articles/collection-tutorials.html        
+    annotation:
+      text: "Annotate Signatures"
+      href: articles/annotation-tutorial.html
     reference:
       text: "Reference"
       href: reference/index.html 

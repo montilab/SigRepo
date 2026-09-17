@@ -88,8 +88,7 @@ Only \code{hyp_obj} is required, so \code{plotHypeRDots(hyp)} works on any
 default listed with it: the 20 best genesets by FDR with no cutoff, coloured
 by significance and sized by geneset size, with the title naming the test.
 \code{title = NULL} and \code{query_labels = NULL} mean "choose for me", not
-"none". \code{color_by = "score"} needs kstest or fgsea results. ggplot2 must
-be installed.
+"none". \code{color_by = "score"} needs kstest or fgsea results.
 }
 
 \examples{

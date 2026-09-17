@@ -136,9 +136,9 @@ test_that("hypeREnrichmentData ES matches every fgsea and kstest score in the re
   sig <- make_hyper_fgsea_sig()
   gs <- hyper_fgsea_genesets()
   results <- list(
-    fgsea = list(res = SigRepo::runHypeR(omic_signature = sig, genesets = gs, test = "fgsea", verbose = FALSE), column = "es"),
-    kstest = list(res = suppressWarnings(SigRepo::runHypeR(omic_signature = sig, genesets = gs, test = "kstest", direction = "both", verbose = FALSE)), column = "score"),
-    ranked = list(res = suppressWarnings(SigRepo::runHypeR(omic_signature = sig, genesets = gs, test = "kstest", power = 0, verbose = FALSE)), column = "score")
+    fgsea = list(res = SigRepo::runHypeR(organism = "Homo sapiens", omic_signature = sig, genesets = gs, test = "fgsea", verbose = FALSE), column = "es"),
+    kstest = list(res = suppressWarnings(SigRepo::runHypeR(organism = "Homo sapiens", omic_signature = sig, genesets = gs, test = "kstest", verbose = FALSE)), column = "score"),
+    ranked = list(res = suppressWarnings(SigRepo::runHypeR(organism = "Homo sapiens", omic_signature = sig, genesets = gs, test = "kstest", power = 0, verbose = FALSE)), column = "score")
   )
 
   for (case in names(results)) {
@@ -158,15 +158,17 @@ test_that("hypeREnrichmentData ES matches every fgsea and kstest score in the re
 test_that("hypeREnrichmentData reproduces the tie rules: first extremum for kstest, 0 for fgsea", {
   testthat::skip_if_not_installed("hypeR")
   testthat::skip_if_not_installed("fgsea")
-  run <- function(...) suppressWarnings(SigRepo::runHypeR(signature = hyper_tie_stats(), genesets = hyper_tie_genesets(), verbose = FALSE, ...))
+  run <- function(...) suppressWarnings(SigRepo::runHypeR(organism = "Homo sapiens", signature = hyper_tie_stats(), genesets = hyper_tie_genesets(), verbose = FALSE, ...))
 
   weighted <- run(test = "kstest")
-  expect_equal(SigRepo::hypeREnrichmentData(weighted, "TIE")$summary$es, -0.5)
-  expect_equal(weighted$data$score[weighted$data$label == "TIE"], -0.5)
+  expect_equal(SigRepo::hypeREnrichmentData(weighted, "TIE", query = "signature | up")$summary$es, -0.5)
+  up <- weighted$data[["signature | up"]]$data
+  expect_equal(up$score[up$label == "TIE"], -0.5)
 
   ranked <- run(test = "kstest", power = 0)
-  tie_ranked <- SigRepo::hypeREnrichmentData(ranked, "TIE")
-  expect_equal(signif(tie_ranked$summary$es, 2), ranked$data$score[ranked$data$label == "TIE"])
+  tie_ranked <- SigRepo::hypeREnrichmentData(ranked, "TIE", query = "signature | up")
+  ranked_up <- ranked$data[["signature | up"]]$data
+  expect_equal(signif(tie_ranked$summary$es, 2), ranked_up$score[ranked_up$label == "TIE"])
 
   gsea <- run(test = "fgsea")
   tie_gsea <- SigRepo::hypeREnrichmentData(gsea, "TIE", query = "signature | up")
@@ -178,9 +180,9 @@ test_that("hypeREnrichmentData reproduces the tie rules: first extremum for kste
 
 test_that("hypeREnrichmentData curve, ticks and leading edge follow the ranking", {
   testthat::skip_if_not_installed("hypeR")
-  res <- suppressWarnings(SigRepo::runHypeR(signature = hyper_tie_stats(), genesets = hyper_tie_genesets(),
+  res <- suppressWarnings(SigRepo::runHypeR(organism = "Homo sapiens", signature = hyper_tie_stats(), genesets = hyper_tie_genesets(),
                                             test = "kstest", verbose = FALSE))
-  top <- SigRepo::hypeREnrichmentData(res, "TOP")
+  top <- SigRepo::hypeREnrichmentData(res, "TOP", query = "signature | up")
   expect_equal(nrow(top$curve), 11L)
   expect_equal(top$ticks$position, 1:3)
   expect_equal(top$ticks$gene, c("T01", "T02", "T03"))
@@ -188,7 +190,7 @@ test_that("hypeREnrichmentData curve, ticks and leading edge follow the ranking"
   expect_true(all(top$ticks$leading_edge))
   expect_equal(top$summary$es_position, 3L)
 
-  bottom <- SigRepo::hypeREnrichmentData(res, "BOT")
+  bottom <- SigRepo::hypeREnrichmentData(res, "BOT", query = "signature | up")
   expect_true(bottom$summary$es < 0)
   expect_true(all(bottom$ticks$position[bottom$ticks$leading_edge] >= bottom$summary$es_position))
   expect_equal(bottom$summary$leading_edge_genes, c("T09", "T10", "T11"))
@@ -196,9 +198,9 @@ test_that("hypeREnrichmentData curve, ticks and leading edge follow the ranking"
 
 test_that("hypeREnrichmentData weighted kstest running_score matches hand-derived values on the TIE fixture", {
   testthat::skip_if_not_installed("hypeR")
-  res <- suppressWarnings(SigRepo::runHypeR(signature = hyper_tie_stats(), genesets = hyper_tie_genesets(),
+  res <- suppressWarnings(SigRepo::runHypeR(organism = "Homo sapiens", signature = hyper_tie_stats(), genesets = hyper_tie_genesets(),
                                             test = "kstest", verbose = FALSE))
-  tie <- SigRepo::hypeREnrichmentData(res, "TIE")
+  tie <- SigRepo::hypeREnrichmentData(res, "TIE", query = "signature | up")
   # By hand: TIE hits only T06 (score 0.5, position 6) of 11. p_hit is 0 until
   # position 6 then 1 (all its weight is there); p_mis is cumsum(!hit)/10.
   # running = p_hit - p_mis.
@@ -207,8 +209,8 @@ test_that("hypeREnrichmentData weighted kstest running_score matches hand-derive
 
 test_that("hypeREnrichmentData errors for absolute = TRUE kstest results", {
   testthat::skip_if_not_installed("hypeR")
-  res <- suppressWarnings(SigRepo::runHypeR(signature = hyper_tie_stats(), genesets = hyper_tie_genesets(),
-                                            test = "kstest", absolute = TRUE, verbose = FALSE))
+  # runHypeR() no longer offers absolute, but a hypeR result made with it can still reach this function.
+  res <- hypeR::hypeR(hyper_tie_stats(), hyper_tie_genesets(), test = "kstest", absolute = TRUE, plotting = FALSE, quiet = TRUE)
   expect_error(
     SigRepo::hypeREnrichmentData(res, "TIE"),
     "absolute = TRUE kstest results have no running-sum curve; hypeR scores them as max - min", fixed = TRUE
@@ -221,7 +223,7 @@ test_that("hypeREnrichmentData ticks and leading edge use fgsea's own (sorted) r
   set.seed(42)
   stats <- hyper_fgsea_stats()
   shuffled <- stats[sample(base::length(stats))]
-  res <- SigRepo::runHypeR(signature = shuffled, genesets = hyper_fgsea_genesets(), test = "fgsea", verbose = FALSE)
+  res <- SigRepo::runHypeR(organism = "Homo sapiens", signature = shuffled, genesets = hyper_fgsea_genesets(), test = "fgsea", verbose = FALSE)
 
   hyps <- if (inherits(res, "multihyp")) res$data else list(query = res)
   sorted_names <- base::names(base::sort(shuffled, decreasing = TRUE))
@@ -243,16 +245,16 @@ test_that("hypeREnrichmentData ticks and leading edge use fgsea's own (sorted) r
 
 test_that("hypeREnrichmentData errors on hypergeometric results, bad queries and unusable genesets", {
   testthat::skip_if_not_installed("hypeR")
-  hyper <- runToyHypeR(signature = list(a = c("A", "B"), b = c("C", "D")), genesets = hyper_genesets(), verbose = FALSE)
+  hyper <- runToyHypeR(organism = "Homo sapiens", test = "hypergeometric", signature = list(a = c("A", "B"), b = c("C", "D")), genesets = hyper_genesets(), verbose = FALSE)
   expect_error(SigRepo::hypeREnrichmentData(hyper, "SET_AB", query = "a"), "needs kstest or fgsea results", fixed = TRUE)
 
   gs <- c(hyper_tie_genesets(), list(ABSENT = c("ZZ1", "ZZ2")))
-  ks <- suppressWarnings(SigRepo::runHypeR(signature = list(x = hyper_tie_stats(), y = hyper_tie_stats()), genesets = gs,
+  ks <- suppressWarnings(SigRepo::runHypeR(organism = "Homo sapiens", signature = list(x = hyper_tie_stats(), y = hyper_tie_stats()), genesets = gs,
                                            test = "kstest", verbose = FALSE))
-  expect_error(SigRepo::hypeREnrichmentData(ks, "TOP"), "'query' is required for a result with 2 queries: 'x', 'y'", fixed = TRUE)
-  expect_error(SigRepo::hypeREnrichmentData(ks, "TOP", query = "z"), "'query' must be one of: 'x', 'y'", fixed = TRUE)
-  expect_error(SigRepo::hypeREnrichmentData(ks, "NOPE", query = "x"), "Geneset 'NOPE' is not in this result's genesets", fixed = TRUE)
-  expect_error(SigRepo::hypeREnrichmentData(ks, "ABSENT", query = "x"), "'ABSENT' has no genes in this ranking", fixed = TRUE)
+  expect_error(SigRepo::hypeREnrichmentData(ks, "TOP"), "'query' is required for a result with 4 queries: 'x | up', 'x | down', 'y | up', 'y | down'", fixed = TRUE)
+  expect_error(SigRepo::hypeREnrichmentData(ks, "TOP", query = "z"), "'query' must be one of: 'x | up', 'x | down', 'y | up', 'y | down'", fixed = TRUE)
+  expect_error(SigRepo::hypeREnrichmentData(ks, "NOPE", query = "x | up"), "Geneset 'NOPE' is not in this result's genesets", fixed = TRUE)
+  expect_error(SigRepo::hypeREnrichmentData(ks, "ABSENT", query = "x | up"), "'ABSENT' has no genes in this ranking", fixed = TRUE)
 })
 
 # ---- plotHypeRDots() ----
@@ -369,7 +371,7 @@ test_that("fgsea enrichment data and plots take the ranking name and use the sid
   testthat::skip_if_not_installed("hypeR")
   testthat::skip_if_not_installed("ggplot2")
   testthat::skip_if_not_installed("fgsea")
-  res <- SigRepo::runHypeR(omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(), test = "fgsea", verbose = FALSE)
+  res <- SigRepo::runHypeR(organism = "Homo sapiens", omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(), test = "fgsea", verbose = FALSE)
 
   top <- SigRepo::hypeREnrichmentData(res, "TOP", query = "fg")
   expect_equal(top$summary$query, "fg | up")
@@ -391,7 +393,7 @@ test_that("plotHypeREnrichment draws the running score, hits and ES for fgsea", 
   testthat::skip_if_not_installed("hypeR")
   testthat::skip_if_not_installed("ggplot2")
   testthat::skip_if_not_installed("fgsea")
-  res <- SigRepo::runHypeR(omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(), test = "fgsea", verbose = FALSE)
+  res <- SigRepo::runHypeR(organism = "Homo sapiens", omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(), test = "fgsea", verbose = FALSE)
   plot <- SigRepo::plotHypeREnrichment(res, "TOP", query = "fg | up")
 
   geoms <- unname(vapply(plot$layers, function(layer) class(layer$geom)[1], ""))
@@ -401,12 +403,12 @@ test_that("plotHypeREnrichment draws the running score, hits and ES for fgsea", 
   expect_equal(plot$labels$x, "Rank in ranking")
   expect_no_error(ggplot2::ggplot_build(plot))
 
-  filtered <- SigRepo::runHypeR(omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(), test = "fgsea",
+  filtered <- SigRepo::runHypeR(organism = "Homo sapiens", omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(), test = "fgsea",
                                 fdr = 1e-12, verbose = FALSE)
   expect_match(SigRepo::plotHypeREnrichment(filtered, "TOP", query = "fg | up")$labels$subtitle, "not in the result table", fixed = TRUE)
   expect_match(SigRepo::plotHypeREnrichment(filtered, "TOP", query = "fg")$labels$subtitle, "^TOP\nfg\nES = 1, not in the result table$")
 
-  tie <- suppressWarnings(SigRepo::runHypeR(signature = hyper_tie_stats(), genesets = hyper_tie_genesets(), test = "fgsea", verbose = FALSE))
+  tie <- suppressWarnings(SigRepo::runHypeR(organism = "Homo sapiens", signature = hyper_tie_stats(), genesets = hyper_tie_genesets(), test = "fgsea", verbose = FALSE))
   tie_geoms <- unname(vapply(SigRepo::plotHypeREnrichment(tie, "TIE", query = "signature | up")$layers, function(layer) class(layer$geom)[1], ""))
   expect_false("GeomVline" %in% tie_geoms)
 })
@@ -414,15 +416,15 @@ test_that("plotHypeREnrichment draws the running score, hits and ES for fgsea", 
 test_that("plotHypeREnrichment labels a kstest down ranking and draws a Venn for hypergeometric", {
   testthat::skip_if_not_installed("hypeR")
   testthat::skip_if_not_installed("ggplot2")
-  ks <- suppressWarnings(SigRepo::runHypeR(omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(),
-                                           test = "kstest", direction = "both", verbose = FALSE))
+  ks <- suppressWarnings(SigRepo::runHypeR(organism = "Homo sapiens", omic_signature = make_hyper_fgsea_sig(), genesets = hyper_fgsea_genesets(),
+                                           test = "kstest", verbose = FALSE))
   ks_down <- SigRepo::plotHypeREnrichment(ks, "BOTTOM", query = "fg | down")
   expect_equal(ks_down$labels$x, "Rank in ranking (negated scores)")
   # A kstest down query is its own (negated) ranking, so it keeps its side.
   expect_match(ks_down$labels$subtitle, "^BOTTOM\nfg \\| down\n")
   expect_error(SigRepo::plotHypeREnrichment(ks, "BOTTOM", query = "fg"), "'query' must be one of", fixed = TRUE)
 
-  hyper <- runToyHypeR(signature = list(a = c("A", "B", "X1"), b = c("C", "D")), genesets = hyper_genesets(), verbose = FALSE)
+  hyper <- runToyHypeR(organism = "Homo sapiens", test = "hypergeometric", signature = list(a = c("A", "B", "X1"), b = c("C", "D")), genesets = hyper_genesets(), verbose = FALSE)
   venn <- SigRepo::plotHypeREnrichment(hyper, "SET_AB", query = "a", title = "custom")
   expect_equal(unname(vapply(venn$layers, function(layer) class(layer$geom)[1], ""))[1], "GeomCircle")
   expect_equal(venn$labels$subtitle, sprintf("SET_AB\na\noverlap = 3, p = %s, FDR = %s",
@@ -435,7 +437,7 @@ test_that("plotHypeREnrichment labels a kstest down ranking and draws a Venn for
 test_that("plotHypeRMap returns hypeR's enrichment map when geneset pairs share genes", {
   testthat::skip_if_not_installed("hypeR")
   testthat::skip_if_not_installed("visNetwork")
-  hyper <- runToyHypeR(signature = list(a = sprintf("G%02d", 1:12), b = sprintf("G%02d", 29:40)),
+  hyper <- runToyHypeR(organism = "Homo sapiens", test = "hypergeometric", signature = list(a = sprintf("G%02d", 1:12), b = sprintf("G%02d", 29:40)),
                        genesets = hyper_fgsea_genesets(), verbose = FALSE)
 
   map <- SigRepo::plotHypeRMap(hyper, query = "a")
@@ -452,7 +454,7 @@ test_that("plotHypeRMap returns NULL with a warning when hypeR would fail", {
   testthat::skip_if_not_installed("hypeR")
   testthat::skip_if_not_installed("visNetwork")
   disjoint <- list(A = c("X1", "X2", "X3"), B = c("Y1", "Y2", "Y3"), C = c("Z1", "Z2", "Z3"))
-  hyper <- runToyHypeR(signature = c("X1", "Y1", "Z1", "Q"), genesets = disjoint, verbose = FALSE)
+  hyper <- runToyHypeR(organism = "Homo sapiens", test = "hypergeometric", signature = c("X1", "Y1", "Z1", "Q"), genesets = disjoint, verbose = FALSE)
 
   expect_warning(
     no_edges <- SigRepo::plotHypeRMap(hyper),
@@ -469,7 +471,7 @@ test_that("plotHypeRMap returns NULL with a warning when hypeR would fail", {
 test_that("plotHypeRMap warns distinctly when top leaves only one geneset", {
   testthat::skip_if_not_installed("hypeR")
   testthat::skip_if_not_installed("visNetwork")
-  hyper <- runToyHypeR(signature = sprintf("G%02d", 1:12), genesets = hyper_fgsea_genesets(), verbose = FALSE)
+  hyper <- runToyHypeR(organism = "Homo sapiens", test = "hypergeometric", signature = sprintf("G%02d", 1:12), genesets = hyper_fgsea_genesets(), verbose = FALSE)
 
   expect_warning(
     one <- SigRepo::plotHypeRMap(hyper, top = 1),
@@ -483,12 +485,12 @@ test_that("plotHypeRMap hierarchy maps need rgsets genesets", {
   testthat::skip_if_not_installed("visNetwork")
   testthat::skip_if_not_installed("igraph")
   gs <- hyper_fgsea_genesets()
-  hyper <- runToyHypeR(signature = sprintf("G%02d", 1:12), genesets = gs, verbose = FALSE)
+  hyper <- runToyHypeR(organism = "Homo sapiens", test = "hypergeometric", signature = sprintf("G%02d", 1:12), genesets = gs, verbose = FALSE)
   expect_error(SigRepo::plotHypeRMap(hyper, type = "hmap"), "type = \"hmap\" needs rgsets genesets", fixed = TRUE)
 
   nodes <- data.frame(label = names(gs), row.names = paste0("n", seq_along(gs)))
   edges <- data.frame(from = c("n1", "n3"), to = c("n2", "n4"))
   rg <- hypeR::rgsets$new(gs, nodes, edges, name = "toy", version = "v1", quiet = TRUE)
-  hierarchical <- runToyHypeR(signature = sprintf("G%02d", 1:12), genesets = rg, verbose = FALSE)
+  hierarchical <- runToyHypeR(organism = "Homo sapiens", test = "hypergeometric", signature = sprintf("G%02d", 1:12), genesets = rg, verbose = FALSE)
   expect_true(inherits(SigRepo::plotHypeRMap(hierarchical, type = "hmap"), "visNetwork"))
 })

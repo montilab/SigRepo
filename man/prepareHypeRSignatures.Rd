@@ -12,7 +12,6 @@ prepareHypeRSignatures(
   signature = NULL,
   test = c("hypergeometric", "kstest", "fgsea"),
   split = TRUE,
-  direction = c("up", "down", "both"),
   ks_source = c("difexp", "signature"),
   score_col = "score",
   query_names = NULL,
@@ -36,18 +35,31 @@ only), or a named list of those, as \code{hypeR::hypeR()} takes. A vector is
 used in the order given (it is the ranking for kstest); NA and empty symbols
 are removed. Cannot be combined with \code{omic_signature},
 \code{signature_id} or \code{signature_name}; \code{split},
-\code{score_col} are ignored and \code{direction}, \code{ks_source} must
-stay at their defaults. Use \code{getHypeRDifexp()} to build a gene list from
+\code{score_col} are ignored and \code{ks_source} must stay at its
+default. For \code{"kstest"}, each vector is tested as given
+(\code{"<name> | up"}) and reversed (\code{"<name> | down"}, with negated
+scores). Use \code{getHypeRDifexp()} to build a gene list from
 a signature's difexp with your own cutoffs.}
 
 \item{test}{\code{"hypergeometric"} (a character vector of symbols from the
 signature table), \code{"kstest"} (a named numeric vector ranked by
 \code{score_col}, from the table named by \code{ks_source}) or
-\code{"fgsea"} (the same ranking as \code{"kstest"} with
-\code{direction = "up"}; one ranking per signature, or per category for a
-categorical signature, and \code{info$direction} holds the requested
-direction). With \code{"fgsea"}, \code{signature} input must be named numeric
-vectors.}
+\code{"fgsea"} (the "up" ranking of \code{"kstest"}: one ranking per
+signature, or per category for a categorical signature, and
+\code{info$direction} is \code{"both"}). With \code{"fgsea"},
+\code{signature} input must be named numeric vectors. Both ranked tests
+always test both ends of the ranking: hypeR's KS test only finds genesets
+enriched toward the top, so \code{"kstest"} builds two queries per ranking,
+\code{"<label> | up"} (highest scores first) and \code{"<label> | down"}
+(the negated scores, so the lowest come first), whose p-values are adjusted
+for multiple testing together; \code{"fgsea"} tests both tails in one run
+and returns \code{"<label> | up"} (ES > 0) and \code{"<label> | down"}
+(ES < 0). A categorical signature is ranked separately within each
+\code{group_label}, using only that category's rows
+(\code{"<label> | <group> | up"} / \code{" | down"}). A ranking needs a
+signed score: one whose scores are all equal (\code{constant_score}) or all
+one sign (\code{unsigned_score}) is skipped, per category for categorical
+signatures.}
 
 \item{split}{Logical; for \code{"hypergeometric"}, build one vector per
 \code{group_label} (e.g. one per arm of a bi-directional signature). A
@@ -56,23 +68,6 @@ its signature table has scores each category is also split by score sign:
 \code{"<label> | <group> | up"} (score > 0) and \code{"... | down"}
 (score < 0); rows scoring exactly 0 join neither. Ignored by
 \code{"kstest"} and \code{"fgsea"}. Defaults to \code{TRUE}.}
-
-\item{direction}{For \code{"kstest"} only: which end of the ranking to test.
-hypeR's KS test only finds genesets enriched toward the top of the ranking.
-\code{"up"} (default) ranks by \code{score_col}, highest first;
-\code{"down"} ranks by the negated \code{score_col}, so the lowest scores
-come first; \code{"both"} builds one query per direction, named
-\code{"<label> | up"} and \code{"<label> | down"}. A categorical signature
-is ranked separately within each \code{group_label}, using only that
-category's rows (\code{"<label> | <group>"}, plus \code{" | up"} /
-\code{" | down"} with \code{"both"}). A ranking needs a signed score: one
-whose scores are all equal (\code{constant_score}) or all one sign
-(\code{unsigned_score}) is skipped, per category for categorical
-signatures. For \code{"fgsea"}, which tests both tails in one run,
-\code{direction} chooses which result sides \code{runHypeR()} returns:
-\code{"up"} (ES > 0), \code{"down"} (ES < 0) or \code{"both"}, the default
-for \code{"fgsea"} when \code{direction} is not passed; it is allowed with
-\code{signature} input.}
 
 \item{ks_source}{For \code{"kstest"} and \code{"fgsea"} only: the table to
 rank. \code{"difexp"} (default) ranks every measured gene. \code{"signature"}

@@ -47,8 +47,8 @@ significant digits, ties included:
   \item fgsea: \code{fgsea::plotEnrichmentData()}; an exact tie between the
   positive and negative extremum gives 0, as fgsea does.
 }
-The ranking is the one tested: for a kstest \code{direction = "down"} query
-it is the negated score. The leading edge follows the GSEA convention (hits
+The ranking is the one tested: for a kstest \code{"| down"} query it is the
+negated score. The leading edge follows the GSEA convention (hits
 up to the extremum for a positive score, from it for a negative score); for
 kstest with a negative score this can differ from hypeR's \code{hits}
 column, which always counts from the top.

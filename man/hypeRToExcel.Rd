@@ -37,13 +37,13 @@ not modified.
 \code{hyp_obj} and \code{file_path} are required. \code{cols},
 \code{versioning} and \code{index} are optional: by default every column is
 written, with hypeR's \code{versioning} sheet and the SigRepo \code{index}
-sheet. \code{cols = NULL} means "all columns", not "none". The hypeR and
-openxlsx packages must be installed.
+sheet. \code{cols = NULL} means "all columns", not "none".
 }
 
 \examples{
 \dontrun{
-hyp <- SigRepo::runHypeR(omic_signature = sig, genesets = "msigdb", msigdb_collection = "H")
+hyp <- SigRepo::runHypeR(omic_signature = sig, organism = "Homo sapiens", test = "hypergeometric",
+                         genesets = "msigdb", msigdb_collection = "H")
 SigRepo::hypeRToExcel(hyp, file_path = "results.xlsx")
 }
 

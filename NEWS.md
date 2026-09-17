@@ -4,12 +4,22 @@
 
 `runHypeR()` and `prepareHypeRSignatures()` now follow hypeR's own interface.
 
+- `runHypeR()` requires `organism` and `test`, with no default for either:
+  `runHypeR(omic_signature = sig, organism = "Homo sapiens", test = "hypergeometric", genesets = ...)`.
+  `organism` replaces `msigdb_species` (it is the MSigDB species with
+  `genesets = "msigdb"`), and a SigRepo signature whose `metadata$organism` is
+  different (ignoring case), or missing, is an error, so human and mouse
+  signatures run in separate calls. Before, the species silently defaulted to
+  `"Homo sapiens"` and mixed organisms were not detected.
+- hypeR, msigdbr, fgsea, ggplot2, openxlsx and hypeR.GEM are now imported
+  rather than suggested, so they install with SigRepo.
+
 - `runHypeR()` returns hypeR's `hyp` or `multihyp` instead of
   `list(result, signatures, metadata)`, and hypeR's functions (`hyp_dots()`,
   `hyp_emap()`, `hyp_to_rmd()`, ...) work on it directly. The type follows the
   input, as in hypeR: a `hyp` for a single signature (one `OmicSignature`, id
-  or name) with `split = FALSE` or a one-direction kstest, otherwise a
-  `multihyp`, even when only one query is left. `hyp_show()` takes a single
+  or name) with hypergeometric `split = FALSE`, otherwise a `multihyp`, even
+  when only one query is left. `hyp_show()` takes a single
   `hyp`, e.g. `hyp_show(res$data[[1]])`.
 - Each `hyp$info` ends with SigRepo provenance in a fixed order:
   `SigRepo Signature ID`, `SigRepo Signature Name`, `Group Label`,
@@ -22,9 +32,20 @@
   `power` changes only the kstest `score`: `1`, the default, weights hits by
   |score|; `0` runs hypeR's ranked (unweighted) signature, so its `score` and
   `Signature Type = "ranked"` match hypeR's documentation. The p-value and FDR
-  come from hypeR's unweighted, one-sided KS test and do not depend on `power`
-  or `absolute`; it finds genesets enriched toward the top of the ranking, and
-  `direction` chooses which end that is.
+  come from hypeR's unweighted, one-sided KS test and do not depend on `power`;
+  it finds genesets enriched toward the top of the ranking, which is why every
+  kstest also runs a `| down` query on the negated scores.
+- kstest and fgsea always test both ends of the ranking; there is no
+  `direction` argument. kstest returns `"<label> | up"` (the scores) and
+  `"<label> | down"` (the negated scores) for every ranking, with the FDR
+  adjusted across both (`fdr_scope = "run"`); fgsea returns its ES > 0 and
+  ES < 0 pathways as `"<label> | up"` and `"<label> | down"`. Both rank the
+  whole difexp as one list, not split by `group_label` (categorical signatures
+  are ranked per category). A single signature therefore gives a `multihyp`
+  for both tests, and hypeR-native `signature` input for kstest is tested as
+  given and reversed.
+- `absolute` is removed from `runHypeR()`. hypeR marks it as not implemented,
+  and every run now uses `absolute = FALSE`.
 - `fdr = 1` (was 0.05) and `pval = 1` (new) match `hypeR::hypeR()`.
 - Hypergeometric runs follow the BS831 `hyperEnrichment()` conventions
   (montilab.github.io/BS831), which differ from plain hypeR:
@@ -62,15 +83,20 @@
 ## New
 
 - `runHypeR()`, `prepareHypeRSignatures()` and `getHypeRGenesets()` document
-  which arguments are required (the signatures, and the genesets) and which are
+  which arguments are required (the signatures and genesets, plus `organism` and
+  `test` for `runHypeR()`) and which are
   optional with a default, including what `NULL` means for `background`,
   `query_names` and `seed`. `getHypeRDifexp()`, `hypeRToExcel()`,
   `hypeRDotData()`, `hypeREnrichmentData()`, `hypeRSignatureKey()`,
   `plotHypeRDots()`, `plotHypeREnrichment()` and `plotHypeRMap()` have the same
   section; most need only the result object, and the enrichment functions also
-  need `geneset` (and `query` for a result with several queries). The hypeR tutorial says the same up front, and the
-  error for a call with no signatures now names `signature` alongside
+  need `geneset` (and `query` for a result with several queries). The error for
+  a call with no signatures now names `signature` alongside
   `signature_id`, `signature_name` and `omic_signature`.
+
+- The annotation tutorial (`vignette("annotation-tutorial")`) walks through
+  searching SigRepo for signatures, running `runHypeR()` and plotting the
+  results.
 
 - Plotting for `runHypeR()` results, drawn from the result objects:
   `plotHypeRDots()` (one column per query with the same top genesets for every
@@ -97,8 +123,7 @@
   ignore the score weights and test only the top of the ranking, fgsea gives
   weighted permutation p-values, NES and the leading edge for both tails in one
   run. Pathways are split by the sign of their enrichment score into
-  `"<query> | up"` and `"<query> | down"` hyps (`direction`, default `"both"`
-  for fgsea). `seed = 1` makes the p-values reproducible without touching the
+  `"<query> | up"` and `"<query> | down"` hyps. `seed = 1` makes the p-values reproducible without touching the
   session's random-number state; `fgsea_args` passes fgsea options such as
   `minSize`/`maxSize`. The results work with `hyp_dots()`, `hyp_emap()`,
   `rctbl_build()`, `hyp_to_rmd()` and `hypeRToExcel()`.
@@ -109,9 +134,6 @@
   names (hypeR's `hyp_to_excel()` fails on names over 31 characters, which
   most SigRepo signature names are) and an `index` sheet mapping each sheet to
   its query and signature.
-- kstest `direction = c("up", "down", "both")`: `"down"` ranks by the negated
-  score so genesets at the low end can reach significance; `"both"` returns
-  `"<label> | up"` and `"<label> | down"` queries.
 - kstest `ks_source = c("difexp", "signature")`: `"signature"` ranks the
   signature table, for signatures stored without a difexp.
 - `query_names`: a function of the query info table that returns the query
@@ -124,9 +146,17 @@
   so you can apply your own cutoffs and pass the genes to `signature =`.
 - `background` can be a named list giving each signature its own background
   (number, gene vector or `"difexp"`), keyed by signature label or ID.
-- `hypeR (>= 2.0.0)` in Suggests.
+- `hypeR (>= 2.0.0)` in Imports.
 
 ## Fixes
+
+- A kstest query with a single geneset (passed that way, or left after the
+  zero-weight and full-coverage drops) now runs instead of failing with hypeR's
+  "dim(X) must have a positive length"; its FDR equals its p-value.
+- A gene-vector or `"difexp"` background now reduces kstest and fgsea rankings
+  to the background genes as well as the genesets, as it already did for
+  hypergeometric gene lists, with the same warning and
+  `SigRepo Query Genes Removed` count. A ranking left with no genes is skipped.
 
 - Gene symbols resolve from the table's symbol column, then (hypergeometric)
   difexp symbols joined on `probe_id`, then the reference table by

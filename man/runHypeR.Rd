@@ -10,14 +10,13 @@ runHypeR(
   signature_name = NULL,
   omic_signature = NULL,
   signature = NULL,
+  organism,
+  test,
   genesets,
-  msigdb_species = NULL,
   msigdb_collection = NULL,
   msigdb_subcollection = NULL,
   msigdb_clean = FALSE,
-  test = c("hypergeometric", "kstest", "fgsea"),
   split = TRUE,
-  direction = c("up", "down", "both"),
   ks_source = c("difexp", "signature"),
   score_col = "score",
   query_names = NULL,
@@ -27,7 +26,6 @@ runHypeR(
   fgsea_args = base::list(),
   background = NULL,
   power = 1,
-  absolute = FALSE,
   pval = 1,
   fdr = 1,
   plotting = FALSE,
@@ -52,17 +50,31 @@ only), or a named list of those, as \code{hypeR::hypeR()} takes. A vector is
 used in the order given (it is the ranking for kstest); NA and empty symbols
 are removed. Cannot be combined with \code{omic_signature},
 \code{signature_id} or \code{signature_name}; \code{split},
-\code{score_col} are ignored and \code{direction}, \code{ks_source} must
-stay at their defaults. Use \code{getHypeRDifexp()} to build a gene list from
+\code{score_col} are ignored and \code{ks_source} must stay at its
+default. For \code{"kstest"}, each vector is tested as given
+(\code{"<name> | up"}) and reversed (\code{"<name> | down"}, with negated
+scores). Use \code{getHypeRDifexp()} to build a gene list from
 a signature's difexp with your own cutoffs.}
+
+\item{organism}{Required. The organism of the signatures, e.g.
+\code{"Homo sapiens"} or \code{"Mus musculus"}, compared with each SigRepo
+signature's \code{metadata$organism} ignoring case. A signature of another
+organism, or with none recorded, is an error: one call tests one organism,
+because genesets are organism-specific gene symbols. With
+\code{genesets = "msigdb"} it is also the MSigDB species. With
+\code{signature} input there is no metadata to check, so it only chooses
+the MSigDB species.}
+
+\item{test}{Required: \code{"hypergeometric"} (a character vector of
+symbols from the signature table), \code{"kstest"} (a named numeric vector
+ranked by \code{score_col}, from the table named by \code{ks_source}) or
+\code{"fgsea"} (the same ranking as \code{"kstest"}, tested with
+\code{fgsea::fgseaMultilevel()}). With \code{"fgsea"}, \code{signature}
+input must be named numeric vectors.}
 
 \item{genesets}{Either the string \code{"msigdb"}, or your own genesets: a
 named list of character vectors, a \code{hypeR::gsets} object, or a
 \code{hypeR::rgsets} object.}
-
-\item{msigdb_species}{Species for MSigDB, e.g. \code{"Homo sapiens"} or
-\code{"Mus musculus"}. Defaults to \code{"Homo sapiens"}. Only valid with
-\code{genesets = "msigdb"}.}
 
 \item{msigdb_collection}{MSigDB collection, e.g. \code{"H"}, \code{"C2"},
 \code{"MH"}. Required with \code{genesets = "msigdb"}.}
@@ -73,15 +85,6 @@ named list of character vectors, a \code{hypeR::gsets} object, or a
 \item{msigdb_clean}{Logical; clean geneset labels via
 \code{hypeR::gsets$new(clean = TRUE)}. Defaults to \code{FALSE}.}
 
-\item{test}{\code{"hypergeometric"} (a character vector of symbols from the
-signature table), \code{"kstest"} (a named numeric vector ranked by
-\code{score_col}, from the table named by \code{ks_source}) or
-\code{"fgsea"} (the same ranking as \code{"kstest"} with
-\code{direction = "up"}; one ranking per signature, or per category for a
-categorical signature, and \code{info$direction} holds the requested
-direction). With \code{"fgsea"}, \code{signature} input must be named numeric
-vectors.}
-
 \item{split}{Logical; for \code{"hypergeometric"}, build one vector per
 \code{group_label} (e.g. one per arm of a bi-directional signature). A
 categorical signature's groups are categories rather than directions, so when
@@ -89,23 +92,6 @@ its signature table has scores each category is also split by score sign:
 \code{"<label> | <group> | up"} (score > 0) and \code{"... | down"}
 (score < 0); rows scoring exactly 0 join neither. Ignored by
 \code{"kstest"} and \code{"fgsea"}. Defaults to \code{TRUE}.}
-
-\item{direction}{For \code{"kstest"} only: which end of the ranking to test.
-hypeR's KS test only finds genesets enriched toward the top of the ranking.
-\code{"up"} (default) ranks by \code{score_col}, highest first;
-\code{"down"} ranks by the negated \code{score_col}, so the lowest scores
-come first; \code{"both"} builds one query per direction, named
-\code{"<label> | up"} and \code{"<label> | down"}. A categorical signature
-is ranked separately within each \code{group_label}, using only that
-category's rows (\code{"<label> | <group>"}, plus \code{" | up"} /
-\code{" | down"} with \code{"both"}). A ranking needs a signed score: one
-whose scores are all equal (\code{constant_score}) or all one sign
-(\code{unsigned_score}) is skipped, per category for categorical
-signatures. For \code{"fgsea"}, which tests both tails in one run,
-\code{direction} chooses which result sides \code{runHypeR()} returns:
-\code{"up"} (ES > 0), \code{"down"} (ES < 0) or \code{"both"}, the default
-for \code{"fgsea"} when \code{direction} is not passed; it is allowed with
-\code{signature} input.}
 
 \item{ks_source}{For \code{"kstest"} and \code{"fgsea"} only: the table to
 rank. \code{"difexp"} (default) ranks every measured gene. \code{"signature"}
@@ -136,8 +122,8 @@ within each query, as \code{hypeR::hypeR()} does for a named list. With one
 query both are the same. The pooled FDR is computed from hypeR's p-values,
 which are rounded to 2 significant digits. \code{pval} and \code{fdr} filter
 on the FDR of the chosen scope. For \code{test = "fgsea"}, \code{"run"}
-pools the up and down sides of every ranking in the call, regardless of
-\code{direction} (also with a single ranking); \code{"query"} keeps
+pools the up and down sides of every ranking in the call (also with a
+single ranking); \code{"query"} keeps
 fgsea's own per-ranking \code{padj}, which already covers both sides.}
 
 \item{seed}{\code{test = "fgsea"} only: fgsea's p-values come from random
@@ -163,8 +149,8 @@ looks filtered is not a measured-gene universe, so the default also uses
 universe, so the background does not enter the test. \code{test = "fgsea"}
 defaults to \code{23467} as well and for the same reason (the ranking is
 the universe): a number has no effect on the fgsea result, while a gene
-vector or \code{"difexp"} still reduces the genesets to those genes (the
-\code{geneset} column) as hypeR does. Otherwise
+vector or \code{"difexp"} still reduces the genesets and the ranking to
+those genes. Otherwise
 hypeR's background: a single number (population size), a
 character vector of background genes, or \code{"difexp"} to use each
 signature's measured genes from its difexp table. With an explicit
@@ -175,10 +161,12 @@ named by signature label (see \code{prepareHypeRSignatures()$info$signature_name
 with \code{signature}, the list names) or by signature ID; arms of a split
 signature share its background. A name that matches no signature, or a
 signature with no entry, is an error. With a gene vector or
-\code{"difexp"}, a hypergeometric query is first reduced to the background
-genes, with a warning naming each query that lost genes: hypeR reduces only
-the genesets, and query genes outside the background would distort the
-p-values. Anything else (e.g. \code{"Difexp"}) is an error.}
+\code{"difexp"}, every query (the hypergeometric gene list, or the kstest
+and fgsea ranking) is first reduced to the background genes, with a warning
+naming each query that lost genes: hypeR reduces only the genesets, and
+query genes outside the background would distort the p-values. A query left
+with no genes is skipped with a warning. Anything else (e.g.
+\code{"Difexp"}) is an error.}
 
 \item{power}{Exponent for the score weights: fgsea's \code{gseaParam} with
 \code{test = "fgsea"}, where it does change the p-values. For kstest it changes
@@ -187,17 +175,17 @@ only the enrichment \code{score}. \code{1} (default) weights hits by
 passed as gene names in rank order, so \code{score} and
 \code{Signature Type = "ranked"} match hypeR's documented ranked test. The
 \code{pval} and \code{fdr} come from hypeR's unweighted, one-sided KS test
-and do not depend on \code{power} or \code{absolute}. That test finds
-genesets enriched toward the top of the ranking; use \code{direction} to
-test the other end. hypeR's kstest also cannot score a geneset whose hits in
+and do not depend on \code{power}. That test finds
+genesets enriched toward the top of the ranking, which is why every kstest
+also runs a \code{"| down"} query on the negated scores. hypeR's kstest also cannot score a geneset whose hits in
 a query all have score 0 (\code{power != 0}) or that contains every query
 gene (any power); such genesets are dropped for that query with a warning,
 which also removes them from the FDR adjustment. They are listed in the
-result's \code{info} (see Value).}
-
-\item{absolute}{Passed to \code{hypeR::hypeR()} (kstest only). hypeR marks
-it as not fully implemented; \code{TRUE} is an error with
-\code{test = "fgsea"}. Defaults to \code{FALSE}.}
+result's \code{info} (see Value). A kstest query left with a single geneset
+is still tested (hypeR itself errors on a one-geneset list); its FDR equals
+its p-value. hypeR's \code{absolute} option is not offered: hypeR marks it
+as not implemented, and \code{runHypeR()} always runs with
+\code{absolute = FALSE}.}
 
 \item{pval}{Keep results with p-value at or below this. Defaults to \code{1}.}
 
@@ -218,19 +206,17 @@ geneset without storing every plot, use \code{plotHypeREnrichment()}.}
 \value{
 A \code{hyp} when the input is a single vector in \code{signature},
 or a single signature (one \code{OmicSignature}, or one id or name) and the
-test builds one query by construction (\code{split = FALSE}, or
-\code{test = "kstest"} or \code{"fgsea"} with \code{direction} \code{"up"}
-or \code{"down"} on a signature that is not categorical; a single
-\code{signature} vector gives a \code{multihyp} only for fgsea with
-\code{"both"}). Otherwise a \code{multihyp} named
-by query, even when only one query is left. This mirrors hypeR, where a
-vector gives a \code{hyp} and a named list a \code{multihyp}.
+test builds one query by construction (hypergeometric with
+\code{split = FALSE}, or a single \code{signature} vector). Otherwise a
+\code{multihyp} named by query, even when only one query is left: the
+ranked tests always return an \code{"| up"} and a \code{"| down"} query
+per ranking. This mirrors hypeR, where a vector gives a \code{hyp} and a
+named list a \code{multihyp}.
 
 With \code{test = "fgsea"}, each ranking runs
 \code{fgsea::fgseaMultilevel()} once, and its pathways are split by the sign
 of their enrichment score into \code{"<query> | up"} (ES > 0) and
-\code{"<query> | down"} (ES < 0) hyps (just \code{"<query>"} for
-\code{direction} \code{"up"} or \code{"down"}); pathways with ES = 0 join
+\code{"<query> | down"} (ES < 0) hyps; pathways with ES = 0 join
 neither. Their \code{data} has \code{label}, \code{pval}, \code{fdr},
 \code{lte} (log2err), \code{es}, \code{nes}, \code{signature},
 \code{geneset}, \code{overlap}, \code{le} and \code{hits} (the leading
@@ -278,13 +264,17 @@ sheet, or shorten the names with \code{query_names}.
 }
 \section{Required and optional arguments}{
 
-Only two things are required: the signatures to test, and the genesets to
-test them against.
+Four things are required and have no default:
 \itemize{
   \item \strong{Signatures}, as exactly one of: \code{signature_id} or
   \code{signature_name} (each with \code{conn_handler}),
   \code{omic_signature}, or \code{signature} (hypeR-native gene symbols or
   a named score vector). They cannot be combined.
+  \item \strong{\code{organism}}: the organism of every signature in the
+  call, e.g. \code{"Homo sapiens"}. A signature of another organism is an
+  error, so human and mouse signatures run in separate calls.
+  \item \strong{\code{test}}: \code{"hypergeometric"}, \code{"kstest"}
+  or \code{"fgsea"}.
   \item \strong{\code{genesets}}: \code{"msigdb"} together with
   \code{msigdb_collection}, or your own genesets (a named list,
   \code{hypeR::gsets} or \code{hypeR::rgsets}).
@@ -307,17 +297,19 @@ hallmark <- SigRepo::getHypeRGenesets("msigdb", msigdb_collection = "H")
 
 hyp <- SigRepo::runHypeR(
   omic_signature = LLFS_Aging_Gene_2023,
+  organism = "Homo sapiens",
+  test = "hypergeometric",
   genesets = hallmark,
   fdr = 0.05
 )
-hypeR::hyp_dots(hyp)
+SigRepo::plotHypeRDots(hyp)
 SigRepo::hypeRToExcel(hyp, file_path = "llfs_hallmark.xlsx")
 
 ranked <- SigRepo::runHypeR(
   omic_signature = LLFS_Aging_Gene_2023,
-  genesets = hallmark,
+  organism = "Homo sapiens",
   test = "kstest",
-  direction = "both"
+  genesets = hallmark
 )
 }
 

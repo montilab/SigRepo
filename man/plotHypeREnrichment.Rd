@@ -39,7 +39,7 @@ required. \code{query} is required only when \code{hyp_obj} holds more than
 one query; for a single \code{hyp}, or a \code{multihyp} with one query, it
 can be left out. For fgsea the ranking name without \code{" | up"} or
 \code{" | down"} is enough. \code{title} is optional and defaults to the test
-that was run. ggplot2 must be installed.
+that was run.
 }
 
 \examples{

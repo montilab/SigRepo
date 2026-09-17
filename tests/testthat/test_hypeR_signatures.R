@@ -88,10 +88,10 @@ test_that("kstest ranks the full difexp, collapsing duplicate symbols by max |sc
 
   prepared <- SigRepo::prepareHypeRSignatures(omic_signature = sig, test = "kstest", verbose = FALSE)
 
-  expect_equal(names(prepared$signatures), "sig_a")
-  expect_equal(prepared$signatures[["sig_a"]], c(A = 3, B = 2, E = -1, C = -2, D = -3))
-  expect_equal(prepared$info$symbol_source, "difexp$gene_symbol")
-  expect_true(is.na(prepared$info$group_label))
+  expect_equal(names(prepared$signatures), c("sig_a | up", "sig_a | down"))
+  expect_equal(prepared$signatures[["sig_a | up"]], c(A = 3, B = 2, E = -1, C = -2, D = -3))
+  expect_equal(prepared$info$symbol_source, rep("difexp$gene_symbol", 2))
+  expect_true(all(is.na(prepared$info$group_label)))
 })
 
 test_that("kstest skips signatures without difexp or without the score column", {
@@ -250,18 +250,14 @@ test_that("B5/E10: omic_signature together with signature_id or signature_name i
 
 # ---- Evaluation fixes (W1, W2, W5) ----
 
-test_that("W1: direction = \"down\" ranks the negated scores; \"both\" builds one query per direction", {
+test_that("kstest always builds an up query and a down query on the negated scores", {
   sig <- make_hyper_sig(difexp = hyper_difexp_table())
 
-  down <- SigRepo::prepareHypeRSignatures(omic_signature = sig, test = "kstest", direction = "down", verbose = FALSE)
-  expect_equal(names(down$signatures), "sig_a")
-  expect_equal(down$signatures[["sig_a"]], c(D = 3, C = 2, E = 1, B = -2, A = -3))
-  expect_equal(down$info$direction, "down")
-
-  both <- SigRepo::prepareHypeRSignatures(omic_signature = sig, test = "kstest", direction = "both", verbose = FALSE)
+  expect_false("direction" %in% names(formals(SigRepo::prepareHypeRSignatures)))
+  both <- SigRepo::prepareHypeRSignatures(omic_signature = sig, test = "kstest", verbose = FALSE)
   expect_equal(names(both$signatures), c("sig_a | up", "sig_a | down"))
   expect_equal(both$signatures[["sig_a | up"]], c(A = 3, B = 2, E = -1, C = -2, D = -3))
-  expect_equal(both$signatures[["sig_a | down"]], down$signatures[["sig_a"]])
+  expect_equal(both$signatures[["sig_a | down"]], c(D = 3, C = 2, E = 1, B = -2, A = -3))
   expect_equal(both$info$direction, c("up", "down"))
   expect_equal(both$info$query, names(both$signatures))
 
@@ -272,8 +268,8 @@ test_that("W1: direction = \"down\" ranks the negated scores; \"both\" builds on
 test_that("W5: ks_source = \"signature\" ranks the signature table and reports its own skip reasons", {
   prepared <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(), test = "kstest",
                                               ks_source = "signature", verbose = FALSE)
-  expect_equal(prepared$signatures[["sig_a"]], c(A = 3, B = 2, C = -2, D = -3))
-  expect_equal(prepared$info$symbol_source, "signature$symbol")
+  expect_equal(prepared$signatures[["sig_a | up"]], c(A = 3, B = 2, C = -2, D = -3))
+  expect_equal(prepared$info$symbol_source, rep("signature$symbol", 2))
 
   no_score <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(), test = "kstest",
                                               ks_source = "signature", score_col = "logFC", verbose = FALSE)
@@ -283,12 +279,12 @@ test_that("W5: ks_source = \"signature\" ranks the signature table and reports i
 
 test_that("W1/W5: kstest-only arguments are rejected for hypergeometric", {
   expect_error(
-    SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(), direction = "both", verbose = FALSE),
-    "'direction' and 'ks_source' only apply when test = \"kstest\"", fixed = TRUE
+    SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(), ks_source = "signature", verbose = FALSE),
+    "'ks_source' only applies when test = \"kstest\"", fixed = TRUE
   )
   expect_error(
-    SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(), test = "kstest", direction = "sideways", verbose = FALSE),
-    "should be one of"
+    SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(), test = "kstest", direction = "down", verbose = FALSE),
+    "unused argument (direction = \"down\")", fixed = TRUE
   )
 })
 
@@ -334,9 +330,13 @@ test_that("W4: a named list gives one query per element; a weighted vector keeps
     signature = list(up = c("A", "B"), ranked = c(C = -1, A = 2, B = NA)),
     test = "kstest", verbose = FALSE
   )
-  expect_equal(names(prepared$signatures), c("up", "ranked"))
-  expect_equal(prepared$signatures$ranked, c(C = -1, A = 2))
-  expect_equal(prepared$info$n_dropped, c(0L, 1L))
+  expect_equal(names(prepared$signatures), c("up | up", "up | down", "ranked | up", "ranked | down"))
+  expect_equal(prepared$signatures[["ranked | up"]], c(C = -1, A = 2))
+  # The down query tests the other end: the reversed ranking, with negated scores.
+  expect_equal(prepared$signatures[["ranked | down"]], c(A = -2, C = 1))
+  expect_equal(prepared$signatures[["up | down"]], c("B", "A"))
+  expect_equal(prepared$info$direction, c("up", "down", "up", "down"))
+  expect_equal(prepared$info$n_dropped, c(0L, 0L, 1L, 1L))
 })
 
 test_that("W4: invalid hypeR-native input is rejected with a clear message", {
@@ -349,7 +349,7 @@ test_that("W4: invalid hypeR-native input is rejected with a clear message", {
   expect_error(prep(signature = c(A = 1, A = 2), test = "kstest"), "has duplicated gene names", fixed = TRUE)
   expect_error(prep(signature = "A", omic_signature = make_hyper_sig()), "Supply either 'signature' or SigRepo signatures", fixed = TRUE)
   expect_error(prep(signature = "A", signature_id = 5), "Supply either 'signature' or SigRepo signatures", fixed = TRUE)
-  expect_error(prep(signature = "A", test = "kstest", direction = "down"), "with 'signature', order the vector yourself", fixed = TRUE)
+  expect_error(prep(signature = "A", test = "kstest", ks_source = "signature"), "with 'signature', order the vector yourself", fixed = TRUE)
 })
 
 test_that("W4: an all-NA element is skipped, and query_names applies to native input", {
@@ -414,23 +414,19 @@ test_that("bi-directional hypergeometric still splits by group_label only, not b
 })
 
 test_that("categorical kstest ranks each category's own difexp rows, in both directions", {
-  prepared <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_categorical_sig(), test = "kstest",
-                                              direction = "both", verbose = FALSE)
+  prepared <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_categorical_sig(), test = "kstest", verbose = FALSE)
 
   expect_equal(names(prepared$signatures), c("cat | red | up", "cat | red | down", "cat | white | up", "cat | white | down"))
   expect_equal(prepared$signatures[["cat | red | up"]], c(A = 2, C = 0.5, E = 0.2, F = 0.1, D = -0.3, B = -1))
   expect_equal(prepared$signatures[["cat | white | down"]], c(C = 2, A = 1, F = 0.5, B = -0.4, E = -1, D = -3))
   expect_equal(prepared$info$group_label, c("red", "red", "white", "white"))
-
-  up_only <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_categorical_sig(), test = "kstest", verbose = FALSE)
-  expect_equal(names(up_only$signatures), c("cat | red", "cat | white"))
 })
 
 test_that("a categorical category with unsigned scores is skipped; the other categories still run", {
   prepared <- SigRepo::prepareHypeRSignatures(
     omic_signature = make_hyper_categorical_sig(c(2, 1, 0.5, 0.3, 0.2, 0.1)), test = "kstest", verbose = FALSE
   )
-  expect_equal(names(prepared$signatures), "cat | white")
+  expect_equal(names(prepared$signatures), c("cat | white | up", "cat | white | down"))
   expect_equal(prepared$skipped$signature, "cat | red")
   expect_equal(prepared$skipped$reason, "unsigned_score")
 })

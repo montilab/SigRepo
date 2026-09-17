@@ -63,7 +63,8 @@ the reference feature table; without it those rows get
 \dontrun{
 difexp <- SigRepo::getHypeRDifexp(omic_signature = sig)[[1]]
 strict_up <- difexp$resolved_symbol[difexp$adj_p < 0.001 & difexp$score > 0]
-hyp <- SigRepo::runHypeR(signature = list(strict_up = strict_up), genesets = hallmark)
+hyp <- SigRepo::runHypeR(signature = list(strict_up = strict_up), organism = "Homo sapiens",
+                         test = "hypergeometric", genesets = hallmark)
 }
 
 }

@@ -140,13 +140,7 @@ runFgseaHyps <- function(stats, genesets, background, direction, power, seed, fg
 
 #' Error or warn on arguments test = "fgsea" cannot use
 #' @noRd
-checkHypeRFgseaArgs <- function(absolute, seed, fgsea_args, plotting) {
-  if (!base::requireNamespace("fgsea", quietly = TRUE)) {
-    base::stop("\nPackage 'fgsea' is required for test = \"fgsea\". Please install it first.\n")
-  }
-  if (base::isTRUE(absolute)) {
-    base::stop("\n'absolute' applies to test = \"kstest\" only.\n")
-  }
+checkHypeRFgseaArgs <- function(seed, fgsea_args, plotting) {
   if (!base::is.null(seed) && !(base::is.numeric(seed) && base::length(seed) == 1L && base::is.finite(seed))) {
     base::stop("\n'seed' must be NULL or a single number.\n")
   }
@@ -171,17 +165,14 @@ checkHypeRFgseaArgs <- function(absolute, seed, fgsea_args, plotting) {
 #' Run fgsea on every prepared ranking and build named, provenance-tagged hyps
 #'
 #' The multiple-testing family for `fdr_scope = "run"` is the up and down sides
-#' of every ranking in the call, regardless of `direction`: every ranking
-#' always runs both sides here, and the pooled FDR (via `applyRunHypeRFdr()`,
-#' the same BH-over-2-significant-digit-pval pooling `finishHypeRRun()` uses)
-#' is computed before `direction` drops the side(s) not asked for. Otherwise a
-#' `direction` other than "both" would silently halve or skew the pool.
+#' of every ranking in the call, pooled via `applyRunHypeRFdr()` (the same
+#' BH-over-2-significant-digit-pval pooling `finishHypeRRun()` uses).
 #'
-#' @return Named list of hyp objects: "<query> | up" / "<query> | down" for
-#'   direction "both", "<query>" otherwise.
+#' @return Named list of hyp objects, "<query> | up" and "<query> | down" per ranking.
 #' @noRd
-runFgseaQueries <- function(prepared, backgrounds, genesets, direction, power, seed, fgsea_args, quiet,
-                            native, ks_source, score_col, fdr_scope) {
+runFgseaQueries <- function(prepared, backgrounds, genesets, power, seed, fgsea_args, quiet,
+                            native, ks_source, score_col, fdr_scope,
+                            query_genes_removed = base::integer(base::length(prepared$signatures))) {
   side_results <- base::list()
   fgsea_warnings <- base::character()
 
@@ -202,7 +193,7 @@ runFgseaQueries <- function(prepared, backgrounds, genesets, direction, power, s
         score_col = if (native) "" else score_col,
         split = "",
         background_source = backgrounds$sources[i],
-        query_genes_removed = 0L,
+        query_genes_removed = query_genes_removed[i],
         genesets_dropped = run$dropped,
         fdr_scope = fdr_scope
       ))
@@ -219,14 +210,6 @@ runFgseaQueries <- function(prepared, backgrounds, genesets, direction, power, s
     side_results <- applyRunHypeRFdr(side_results, pval = 1, fdr = 1)
   }
 
-  if (base::identical(direction, "both")) {
-    results <- side_results
-  } else {
-    keep <- base::endsWith(base::names(side_results), base::paste0(" | ", direction))
-    results <- side_results[keep]
-    base::names(results) <- base::sub(base::paste0(" \\| ", direction, "$"), "", base::names(results))
-  }
-
-  base::names(results) <- disambiguateHypeRLabels(base::names(results))
-  results
+  base::names(side_results) <- disambiguateHypeRLabels(base::names(side_results))
+  side_results
 }
