@@ -181,7 +181,8 @@ emptyHypeRDotData <- function() {
 #' significant geneset is the last level, i.e. the top row of a plot),
 #' \code{pval}, \code{fdr}, \code{significance} (-log10 of \code{val}; values of
 #' 0 are floored to a tenth of the smallest positive value, or 1e-300),
-#' \code{score} (fgsea NES, kstest score, \code{NA} for hypergeometric) and
+#' \code{score} (fgsea NES, kstest score, negated for a kstest \code{"| down"}
+#' query so it is on the original ranking; \code{NA} for hypergeometric) and
 #' \code{size}. It has 0 rows when nothing passes the cutoffs. Ties for the
 #' shared \code{top} genesets are broken by the best (smallest) \code{pval}
 #' across queries, then by label name.
@@ -229,7 +230,9 @@ hypeRDotData <- function(
     score <- if ("nes" %in% base::colnames(data)) {
       data$nes
     } else if ("score" %in% base::colnames(data)) {
-      data$score
+      # A kstest down query ranks the negated scores; flip its score back so
+      # enrichment at the bottom of the original ranking is negative, as in fgsea.
+      if (base::identical(info$test[i], "kstest") && base::identical(info$direction[i], "down")) -data$score else data$score
     } else {
       NA_real_
     }

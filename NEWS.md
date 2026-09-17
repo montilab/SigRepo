@@ -116,6 +116,9 @@
   as `query` and name the whole ranking rather than its up/down side
   (`summary$ranking`).
   `hypeRDotData()` and `hypeREnrichmentData()` return the underlying data.
+  A kstest `| down` query ranks the negated scores, so its `score` is negated
+  back onto the original ranking and `color_by = "score"` shows genesets
+  enriched at the bottom as negative, as fgsea's NES does.
   `ggplot2` is in Suggests.
 
 - `runHypeR(test = "fgsea")` runs GSEA with `fgsea::fgseaMultilevel()`, ported

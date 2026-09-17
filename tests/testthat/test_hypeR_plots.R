@@ -36,6 +36,11 @@ test_that("hypeRDotData takes score from nes (fgsea) or score (kstest), and size
 
   expect_equal(SigRepo::hypeRDotData(fgsea)$score, c(2.1, -1.5))
   expect_equal(SigRepo::hypeRDotData(kstest)$score, c(0.6, -0.4))
+  # A kstest down query ranks the negated scores, so its score is flipped back
+  # onto the original ranking: enrichment at the bottom plots as negative.
+  kstest_down <- make_dot_hyp(c("A", "B"), c(0.01, 0.02), test = "kstest", extra = list(score = c(0.6, -0.4)),
+                              info = list(`SigRepo Direction` = "down"))
+  expect_equal(SigRepo::hypeRDotData(kstest_down)$score, c(-0.6, 0.4))
   expect_true(all(is.na(SigRepo::hypeRDotData(hyper)$score)))
   expect_equal(SigRepo::hypeRDotData(hyper, size_by = "overlap")$size, c(1, 2))
   expect_true(all(is.na(SigRepo::hypeRDotData(hyper, size_by = "none")$size)))
