@@ -1,0 +1,92 @@
+# Contributing
+
+These rules apply to [SigRepo](https://github.com/montilab/SigRepo) and
+[SigRepo_Server](https://github.com/montilab/SigRepo_Server). They are meant to be
+followed rather than read, so they are short.
+
+The point of all of them: someone outside the project should be able to open the
+tracker and tell, without asking, what is being worked on, what is waiting, and
+what has been decided.
+
+## The rules
+
+**Every change starts as an issue.** Create the branch from the issue, so the two
+are linked before any code is written:
+
+```sh
+gh issue create --repo montilab/SigRepo --title "..." --body "..."
+gh issue develop <number> --base master --checkout
+```
+
+Branch names carry no type prefix — not `fix/`, not `feat/`, not `chore/`. The
+default `<number>-<title-slug>` that `gh` produces is what we want.
+
+**Every pull request closes its issue.** Put `Closes #NNN` in the description.
+This is the rule the rest depends on: it is what lets the board move by itself and
+what leaves the reason for a change next to the change.
+
+**Ideas and work are different things.** An idea states a goal, is labelled `idea`,
+and is never closed by a pull request. A task or bug is real work: it links to the
+idea it serves, and it is closed by the pull request that resolves it. An idea is
+closed only when it has been decided against, or when the work it called for is
+done and its issues are closed.
+
+**A bug report says what was run, what happened, and the error.**
+[SigRepo#75](https://github.com/montilab/SigRepo/issues/75) is the standard to copy.
+The bug form asks for exactly these three things.
+
+**Every issue carries one type label and one status label.** If neither fits, the
+issue is not ready — see the table below.
+
+**Branches are short-lived and merged on GitHub.** Not locally, so the review and
+the history stay in one place. Delete the branch when its pull request merges.
+
+**Nothing is closed silently.** Say what happened and link the pull request or the
+commit. A closed issue with no explanation is a question someone has to ask later.
+
+**The board is a by-product, not a chore.** Status on
+[the project board](https://github.com/orgs/montilab/projects/4) is set by
+automation. If you find yourself updating it by hand, something upstream is wrong —
+usually a missing `Closes #NNN` or an issue that was never added to the board.
+
+**If you cannot state the next step, the issue is not ready.** Write the next step
+in the issue, or label it `needs-decision` and say what the decision is.
+
+**Stale means ninety days.** Untouched issues get asked about once, then closed if
+nobody answers. Closing is not a judgement on the idea; reopen it when it matters
+again.
+
+## Labels
+
+Exactly one type label, and exactly one status label.
+
+| Type | Use for |
+| --- | --- |
+| `bug` | Something is broken. What was run, what happened, the error. |
+| `enhancement` | New behaviour or a change to existing behaviour. |
+| `documentation` | Vignettes, README, roxygen, this file. |
+| `idea` | A goal, not a task. Never closed by a pull request. |
+
+| Status | Meaning |
+| --- | --- |
+| `ready` | The next step is stated and anyone could pick it up. |
+| `needs-decision` | Blocked on a choice a person has to make. Say which choice. |
+| `blocked` | Blocked on something outside this issue. Link it. |
+
+Two more labels exist for specific jobs:
+
+- `no-changelog` — the change is not user-visible, so it needs no `NEWS.md` entry.
+- `data-quality` — the code is fine; the data in the repository is wrong.
+
+## Pull requests
+
+- `Closes #NNN` in the description.
+- Add a `NEWS.md` bullet under `# SigRepo (development version)` for anything a
+  user would notice, or apply `no-changelog`.
+- Merge on GitHub once review passes. Delete the branch.
+
+## Where work happens
+
+Local checkouts stay on `master`; branch work goes in a worktree per issue. The
+`sr-wt new <repo> <issue>` helper creates one, and `sr-wt prune` removes it once
+the pull request merges.

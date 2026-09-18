@@ -43,3 +43,4 @@
 ^artifacts$
 ^sigs_in_repo\.csv$
 ^\.lintr$
+^CONTRIBUTING\.md$
