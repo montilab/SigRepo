@@ -1,0 +1,44 @@
+name: Idea
+description: A goal, not a task. Never closed by a pull request.
+labels: ["idea", "needs-decision"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        An idea states a goal. The work that serves it lives in separate task or
+        bug issues that link back here. This issue is closed only when the idea is
+        decided against, or when the work it called for is finished.
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: The goal
+      description: What would be true that is not true now.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters
+      description: Who benefits, and what they cannot do today.
+    validations:
+      required: true
+
+  - type: textarea
+    id: shape
+    attributes:
+      label: What it might look like
+      description: Rough shape only. Links to prior art, papers or tools are welcome.
+    validations:
+      required: false
+
+  - type: textarea
+    id: decision
+    attributes:
+      label: What has to be decided
+      description: >-
+        The open question that stands between this idea and a task. This is what
+        the needs-decision label points at.
+    validations:
+      required: false
