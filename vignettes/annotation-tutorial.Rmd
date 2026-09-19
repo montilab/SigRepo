@@ -1,0 +1,325 @@
+---
+title: "Annotate signatures with hypeR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Annotate signatures with hypeR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+# The code runs only when a SigRepo account is supplied through the
+# SIGREPO_TEST_DB_USER and SIGREPO_TEST_DB_PASSWORD environment variables;
+# otherwise the tutorial shows its code without running it. Credentials never
+# go in this file. Everything here only reads from the database.
+has_account <- base::nzchar(base::Sys.getenv("SIGREPO_TEST_DB_USER")) &&
+  base::nzchar(base::Sys.getenv("SIGREPO_TEST_DB_PASSWORD"))
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  fig.align = "center",
+  eval = has_account
+)
+```
+
+This tutorial will walk you through how to fetch, and annotate signatures with gene set enrichment, in three
+steps:
+
+1. Find the signatures you want to test with `searchSignature()`.
+2. Test them against a geneset collection with `runHypeR()`.
+3. Plot the results with `plotHypeRDots()` and `plotHypeREnrichment()`.
+
+The same analysis runs without code in the SigRepo website's Annotate tab; see
+[the end of this tutorial](#the-same-analysis-in-the-annotate-tab).
+
+# Load packages:
+All of the required packages for annotate (fgsea, hypeR) are built into SigRepo.
+
+```{r load packages}
+library(SigRepo)
+```
+
+# Connect to SigRepo
+
+Connect with your own SigRepo account.
+
+```{r connect, eval = FALSE}
+conn_handler <- SigRepo::newConnHandler(
+  # required: your SigRepo account
+  user = "montilab",
+  password = "sigrepo",
+  dbname = "sigrepo",
+  host = "sigrepo.org",
+  port = 3306
+)
+```
+
+```{r account, include = FALSE}
+conn_handler <- SigRepo::newConnHandler(
+  dbname = base::Sys.getenv("SIGREPO_TEST_DB_NAME", "sigrepo"),
+  host = base::Sys.getenv("SIGREPO_TEST_DB_HOST", "sigrepo.org"),
+  port = base::as.numeric(base::Sys.getenv("SIGREPO_TEST_DB_PORT", "3306")),
+  user = base::Sys.getenv("SIGREPO_TEST_DB_USER"),
+  password = base::Sys.getenv("SIGREPO_TEST_DB_PASSWORD"),
+  api_host = base::Sys.getenv("SIGREPO_TEST_API_HOST", "http://142.93.67.157:8020"),
+  api_port = base::as.numeric(base::Sys.getenv("SIGREPO_TEST_API_PORT", "8020"))
+)
+```
+
+# Step 1: Find the signatures to test
+
+`searchSignature()` returns one row per signature you can see, with its
+metadata. Here we look for human signatures:
+
+```{r search}
+human <- SigRepo::searchSignature(
+  # required:
+  conn_handler = conn_handler,
+
+  # optional filters, any combination:
+  organism = "Homo sapiens",
+  phenotype = NULL,
+  sample_type = NULL,
+  platform_name = NULL,
+  signature_name = NULL,
+  signature_id = NULL,
+  user_name = NULL,
+  verbose = FALSE
+)
+
+nrow(human)
+```
+
+Narrow the results down to the sample you want. Enrichment works best on
+signatures stored with their full differential expression table (`has_difexp`),
+because the ranked tests (KS and fgsea) rank every measured gene. Smaller difexp
+tables that already carry gene symbols run fastest. Here we take the same
+experiment in two breast cancer cell lines: knockdown of the aryl hydrocarbon
+receptor (AhR) in MDA-MB-231 and in SUM149PT cells, each compared with control
+cells (`CN`):
+
+```{r sample}
+experiments <- c(
+  "BreastCancer_Hs_MDA_AhR_KD_vs_CN_MontiLab",
+  "BreastCancer_Hs_SUM149PT_AhR_KD_vs_CN_MontiLab"
+)
+
+my_signatures <- human[
+  human$signature_name %in% experiments & human$has_difexp == 1,
+  c("signature_id", "signature_name", "assay_type", "num_of_difexp", "num_up_regulated", "num_down_regulated")
+]
+my_signatures
+```
+
+# Step 2: Run the enrichment
+
+For enrichment, SigRepo uses [hypeR](https://github.com/montilab/hypeR), an
+open-source R package for geneset enrichment developed by the Monti lab. You can
+read its documentation at
+[montilab.github.io/hypeR-docs](https://montilab.github.io/hypeR-docs/).
+`runHypeR()` turns SigRepo signatures into hypeR's input, runs the test in your R
+session, and returns hypeR's own result objects.
+
+`runHypeR()` tests every signature against a geneset collection and returns a
+hypeR result. Four things are required:
+
+- **which signatures**: `signature_id` (or `signature_name`) with `conn_handler`. Also takes OmicSignature objects read from `.rds` files, as `omic_signature`;
+- **`organism`**: the organism of every signature in the call;
+- **`test`**: `"hypergeometric"`, `"kstest"` or `"fgsea"`;
+- **`genesets`**: `"msigdb"` with an MSigDB collection, or your own genesets.
+
+## The three tests
+
+| `test` | Asks | Tests |
+|---|---|---|
+| `"hypergeometric"` | Are the signature's genes over-represented in a geneset? | the signature's genes, one query per `group_label` |
+| `"kstest"` | Do a geneset's genes sit toward the top or the bottom of the ranking? | every measured gene, ranked by score, then by the negated score |
+| `"fgsea"` | Do a geneset's genes sit toward the top or the bottom of the ranking? | every measured gene, ranked by score, with permutation p-values |
+
+The hypergeometric test only needs the signature's genes. The ranked tests
+(KS and fgsea) need signatures stored with their difexp table, rank all of its
+genes in one list rather than splitting them by `group_label`, and always test
+both ends of that list: each ranked result has a `| up` query (genesets toward
+the highest scores) and a `| down` query (toward the lowest). The sections
+below run each test in turn.
+
+## Hypergeometric test
+
+```{r hypergeometric}
+hyp <- SigRepo::runHypeR(
+  # required:
+  conn_handler = conn_handler,
+  signature_id = my_signatures$signature_id,  # or signature_name = my_signatures$signature_name
+  organism = "Homo sapiens",
+  test = "hypergeometric",
+  genesets = "msigdb",
+  msigdb_collection = "H",                    # required with genesets = "msigdb": "H", "C2", "C5", ...
+
+  # optional:
+  msigdb_subcollection = NULL,                # e.g. "CP:REACTOME" with msigdb_collection = "C2"
+  split = TRUE,                               # one query per group_label of each signature (here AhR / CN)
+  background = NULL,                          # NULL: the signature's measured genes; or a number or gene vector
+  min_query_genes = 4,                        # skip a query with fewer genes found in the genesets
+  fdr_scope = "run",                          # adjust p-values across the whole call ("query": per query)
+  pval = 1,                                   # keep genesets with p-value at or below this
+  fdr = 1,                                    # keep genesets with FDR at or below this
+  verbose = FALSE
+)
+
+names(hyp$data)
+head(hyp$data[[1]]$data[, c("label", "pval", "fdr", "overlap", "geneset")])
+```
+
+The result is a hypeR `multihyp`: one `hyp` per query in `hyp$data`, each with a
+results table in `$data` and the settings it ran with in `$info`. With
+`split = TRUE`, each signature gives one query per `group_label`, here `AhR`
+and `CN`.
+
+## GSEA with fgsea
+
+`fgsea` tests both ends of the ranking in one run and files each geneset under
+`| up` or `| down` by the sign of its enrichment score:
+
+
+```{r fgsea}
+gsea <- SigRepo::runHypeR(
+  # required:
+  conn_handler = conn_handler,
+  signature_id = my_signatures$signature_id,
+  organism = "Homo sapiens",
+  test = "fgsea",
+  genesets = "msigdb",
+  msigdb_collection = "H",
+
+  # optional for fgsea:
+  power = 1,                                  # weight of each gene's score (fgsea's gseaParam)
+  seed = 1,                                   # fgsea samples at random; the seed makes a run repeatable
+  fgsea_args = list(minSize = 15, maxSize = 500),  # other fgsea::fgseaMultilevel() settings
+  fdr = 1,
+  verbose = FALSE
+)
+
+
+# tables are split into up and down tables, in this instance there should be four seperate tables, two for each signature.
+names(gsea$data)
+# showing the result of one table
+head(gsea$data[["BreastCancer_Hs_SUM149PT_AhR_KD_vs_CN_MontiLab | down"]]$data[, c("label", "fdr", "nes", "overlap")], 3)
+```
+
+## KS test
+
+hypeR's KS test only finds genesets at the top of a ranking, so `runHypeR()`
+runs it twice: on the scores (`| up`) and on the negated scores (`| down`),
+adjusting the p-values of both runs for multiple testing together:
+
+```{r kstest}
+ks <- SigRepo::runHypeR(
+  # required:
+  conn_handler = conn_handler,
+  signature_id = my_signatures$signature_id[1],
+  organism = "Homo sapiens",
+  test = "kstest",
+  genesets = "msigdb",
+  msigdb_collection = "H",
+
+  # optional for kstest:
+  score_col = "score",                        # the difexp column that ranks the genes
+  power = 1,                                  # 0 for an unweighted ranked test
+  verbose = FALSE
+)
+
+head(ks$data)
+```
+
+## One organism per call
+
+Genesets are made of one organism's gene symbols, so every signature in a call
+must match `organism`. Asking for another organism, or mixing human and mouse
+signatures, stops with an error that names the signatures. Run each organism
+in its own call:
+
+```{r organism mismatch, error = TRUE}
+SigRepo::runHypeR(
+  conn_handler = conn_handler,
+  signature_id = my_signatures$signature_id[1],
+  organism = "Mus musculus",
+  test = "hypergeometric",
+  genesets = "msigdb",
+  msigdb_collection = "MH",
+  verbose = FALSE
+)
+```
+
+# Step 3: Visualize the results
+
+Every plot is drawn from the result object and titled with the test that was
+run. `plotHypeRDots()` and `plotHypeREnrichment()` return ggplot objects, which
+you can save with `ggplot2::ggsave()`.
+
+## Dot plot: every signature at once
+
+One column per query and one row per geneset; a blank cell means the geneset
+did not pass the cutoffs for that query. With several signatures, each
+signature's columns sit under a short code (`S1`, `S2`, ...) explained in the
+caption.
+
+```{r dots hypergeometric, fig.width = 8, fig.height = 6}
+
+# hypergeometric dot plot example
+
+SigRepo::plotHypeRDots(
+  # required:
+  hyp_obj = hyp,
+
+  # optional:
+  top = 15,                                   # number of genesets, the best by FDR across all queries
+  fdr = 0.25,                                 # hide genesets above this FDR
+  val = "fdr",                                # rank and colour by "fdr" or "pval"
+  color_by = "significance",                  # "score" (NES) for kstest and fgsea results
+  size_by = "geneset",                        # dot size: "geneset", "overlap" or "none"
+  signature_key = TRUE,                       # FALSE labels columns with the full query names
+  title = NULL                                # NULL: the test that was run
+)
+
+```
+
+For the ranked tests, `color_by = "score"` shows the direction of enrichment:
+
+```{r dots fgsea, fig.width = 8, fig.height = 6}
+SigRepo::plotHypeRDots(gsea, top = 15, fdr = 0.05, color_by = "score")
+SigRepo::plotHypeRDots(ks, fdr = 0.05, top = 15,  color_by = "score")
+```
+
+
+
+```{r enrichment hypergeometric, fig.width = 6, fig.height = 4.5}
+SigRepo::plotHypeREnrichment(
+  hyp_obj = hyp,
+  geneset = "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION",
+  query = "BreastCancer_Hs_SUM149PT_AhR_KD_vs_CN_MontiLab | AhR"
+)
+```
+
+# The same analysis in the Annotate tab
+
+The SigRepo website's Annotate tab is a front end to `runHypeR()` and follows the
+same rules:
+
+| In the tab | In R |
+|---|---|
+| Step 1: pick up to 10 signatures, upload OmicSignature `.rds` files, or type gene lists | `signature_id`, `omic_signature` or `signature` |
+| Step 2: **Organism (required)**, then MSigDB or custom genesets | `organism`, `genesets` |
+| Step 3: **Test (required)**, plus split and minimum genes for the hypergeometric test | `test`, `split`, `min_query_genes` |
+| Step 3: Background | `background` |
+
+- A run tests one organism. If a picked or uploaded signature is of another
+  organism, the tab names it and will not run until you change the organism or
+  remove the signature; previewing the queries still works.
+- There is no direction setting. KS and GSEA always rank the whole difexp and
+  return an `| up` and a `| down` query for every signature, as in R.
+- The R code tab writes the `runHypeR()` call and the plot calls that reproduce
+  the run, with `organism` and `test` always included.
+
+See `?runHypeR` and the help page of each plotting function for every argument.
