@@ -13,6 +13,15 @@ searchSignature(
   phenotype = NULL,
   sample_type = NULL,
   platform_name = NULL,
+  platform = NULL,
+  direction_type = NULL,
+  assay_type = NULL,
+  keywords = NULL,
+  description = NULL,
+  covariates = NULL,
+  PMID = NULL,
+  year = NULL,
+  has_difexp = NULL,
   verbose = TRUE
 )
 }
@@ -23,7 +32,8 @@ searchSignature(
 
 \item{signature_name}{Name of the signatures to be looked up by.}
 
-\item{user_name}{The name of the user to be looked up by.}
+\item{user_name}{The name of the user to be looked up by. The OmicSignature
+metadata calls this field "author".}
 
 \item{organism}{The organism to be looked up by.}
 
@@ -33,11 +43,41 @@ searchSignature(
 
 \item{platform_name}{The platform name to be looked up by.}
 
+\item{platform}{The OmicSignature spelling of `platform_name`; the two are
+the same filter, and giving both is an error.}
+
+\item{direction_type}{One or more of `SigRepo::direction_types`.}
+
+\item{assay_type}{One or more of `SigRepo::assay_tbl$assay_type`.}
+
+\item{keywords}{Keyword text to be looked up by.}
+
+\item{description}{Description text to be looked up by.}
+
+\item{covariates}{Covariate text to be looked up by.}
+
+\item{PMID}{The PubMed ID to be looked up by.}
+
+\item{year}{The publication year to be looked up by.}
+
+\item{has_difexp}{Whether the signature has a difexp table; TRUE or FALSE.}
+
 \item{verbose}{Logical; whether or not to print the diagnostic messages.
 Defaults to 'TRUE'.}
 }
 \description{
-Search for a list of signatures in the database
+Search for a list of signatures in the database.
+
+Text fields match on one rule, with nothing for the caller to set: a term
+that is somebody's whole value matches only that value, and a term that is
+nobody's whole value matches every value containing it. So
+`signature_name = "M005"` finds every signature with M005 in its name, while
+`sample_type = "liver"` returns liver signatures and not the 290 sample
+types that merely contain the word. Terms are literal: a dot is a dot, and
+a `%` is a percent sign.
+
+Numbers and controlled vocabularies (`signature_id`, `PMID`, `year`,
+`has_difexp`, `direction_type`, `assay_type`) always match exactly.
 }
 \examples{
 

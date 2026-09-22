@@ -12,7 +12,8 @@ lookup_table_sql(
   filter_coln_var = NULL,
   filter_coln_val = NULL,
   filter_var_by = NULL,
-  check_db_table = TRUE
+  check_db_table = TRUE,
+  partial_match_columns = base::character()
 )
 }
 \arguments{

@@ -232,6 +232,36 @@ if(base::nrow(signature_tbl) > 0){
 }
 ```
 
+## How search terms are matched
+
+There is nothing to configure. A term that is somebody's whole value matches
+only that value; a term that is nobody's whole value matches every value
+containing it.
+
+```{r}
+# "LLFS" is no signature's whole name, so this finds every name containing it.
+SigRepo::searchSignature(conn_handler = conn_handler, signature_name = "LLFS")
+
+# A whole name returns that one signature, not every name containing it.
+SigRepo::searchSignature(
+  conn_handler = conn_handler,
+  signature_name = "Aging_Hs_PeripheralBlood_LLFS_Aging_MontiLab"
+)
+
+# "liver" is itself a sample type, so it does not drag in the several hundred
+# sample types that merely contain the word. "liv" is not, so it does.
+SigRepo::searchSignature(conn_handler = conn_handler, sample_type = "liver")
+SigRepo::searchSignature(conn_handler = conn_handler, sample_type = "liv")
+```
+
+Terms are literal, not patterns: a `.` means a dot and a `%` means a percent
+sign. Numbers and closed vocabularies (`signature_id`, `PMID`, `year`,
+`has_difexp`, `direction_type`, `assay_type`) always match exactly, so
+`year = 201` finds nothing rather than the whole of the 2010s.
+
+If you need a query the arguments cannot express, the connection is yours:
+`conn <- SigRepo::conn_init(conn_handler)` and then `DBI::dbGetQuery()`.
+
 ## Example 2: Search for a specific signature, e.g., `signature_name = "LLFS_Aging_Gene_2023"`
 
 ```{r} 
