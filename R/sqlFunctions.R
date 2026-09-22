@@ -189,14 +189,24 @@ delete_table_sql <- function(
 #' and quoted in one vectorised DBI::dbQuoteString() call -- quoting them one
 #' at a time cost 0.9 s per 15,000 feature ids.
 #'
+#' Columns named in `partial_match_columns` narrow with `LIKE '%term%'`
+#' instead. That clause is deliberately a superset: "an exact match wins if one
+#' exists, otherwise the term is a substring" is decided per value, which a
+#' single WHERE clause cannot express, so search_match_rows() settles it in R
+#' over the rows this returns. Partial matching is opt-in because a leading
+#' wildcard cannot use an index, and this is the same function that fetches
+#' 15,000 signature_feature_set rows by id.
+#'
 #' @param conn A DBI connection (or DBI::ANSI()) used to quote values.
 #' @param filter_coln_var Column names to filter on.
 #' @param filter_coln_val A named list of values per column in filter_coln_var.
 #' @param filter_var_by Logical operators joining the filters, length
 #'   length(filter_coln_var) - 1.
+#' @param partial_match_columns Columns to narrow with LIKE rather than IN.
+#'   Defaults to none, which leaves every clause exactly as it was.
 #' @return The clause without the WHERE keyword.
 #' @noRd
-build_lookup_where_clause <- function(conn, filter_coln_var, filter_coln_val, filter_var_by = NULL){
+build_lookup_where_clause <- function(conn, filter_coln_var, filter_coln_val, filter_var_by = NULL, partial_match_columns = base::character()){
 
   clauses <- base::vapply(
     base::seq_along(filter_coln_var),
@@ -207,6 +217,25 @@ build_lookup_where_clause <- function(conn, filter_coln_var, filter_coln_val, fi
         # explicit always-false clause rather than invalid `IN ()` SQL. ####
         return("1 = 0")
       }
+
+      if(filter_coln_var[s] %in% partial_match_columns){
+        # LIKE reads % and _ as wildcards, so a term containing either has to
+        # say so: "LC_M005" must not match "LCxM005", and a phenotype written
+        # "top 5% by score" must not match every row. The escape character is
+        # '|' rather than the conventional backslash so that nothing here
+        # depends on how the driver escapes backslashes inside a string
+        # literal -- MySQL treats those specially, ANSI does not. ####
+        escaped <- base::gsub("([|%_])", "|\\1", values)
+        patterns <- base::as.character(DBI::dbQuoteString(conn, base::paste0("%", escaped, "%")))
+        return(base::sprintf(
+          "(%s)",
+          base::paste0(
+            base::sprintf("trim(lower(%s)) LIKE %s ESCAPE '|'", filter_coln_var[s], patterns),
+            collapse = " OR "
+          )
+        ))
+      }
+
       value_list <- base::paste0(base::as.character(DBI::dbQuoteString(conn, values)), collapse = ", ")
       # The bare predicate lets MySQL use the index; the trim(lower()) one
       # keeps the original matching on the rows the index returns. ####
@@ -246,10 +275,11 @@ lookup_table_sql <- function(
     db_table_name, 
     return_var = "*", 
     exclude_return_var = NULL,
-    filter_coln_var = NULL, 
-    filter_coln_val = NULL, 
-    filter_var_by = NULL, 
-    check_db_table = TRUE
+    filter_coln_var = NULL,
+    filter_coln_val = NULL,
+    filter_var_by = NULL,
+    check_db_table = TRUE,
+    partial_match_columns = base::character()
 ){
   
   # Get table column names
@@ -314,7 +344,8 @@ lookup_table_sql <- function(
         conn = conn,
         filter_coln_var = filter_coln_var,
         filter_coln_val = filter_coln_val,
-        filter_var_by = filter_var_by
+        filter_var_by = filter_var_by,
+        partial_match_columns = partial_match_columns
       )
     )
     

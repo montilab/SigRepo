@@ -61,6 +61,102 @@ test_that("several filters are joined with the given logical operators", {
   )
 })
 
+# ---- partial matching (issues #230, #231) -----------------------------------
+
+# Named columns narrow with LIKE instead of IN. That is only ever a superset:
+# search_match_rows() decides the final rows in R, because "exact wins if one
+# exists" cannot be expressed per value in a single WHERE clause. Strictly
+# opt-in -- lookup_table_sql() is the same function that fetches 15,000
+# signature_feature_set rows by id, where a leading wildcard would throw away
+# the index this clause exists to use.
+
+test_that("a partial column narrows with LIKE rather than IN", {
+  expect_identical(
+    where_clause("signature_name", list(signature_name = "M005"),
+                 partial_match_columns = "signature_name"),
+    "(trim(lower(signature_name)) LIKE '%m005%' ESCAPE '|')"
+  )
+})
+
+test_that("several terms in a partial column are OR-ed", {
+  expect_identical(
+    where_clause("signature_name", list(signature_name = c("M005", "LLFS")),
+                 partial_match_columns = "signature_name"),
+    "(trim(lower(signature_name)) LIKE '%m005%' ESCAPE '|' OR trim(lower(signature_name)) LIKE '%llfs%' ESCAPE '|')"
+  )
+})
+
+test_that("a column not named keeps the exact clause it had", {
+  expect_identical(
+    where_clause("signature_id", list(signature_id = 275),
+                 partial_match_columns = "signature_name"),
+    "(signature_id IN ('275') AND trim(lower(signature_id)) IN ('275'))"
+  )
+})
+
+test_that("naming no columns leaves every clause exactly as before", {
+  expect_identical(
+    where_clause("organism", list(organism = "Mus musculus"), partial_match_columns = character()),
+    where_clause("organism", list(organism = "Mus musculus"))
+  )
+})
+
+test_that("a percent sign in a term searches for a percent sign", {
+  # Otherwise a phenotype written "top 5% by score" would match everything.
+  expect_identical(
+    where_clause("phenotype", list(phenotype = "top 5% by score"),
+                 partial_match_columns = "phenotype"),
+    "(trim(lower(phenotype)) LIKE '%top 5|% by score%' ESCAPE '|')"
+  )
+})
+
+test_that("an underscore in a term searches for an underscore", {
+  # Signature names are full of them, and LIKE reads a bare _ as any character.
+  expect_identical(
+    where_clause("signature_name", list(signature_name = "LC_M005"),
+                 partial_match_columns = "signature_name"),
+    "(trim(lower(signature_name)) LIKE '%lc|_m005%' ESCAPE '|')"
+  )
+})
+
+test_that("the escape character itself is escaped", {
+  expect_identical(
+    where_clause("keywords", list(keywords = "a|b"), partial_match_columns = "keywords"),
+    "(trim(lower(keywords)) LIKE '%a||b%' ESCAPE '|')"
+  )
+})
+
+test_that("a quote in a partial term is still quoted safely", {
+  expect_identical(
+    where_clause("signature_name", list(signature_name = "O'Brien"),
+                 partial_match_columns = "signature_name"),
+    "(trim(lower(signature_name)) LIKE '%o''brien%' ESCAPE '|')"
+  )
+})
+
+test_that("partial and exact columns combine with the given operators", {
+  expect_identical(
+    where_clause(
+      c("signature_name", "organism_id"),
+      list(signature_name = "M005", organism_id = 1),
+      "AND",
+      partial_match_columns = "signature_name"
+    ),
+    paste(
+      "(trim(lower(signature_name)) LIKE '%m005%' ESCAPE '|')",
+      "AND (organism_id IN ('1') AND trim(lower(organism_id)) IN ('1'))"
+    )
+  )
+})
+
+test_that("a partial column with no values still matches nothing", {
+  expect_identical(
+    where_clause("signature_name", list(signature_name = character()),
+                 partial_match_columns = "signature_name"),
+    "1 = 0"
+  )
+})
+
 test_that("thousands of values all reach both predicates in order", {
   ids <- as.character(seq_len(15000))
   values <- paste0("'", ids, "'", collapse = ", ")
