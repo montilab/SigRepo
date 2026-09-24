@@ -28,6 +28,14 @@ jobs:
       # the site shows the example code without output.
       SIGREPO_TEST_DB_USER: ${{ secrets.SIGREPO_TEST_DB_USER }}
       SIGREPO_TEST_DB_PASSWORD: ${{ secrets.SIGREPO_TEST_DB_PASSWORD }}
+      # These two are the reason this matters. test_conn_handler still DEFAULTS
+      # host to sigrepo.org and api_host to the production IP, and the vignettes
+      # gate evaluation on the credentials alone, not on the host. So the moment
+      # the secrets above are set, an unpinned build would run addSignature()
+      # and deleteSignature() against PRODUCTION, which is read-only for
+      # signatures by policy. Point them at a stack that is safe to write to.
+      SIGREPO_TEST_DB_HOST: 127.0.0.1
+      SIGREPO_TEST_API_HOST: http://127.0.0.1
     steps:
       - uses: actions/checkout@v4
 
