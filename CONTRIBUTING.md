@@ -40,6 +40,13 @@ resulting bug report makes no sense to anyone.
 This is the rule the rest depends on: it is what lets the board move by itself and
 what leaves the reason for a change next to the change.
 
+Note when it fires. GitHub auto-closes an issue only when the pull request merges
+into the repository's default branch, which is `master`. Pull requests target
+`dev`, so `Closes #NNN` does nothing at the moment your pull request merges: the
+issue closes later, when the release pull request carries `dev` into `master`.
+Write it anyway, in every pull request. It means the board shows what is live
+rather than what is merged, which is usually the question being asked of it.
+
 **Ideas and work are different things.** An idea states a goal, is labelled `idea`,
 and is never closed by a pull request. A task or bug is real work: it links to the
 idea it serves, and it is closed by the pull request that resolves it. An idea is
