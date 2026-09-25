@@ -84,13 +84,13 @@ buildRetrievedMetadata <- function(db_signature_tbl){
   metadata <- base::list(
     signature_name = db_signature_tbl$signature_name[1],
     organism = db_signature_tbl$organism[1],
-    direction_type = db_signature_tbl$direction_type[1],
+    type = db_signature_tbl$type[1],
     assay_type = db_signature_tbl$assay_type[1],
     phenotype = db_signature_tbl$phenotype[1]
   )
 
   optional_metadata <- base::list(
-    platform = parseRetrievedMetadataList(db_signature_tbl$platform_name, split_values = FALSE),
+    platform = parseRetrievedMetadataList(db_signature_tbl$platform, split_values = FALSE),
     sample_type = parseRetrievedMetadataList(db_signature_tbl$sample_type, split_values = FALSE),
     covariates = parseRetrievedScalarString(db_signature_tbl$covariates),
     description = parseRetrievedMetadataList(db_signature_tbl$description, split_values = FALSE),
@@ -120,7 +120,7 @@ buildRetrievedMetadata <- function(db_signature_tbl){
   c(metadata, optional_metadata)
 }
 
-sanitizeRetrievedSignature <- function(signature, direction_type){
+sanitizeRetrievedSignature <- function(signature, type){
   signature_columns <- c("probe_id", "feature_name", "score", "group_label")
   keep_columns <- signature_columns[signature_columns %in% base::colnames(signature)]
 
@@ -128,7 +128,7 @@ sanitizeRetrievedSignature <- function(signature, direction_type){
     dplyr::select(dplyr::all_of(keep_columns))
 
   if("group_label" %in% base::colnames(signature) &&
-     direction_type %in% c("bi-directional", "categorical")){
+     type %in% c("bi-directional", "categorical")){
     signature <- signature |>
       dplyr::mutate(
         group_label = base::factor(
@@ -435,19 +435,19 @@ createOmicSignature <- function(
   # Extract the user-facing table ####
   signature <- sanitizeRetrievedSignature(
     signature = signature,
-    direction_type = metadata$direction_type[1]
+    type = metadata$type[1]
   )
-  
+
   # Extract difexp with appropriate column names ####
   # Mirrors sanitizeRetrievedSignature()'s guard above: only touch group_label
   # when it's both present (uni-directional difexp rows may not have it) and
-  # semantically meaningful for this signature's direction_type. Referencing
+  # semantically meaningful for this signature's type. Referencing
   # .data$group_label unconditionally errors ("Column not found") for
   # uni-directional signatures whose difexp table never got a group_label
   # column in the first place.
   if(db_signature_tbl$has_difexp[1] == TRUE){
     if("group_label" %in% base::colnames(difexp) &&
-       metadata$direction_type[1] %in% c("bi-directional", "categorical")){
+       metadata$type[1] %in% c("bi-directional", "categorical")){
       difexp <- difexp |>
         dplyr::mutate(
           group_label = base::factor(

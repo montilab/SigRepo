@@ -66,7 +66,11 @@ build_signature <- function(name, feature_names, direction = "bi-directional", g
 
   metadata <- fixture$metadata
   metadata$signature_name <- name
-  metadata$direction_type <- direction
+  metadata$type <- direction
+  # The fixture predates OmicSignature 1.4.0 and still carries the retired
+  # direction_type key alongside the type key just set above; OmicSignature
+  # rejects metadata that has both, so drop the stale one.
+  metadata$direction_type <- NULL
   metadata$PMID <- base::as.character(metadata$PMID)
   metadata$year <- base::as.character(metadata$year)
   OmicSignature::OmicSignature$new(metadata = metadata, signature = signature, difexp = difexp, print_message = FALSE)

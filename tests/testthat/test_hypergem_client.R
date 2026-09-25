@@ -4,7 +4,7 @@ build_test_metabolomics_signature <- function() {
     assay_type = "metabolomics",
     phenotype = "test_phenotype",
     organism = "Homo sapiens",
-    direction_type = "bi-directional",
+    type = "bi-directional",
     others = base::list(
       metabolomics_nomenclature = "refmet"
     )
@@ -57,7 +57,7 @@ test_that("runHyperGEM rejects non-metabolomics signatures before calling hypeR.
       assay_type = "transcriptomics",
       phenotype = "test_phenotype",
       organism = "Homo sapiens",
-      direction_type = "bi-directional",
+      type = "bi-directional",
       others = base::list()
     ),
     signature = base::data.frame(

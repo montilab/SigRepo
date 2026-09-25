@@ -50,8 +50,8 @@ createSignatureMetadata <- function(
   # Get signature_name ####
   signature_name <- metadata$signature_name[1]
   
-  # Get direction_type ####
-  direction_type <- metadata$direction_type[1]
+  # Get type ####
+  type <- metadata$type[1]
   
   # Get assay_type ####
   assay_type <- metadata$assay_type[1]
@@ -319,7 +319,7 @@ createSignatureMetadata <- function(
   metadata_tbl <- base::data.frame(
     signature_name = signature_name,
     organism_id = organism_id,
-    direction_type = direction_type,
+    type = type,
     assay_type = assay_type,
     phenotype_id = phenotype_id,
     platform_id = platform_id,
