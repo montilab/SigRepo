@@ -21,7 +21,7 @@ test_that("checkOmicSignature fills a missing uni-directional group_label with '
   fixture <- base::readRDS(testthat::test_path("test_data", "test_data_transcriptomics.rds"))
 
   metadata <- fixture$metadata
-  metadata$direction_type <- "uni-directional"
+  metadata$type <- "uni-directional"
   metadata$PMID <- base::as.character(metadata$PMID)
   metadata$year <- base::as.character(metadata$year)
   difexp <- fixture$difexp[, c("probe_id", "feature_name", "score", "p_value", "adj_p")]
