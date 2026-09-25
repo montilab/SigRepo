@@ -100,7 +100,7 @@ createOmicCollection <- function(
     platform_id_tbl <- SigRepo::lookup_table_sql(
       conn = conn, 
       db_table_name = "platforms", 
-      return_var = c("platform_id", "platform_name"), 
+      return_var = c("platform_id", "platform"),
       filter_coln_var = "platform_id", 
       filter_coln_val = base::list("platform_id" = lookup_platform_id),
       check_db_table = TRUE
@@ -115,7 +115,7 @@ createOmicCollection <- function(
     
     # Rename table with appropriate column names 
     coln_names <- base::colnames(db_signature_tbl) |> 
-      base::replace(base::match(c("organism_id", "phenotype_id", "sample_type_id", "platform_id"), base::colnames(db_signature_tbl)), c("organism", "phenotype", "sample_type", "platform_name"))
+      base::replace(base::match(c("organism_id", "phenotype_id", "sample_type_id", "platform_id"), base::colnames(db_signature_tbl)), c("organism", "phenotype", "sample_type", "platform"))
     
     # Extract the table with appropriate column names ####
     db_signature_tbl <- db_signature_tbl |> dplyr::select(dplyr::all_of(coln_names))

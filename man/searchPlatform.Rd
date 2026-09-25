@@ -4,12 +4,12 @@
 \alias{searchPlatform}
 \title{searchPlatform}
 \usage{
-searchPlatform(conn_handler = NULL, platform_name = NULL, verbose = TRUE)
+searchPlatform(conn_handler = NULL, platform = NULL, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{platform_name}{A platform, or a list of platform names to be looked up. Defaults to
+\item{platform}{A platform, or a list of platform names to be looked up. Defaults to
 'NULL', which will return all of the platforms in the database.}
 
 \item{verbose}{Logical; whether or not to print the diagnostic messages. 
@@ -33,8 +33,8 @@ conn_handler <- SigRepo::newConnHandler(
 
 # Search for a list of platforms in the database
 SigRepo::searchPlatform(
-  conn_handler = conn_handler, 
-  platform_name = "test_platform", 
+  conn_handler = conn_handler,
+  platform = "test_platform",
   verbose = TRUE
 )
 

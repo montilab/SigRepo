@@ -131,8 +131,8 @@ createSignatureMetadata <- function(
     conn = conn,
     db_table_name = "platforms",
     return_var = "platform_id",
-    filter_coln_var = "platform_name",
-    filter_coln_val = base::list("platform_name" = lookup_platform),
+    filter_coln_var = "platform",
+    filter_coln_val = base::list("platform" = lookup_platform),
     check_db_table = TRUE
   )
 
