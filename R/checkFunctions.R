@@ -359,23 +359,23 @@ checkAssayType <- function(
   
 }
 
-#' @title checkDirectionType
-#' @description Check if direction type is a valid type in the database
-#' @param direction_type A direction type of the signature
-#' 
-#' @keywords internal 
-#' 
+#' @title checkSignatureType
+#' @description Check if signature type is a valid type in the database
+#' @param type A signature type of the signature
+#'
+#' @keywords internal
+#'
 #' @export
-checkDirectionType <- function(
-    direction_type
+checkSignatureType <- function(
+    type
 ){
-  
-  # Get direction type options
-  direction_type_options <- SigRepo::direction_types |> base::tolower() |> base::trimws()
-  
+
+  # Get signature type options
+  signature_type_options <- SigRepo::signature_types |> base::tolower() |> base::trimws()
+
   # Return message
-  if(!base::trimws(base::tolower(direction_type[1])) %in% direction_type_options)
-    base::stop(base::sprintf("'direction_type' must be one of the following options: %s", base::paste0(direction_type_options, collapse = "/")))
+  if(!base::trimws(base::tolower(type[1])) %in% signature_type_options)
+    base::stop(base::sprintf("'type' must be one of the following options: %s", base::paste0(signature_type_options, collapse = "/")))
 
 }
 
@@ -392,8 +392,22 @@ checkOmicSignature <- function(
   
   # Check if omic_signature is an OmicSignature class object ####
   if(!methods::is(omic_signature, "OmicSignature"))
-    base::stop("'omic_signature' must be an R6 class object from OmicSignature package.") 
-  
+    base::stop("'omic_signature' must be an R6 class object from OmicSignature package.")
+
+  # An OmicSignature deserialized from an RDS written before the metadata
+  # field rename never passes through the package's own normalizer, so
+  # metadata$type is NULL. Fail here with something actionable rather than
+  # letting a NULL propagate into SQL and surface as a confusing insert error.
+  if(base::is.null(omic_signature$metadata$type) &&
+     !base::is.null(omic_signature$metadata$direction_type)){
+    base::stop(
+      "This OmicSignature object uses the retired metadata field 'direction_type'. ",
+      "Please reinstall OmicSignature (>= 1.4.0) and rebuild the object with ",
+      "OmicSignature$new(), or round-trip it through writeJson()/readJson(), so ",
+      "its metadata uses 'type'."
+    )
+  }
+
   # Check metadata and signature
   if(!"metadata" %in% base::names(omic_signature))
     base::stop("'omic_signature' must contain a metadata object.\n")
@@ -409,7 +423,7 @@ checkOmicSignature <- function(
     base::stop("'metadata' in OmicSignature object must be a list.")
   
   # Check required metadata fields ####
-  metadata_fields <- c('signature_name', 'organism', 'direction_type', 'assay_type', 'phenotype')
+  metadata_fields <- c('signature_name', 'organism', 'type', 'assay_type', 'phenotype')
   
   if(base::any(!metadata_fields %in% base::names(metadata)))
     base::stop(base::sprintf("'metadata' in OmicSignature object must have the following column names: %s", base::paste0(metadata_fields, collapse = ", ")))
@@ -422,8 +436,8 @@ checkOmicSignature <- function(
   if(base::length(metadata$organism[1]) == 0 || metadata$organism[1] %in% c(NA, ""))
     base::stop("'organism' in OmicSignature's metadata object is required and cannot be empty.")
   
-  # Check direction_type (required) ####
-  SigRepo::checkDirectionType(direction_type = metadata$direction_type[1])
+  # Check type (required) ####
+  SigRepo::checkSignatureType(type = metadata$type[1])
   
   # Check assay_type (required) ####
   SigRepo::checkAssayType(assay_type = metadata$assay_type[1])
@@ -448,9 +462,9 @@ checkOmicSignature <- function(
   if(!"score" %in% base::colnames(signature))
     signature <- signature |> dplyr::mutate(score = "")
   
-  if(metadata$direction_type[1] %in% c("bi-directional", "categorical") && !"group_label" %in% base::colnames(signature)){
+  if(metadata$type[1] %in% c("bi-directional", "categorical") && !"group_label" %in% base::colnames(signature)){
     base::stop("'signature' in OmicSignature object requires a 'group_label' variable as the direction of the signature is 'bi-directional' or 'categorical'")
-  }else if(metadata$direction_type[1] %in% c("uni-directional") && !"group_label" %in% base::colnames(signature)){
+  }else if(metadata$type[1] %in% c("uni-directional") && !"group_label" %in% base::colnames(signature)){
     signature <- signature |> dplyr::mutate(group_label = "All Features")
   }
   
@@ -478,9 +492,9 @@ checkOmicSignature <- function(
   if(!base::is.null(difexp) && base::any(!difexp_req_fields %in% base::colnames(difexp)) && base::all(!difexp_opt_fields %in% base::colnames(difexp)))
     base::stop(base::sprintf("'difexp' in OmicSignature object must have the following required column names: %s, and as least one of the following fields: %s", base::paste0("'", difexp_req_fields, "'", collapse = ", "), base::paste0("'", difexp_opt_fields, "'", collapse = "/")))
   
-  if(!base::is.null(difexp) && metadata$direction_type[1] %in% c("bi-directional", "categorical") && !"group_label" %in% base::colnames(difexp)){
+  if(!base::is.null(difexp) && metadata$type[1] %in% c("bi-directional", "categorical") && !"group_label" %in% base::colnames(difexp)){
     base::stop("When the direction of the signature is bi-directional or categorical, 'difexp' in OmicSignature requires a 'group_label' variable.")
-  }else if(!base::is.null(difexp) && metadata$direction_type[1] %in% c("uni-directional") && !"group_label" %in% base::colnames(difexp)){
+  }else if(!base::is.null(difexp) && metadata$type[1] %in% c("uni-directional") && !"group_label" %in% base::colnames(difexp)){
     difexp <- difexp |> dplyr::mutate(group_label = "All Features")
   }
   

@@ -33,3 +33,27 @@ test_that("checkOmicSignature fills a missing uni-directional group_label with '
   expect_true(base::all(checked$signature$group_label == "All Features"))
   expect_true(base::all(checked$difexp$group_label == "All Features"))
 })
+
+test_that("checkSignatureType() accepts valid types and rejects others", {
+  expect_silent(checkSignatureType("uni-directional"))
+  expect_silent(checkSignatureType("BI-DIRECTIONAL"))
+  expect_error(checkSignatureType("sideways"), "'type' must be one of the following options")
+})
+
+test_that("signature_types exposes the three supported values", {
+  expect_setequal(SigRepo::signature_types, c("uni-directional", "bi-directional", "categorical"))
+})
+
+test_that("checkOmicSignature() rejects an object built by a pre-rename OmicSignature", {
+  ## Simulates an object deserialized from an RDS written before the metadata
+  ## field was renamed. It never passes through OmicSignature's normalizer, so
+  ## metadata$type is NULL and every downstream read would silently misbehave.
+  stale <- structure(
+    list(metadata = list(signature_name = "stale", direction_type = "uni-directional")),
+    class = c("OmicSignature", "R6")
+  )
+  expect_error(
+    checkOmicSignature(stale),
+    "reinstall OmicSignature"
+  )
+})
