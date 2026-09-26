@@ -504,7 +504,7 @@ insertMetabolomicsAmbiguityRows <- function(conn, ambiguity_tbl) {
   }
 
   all_tables <- base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = "show tables;"))
-  if (!"signature_feature_set_ambiguity" %in% all_tables$Tables_in_sigrepo) {
+  if (!"signature_feature_set_ambiguity" %in% all_tables[[1]]) {
     return(base::invisible(NULL))
   }
 
