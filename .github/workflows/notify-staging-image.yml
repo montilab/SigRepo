@@ -1,0 +1,77 @@
+name: notify staging image
+
+# Tell SigRepo_Server to rebuild the staging image when this package changes on
+# dev.
+#
+# Why this is needed at all: the server calls SigRepo:: by namespace, which
+# resolves from the installed library, not from the /SigRepo bind mount --
+# inside the container find.package("SigRepo") returns
+# /usr/local/lib/R/site-library/SigRepo, and nothing calls pkgload::load_all()
+# on that path. So this package reaches the server ONLY through the Docker
+# image. SigRepo_Server's build watches only its own files, so without this
+# workflow a push here triggers nothing and montilab.bu.edu quietly keeps
+# running whatever client was baked in last.
+#
+# That gap matters most for R/sqlFunctions.R: lookup_table_sql is called 21
+# times across 5 of the server's API files and twice in its Shiny app, and its
+# query shape is what made getSignature take 4.6 seconds before the index fix.
+# Only the staging replica has enough rows for a regression to show.
+
+on:
+  push:
+    branches: [dev]
+    # Only what changes the INSTALLED package. A vignette or README push does
+    # not need a nine minute image build.
+    paths:
+      - "R/**"
+      - "src/**"
+      - "inst/**"
+      - "DESCRIPTION"
+      - "NAMESPACE"
+      - ".github/workflows/notify-staging-image.yml"
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask SigRepo_Server to rebuild montilab/sigrepo:dev
+        env:
+          # secrets.GITHUB_TOKEN cannot reach another repository. GH_DOCS is the
+          # cross-repo token this project already uses; it needs access to
+          # montilab/SigRepo_Server for this to work.
+          TOKEN: ${{ secrets.GH_DOCS }}
+          SHA: ${{ github.sha }}
+          REF: ${{ github.ref_name }}
+        run: |
+          set -uo pipefail
+
+          if [ -z "${TOKEN:-}" ]; then
+            echo "::error::GH_DOCS is not set, so the staging image cannot be rebuilt."
+            echo "::error::Staging would silently keep running an older client."
+            exit 1
+          fi
+
+          code=$(curl -s -o /tmp/dispatch.out -w '%{http_code}' -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/montilab/SigRepo_Server/dispatches \
+            -d "{\"event_type\":\"sigrepo-client-updated\",\"client_payload\":{\"ref\":\"$REF\",\"sha\":\"$SHA\"}}")
+
+          if [ "$code" = "204" ]; then
+            echo "Asked SigRepo_Server to rebuild montilab/sigrepo:dev for $REF@${SHA:0:8}"
+            exit 0
+          fi
+
+          # 404 rather than 403 is the usual failure here: GitHub will not
+          # confirm the existence of a repository the token cannot see, so an
+          # under-scoped token looks exactly like a missing one. Say so, because
+          # failing quietly means staging goes stale while looking healthy.
+          echo "::error::Dispatch to montilab/SigRepo_Server failed with HTTP $code."
+          if [ "$code" = "404" ]; then
+            echo "::error::404 here usually means GH_DOCS cannot see SigRepo_Server,"
+            echo "::error::not that the repository is missing. Check the token's scope."
+          fi
+          cat /tmp/dispatch.out
+          exit 1
