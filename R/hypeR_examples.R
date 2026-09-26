@@ -1238,6 +1238,13 @@ build_signature_metadata_table <- function(sig_objs, sig_list) {
       organism = flatten_report_value(metadata$organism),
       assay_type = flatten_report_value(metadata$assay_type),
       phenotype = flatten_report_value(metadata$phenotype),
+      # No direction_type fallback here (unlike the Shiny app's copy of this
+      # function in SigRepo_Server's annotate_module.R): this function's
+      # inputs are OmicSignature objects built by this same package, and
+      # checkOmicSignature() hard-fails on any object still carrying
+      # direction_type, so metadata$type is guaranteed to already be
+      # normalized by the time it reaches here. Deliberately collapsed to a
+      # single key rather than kept as belt-and-braces.
       type = flatten_report_value(metadata$type),
       description = flatten_report_value(metadata$description),
       score_cutoff = flatten_report_value(metadata$score_cutoff),
@@ -1246,6 +1253,7 @@ build_signature_metadata_table <- function(sig_objs, sig_list) {
       p_value_cutoff = flatten_report_value(metadata$p_value_cutoff),
       keywords = flatten_report_value(metadata$keywords),
       sample_type = flatten_report_value(metadata$sample_type),
+      # Same reasoning as `type` above: no platform_name fallback needed.
       platform = flatten_report_value(metadata$platform),
       covariates = flatten_report_value(metadata$covariates),
       author = flatten_report_value(metadata$author %||% metadata$user_name),
