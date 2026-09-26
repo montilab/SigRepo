@@ -10,7 +10,7 @@ addPlatform(conn_handler = NULL, platform_tbl, verbose = TRUE)
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
 \item{platform_tbl}{A Data Frame; Must contain the following column names:
-platform_name (required)}
+platform (required)}
 
 \item{verbose}{Logical; whether to print diagnostic messages. 
 Defaults to 'TRUE'.}
@@ -24,7 +24,7 @@ Add platforms to database
 
 # Create platforms table
 platform_tbl <- base::data.frame(
-  platform_name = c("platform_1", "platform_2")
+  platform = c("platform_1", "platform_2")
 )
 
 # Create a connection handler

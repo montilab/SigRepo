@@ -12,7 +12,7 @@ searchSignature(
   organism = NULL,
   phenotype = NULL,
   sample_type = NULL,
-  platform_name = NULL,
+  platform = NULL,
   verbose = TRUE
 )
 }
@@ -31,7 +31,7 @@ searchSignature(
 
 \item{sample_type}{The sample type to be looked up by.}
 
-\item{platform_name}{The platform name to be looked up by.}
+\item{platform}{The platform name to be looked up by.}
 
 \item{verbose}{Logical; whether or not to print the diagnostic messages.
 Defaults to 'TRUE'.}

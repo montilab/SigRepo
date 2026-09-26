@@ -7,7 +7,7 @@ test_that("addPlatform correctly adds the platform into the database", {
   
   # Create platform data for this test
   platform_table <- base::data.frame(
-    platform_name = "test_platform"
+    platform = "test_platform"
   )
   
   expect_no_error({
@@ -38,7 +38,7 @@ test_that("addPlatform handles duplicate platforms", {
   
   # Create platform data for this test
   platform_table <- base::data.frame(
-    platform_name = "duplicate_test_platform"
+    platform = "duplicate_test_platform"
   )
 
   # Add platform first time
