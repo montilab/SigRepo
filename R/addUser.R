@@ -192,26 +192,19 @@ addUser <- function(
         base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("CREATE USER '%s'@'%%' IDENTIFIED BY '%s';", table$user_name[u], table$user_password[u])))
       }
       
-      # GRANT USER PERMISSIONS TO DATABASE BASED ON THEIR ROLES
-      if(table$user_role[u] == "admin"){
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT ALL PRIVILEGES ON `sigrepo`.* TO '%s'@'%%' WITH GRANT OPTION;", table$user_name[u])))
+      # GRANT USER PERMISSIONS TO DATABASE BASED ON THEIR ROLES. The schema name
+      # comes from the connection; a literal `sigrepo` here broke seeding on any
+      # database with another name (#245).
+      grant_statements <- SigRepo::user_grant_statements(
+        user_name = table$user_name[u],
+        user_role = table$user_role[u],
+        dbname = DBI::dbGetInfo(conn)$dbname
+      )
+      if(base::length(grant_statements) > 0){
+        for(statement in grant_statements){
+          base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = statement))
+        }
         base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = "FLUSH PRIVILEGES;"))
-      }else if(table$user_role[u] == "editor"){
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT ON `sigrepo`.* TO '%s'@'%%';", table$user_name[u])))
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT ON `sigrepo`.`users` TO '%s'@'%%';", table$user_name[u])))
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT ON `sigrepo`.`keywords` TO '%s'@'%%';", table$user_name[u])))
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT ON `sigrepo`.`phenotypes` TO '%s'@'%%';", table$user_name[u])))
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT ON `sigrepo`.`platforms` TO '%s'@'%%';", table$user_name[u])))
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON `sigrepo`.`signatures` TO '%s'@'%%';", table$user_name[u])))
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON `sigrepo`.`signature_access` TO '%s'@'%%';", table$user_name[u])))
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON `sigrepo`.`signature_feature_set` TO '%s'@'%%';", table$user_name[u])))
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON `sigrepo`.`signature_collection_access` TO '%s'@'%%';", table$user_name[u])))
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON `sigrepo`.`collection` TO '%s'@'%%';", table$user_name[u])))
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON `sigrepo`.`collection_access` TO '%s'@'%%';", table$user_name[u])))
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = "FLUSH PRIVILEGES;"))       
-      }else if(table$user_role[u] == "viewer"){
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT ON `sigrepo`.* TO '%s'@'%%';", table$user_name[u])))
-        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = "FLUSH PRIVILEGES;"))        
       }
     }
   )

@@ -160,7 +160,7 @@ checkDBTable <- function(
   all_tables <- base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = "show tables;"))
   
   # Check if table exists in the database
-  if(!db_table_name %in% all_tables$Tables_in_sigrepo){
+  if(!db_table_name %in% all_tables[[1]]){
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn))  
     # Return error message
