@@ -153,7 +153,7 @@ metadata <- OmicSignature::createMetadata(
   # required attributes:
   signature_name = "Myc_reduce_mice_liver_24m_readme",
   organism = "Mus musculus",
-  direction_type = "bi-directional",
+  type = "bi-directional",
   assay_type = "transcriptomics",
   phenotype = "Myc_reduce",
 
@@ -320,7 +320,7 @@ metadata_revised <- OmicSignature::createMetadata(
   # required attributes:
   signature_name = "Myc_reduce_mice_liver_24m_readme",
   organism = "Mus musculus",
-  direction_type = "bi-directional",
+  type = "bi-directional",
   assay_type = "transcriptomics",
   phenotype = "Myc_reduce",
 

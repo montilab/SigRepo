@@ -87,7 +87,7 @@ test_that("every text column lookup_table_sql() filters on is case-insensitive a
 
   filtered_text_columns <- c(
     "user_name", "organism", "feature_name", "source_db", "signature_hashkey", "phenotype",
-    "feature_hashkey", "sig_feature_hashkey", "sample_type", "platform_name", "collection_hashkey",
+    "feature_hashkey", "sig_feature_hashkey", "sample_type", "platform", "collection_hashkey",
     "user_email", "signature_collection_hashkey", "metabolite_hashkey", "keyword", "access_type",
     "source_value", "signature_name", "collection_name", "refmet_name", "api_key"
   )

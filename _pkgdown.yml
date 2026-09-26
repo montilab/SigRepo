@@ -133,7 +133,7 @@ reference:
   - title: Controlled Vocabulary
     desc: The value sets SigRepo validates metadata against
     contents:
-      - '`direction_types`'
+      - '`signature_types`'
       - '`assay_tbl`'
       - '`metabolomics_feature_tables`'
 
@@ -152,9 +152,9 @@ reference:
       - '`test_conn_handler`'
       - '`checkAssayType`'
       - '`checkDBTable`'
-      - '`checkDirectionType`'
       - '`checkDuplicatedEmails`'
       - '`checkPermissions`'
+      - '`checkSignatureType`'
       - '`checkTableInput`'
       - '`createHashKey`'
       - '`getDBColNames`'
