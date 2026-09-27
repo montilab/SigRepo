@@ -287,7 +287,7 @@ hypeRSkip <- function(reason, message) {
 #' TRUE when a signature's metadata marks it categorical
 #' @noRd
 isCategoricalHypeRSignature <- function(omic_signature) {
-  type <- base::tryCatch(omic_signature$metadata$direction_type, error = function(e) NULL)
+  type <- base::tryCatch(omic_signature$metadata$type, error = function(e) NULL)
   base::length(type) > 0 && base::identical(base::tolower(base::trimws(base::as.character(type[1]))), "categorical")
 }
 

@@ -31,7 +31,7 @@ Imports:
   jsonlite,
   methods,
   msigdbr,
-  OmicSignature,
+  OmicSignature (>= 1.4.0),
   openxlsx,
   purrr,
   readr,

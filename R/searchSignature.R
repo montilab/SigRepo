@@ -7,7 +7,7 @@
 #' @param organism The organism to be looked up by.
 #' @param phenotype The phenotype to be looked up by.
 #' @param sample_type The sample type to be looked up by.
-#' @param platform_name The platform name to be looked up by.
+#' @param platform The platform name to be looked up by.
 #' @param verbose Logical; whether or not to print the diagnostic messages.
 #' Defaults to 'TRUE'.
 #'
@@ -43,7 +43,7 @@ searchSignature <- function(
     organism = NULL,
     phenotype = NULL,
     sample_type = NULL,
-    platform_name = NULL,
+    platform = NULL,
     verbose = TRUE
 ){
 
@@ -62,7 +62,7 @@ searchSignature <- function(
     required_role = "viewer"
   )
 
-  # Resolve organism/phenotype/sample_type/platform_name filters against
+  # Resolve organism/phenotype/sample_type/platform filters against
   # their (small) vocabulary tables into id values first, so the main
   # signatures query below can filter on organism_id/phenotype_id/
   # sample_type_id/platform_id directly instead of pulling every signature
@@ -86,7 +86,7 @@ searchSignature <- function(
   organism_id <- resolve_id_filter(organism, "organisms", "organism", "organism_id")
   phenotype_id <- resolve_id_filter(phenotype, "phenotypes", "phenotype", "phenotype_id")
   sample_type_id <- resolve_id_filter(sample_type, "sample_types", "sample_type", "sample_type_id")
-  platform_id <- resolve_id_filter(platform_name, "platforms", "platform_name", "platform_id")
+  platform_id <- resolve_id_filter(platform, "platforms", "platform", "platform_id")
 
   # If a vocabulary filter was supplied but didn't resolve to any id, the
   # search is guaranteed to match no signatures. Force that outcome with an
@@ -96,7 +96,7 @@ searchSignature <- function(
     (base::length(organism) > 0 && base::length(organism_id) == 0) ||
     (base::length(phenotype) > 0 && base::length(phenotype_id) == 0) ||
     (base::length(sample_type) > 0 && base::length(sample_type_id) == 0) ||
-    (base::length(platform_name) > 0 && base::length(platform_id) == 0)
+    (base::length(platform) > 0 && base::length(platform_id) == 0)
 
   # Build the signatures WHERE clause directly from the caller's search
   # parameters, pushed down to SQL. ####
@@ -188,7 +188,7 @@ searchSignature <- function(
     platform_id_tbl <- SigRepo::lookup_table_sql(
       conn = conn,
       db_table_name = "platforms",
-      return_var = c("platform_id", "platform_name"),
+      return_var = c("platform_id", "platform"),
       filter_coln_var = "platform_id",
       filter_coln_val = base::list("platform_id" = lookup_platform_id),
       check_db_table = TRUE
@@ -203,7 +203,7 @@ searchSignature <- function(
 
     # Rename table with appropriate column names
     coln_names <- base::colnames(signature_tbl) |>
-      base::replace(base::match(c("organism_id", "phenotype_id", "sample_type_id", "platform_id"), base::colnames(signature_tbl)), c("organism", "phenotype", "sample_type", "platform_name"))
+      base::replace(base::match(c("organism_id", "phenotype_id", "sample_type_id", "platform_id"), base::colnames(signature_tbl)), c("organism", "phenotype", "sample_type", "platform"))
 
     # Extract the table with appropriate column names ####
     signature_tbl <- signature_tbl |> dplyr::select(dplyr::all_of(coln_names))

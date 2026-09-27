@@ -1,7 +1,7 @@
 #' @title deletePlatform
 #' @description Remove platforms from database
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required)
-#' @param platform_name A list of platform names to be removed (required)
+#' @param platform A list of platform names to be removed (required)
 #' @param verbose Logical; whether to print diagnostic messages. 
 #' Defaults to 'TRUE'.
 #' 
@@ -21,7 +21,7 @@
 #' # Delete a list of platforms from database
 #' SigRepo::deleteOrganism(
 #'   conn_handler = conn_handler,
-#'   platform_name = "DNA assay by ChIP-seq",
+#'   platform = "DNA assay by ChIP-seq",
 #'   verbose = TRUE
 #' )
 #' 
@@ -30,7 +30,7 @@
 #' @export
 deletePlatform <- function(
     conn_handler = NULL,
-    platform_name,
+    platform,
     verbose = TRUE
 ){
   
@@ -52,8 +52,8 @@ deletePlatform <- function(
   SigRepo::delete_table_sql(
     conn = conn,
     db_table_name = "platforms",
-    delete_coln_var = "platform_name",
-    delete_coln_val = base::unique(platform_name),
+    delete_coln_var = "platform",
+    delete_coln_val = base::unique(platform),
     check_db_table = TRUE
   )
   

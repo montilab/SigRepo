@@ -2,7 +2,7 @@
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
   push:
-    branches: [master]
+    branches: [master, dev]
     paths-ignore:
       - '.github/workflows/document.yaml'
       - '.github/workflows/gh-pages-pkgdown.yaml'
@@ -12,7 +12,7 @@ on:
       - '**.Rmd'
       - '.gitignore'
   pull_request:
-    branches: [master]
+    branches: [master, dev]
   release:
     types: [published]
   workflow_dispatch:
@@ -43,6 +43,13 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
+      # test_conn_handler defaults host to sigrepo.org and api_host to the
+      # production IP. Nothing here reaches production today: this check supplies
+      # no SIGREPO_TEST_DB_USER or _PASSWORD, runs with --no-tests --no-examples,
+      # and every @examples block is wrapped in \dontrun. Pin the hosts anyway, so
+      # that stays true if credentials are ever added to this workflow.
+      SIGREPO_TEST_DB_HOST: 127.0.0.1
+      SIGREPO_TEST_API_HOST: http://127.0.0.1
 
     steps:
       - uses: actions/checkout@v4

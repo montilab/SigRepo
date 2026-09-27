@@ -35,7 +35,7 @@ test_that("split = FALSE gives one hypergeometric vector per signature", {
 test_that("a signature without group_label gives one vector named after the signature", {
   tbl <- hyper_sig_table()
   tbl$group_label <- NULL
-  sig <- make_hyper_sig(signature = tbl, direction_type = "uni-directional")
+  sig <- make_hyper_sig(signature = tbl, type = "uni-directional")
 
   prepared <- SigRepo::prepareHypeRSignatures(omic_signature = sig, verbose = FALSE)
 
@@ -153,7 +153,7 @@ test_that("B2: query names are unique even when a label collides with another si
   ))
   b <- make_hyper_sig("X | Up", signature = data.frame(
     probe_id = "p1", feature_name = "f1", score = 1, group_label = factor(NA), symbol = "EGFR"
-  ), direction_type = "uni-directional")
+  ), type = "uni-directional")
 
   prepared <- SigRepo::prepareHypeRSignatures(omic_signature = list(a, b), verbose = FALSE)
 
@@ -449,7 +449,7 @@ test_that("kstest skips a ranking with constant or one-signed scores", {
 
   tbl <- hyper_sig_table()
   tbl$score <- 1
-  constant <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(signature = tbl, direction_type = "uni-directional"),
+  constant <- SigRepo::prepareHypeRSignatures(omic_signature = make_hyper_sig(signature = tbl, type = "uni-directional"),
                                               test = "kstest", ks_source = "signature", verbose = FALSE)
   expect_equal(constant$skipped$reason, "constant_score")
 })

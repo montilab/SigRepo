@@ -226,7 +226,7 @@ test_that("B2: runHypeR multihyp names are unique", {
   ))
   b <- make_hyper_sig("X | Up", signature = data.frame(
     probe_id = "p1", feature_name = "f1", score = 1, group_label = factor(NA), symbol = "EGFR"
-  ), direction_type = "uni-directional")
+  ), type = "uni-directional")
 
   res <- runToyHypeR(organism = "Homo sapiens", test = "hypergeometric", omic_signature = list(a, b), genesets = gs, verbose = FALSE)
 
@@ -497,7 +497,7 @@ test_that("W3: the return type follows the input, not how many queries survive",
   # A signature without group_label still gives a multihyp when split = TRUE.
   tbl <- hyper_sig_table()
   tbl$group_label <- NULL
-  uni <- make_hyper_sig(signature = tbl, direction_type = "uni-directional")
+  uni <- make_hyper_sig(signature = tbl, type = "uni-directional")
   uni_res <- run(omic_signature = uni)
   expect_true(inherits(uni_res, "multihyp"))
   expect_equal(names(uni_res$data), "sig_a")

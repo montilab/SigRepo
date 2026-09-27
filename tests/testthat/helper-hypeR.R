@@ -32,7 +32,7 @@ hyper_difexp_table <- function() {
 make_hyper_sig <- function(name = "sig_a",
                            signature = hyper_sig_table(),
                            difexp = NULL,
-                           direction_type = "bi-directional",
+                           type = "bi-directional",
                            organism = "Homo sapiens",
                            assay_type = "transcriptomics") {
   OmicSignature::OmicSignature$new(
@@ -41,7 +41,7 @@ make_hyper_sig <- function(name = "sig_a",
       assay_type = assay_type,
       phenotype = "test_phenotype",
       organism = organism,
-      direction_type = direction_type,
+      type = type,
       others = list()
     ),
     signature = signature,
@@ -114,7 +114,7 @@ make_hyper_categorical_sig <- function(red_difexp_scores = c(2, -1, 0.5, -0.3, 0
       assay_type = "transcriptomics",
       phenotype = "test_phenotype",
       organism = "Homo sapiens",
-      direction_type = "categorical",
+      type = "categorical",
       category_num = 2,
       others = list()
     ),

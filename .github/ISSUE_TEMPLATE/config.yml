@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: How we work
+    url: https://github.com/montilab/SigRepo/blob/master/CONTRIBUTING.md
+    about: The rules for issues, branches, pull requests and the board. Read this first.
+  - name: Server, Shiny app or deployment problem
+    url: https://github.com/montilab/SigRepo_Server/issues/new/choose
+    about: Anything about the API, the Shiny app, Docker or sigrepo.org belongs in SigRepo_Server.

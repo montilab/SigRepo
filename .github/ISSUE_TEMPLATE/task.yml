@@ -1,0 +1,39 @@
+name: Task
+description: Real work with a stated next step. Closed by the pull request that resolves it.
+labels: ["enhancement", "ready"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What needs to happen
+      description: The change itself, in a sentence or two.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: >-
+        The problem this solves. If it serves an idea issue, link it here — the
+        idea stays open until its work is done.
+    validations:
+      required: true
+
+  - type: textarea
+    id: next
+    attributes:
+      label: Next step
+      description: >-
+        What the person picking this up does first. If you cannot state it, this
+        issue is not ready: say what is undecided and apply needs-decision.
+    validations:
+      required: true
+
+  - type: textarea
+    id: done
+    attributes:
+      label: How we will know it is done
+      description: The check that has to pass, or the behaviour someone should see.
+    validations:
+      required: false

@@ -82,7 +82,7 @@ human <- SigRepo::searchSignature(
   organism = "Homo sapiens",
   phenotype = NULL,
   sample_type = NULL,
-  platform_name = NULL,
+  platform = NULL,
   signature_name = NULL,
   signature_id = NULL,
   user_name = NULL,

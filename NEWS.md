@@ -193,3 +193,12 @@
 
 - Documentation: <https://montilab.github.io/SigRepo/>
 - GitHub: <https://github.com/montilab/SigRepo/>
+- `R/hypeR_examples.R`, a Shiny UI module left over from prototyping
+  the server’s Annotate tab, is removed from the package source along
+  with its `.Rbuildignore` line. It was never built, exported or
+  referenced (#248).
+- `addUser()` and `updateUser()` now grant privileges on the database
+  the connection is on instead of a hard-coded `sigrepo` schema, and
+  `checkDBTable()` reads `SHOW TABLES` by position, so seeding and
+  lookups work on a database with any name (#245,
+  montilab/SigRepo\_Server#130).
