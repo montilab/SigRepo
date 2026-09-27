@@ -1,6 +1,6 @@
 ---
 name: connect-sigrepo-mcp
-description: Registers SigRepo's MCP server (https://sigrepo.org/mcp/) with Claude Code if it isn't already added, asks the user for their SigRepo api_key, and carries it forward for the rest of the session so every MCP tool call (search_signatures, run_enrichment, etc.) includes it automatically. Use this whenever the user asks to "connect to SigRepo's MCP," "set up SigRepo MCP," "use the SigRepo MCP tools," or wants to start querying/searching SigRepo signatures, collections, gene sets, or run enrichment via MCP but hasn't already supplied an api_key this session.
+description: Registers SigRepo's MCP server (https://sigrepo.org/mcp/) with Claude Code if it isn't already added, asks the user for their SigRepo api_key, and carries it forward for the rest of the session so every MCP tool call (search_signatures, compare_signatures, etc.) includes it automatically. Use this whenever the user asks to "connect to SigRepo's MCP," "set up SigRepo MCP," "use the SigRepo MCP tools," or wants to start querying/searching SigRepo signatures, collections, gene sets, or run enrichment via MCP but hasn't already supplied an api_key this session.
 ---
 
 # Connect to SigRepo's MCP server
@@ -53,7 +53,7 @@ it to a file, and don't echo it back after this point.
 The registered server exposes 9 tools: `list_vocabulary`,
 `search_signatures`, `get_signature_context`, `compare_signatures`,
 `search_collections`, `search_geneset_resources`, `search_geneset_entries`,
-`search_features`, and `run_enrichment`. A reasonable starting point if the
+`search_features`, and `rummagene_enrich`. A reasonable starting point if the
 person hasn't said what they want yet: call `list_vocabulary` to show what
 organisms/phenotypes/assay types actually have data, then `search_signatures`
 from there.
