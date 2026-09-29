@@ -176,26 +176,19 @@ updateUser <- function(
     if(base::length(password[1]) == 1 && base::all(!password[1] %in% c("", NA))){
       base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("ALTER USER '%s'@'%%' IDENTIFIED BY '%s';", user_name[1], password[1])))
     }
-    # GRANT USER PERMISSIONS TO DATABASE BASED ON THEIR ROLES
-    if(base::length(role[1]) == 1 && role[1] %in% "admin"){
-      base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT ALL PRIVILEGES ON `sigrepo`.* TO '%s'@'%%' WITH GRANT OPTION;", user_name[1])))
+    # GRANT USER PERMISSIONS TO DATABASE BASED ON THEIR ROLES. The schema name
+    # comes from the connection; a literal `sigrepo` here broke role changes on
+    # any database with another name (#245).
+    grant_statements <- SigRepo::user_grant_statements(
+      user_name = user_name[1],
+      user_role = role[1],
+      dbname = DBI::dbGetInfo(conn)$dbname
+    )
+    if(base::length(grant_statements) > 0){
+      for(statement in grant_statements){
+        base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = statement))
+      }
       base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = "FLUSH PRIVILEGES;"))
-    }else if(base::length(role[1]) == 1 && role[1] %in% "editor"){
-      base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT ON `sigrepo`.* TO '%s'@'%%';", user_name[1])))
-      base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT ON `sigrepo`.`users` TO '%s'@'%%';", user_name[1])))
-      base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT ON `sigrepo`.`keywords` TO '%s'@'%%';", user_name[1])))
-      base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT ON `sigrepo`.`phenotypes` TO '%s'@'%%';", user_name[1])))
-      base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT ON `sigrepo`.`platforms` TO '%s'@'%%';", user_name[1])))
-      base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON `sigrepo`.`signatures` TO '%s'@'%%';", user_name[1])))
-      base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON `sigrepo`.`signature_access` TO '%s'@'%%';", user_name[1])))
-      base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON `sigrepo`.`signature_feature_set` TO '%s'@'%%';", user_name[1])))
-      base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON `sigrepo`.`signature_collection_access` TO '%s'@'%%';", user_name[1])))
-      base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON `sigrepo`.`collection` TO '%s'@'%%';", user_name[1])))
-      base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT, INSERT, UPDATE, DELETE ON `sigrepo`.`collection_access` TO '%s'@'%%';", user_name[1])))
-      base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = "FLUSH PRIVILEGES;"))        
-    }else if(base::length(role[1]) == 1 && role[1] %in% "viewer"){
-      base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = base::sprintf("GRANT SELECT ON `sigrepo`.* TO '%s'@'%%';", user_name[1])))
-      base::suppressWarnings(DBI::dbGetQuery(conn = conn, statement = "FLUSH PRIVILEGES;"))        
     }
   }
   

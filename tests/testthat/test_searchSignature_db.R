@@ -114,13 +114,13 @@ test_that("a term matching nothing returns no rows rather than everything", {
 
 # ---- the fields #231 asked for ----------------------------------------------
 
-test_that("direction_type filters, which the required OmicSignature fields need", {
+test_that("type filters, which the required OmicSignature fields need", {
   test_conn <- skip_unless_test_database()
 
-  found <- SigRepo::searchSignature(conn_handler = test_conn, direction_type = "uni-directional", verbose = FALSE)
+  found <- SigRepo::searchSignature(conn_handler = test_conn, type = "uni-directional", verbose = FALSE)
 
   testthat::skip_if(base::nrow(found) == 0, "the test database has no uni-directional signatures")
-  expect_identical(base::unique(found$direction_type), "uni-directional")
+  expect_identical(base::unique(found$type), "uni-directional")
 })
 
 test_that("assay_type filters", {
@@ -132,11 +132,11 @@ test_that("assay_type filters", {
   expect_identical(base::unique(found$assay_type), "proteomics")
 })
 
-test_that("an unknown direction_type says what the choices are", {
+test_that("an unknown type says what the choices are", {
   test_conn <- skip_unless_test_database()
 
   expect_error(
-    SigRepo::searchSignature(conn_handler = test_conn, direction_type = "bidirectional", verbose = FALSE),
+    SigRepo::searchSignature(conn_handler = test_conn, type = "bidirectional", verbose = FALSE),
     "uni-directional"
   )
 })
@@ -218,33 +218,63 @@ test_that("covariates is searchable, which #231 asked about", {
   expect_true(base::nrow(found) > 0)
 })
 
-# ---- platform, under either spelling (#231) ---------------------------------
+# ---- platform (#231) --------------------------------------------------------
 
-test_that("platform is accepted as the OmicSignature spelling of platform_name", {
+# #231 asked why the argument was platform_name when OmicSignature calls the
+# field platform. #242 has since renamed the column and the argument, so there
+# is one spelling and nothing left to alias.
+
+test_that("a whole platform finds the signatures on that platform and no other", {
   test_conn <- skip_unless_test_database()
   conn <- SigRepo::conn_init(conn_handler = test_conn)
-  platform <- stack_value(conn, "SELECT platform_name FROM platforms LIMIT 1")
+  in_use <- DBI::dbGetQuery(
+    conn,
+    "SELECT p.platform, COUNT(*) AS n FROM signatures s
+       JOIN platforms p ON p.platform_id = s.platform_id
+      GROUP BY p.platform ORDER BY n DESC LIMIT 1"
+  )
   base::suppressWarnings(DBI::dbDisconnect(conn))
-  testthat::skip_if(base::is.null(platform), "the test database has no platforms")
+  testthat::skip_if(base::nrow(in_use) == 0, "the test database has no signatures with a platform")
 
-  by_alias <- SigRepo::searchSignature(conn_handler = test_conn, platform = platform, verbose = FALSE)
-  by_column <- SigRepo::searchSignature(conn_handler = test_conn, platform_name = platform, verbose = FALSE)
+  found <- SigRepo::searchSignature(conn_handler = test_conn, platform = in_use$platform[1], verbose = FALSE)
 
-  expect_identical(by_alias, by_column)
+  expect_identical(base::nrow(found), base::as.integer(in_use$n[1]))
+  expect_identical(base::unique(found$platform), in_use$platform[1])
 })
 
-test_that("giving both spellings of platform is refused rather than guessed at", {
+test_that("a partial platform resolves through the platforms table", {
   test_conn <- skip_unless_test_database()
-
-  expect_error(
-    SigRepo::searchSignature(
-      conn_handler = test_conn,
-      platform = "a",
-      platform_name = "b",
-      verbose = FALSE
-    ),
-    "platform"
+  conn <- SigRepo::conn_init(conn_handler = test_conn)
+  platform <- stack_value(
+    conn,
+    "SELECT p.platform FROM signatures s JOIN platforms p ON p.platform_id = s.platform_id
+      WHERE CHAR_LENGTH(p.platform) > 4 LIMIT 1"
   )
+  testthat::skip_if(base::is.null(platform), "the test database has no signatures with a platform")
+  # Every character but the last: nobody's whole value unless another platform
+  # happens to be named exactly that, which the expectation below allows for.
+  term <- base::substr(platform, 1, base::nchar(platform) - 1)
+  expected <- DBI::dbGetQuery(
+    conn,
+    base::sprintf(
+      "SELECT DISTINCT p.platform FROM signatures s JOIN platforms p ON p.platform_id = s.platform_id
+        WHERE LOCATE(LOWER(%s), LOWER(p.platform)) > 0",
+      DBI::dbQuoteString(conn, term)
+    )
+  )$platform
+  exact_exists <- DBI::dbGetQuery(
+    conn,
+    base::sprintf(
+      "SELECT COUNT(*) AS n FROM platforms WHERE TRIM(LOWER(platform)) = TRIM(LOWER(%s))",
+      DBI::dbQuoteString(conn, term)
+    )
+  )$n[1] > 0
+  base::suppressWarnings(DBI::dbDisconnect(conn))
+  testthat::skip_if(exact_exists, "the shortened platform is itself a platform on this stack")
+
+  found <- SigRepo::searchSignature(conn_handler = test_conn, platform = term, verbose = FALSE)
+
+  expect_setequal(base::unique(found$platform), expected)
 })
 
 # ---- the one internal caller that resolves names ----------------------------
@@ -281,11 +311,11 @@ test_that("two filters narrow together rather than either one alone", {
   both <- SigRepo::searchSignature(
     conn_handler = test_conn,
     organism = "Mus musculus",
-    direction_type = "uni-directional",
+    type = "uni-directional",
     verbose = FALSE
   )
 
   testthat::skip_if(base::nrow(both) == 0, "the test database has no uni-directional mouse signatures")
   expect_identical(base::unique(both$organism), "Mus musculus")
-  expect_identical(base::unique(both$direction_type), "uni-directional")
+  expect_identical(base::unique(both$type), "uni-directional")
 })

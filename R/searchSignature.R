@@ -10,7 +10,7 @@
 #' a `%` is a percent sign.
 #'
 #' Numbers and controlled vocabularies (`signature_id`, `PMID`, `year`,
-#' `has_difexp`, `direction_type`, `assay_type`) always match exactly.
+#' `has_difexp`, `type`, `assay_type`) always match exactly.
 #'
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required)
 #' @param signature_id Database ID of the signatures to be looked up by.
@@ -20,10 +20,8 @@
 #' @param organism The organism to be looked up by.
 #' @param phenotype The phenotype to be looked up by.
 #' @param sample_type The sample type to be looked up by.
-#' @param platform_name The platform name to be looked up by.
-#' @param platform The OmicSignature spelling of `platform_name`; the two are
-#' the same filter, and giving both is an error.
-#' @param direction_type One or more of `SigRepo::direction_types`.
+#' @param platform The platform name to be looked up by.
+#' @param type One or more of `SigRepo::signature_types`.
 #' @param assay_type One or more of `SigRepo::assay_tbl$assay_type`.
 #' @param keywords Keyword text to be looked up by.
 #' @param description Description text to be looked up by.
@@ -66,9 +64,8 @@ searchSignature <- function(
     organism = NULL,
     phenotype = NULL,
     sample_type = NULL,
-    platform_name = NULL,
     platform = NULL,
-    direction_type = NULL,
+    type = NULL,
     assay_type = NULL,
     keywords = NULL,
     description = NULL,
@@ -81,16 +78,6 @@ searchSignature <- function(
 
   # Whether to print the diagnostic messages
   SigRepo::print_messages(verbose = verbose)
-
-  # OmicSignature's metadata calls this field "platform"; the database column,
-  # and so the returned column, is platform_name. Both spellings are accepted
-  # rather than guessing which one a caller meant when they disagree. ####
-  if(base::length(platform) > 0){
-    if(base::length(platform_name) > 0){
-      base::stop("\n'platform' and 'platform_name' are the same filter; please supply only one.\n")
-    }
-    platform_name <- platform
-  }
 
   # Controlled vocabularies with a fixed set of members. Checking them here
   # turns a typo into a message naming the choices, rather than an empty
@@ -111,7 +98,7 @@ searchSignature <- function(
     base::invisible(NULL)
   }
 
-  check_vocabulary(direction_type, SigRepo::direction_types, "direction_type")
+  check_vocabulary(type, SigRepo::signature_types, "type")
   check_vocabulary(assay_type, SigRepo::assay_tbl$assay_type, "assay_type")
 
   # TRUE/FALSE reads better than 1/0 at the call site; the column is a BOOL. ####
@@ -131,7 +118,7 @@ searchSignature <- function(
     required_role = "viewer"
   )
 
-  # Resolve organism/phenotype/sample_type/platform_name filters against
+  # Resolve organism/phenotype/sample_type/platform filters against
   # their (small) vocabulary tables into id values first, so the main
   # signatures query below can filter on organism_id/phenotype_id/
   # sample_type_id/platform_id directly instead of pulling every signature
@@ -160,7 +147,7 @@ searchSignature <- function(
   organism_id <- resolve_id_filter(organism, "organisms", "organism", "organism_id")
   phenotype_id <- resolve_id_filter(phenotype, "phenotypes", "phenotype", "phenotype_id")
   sample_type_id <- resolve_id_filter(sample_type, "sample_types", "sample_type", "sample_type_id")
-  platform_id <- resolve_id_filter(platform_name, "platforms", "platform_name", "platform_id")
+  platform_id <- resolve_id_filter(platform, "platforms", "platform", "platform_id")
 
   # If a vocabulary filter was supplied but didn't resolve to any id, the
   # search is guaranteed to match no signatures. Force that outcome with an
@@ -170,7 +157,7 @@ searchSignature <- function(
     (base::length(organism) > 0 && base::length(organism_id) == 0) ||
     (base::length(phenotype) > 0 && base::length(phenotype_id) == 0) ||
     (base::length(sample_type) > 0 && base::length(sample_type_id) == 0) ||
-    (base::length(platform_name) > 0 && base::length(platform_id) == 0)
+    (base::length(platform) > 0 && base::length(platform_id) == 0)
 
   # Build the signatures WHERE clause directly from the caller's search
   # parameters, pushed down to SQL. ####
@@ -181,7 +168,7 @@ searchSignature <- function(
     "keywords" = base::unique(keywords),
     "description" = base::unique(description),
     "covariates" = base::unique(covariates),
-    "direction_type" = base::unique(direction_type),
+    "type" = base::unique(type),
     "assay_type" = base::unique(assay_type),
     "PMID" = base::unique(PMID),
     "year" = base::unique(year),
@@ -195,7 +182,7 @@ searchSignature <- function(
   # Text columns on the signatures table itself. SQL narrows these with LIKE,
   # which is a superset, and search_match_rows() settles them below. The rest
   # match exactly: substring-matching a year would make 201 mean 2010-2019,
-  # and direction_type/assay_type are closed vocabularies already. ####
+  # and type/assay_type are closed vocabularies already. ####
   partial_match_columns <- base::c(
     "signature_name", "user_name", "keywords", "description", "covariates"
   )
@@ -291,7 +278,7 @@ searchSignature <- function(
     platform_id_tbl <- SigRepo::lookup_table_sql(
       conn = conn,
       db_table_name = "platforms",
-      return_var = c("platform_id", "platform_name"),
+      return_var = c("platform_id", "platform"),
       filter_coln_var = "platform_id",
       filter_coln_val = base::list("platform_id" = lookup_platform_id),
       check_db_table = TRUE
@@ -306,7 +293,7 @@ searchSignature <- function(
 
     # Rename table with appropriate column names
     coln_names <- base::colnames(signature_tbl) |>
-      base::replace(base::match(c("organism_id", "phenotype_id", "sample_type_id", "platform_id"), base::colnames(signature_tbl)), c("organism", "phenotype", "sample_type", "platform_name"))
+      base::replace(base::match(c("organism_id", "phenotype_id", "sample_type_id", "platform_id"), base::colnames(signature_tbl)), c("organism", "phenotype", "sample_type", "platform"))
 
     # Extract the table with appropriate column names ####
     signature_tbl <- signature_tbl |> dplyr::select(dplyr::all_of(coln_names))

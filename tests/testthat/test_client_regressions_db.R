@@ -66,7 +66,7 @@ build_signature <- function(name, feature_names, direction = "bi-directional", g
 
   metadata <- fixture$metadata
   metadata$signature_name <- name
-  metadata$direction_type <- direction
+  metadata$type <- direction
   metadata$PMID <- base::as.character(metadata$PMID)
   metadata$year <- base::as.character(metadata$year)
   OmicSignature::OmicSignature$new(metadata = metadata, signature = signature, difexp = difexp, print_message = FALSE)

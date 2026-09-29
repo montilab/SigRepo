@@ -104,7 +104,7 @@ test_that("getSignature returns the user-facing OmicSignature shape", {
     "signature_id", "signature_hashkey", "organism_id", "phenotype_id",
     "platform_id", "sample_type_id", "user_name", "visibility",
     "date_created", "has_difexp", "num_of_difexp", "num_up_regulated",
-    "num_down_regulated", "platform_name"
+    "num_down_regulated"
   )
   expect_false(any(internal_metadata_fields %in% base::names(retrieved_signature$metadata)))
   expect_equal(

@@ -12,9 +12,8 @@ searchSignature(
   organism = NULL,
   phenotype = NULL,
   sample_type = NULL,
-  platform_name = NULL,
   platform = NULL,
-  direction_type = NULL,
+  type = NULL,
   assay_type = NULL,
   keywords = NULL,
   description = NULL,
@@ -41,12 +40,9 @@ metadata calls this field "author".}
 
 \item{sample_type}{The sample type to be looked up by.}
 
-\item{platform_name}{The platform name to be looked up by.}
+\item{platform}{The platform name to be looked up by.}
 
-\item{platform}{The OmicSignature spelling of `platform_name`; the two are
-the same filter, and giving both is an error.}
-
-\item{direction_type}{One or more of `SigRepo::direction_types`.}
+\item{type}{One or more of `SigRepo::signature_types`.}
 
 \item{assay_type}{One or more of `SigRepo::assay_tbl$assay_type`.}
 
@@ -77,7 +73,7 @@ types that merely contain the word. Terms are literal: a dot is a dot, and
 a `%` is a percent sign.
 
 Numbers and controlled vocabularies (`signature_id`, `PMID`, `year`,
-`has_difexp`, `direction_type`, `assay_type`) always match exactly.
+`has_difexp`, `type`, `assay_type`) always match exactly.
 }
 \examples{
 

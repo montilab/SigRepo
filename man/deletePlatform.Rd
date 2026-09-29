@@ -4,12 +4,12 @@
 \alias{deletePlatform}
 \title{deletePlatform}
 \usage{
-deletePlatform(conn_handler = NULL, platform_name, verbose = TRUE)
+deletePlatform(conn_handler = NULL, platform, verbose = TRUE)
 }
 \arguments{
 \item{conn_handler}{An R object obtained from SigRepo::newConnhandler() (required)}
 
-\item{platform_name}{A list of platform names to be removed (required)}
+\item{platform}{A list of platform names to be removed (required)}
 
 \item{verbose}{Logical; whether to print diagnostic messages. 
 Defaults to 'TRUE'.}
@@ -33,7 +33,7 @@ conn_handler <- SigRepo::newConnHandler(
 # Delete a list of platforms from database
 SigRepo::deleteOrganism(
   conn_handler = conn_handler,
-  platform_name = "DNA assay by ChIP-seq",
+  platform = "DNA assay by ChIP-seq",
   verbose = TRUE
 )
 

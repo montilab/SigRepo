@@ -26,7 +26,7 @@ Imports:
   httr,
   jsonlite,
   methods,
-  OmicSignature,
+  OmicSignature (>= 1.4.0),
   purrr,
   readr,
   rlang,

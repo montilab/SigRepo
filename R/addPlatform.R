@@ -2,7 +2,7 @@
 #' @description Add platforms to database
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required) 
 #' @param platform_tbl A Data Frame; Must contain the following column names:
-#' platform_name (required)
+#' platform (required)
 #' @param verbose Logical; whether to print diagnostic messages. 
 #' Defaults to 'TRUE'.
 #' 
@@ -12,7 +12,7 @@
 #' 
 #' # Create platforms table
 #' platform_tbl <- base::data.frame(
-#'   platform_name = c("platform_1", "platform_2")
+#'   platform = c("platform_1", "platform_2")
 #' )
 #' 
 #' # Create a connection handler
@@ -55,7 +55,7 @@ addPlatform <- function(
   )
   
   # Create a list of variables to check database ####
-  required_column_fields <- "platform_name"
+  required_column_fields <- "platform"
   db_table_name <- "platforms"
   table <- platform_tbl
   
@@ -89,7 +89,7 @@ addPlatform <- function(
     conn = conn, 
     db_table_name = db_table_name,
     table = table,
-    coln_var = "platform_name",
+    coln_var = "platform",
     check_db_table = FALSE
   )
   

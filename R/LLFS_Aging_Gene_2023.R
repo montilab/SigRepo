@@ -11,7 +11,7 @@
 #'     \itemize{
 #'       \item \code{adj_p_cutoff}: Adjusted p-value cutoff used for differential expression (0.01).
 #'       \item \code{assay_type}: Type of assay used: \code{"transcriptomics"}.
-#'       \item \code{direction_type}: Indicates that both up- and down-regulated genes are included (\code{"bi-directional"}).
+#'       \item \code{type}: Indicates that both up- and down-regulated genes are included (\code{"bi-directional"}).
 #'       \item \code{phenotype}: Phenotype: \code{"Aging"}.
 #'       \item \code{organism}: Species: \emph{Homo sapiens}.
 #'       \item \code{sample_type}: Tissue: blood.
