@@ -219,6 +219,10 @@ build_lookup_where_clause <- function(conn, filter_coln_var, filter_coln_val, fi
       }
 
       if(filter_coln_var[s] %in% partial_match_columns){
+        # A blank term would be sent as LIKE '%%', which matches every row. ####
+        values <- values[base::which(!values %in% c(NA, ""))]
+        if(base::length(values) == 0) return("1 = 0")
+
         # LIKE reads % and _ as wildcards, so a term containing either has to
         # say so: "LC_M005" must not match "LCxM005", and a phenotype written
         # "top 5% by score" must not match every row. The escape character is

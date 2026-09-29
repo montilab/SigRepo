@@ -56,8 +56,8 @@ test_that("a whole signature name finds that signature and no other", {
 })
 
 test_that("a sample type picked whole does not drag in the ones containing it", {
-  # The reason the rule is not plain "contains": 975 of 6,565 sample types have
-  # another as a substring, and the Shiny app picks these from a dropdown.
+  # The reason the rule is not plain "contains": 975 of 6,565 sample types are
+  # contained in another, and the Shiny app picks these from a dropdown.
   test_conn <- skip_unless_test_database()
 
   found <- SigRepo::searchSignature(conn_handler = test_conn, sample_type = "liver", verbose = FALSE)
@@ -110,6 +110,61 @@ test_that("a term matching nothing returns no rows rather than everything", {
   )
 
   expect_identical(base::nrow(found), 0L)
+})
+
+test_that("a blank term beside a real one does not return everything", {
+  test_conn <- skip_unless_test_database()
+
+  for(blank in c("", "   ")){
+    for(field in c("signature_name", "keywords", "description", "organism", "sample_type")){
+      found <- base::do.call(
+        SigRepo::searchSignature,
+        c(
+          base::list(conn_handler = test_conn, verbose = FALSE),
+          stats::setNames(base::list(c("no_value_is_called_this_zzz", blank)), field)
+        )
+      )
+      expect_identical(base::nrow(found), 0L, info = base::sprintf("%s with blank '%s'", field, blank))
+    }
+  }
+})
+
+test_that("adding a filter never adds a signature", {
+  # "Exact wins" is decided over the whole column. A name that is some
+  # signature's whole name must stay exact when another filter excludes that
+  # signature, rather than widening to the names that contain it.
+  test_conn <- skip_unless_test_database()
+  conn <- SigRepo::conn_init(conn_handler = test_conn)
+  pair <- DBI::dbGetQuery(
+    conn,
+    "SELECT a.signature_name AS whole_name, b.type AS other_type
+       FROM signatures a
+       JOIN signatures b
+         ON b.signature_name <> a.signature_name
+        AND LOCATE(LOWER(a.signature_name), LOWER(b.signature_name)) > 0
+      WHERE b.type NOT IN (SELECT c.type FROM signatures c WHERE c.signature_name = a.signature_name)
+      LIMIT 1"
+  )
+  base::suppressWarnings(DBI::dbDisconnect(conn))
+  testthat::skip_if(
+    base::nrow(pair) == 0,
+    "the test database has no signature name contained in another of a different type"
+  )
+
+  alone <- SigRepo::searchSignature(
+    conn_handler = test_conn,
+    signature_name = pair$whole_name,
+    verbose = FALSE
+  )
+  narrowed <- SigRepo::searchSignature(
+    conn_handler = test_conn,
+    signature_name = pair$whole_name,
+    type = pair$other_type,
+    verbose = FALSE
+  )
+
+  expect_true(base::nrow(alone) > 0)
+  expect_identical(base::setdiff(narrowed$signature_id, alone$signature_id), base::numeric(0))
 })
 
 # ---- the fields #231 asked for ----------------------------------------------

@@ -149,6 +149,22 @@ test_that("partial and exact columns combine with the given operators", {
   )
 })
 
+test_that("a blank term in a partial column is dropped, not sent as LIKE '%%'", {
+  expect_identical(
+    where_clause("signature_name", list(signature_name = c("M005", "", "  ", NA)),
+                 partial_match_columns = "signature_name"),
+    "(trim(lower(signature_name)) LIKE '%m005%' ESCAPE '|')"
+  )
+})
+
+test_that("a partial column with only blank terms matches nothing", {
+  expect_identical(
+    where_clause("signature_name", list(signature_name = c("", "  ")),
+                 partial_match_columns = "signature_name"),
+    "1 = 0"
+  )
+})
+
 test_that("a partial column with no values still matches nothing", {
   expect_identical(
     where_clause("signature_name", list(signature_name = character()),

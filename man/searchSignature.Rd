@@ -68,9 +68,9 @@ Text fields match on one rule, with nothing for the caller to set: a term
 that is somebody's whole value matches only that value, and a term that is
 nobody's whole value matches every value containing it. So
 `signature_name = "M005"` finds every signature with M005 in its name, while
-`sample_type = "liver"` returns liver signatures and not the 290 sample
-types that merely contain the word. Terms are literal: a dot is a dot, and
-a `%` is a percent sign.
+`sample_type = "liver"` returns liver signatures and not those whose sample
+type merely contains the word. Terms are literal: a dot is a dot, and a
+`\%` is a percent sign.
 
 Numbers and controlled vocabularies (`signature_id`, `PMID`, `year`,
 `has_difexp`, `type`, `assay_type`) always match exactly.

@@ -248,8 +248,8 @@ SigRepo::searchSignature(
   signature_name = "Aging_Hs_PeripheralBlood_LLFS_Aging_MontiLab"
 )
 
-# "liver" is itself a sample type, so it does not drag in the several hundred
-# sample types that merely contain the word. "liv" is not, so it does.
+# "liver" is itself a sample type, so it does not drag in the sample types
+# that merely contain the word. "liv" is not, so it does.
 SigRepo::searchSignature(conn_handler = conn_handler, sample_type = "liver")
 SigRepo::searchSignature(conn_handler = conn_handler, sample_type = "liv")
 ```

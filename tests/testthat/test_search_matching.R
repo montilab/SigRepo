@@ -2,8 +2,8 @@
 #
 # One rule, no argument for the caller to set: an exact match wins if one
 # exists, otherwise the term is a substring. That keeps a value picked from a
-# dropdown meaning itself -- 975 of the repository's 6,565 sample types contain
-# another sample type as a substring, so "M cell" must not drag in "41-M cell"
+# dropdown meaning itself -- 975 of the repository's 6,565 sample types are
+# contained in another sample type, so "M cell" must not drag in "41-M cell"
 # -- while a term nobody has as a whole value still searches.
 #
 # Pure: no database, no connection. The SQL side only narrows the rows this
@@ -91,4 +91,32 @@ test_that("an NA value matches no term", {
 
 test_that("no values gives no matches rather than an error", {
   expect_identical(SigRepo:::search_match_rows(character(), "liver"), logical(0))
+})
+
+test_that("a blank term matches nothing rather than everything", {
+  # Every string contains the empty string, so an empty text box sent alongside
+  # a real term would otherwise return the whole repository.
+  values <- c("liver", "kidney")
+
+  expect_identical(SigRepo:::search_match_rows(values, ""), c(FALSE, FALSE))
+  expect_identical(SigRepo:::search_match_rows(values, "   "), c(FALSE, FALSE))
+  expect_identical(SigRepo:::search_match_rows(values, c("liver", "")), c(TRUE, FALSE))
+})
+
+test_that("whether a term is exact can be decided outside the values given", {
+  # searchSignature() decides it over the whole column. Deciding it over rows
+  # another filter had already narrowed let a filter add rows: a name that is
+  # some signature's whole name turned into a fragment once its owner was
+  # filtered out.
+  values <- c("Myc_reduce_v1_demo")
+
+  expect_identical(SigRepo:::search_match_rows(values, "Myc_reduce_v1"), TRUE)
+  expect_identical(
+    SigRepo:::search_match_rows(values, "Myc_reduce_v1", exact_terms = "Myc_reduce_v1"),
+    FALSE
+  )
+  expect_identical(
+    SigRepo:::search_match_rows(values, "Myc_reduce", exact_terms = "Myc_reduce_v1"),
+    TRUE
+  )
 })
