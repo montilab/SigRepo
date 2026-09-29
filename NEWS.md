@@ -82,6 +82,16 @@
 
 ## New
 
+- `writeSignatureSearchScript()` writes an R script that runs a LINCS
+  connectivity search for one signature with Bioconductor's `signatureSearch`:
+  which perturbations produce the signature's expression pattern, and which
+  reverse it. SigRepo does not run the search or depend on `signatureSearch`,
+  whose reference database is about 2.5 GB; the script is run wherever
+  `signatureSearch` is installed, and saves the result table as a CSV and a
+  plot of the strongest hits as a PDF. The query is the signature's features by
+  the sign of `score`, strongest first. Only human transcriptomics signatures
+  with at least 10 features in each direction can be searched (#252).
+
 - `runHypeR()`, `prepareHypeRSignatures()` and `getHypeRGenesets()` document
   which arguments are required (the signatures and genesets, plus `organism` and
   `test` for `runHypeR()`) and which are

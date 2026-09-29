@@ -127,6 +127,11 @@ reference:
       - '`runHyperGEM`'
       - '`hypergemAvailable`'
       - '`hypergemExport`'
+
+  - title: Connectivity Search
+    desc: Write a script that searches LINCS for perturbations that mimic or reverse a signature
+    contents:
+      - '`writeSignatureSearchScript`'
       
   - title: Build Signature Objects
     desc: Construct and validate OmicSignature and OmicSignatureCollection objects before depositing them
