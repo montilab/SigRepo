@@ -443,6 +443,27 @@ addSignature <- function(
     
       
     }
+
+    # 4. Make sure the feature step actually stored something. A signature row
+    # without feature rows cannot be retrieved (SigRepo_Server#89), so roll
+    # back instead of reporting success ####
+    stored_feature_tbl <- SigRepo::lookup_table_sql(
+      conn = conn,
+      db_table_name = "signature_feature_set",
+      return_var = "signature_id",
+      filter_coln_var = "signature_id",
+      filter_coln_val = base::list("signature_id" = signature_tbl$signature_id[1]),
+      check_db_table = FALSE
+    )
+
+    if(base::nrow(stored_feature_tbl) == 0){
+      # Delete signature
+      SigRepo::deleteSignature(conn_handler = conn_handler, signature_id = signature_tbl$signature_id[1], verbose = FALSE)
+      # Disconnect from database ####
+      base::suppressWarnings(DBI::dbDisconnect(conn))
+      # Show message
+      base::stop(base::sprintf("Signature '%s' was not uploaded: no feature rows were stored for it, so it was removed again.\n", signature_tbl$signature_name[1]))
+    }
  
     # Reset options
     SigRepo::print_messages(verbose = verbose)
