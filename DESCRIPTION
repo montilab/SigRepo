@@ -30,13 +30,9 @@ Imports:
   hypeR.GEM,
   jsonlite,
   methods,
-<<<<<<< HEAD
   msigdbr,
-  OmicSignature (>= 1.4.0),
-  openxlsx,
-=======
   OmicSignature (>= 1.4.1),
->>>>>>> origin/master
+  openxlsx,
   purrr,
   readr,
   rlang,
