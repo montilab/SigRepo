@@ -219,10 +219,14 @@ buildExternalQuery <- function(omic_signature, direction = "combined", conn_hand
   if (base::isTRUE(verbose)) {
     for (err in lookup_errors) base::message(base::sprintf("[%s] %s: %s", direction, name, err))
     base::message(base::sprintf(
-      "[%s] %s: %d of %d features mapped to gene symbols%s%s.",
+      "[%s] %s: %d of %d features mapped to gene symbols%s; the query is %s.",
       direction, name, n_mapped, n_input,
       if (base::length(unmapped) > 0) base::sprintf(" (%d unmapped)", base::length(unmapped)) else "",
-      if (truncated) base::sprintf("; sending the top %d by |score|", max_genes) else ""
+      if (truncated) {
+        base::sprintf("the %d strongest of the %d mapped genes by |score| (the engines accept at most %d)", max_genes, n_mapped, max_genes)
+      } else {
+        base::sprintf("all %d genes", n_mapped)
+      }
     ))
   }
 

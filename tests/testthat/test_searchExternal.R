@@ -81,3 +81,23 @@ test_that("searchExternal validates its arguments", {
   expect_error(searchExternal(omic_signature = fake_signature(c("A", "B")), source = "enrichr"), "should be one of")
   expect_error(searchExternal(omic_signature = fake_signature(c("A", "B")), source = "coresh", limit = 0), "positive integer")
 })
+
+test_that("searchExternal reports how many hits came back per source when verbose", {
+  testthat::local_mocked_bindings(
+    resolveComparisonSignature = function(conn_handler, signature_id, signature_name, omic_signature, label, verbose) omic_signature,
+    lookupSymbolsInSigRepo = function(...) character(),
+    lookupSymbolsInBiomart = function(...) character(),
+    externalRummagene = function(query, limit, timeout) {
+      out <- one_hit("rummagene", query); attr(out, "total_count") <- 27875; out
+    },
+    externalCoresh = function(query, limit, calculate_pvalues, timeout) one_hit("coresh", query)
+  )
+  expect_message(
+    searchExternal(omic_signature = fake_signature(c("TP53", "BRCA1")), source = "rummagene", limit = 25, verbose = TRUE),
+    "rummagene: 1 of 27,875 matching hits returned \\(limit = 25\\)"
+  )
+  expect_message(
+    searchExternal(omic_signature = fake_signature(c("TP53", "BRCA1")), source = "coresh", limit = 25, verbose = TRUE),
+    "coresh: 1 hit returned \\(limit = 25\\)"
+  )
+})

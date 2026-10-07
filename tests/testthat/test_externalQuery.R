@@ -156,3 +156,14 @@ test_that("buildExternalQuery says so when a direction has no features", {
   expect_error(buildExternalQuery(sig, direction = "down", verbose = FALSE), "no features with a negative score")
   expect_error(buildExternalQuery(sig, direction = "down", verbose = FALSE), "direction = 'combined' or 'up'")
 })
+
+test_that("buildExternalQuery's message distinguishes the query genes from the hits", {
+  testthat::local_mocked_bindings(
+    lookupSymbolsInSigRepo = function(...) character(),
+    lookupSymbolsInBiomart = function(...) character()
+  )
+  sig <- fake_signature(paste0("G", 1:10), score = 10:1)
+  expect_message(buildExternalQuery(sig, max_genes = 3, verbose = TRUE),
+                 "query is the 3 strongest of the 10 mapped genes by \\|score\\|")
+  expect_message(buildExternalQuery(sig, verbose = TRUE), "query is all 10 genes")
+})

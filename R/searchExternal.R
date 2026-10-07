@@ -107,6 +107,24 @@ searchExternal <- function(
       )
     })
     base::names(frames) <- directions
+    if (base::isTRUE(verbose)) {
+      for (d in directions) {
+        total <- base::attr(frames[[d]], "total_count")
+        n <- base::nrow(frames[[d]])
+        base::message(base::sprintf(
+          "%s%s: %s returned (limit = %d)%s",
+          src,
+          if (base::length(directions) > 1) base::sprintf(" [%s]", d) else "",
+          if (!base::is.null(total) && base::is.numeric(total)) {
+            base::sprintf("%d of %s matching hits", n, base::format(total, big.mark = ",", scientific = FALSE))
+          } else {
+            base::sprintf("%d hit%s", n, if (n == 1) "" else "s")
+          },
+          limit,
+          if (!base::is.null(base::attr(frames[[d]], "job_url"))) base::sprintf("; full ranking at %s", base::attr(frames[[d]], "job_url")) else ""
+        ))
+      }
+    }
     out <- rbindExternalFrames(frames)
     if (base::length(frames) == 1) {
       base::attr(out, "query") <- queries[[1]]
