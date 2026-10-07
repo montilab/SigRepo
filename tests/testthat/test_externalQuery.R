@@ -121,3 +121,38 @@ test_that("buildExternalQuery reports organism code and unmapped names", {
   expect_equal(q$unmapped, "ENSG00000000000")
   expect_equal(q$n_unmapped, 1)
 })
+
+test_that("lookupSymbolsInBiomart reports a failed lookup instead of swallowing it", {
+  testthat::local_mocked_bindings(
+    biomartSymbolTable = function(ensembl_ids, organism) stop("Ensembl site unresponsive (HTTP 503)")
+  )
+  m <- lookupSymbolsInBiomart(c("ENSG00000126353"), "Homo sapiens")
+  expect_length(m, 0)
+  expect_match(attr(m, "error"), "HTTP 503")
+})
+
+test_that("buildExternalQuery names the lookup failure when too few symbols map", {
+  testthat::local_mocked_bindings(
+    lookupSymbolsInSigRepo = function(...) character(),
+    lookupSymbolsInBiomart = function(...) structure(character(), error = "Ensembl site unresponsive (HTTP 503)")
+  )
+  sig <- fake_signature(c("ENSG00000000001", "ENSG00000000002"))
+  expect_error(buildExternalQuery(sig, verbose = FALSE), "HTTP 503")
+})
+
+test_that("buildExternalQuery surfaces lookup failures as messages when some symbols still map", {
+  testthat::local_mocked_bindings(
+    lookupSymbolsInSigRepo = function(...) structure(character(), error = "could not connect to the database"),
+    lookupSymbolsInBiomart = function(...) c(ENSG00000141510 = "TP53")
+  )
+  sig <- fake_signature(c("ENSG00000141510", "BRCA1"))
+  expect_message(q <- buildExternalQuery(sig, verbose = TRUE), "could not connect to the database")
+  expect_setequal(q$genes, c("TP53", "BRCA1"))
+  expect_match(q$lookup_errors, "could not connect")
+})
+
+test_that("buildExternalQuery says so when a direction has no features", {
+  sig <- fake_signature(c("A1", "B1", "C1"), score = c(3, 2, 1))
+  expect_error(buildExternalQuery(sig, direction = "down", verbose = FALSE), "no features with a negative score")
+  expect_error(buildExternalQuery(sig, direction = "down", verbose = FALSE), "direction = 'combined' or 'up'")
+})

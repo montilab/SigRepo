@@ -29,6 +29,15 @@ looksLikeGeneSymbol <- function(x) {
   !(is_ensembl | is_entrez | is_refseq)
 }
 
+#' @title failedLookup
+#' @description An empty mapping that remembers why the lookup produced
+#' nothing, so the caller can tell the user instead of blaming the signature.
+#' @keywords internal
+#' @noRd
+failedLookup <- function(message) {
+  base::structure(base::character(), error = message)
+}
+
 #' @title lookupSymbolsInSigRepo
 #' @description feature_name -> gene_symbol from the transcriptomics
 #' reference table. Any failure (no connection, viewer without access,
@@ -43,8 +52,11 @@ lookupSymbolsInSigRepo <- function(conn_handler, feature_names, organism) {
     searchTranscriptomicsFeatureSet(
       conn_handler = conn_handler, feature_name = feature_names, organism = NULL, verbose = FALSE
     ),
-    error = function(e) NULL
+    error = function(e) e
   )
+  if (base::inherits(tbl, "error")) {
+    return(failedLookup(base::sprintf("SigRepo reference-table lookup failed: %s", base::conditionMessage(tbl))))
+  }
   if (base::is.null(tbl) || !base::all(c("feature_name", "gene_symbol") %in% base::colnames(tbl))) {
     return(base::character())
   }
@@ -89,7 +101,10 @@ lookupSymbolsInBiomart <- function(feature_names, organism) {
     return(base::character())
   }
   ids <- base::sub("\\.[0-9]+$", "", ensembl_names)
-  bm <- base::tryCatch(biomartSymbolTable(ids, organism), error = function(e) NULL)
+  bm <- base::tryCatch(biomartSymbolTable(ids, organism), error = function(e) e)
+  if (base::inherits(bm, "error")) {
+    return(failedLookup(base::sprintf("biomaRt lookup failed: %s", base::conditionMessage(bm))))
+  }
   if (base::is.null(bm) || base::nrow(bm) == 0) {
     return(base::character())
   }
@@ -115,18 +130,22 @@ mapFeaturesToSymbols <- function(feature_names, organism, conn_handler = NULL) {
   is_symbol <- looksLikeGeneSymbol(feature_names)
   symbol[is_symbol] <- feature_names[is_symbol]
 
+  errors <- base::character()
   pending <- base::names(symbol)[base::is.na(symbol)]
   if (base::length(pending) > 0) {
     hits <- lookupSymbolsInSigRepo(conn_handler, pending, organism)
+    errors <- c(errors, base::attr(hits, "error"))
     hits <- hits[base::names(hits) %in% pending]
     if (base::length(hits) > 0) symbol[base::names(hits)] <- base::unname(hits)
   }
   pending <- base::names(symbol)[base::is.na(symbol)]
   if (base::length(pending) > 0) {
     hits <- lookupSymbolsInBiomart(pending, organism)
+    errors <- c(errors, base::attr(hits, "error"))
     hits <- hits[base::names(hits) %in% pending]
     if (base::length(hits) > 0) symbol[base::names(hits)] <- base::unname(hits)
   }
+  if (base::length(errors) > 0) base::attr(symbol, "lookup_errors") <- errors
   symbol
 }
 
@@ -165,6 +184,13 @@ buildExternalQuery <- function(omic_signature, direction = "combined", conn_hand
     }
     keep <- if (base::identical(direction, "up")) sig$score > 0 else sig$score < 0
     sig <- sig[keep %in% TRUE, , drop = FALSE]
+    if (base::nrow(sig) == 0) {
+      sign_word <- if (base::identical(direction, "up")) "positive" else "negative"
+      other <- if (base::identical(direction, "up")) "down" else "up"
+      base::stop(base::sprintf(
+        "'%s' has no features with a %s score; use direction = 'combined' or '%s'.", name, sign_word, other
+      ))
+    }
   }
   if (has_score) {
     sig <- sig[base::order(-base::abs(sig$score), na.last = TRUE), , drop = FALSE]
@@ -182,13 +208,16 @@ buildExternalQuery <- function(omic_signature, direction = "combined", conn_hand
   if (truncated) {
     genes <- genes[base::seq_len(max_genes)]
   }
+  lookup_errors <- base::attr(mapping, "lookup_errors") %||% base::character()
   if (base::length(genes) < 2) {
     base::stop(base::sprintf(
-      "Could not map enough of the %d features of '%s' to gene symbols (organism '%s'): %d mapped, need at least 2.",
-      n_input, name, organism, n_mapped
+      "Could not map enough of the %d features of '%s' to gene symbols (organism '%s'): %d mapped, need at least 2.%s",
+      n_input, name, organism, n_mapped,
+      if (base::length(lookup_errors) > 0) base::paste0(" ", base::paste(lookup_errors, collapse = " ")) else ""
     ))
   }
   if (base::isTRUE(verbose)) {
+    for (err in lookup_errors) base::message(base::sprintf("[%s] %s: %s", direction, name, err))
     base::message(base::sprintf(
       "[%s] %s: %d of %d features mapped to gene symbols%s%s.",
       direction, name, n_mapped, n_input,
@@ -207,6 +236,7 @@ buildExternalQuery <- function(omic_signature, direction = "combined", conn_hand
     n_mapped = n_mapped,
     n_unmapped = base::length(unmapped),
     truncated = truncated,
-    unmapped = unmapped
+    unmapped = unmapped,
+    lookup_errors = lookup_errors
   )
 }
