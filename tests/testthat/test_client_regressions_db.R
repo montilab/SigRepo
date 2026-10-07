@@ -303,3 +303,61 @@ test_that("a failed updateSignature restores shared access and collection member
   expect_identical(after$access, before$access)
   expect_identical(after$collections, before$collections)
 })
+
+test_that("addSignature stores a uni-directional gene list without scores as NULL scores and getSignature returns every feature (#258)", {
+  # SigRepo_Server#89: scoreless gene lists used to deposit "successfully" with
+  # zero feature rows. Scores are optional for uni-directional signatures and
+  # are stored as NULL.
+  test_conn <- skip_unless_test_database()
+  features <- matchable_features(test_conn, "transcriptomics_features", "Mus musculus", 10)
+  fixture <- base::readRDS(testthat::test_path("test_data", "test_data_transcriptomics.rds"))
+
+  metadata <- fixture$metadata
+  metadata$signature_name <- unique_name("gene_list")
+  metadata$type <- "uni-directional"
+  metadata$PMID <- base::as.character(metadata$PMID)
+  metadata$year <- base::as.character(metadata$year)
+  signature <- base::data.frame(
+    probe_id = base::sprintf("probe_%03d", base::seq_along(features)),
+    feature_name = features,
+    stringsAsFactors = FALSE
+  )
+  sig <- OmicSignature::OmicSignature$new(metadata = metadata, signature = signature, print_message = FALSE)
+
+  id <- SigRepo::addSignature(conn_handler = test_conn, omic_signature = sig, return_signature_id = TRUE, verbose = FALSE)
+  on.exit(delete_quietly(test_conn, id), add = TRUE)
+  expect_length(id, 1)
+
+  stored <- db_query(test_conn, base::sprintf("SELECT score FROM signature_feature_set WHERE signature_id = %s", id))
+  expect_equal(base::nrow(stored), 10)
+  expect_true(base::all(base::is.na(stored$score)))
+
+  retrieved <- SigRepo::getSignature(conn_handler = test_conn, signature_id = id, verbose = FALSE)[[1]]
+  expect_equal(base::nrow(retrieved$signature), 10)
+  expect_setequal(retrieved$signature$feature_name, features)
+  expect_true(base::all(base::is.na(retrieved$signature$score)))
+
+  found <- SigRepo::searchSignature(conn_handler = test_conn, signature_id = id, verbose = FALSE)
+  expect_equal(found$num_up_regulated + found$num_down_regulated, 0)
+})
+
+test_that("addSignature refuses to leave a signature with no feature rows (#258)", {
+  # The guard SigRepo_Server#89 asked for: if the feature step stores nothing,
+  # the deposit must be rolled back and reported, not returned as a success.
+  test_conn <- skip_unless_test_database()
+  features <- matchable_features(test_conn, "transcriptomics_features", "Mus musculus", 5)
+  sig <- build_signature(unique_name("no_rows"), features)
+
+  testthat::local_mocked_bindings(addTranscriptomicsSignatureSet = function(...) base::invisible())
+  on.exit({
+    leftover_id <- db_query(test_conn, base::sprintf("SELECT signature_id FROM signatures WHERE signature_name = '%s'", sig$metadata$signature_name))$signature_id
+    if (base::length(leftover_id) == 1) delete_quietly(test_conn, leftover_id)
+  }, add = TRUE)
+
+  expect_error(
+    SigRepo::addSignature(conn_handler = test_conn, omic_signature = sig, return_signature_id = TRUE, verbose = FALSE),
+    "no feature rows"
+  )
+  leftover <- db_query(test_conn, base::sprintf("SELECT signature_id FROM signatures WHERE signature_name = '%s'", sig$metadata$signature_name))
+  expect_equal(base::nrow(leftover), 0)
+})
