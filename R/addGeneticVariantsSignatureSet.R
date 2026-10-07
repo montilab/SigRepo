@@ -4,7 +4,8 @@
 #' @param signature_id Database ID of the signature (required) 
 #' @param organism_id Database ID of the organism (required) 
 #' @param signature_set A Data Frame; must contain the following column names:
-#' feature_name, probe_id, score, group_label (required) 
+#' feature_name, probe_id, score, group_label (required). score may be NA,
+#' for uni-directional signatures that have no scores; it is stored as NULL.
 #' @param verbose Logical; whether to print diagnostic messages. Defaults to 'TRUE'
 #'  
 #' @keywords internal
@@ -57,7 +58,9 @@ addGeneticVariantsSignatureSet <- function(
     suppressWarnings(DBI::dbDisconnect(conn)) 
     stop(sprintf("\n'signature_set' must have the following column names: %s.\n", paste0(required_fields, collapse = ", ")))
   }
-  if(any(is.na(signature_set[,required_fields]))){
+  # score may be NA: uni-directional gene lists have no scores (#258) ####
+  non_empty_fields <- base::setdiff(required_fields, "score")
+  if(any(is.na(signature_set[,non_empty_fields]))){
     suppressWarnings(DBI::dbDisconnect(conn)) 
     stop(sprintf("\nAll required columns in 'signature_set': %s cannot contain NA values.\n", paste0(required_fields, collapse = ", ")))
   }

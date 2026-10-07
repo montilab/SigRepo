@@ -4,7 +4,8 @@
 #' If NULL, the stored internal handle is used.
 #' @param signature_id Database ID of the signature (required)
 #' @param signature_set A Data Frame; must contain the following column names:
-#' feature_name, probe_id, score, group_label (required)
+#' feature_name, probe_id, score, group_label (required). score may be NA,
+#' for uni-directional signatures that have no scores; it is stored as NULL.
 #' @param feature_database Metabolomics dictionary used by the incoming
 #' signature's \code{feature_name} column. One of refmet_id, refmet, hmdb,
 #' smiles, or inchikey. If \code{feature_database = "refmet"} and
@@ -51,9 +52,11 @@ addMetabolomicsSignatureSet <- function(
     base::stop(base::sprintf("\n'signature_set' must have the following column names: %s.\n", base::paste0(required_fields, collapse = ", ")))
   }
 
-  if (base::any(base::is.na(signature_set[, required_fields]) == TRUE)) {
+  # score may be NA: uni-directional gene lists have no scores (#258) ####
+  non_empty_fields <- base::setdiff(required_fields, "score")
+  if (base::any(base::is.na(signature_set[, non_empty_fields]) == TRUE)) {
     base::suppressWarnings(DBI::dbDisconnect(conn))
-    base::stop(base::sprintf("\nAll required column names in 'signature_set': %s cannot contain any empty values.\n", base::paste0(required_fields, collapse = ", ")))
+    base::stop(base::sprintf("\nAll required column names in 'signature_set': %s cannot contain any empty values.\n", base::paste0(non_empty_fields, collapse = ", ")))
   }
 
   config <- resolveMetabolomicsFeatureConfig(feature_database = feature_database)

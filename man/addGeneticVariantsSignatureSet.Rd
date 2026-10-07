@@ -20,7 +20,8 @@ addGeneticVariantsSignatureSet(
 \item{organism_id}{Database ID of the organism (required)}
 
 \item{signature_set}{A Data Frame; must contain the following column names:
-feature_name, probe_id, score, group_label (required)}
+feature_name, probe_id, score, group_label (required). score may be NA,
+for uni-directional signatures that have no scores; it is stored as NULL.}
 
 \item{verbose}{Logical; whether to print diagnostic messages. Defaults to 'TRUE'}
 }

@@ -19,7 +19,8 @@ If NULL, the stored internal handle is used.}
 \item{signature_id}{Database ID of the signature (required)}
 
 \item{signature_set}{A Data Frame; must contain the following column names:
-feature_name, probe_id, score, group_label (required)}
+feature_name, probe_id, score, group_label (required). score may be NA,
+for uni-directional signatures that have no scores; it is stored as NULL.}
 
 \item{feature_database}{Metabolomics dictionary used by the incoming
 signature's \code{feature_name} column. One of refmet_id, refmet, hmdb,
