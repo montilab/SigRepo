@@ -82,6 +82,17 @@
 
 ## New
 
+- `mergeDifexp()` merges the difexp tables of several signatures into one
+  numeric matrix, one row per feature and one column per signature, the shape
+  that signature-by-signature correlation, clustering, PCA and reference
+  databases for tools such as `signatureSearch` expect. Signatures are given by
+  id, by name or as `OmicSignature` objects, as in `compareSignatures()`.
+  `value_col` picks the difexp column that fills the matrix (`"score"` by
+  default; `"logfc"`, `"p_value"`, `"adj_p"` or any other column work),
+  `features` keeps the union or the intersection of features, and `collapse`
+  reduces a feature's several probe rows to one value: `"max_abs"` (default),
+  `"min"` for p-value columns, `"mean"` or `"first"`.
+
 - `writeSignatureSearchScript()` writes an R script that runs a LINCS
   connectivity search for one signature with Bioconductor's `signatureSearch`:
   which perturbations produce the signature's expression pattern, and which
