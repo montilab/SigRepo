@@ -1,0 +1,92 @@
+{
+ "data": {
+  "currentBackground": {
+   "enrich": {
+    "totalCount": 21423,
+    "nodes": [
+     {
+      "pvalue": 5.546085046176113e-38,
+      "adjPvalue": 4.867011300952217e-32,
+      "oddsRatio": 933.1363636363635,
+      "nOverlap": 12,
+      "geneSets": {
+       "nodes": [
+        {
+         "term": "PMC11278796-mmc3.docx-0-Target_gene",
+         "description": null,
+         "nGeneIds": 22,
+         "geneSetPmcsById": {
+          "nodes": [
+           {
+            "pmcInfoByPmcid": {
+             "pmcid": "PMC11278796",
+             "title": "Spontaneous NETosis and type I IFN signaling activation in resting neutrophils of chronic granulomatous disease patients with CYBB mutations",
+             "yr": 2023,
+             "doi": "10.1016/j.gendis.2023.101118"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     {
+      "pvalue": 4.7030649554020735e-35,
+      "adjPvalue": 2.0636061380663664e-29,
+      "oddsRatio": 603.7941176470589,
+      "nOverlap": 12,
+      "geneSets": {
+       "nodes": [
+        {
+         "term": "PMC4452922-viruses-07-02618-s001.pdf-0-Gene_Symbol",
+         "description": "< 0.05 was considered significant. All primers used in this study are listed in **Supplementary Table S1**  Click here for additional data file",
+         "nGeneIds": 34,
+         "geneSetPmcsById": {
+          "nodes": [
+           {
+            "pmcInfoByPmcid": {
+             "pmcid": "PMC4452922",
+             "title": "Insights into Human Astrocyte Response to H5N1 Infection by Microarray Analysis",
+             "yr": 2015,
+             "doi": "10.3390/v7052618"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     {
+      "pvalue": 2.954514747382774e-34,
+      "adjPvalue": 6.481895131709331e-29,
+      "oddsRatio": 940.9125,
+      "nOverlap": 11,
+      "geneSets": {
+       "nodes": [
+        {
+         "term": "PMC8783724-BMRI2022-7697558.nxml--Hub_gene",
+         "description": "shown in Figure 3(a). We present the top 20 genes in Figure 3(b) and **Table 3**  Topological result exploration for top 20 genesMX1IFIT1ISG15RSAD2IFI44LIFI44IFIT3OAS2OAS1IFI6XAF1IFIT2GBP1OAS3HERC5IRF7OASLIFI27EIF2AK2LY6E",
+         "nGeneIds": 20,
+         "geneSetPmcsById": {
+          "nodes": [
+           {
+            "pmcInfoByPmcid": {
+             "pmcid": "PMC8783724",
+             "title": "Bioinformatic Analysis Identifies Biomarkers and Treatment Targets in Primary Sj\u00f6gren's Syndrome Patients with Fatigue",
+             "yr": 2022,
+             "doi": "10.1155/2022/7697558"
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     }
+    ]
+   }
+  }
+ }
+}

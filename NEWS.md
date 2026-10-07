@@ -82,6 +82,19 @@
 
 ## New
 
+- `searchExternal()` asks the public signature search engines what looks like
+  a SigRepo signature. Give it a signature by id, name or `OmicSignature`, and
+  it translates the features to gene symbols (reference table first, then
+  biomaRt for Ensembl IDs), picks the organism, and queries Rummagene (gene
+  sets mined from PMC supplementary tables), RummaGEO (up/down gene sets
+  computed from GEO RNA-seq) and CORESH (GEO datasets ranked by how strongly
+  the genes are coregulated), one, two or all three in one call. Every result
+  is a data frame with the same first twelve columns, so the sources compare
+  side by side; `direction = "both"` sends the up and down features
+  separately. CORESH results carry the shareable results page as
+  `attr(x, "job_url")`. Human and mouse only for RummaGEO and CORESH, at most
+  500 genes (#265, serves #82).
+
 - `writeSignatureSearchScript()` writes an R script that runs a LINCS
   connectivity search for one signature with Bioconductor's `signatureSearch`:
   which perturbations produce the signature's expression pattern, and which

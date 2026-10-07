@@ -21,7 +21,8 @@
 
 # Ignore folders
 .Rproj.user/
-docs/
+docs/*
+!docs/superpowers/
 
 # Local-only validation harness: runs against a developer's own MySQL/API
 # stack via local_validation/.env.local-validation. Never belongs on a remote.
