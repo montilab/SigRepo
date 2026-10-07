@@ -12,7 +12,7 @@ mergeDifexp(
   value_col = "score",
   feature_col = "feature_name",
   features = c("union", "intersect"),
-  collapse = c("max_abs", "mean", "first"),
+  collapse = c("max_abs", "min", "mean", "first"),
   verbose = FALSE
 )
 }
@@ -39,8 +39,11 @@ only features present in every table.}
 
 \item{collapse}{How to reduce several rows of the same feature within one
 table to a single value: \code{"max_abs"} (the default) keeps the value
-with the largest absolute size, \code{"mean"} averages them, and
-\code{"first"} keeps the first row as stored.}
+with the largest absolute size, \code{"min"} keeps the smallest value,
+\code{"mean"} averages them, and \code{"first"} keeps the first row as
+stored. Use \code{"min"} with a p-value column such as \code{"p_value"}
+or \code{"adj_p"}, where the smallest value is the most significant;
+\code{"max_abs"} would keep the least significant probe there.}
 
 \item{verbose}{Logical; whether to print diagnostic messages while
 resolving and fetching signatures. Defaults to \code{FALSE}.}
@@ -97,6 +100,14 @@ m <- SigRepo::mergeDifexp(
   signature_names = "my_signature",
   value_col = "logfc",
   features = "intersect"
+)
+
+# Adjusted p-values: keep the most significant probe of a duplicated feature
+p <- SigRepo::mergeDifexp(
+  conn_handler = conn_handler,
+  signature_ids = c(12, 34),
+  value_col = "adj_p",
+  collapse = "min"
 )
 }
 

@@ -41,8 +41,11 @@
 #'   only features present in every table.
 #' @param collapse How to reduce several rows of the same feature within one
 #'   table to a single value: \code{"max_abs"} (the default) keeps the value
-#'   with the largest absolute size, \code{"mean"} averages them, and
-#'   \code{"first"} keeps the first row as stored.
+#'   with the largest absolute size, \code{"min"} keeps the smallest value,
+#'   \code{"mean"} averages them, and \code{"first"} keeps the first row as
+#'   stored. Use \code{"min"} with a p-value column such as \code{"p_value"}
+#'   or \code{"adj_p"}, where the smallest value is the most significant;
+#'   \code{"max_abs"} would keep the least significant probe there.
 #' @param verbose Logical; whether to print diagnostic messages while
 #'   resolving and fetching signatures. Defaults to \code{FALSE}.
 #'
@@ -74,6 +77,14 @@
 #'   value_col = "logfc",
 #'   features = "intersect"
 #' )
+#'
+#' # Adjusted p-values: keep the most significant probe of a duplicated feature
+#' p <- SigRepo::mergeDifexp(
+#'   conn_handler = conn_handler,
+#'   signature_ids = c(12, 34),
+#'   value_col = "adj_p",
+#'   collapse = "min"
+#' )
 #' }
 #'
 #' @export
@@ -85,7 +96,7 @@ mergeDifexp <- function(
     value_col = "score",
     feature_col = "feature_name",
     features = c("union", "intersect"),
-    collapse = c("max_abs", "mean", "first"),
+    collapse = c("max_abs", "min", "mean", "first"),
     verbose = FALSE) {
 
   features <- base::match.arg(features)
@@ -179,7 +190,7 @@ mergeDifexp <- function(
 #'
 #' @param feature Character vector of feature identifiers, one per row.
 #' @param value Numeric vector of the values to keep, one per row.
-#' @param collapse "max_abs", "mean" or "first".
+#' @param collapse "max_abs", "min", "mean" or "first".
 #' @return A named numeric vector, one entry per distinct feature, in order of
 #'   first appearance. Rows with an empty or missing feature are ignored.
 #' @noRd
@@ -193,6 +204,7 @@ collapseDifexpValues <- function(feature, value, collapse) {
       v <- v[!base::is.na(v)]
       if (base::length(v) == 0) NA_real_ else v[base::which.max(base::abs(v))]
     },
+    min = function(v) if (base::all(base::is.na(v))) NA_real_ else base::min(v, na.rm = TRUE),
     mean = function(v) if (base::all(base::is.na(v))) NA_real_ else base::mean(v, na.rm = TRUE),
     first = function(v) v[1]
   )

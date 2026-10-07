@@ -129,6 +129,40 @@ test_that("collapse = 'first' keeps the first row of a duplicated feature", {
   expect_equal(m["G2", "a"], -2)
 })
 
+test_that("collapse = 'min' keeps the smallest value of a duplicated feature", {
+  sigs <- toy_pair()
+
+  m <- SigRepo::mergeDifexp(omic_signatures = sigs, collapse = "min")
+
+  expect_equal(m["G2", "a"], -2)
+  expect_equal(m["G1", "a"], 1)
+})
+
+test_that("collapse = 'min' on a p-value column keeps the most significant probe", {
+  a <- toy_signature("sigA", toy_difexp(
+    probe_id = 1:3, feature_name = c("G1", "G2", "G2"), score = c(1, 2, 3),
+    p_value = c(0.5, 0.2, 0.001)
+  ))
+
+  m <- SigRepo::mergeDifexp(omic_signatures = base::list(a = a), value_col = "p_value", collapse = "min")
+
+  expect_equal(m["G2", "a"], 0.001)
+  expect_equal(m["G1", "a"], 0.5)
+  expect_equal(base::sum(base::rownames(m) == "G2"), 1L)
+})
+
+test_that("collapse = 'min' ignores NA values within a feature and returns NA when all are NA", {
+  a <- toy_signature("sigA", toy_difexp(
+    probe_id = 1:4, feature_name = c("G1", "G1", "G2", "G2"), score = c(1, 2, 3, 4),
+    p_value = c(NA, 0.3, NA, NA)
+  ))
+
+  m <- SigRepo::mergeDifexp(omic_signatures = base::list(a = a), value_col = "p_value", collapse = "min")
+
+  expect_equal(m["G1", "a"], 0.3)
+  expect_true(base::is.na(m["G2", "a"]))
+})
+
 ## Columns ####
 
 test_that("value_col picks another difexp column", {
