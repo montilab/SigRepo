@@ -4,7 +4,8 @@
 #' @param signature_id Database ID of the signature (required) 
 #' @param organism_id  Database ID of the organism (required) 
 #' @param signature_set A Data Frame; Must contain the following column names:
-#' feature_name, probe_id, score, group_label (required) 
+#' feature_name, probe_id, score, group_label (required). score may be NA,
+#' for uni-directional signatures that have no scores; it is stored as NULL.
 #' @param verbose Logical; whether to print diagnostic messages. 
 #' Defaults to 'TRUE'.
 #' 
@@ -72,11 +73,13 @@ addTranscriptomicsSignatureSet <- function(
   }
   
   # Make sure required column fields do not have any empty values ####
-  if(base::any(base::is.na(signature_set[,signature_fields]) == TRUE)){
+  # score may be NA: uni-directional gene lists have no scores (#258) ####
+  non_empty_fields <- base::setdiff(signature_fields, "score")
+  if(base::any(base::is.na(signature_set[,non_empty_fields]) == TRUE)){
     # Disconnect from database ####
     base::suppressWarnings(DBI::dbDisconnect(conn)) 
     # Show error message
-    base::stop(base::sprintf("\nAll required column names in 'signature_set': %s cannot contain any empty values.\n", base::paste0(signature_fields, collapse = ", ")))
+    base::stop(base::sprintf("\nAll required column names in 'signature_set': %s cannot contain any empty values.\n", base::paste0(non_empty_fields, collapse = ", ")))
   }
   
   # Define table in database ####

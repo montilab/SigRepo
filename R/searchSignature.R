@@ -1,13 +1,34 @@
 #' @title searchSignature
-#' @description Search for a list of signatures in the database
+#' @description Search for a list of signatures in the database.
+#'
+#' Text fields match on one rule, with nothing for the caller to set: a term
+#' that is somebody's whole value matches only that value, and a term that is
+#' nobody's whole value matches every value containing it. So
+#' `signature_name = "M005"` finds every signature with M005 in its name, while
+#' `sample_type = "liver"` returns liver signatures and not those whose sample
+#' type merely contains the word. Terms are literal: a dot is a dot, and a
+#' `\%` is a percent sign.
+#'
+#' Numbers and controlled vocabularies (`signature_id`, `PMID`, `year`,
+#' `has_difexp`, `type`, `assay_type`) always match exactly.
+#'
 #' @param conn_handler An R object obtained from SigRepo::newConnhandler() (required)
 #' @param signature_id Database ID of the signatures to be looked up by.
 #' @param signature_name Name of the signatures to be looked up by.
-#' @param user_name The name of the user to be looked up by.
+#' @param user_name The name of the user to be looked up by. The OmicSignature
+#' metadata calls this field "author".
 #' @param organism The organism to be looked up by.
 #' @param phenotype The phenotype to be looked up by.
 #' @param sample_type The sample type to be looked up by.
 #' @param platform The platform name to be looked up by.
+#' @param type One or more of `SigRepo::signature_types`.
+#' @param assay_type One or more of `SigRepo::assay_tbl$assay_type`.
+#' @param keywords Keyword text to be looked up by.
+#' @param description Description text to be looked up by.
+#' @param covariates Covariate text to be looked up by.
+#' @param PMID The PubMed ID to be looked up by.
+#' @param year The publication year to be looked up by.
+#' @param has_difexp Whether the signature has a difexp table; TRUE or FALSE.
 #' @param verbose Logical; whether or not to print the diagnostic messages.
 #' Defaults to 'TRUE'.
 #'
@@ -44,11 +65,46 @@ searchSignature <- function(
     phenotype = NULL,
     sample_type = NULL,
     platform = NULL,
+    type = NULL,
+    assay_type = NULL,
+    keywords = NULL,
+    description = NULL,
+    covariates = NULL,
+    PMID = NULL,
+    year = NULL,
+    has_difexp = NULL,
     verbose = TRUE
 ){
 
   # Whether to print the diagnostic messages
   SigRepo::print_messages(verbose = verbose)
+
+  # Controlled vocabularies with a fixed set of members. Checking them here
+  # turns a typo into a message naming the choices, rather than an empty
+  # result that looks like "no such signatures". ####
+  check_vocabulary <- function(value, allowed, argument){
+    value <- value[base::which(!value %in% c(NA, ""))]
+    if(base::length(value) == 0) return(base::invisible(NULL))
+
+    unknown <- value[base::which(!base::tolower(base::trimws(value)) %in% base::tolower(allowed))]
+    if(base::length(unknown) > 0){
+      base::stop(base::sprintf(
+        "\n'%s' must be one of: %s. Received: %s.\n",
+        argument,
+        base::paste0(allowed, collapse = ", "),
+        base::paste0(unknown, collapse = ", ")
+      ))
+    }
+    base::invisible(NULL)
+  }
+
+  check_vocabulary(type, SigRepo::signature_types, "type")
+  check_vocabulary(assay_type, SigRepo::assay_tbl$assay_type, "assay_type")
+
+  # TRUE/FALSE reads better than 1/0 at the call site; the column is a BOOL. ####
+  if(base::length(has_difexp) > 0 && base::is.logical(has_difexp)){
+    has_difexp <- base::as.integer(has_difexp)
+  }
 
 
   # Establish user connection ###
@@ -67,20 +123,25 @@ searchSignature <- function(
   # signatures query below can filter on organism_id/phenotype_id/
   # sample_type_id/platform_id directly instead of pulling every signature
   # and filtering in R. ####
+  # The vocabulary tables are also where partial matching is settled for these
+  # four fields: LIKE narrows to a superset, then search_match_rows() applies
+  # the exact-wins rule over the handful of candidate names. The main query
+  # below still filters on indexed *_id columns. ####
   resolve_id_filter <- function(value, db_table_name, name_col, id_col){
-    value <- base::unique(value[base::which(!value %in% c(NA, ""))])
+    value <- base::unique(value[base::which(!base::trimws(value) %in% c(NA, ""))])
     if(base::length(value) == 0) return(NULL)
 
     id_tbl <- SigRepo::lookup_table_sql(
       conn = conn,
       db_table_name = db_table_name,
-      return_var = id_col,
+      return_var = c(id_col, name_col),
       filter_coln_var = name_col,
       filter_coln_val = stats::setNames(base::list(value), name_col),
-      check_db_table = TRUE
+      check_db_table = TRUE,
+      partial_match_columns = name_col
     )
 
-    id_tbl[[id_col]]
+    id_tbl[[id_col]][search_match_rows(id_tbl[[name_col]], value)]
   }
 
   organism_id <- resolve_id_filter(organism, "organisms", "organism", "organism_id")
@@ -98,16 +159,39 @@ searchSignature <- function(
     (base::length(sample_type) > 0 && base::length(sample_type_id) == 0) ||
     (base::length(platform) > 0 && base::length(platform_id) == 0)
 
+  # A blank term in a text field is an empty text box, not a search for the
+  # empty string, which every value contains. ####
+  drop_blank_terms <- function(value){
+    value <- base::unique(value)
+    value[base::which(!base::trimws(value) %in% c(NA, ""))]
+  }
+
   # Build the signatures WHERE clause directly from the caller's search
   # parameters, pushed down to SQL. ####
   filter_list <- base::list(
     "signature_id" = base::unique(signature_id),
-    "signature_name" = base::unique(signature_name),
-    "user_name" = base::unique(user_name),
+    "signature_name" = drop_blank_terms(signature_name),
+    "user_name" = drop_blank_terms(user_name),
+    "keywords" = drop_blank_terms(keywords),
+    "description" = drop_blank_terms(description),
+    "covariates" = drop_blank_terms(covariates),
+    "type" = base::unique(type),
+    "assay_type" = base::unique(assay_type),
+    "PMID" = base::unique(PMID),
+    "year" = base::unique(year),
+    "has_difexp" = base::unique(has_difexp),
     "organism_id" = organism_id,
     "phenotype_id" = phenotype_id,
     "sample_type_id" = sample_type_id,
     "platform_id" = platform_id
+  )
+
+  # Text columns on the signatures table itself. SQL narrows these with LIKE,
+  # which is a superset, and search_match_rows() settles them below. The rest
+  # match exactly: substring-matching a year would make 201 mean 2010-2019,
+  # and type/assay_type are closed vocabularies already. ####
+  partial_match_columns <- base::c(
+    "signature_name", "user_name", "keywords", "description", "covariates"
   )
 
   if(impossible_match){
@@ -128,8 +212,42 @@ searchSignature <- function(
     filter_coln_var = base::names(filter_list),
     filter_coln_val = filter_list,
     filter_var_by = if(base::length(filter_list) > 1) base::rep("AND", base::length(filter_list) - 1) else NULL,
-    check_db_table = TRUE
+    check_db_table = TRUE,
+    partial_match_columns = partial_match_columns
   )
+
+  # Settle the partial columns: an exact match wins for each term that has
+  # one, so a whole signature name returns that signature rather than every
+  # name containing it. Each column narrows in turn, so several filters still
+  # combine with AND. ####
+  # Whether a term is somebody's whole value is asked of the whole column, not
+  # of the rows above, which the other filters have already narrowed. Asked of
+  # those, a whole name became a fragment as soon as another filter excluded
+  # the signature it belongs to, and adding a filter added rows. ####
+  for(column in base::intersect(partial_match_columns, base::names(filter_list))){
+    if(base::nrow(signature_tbl) == 0) break
+
+    exact_terms <- SigRepo::lookup_table_sql(
+      conn = conn,
+      db_table_name = "signatures",
+      return_var = column,
+      filter_coln_var = column,
+      filter_coln_val = filter_list[column],
+      check_db_table = TRUE
+    )[[column]]
+
+    signature_tbl <- signature_tbl[
+      search_match_rows(
+        signature_tbl[[column]],
+        filter_list[[column]],
+        exact_terms = base::intersect(
+          base::trimws(base::tolower(filter_list[[column]])),
+          base::trimws(base::tolower(exact_terms))
+        )
+      ), ,
+      drop = FALSE
+    ]
+  }
 
   # Check if signature exists
   if(base::nrow(signature_tbl) == 0){
