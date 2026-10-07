@@ -199,11 +199,13 @@ createOmicSignature <- function(
   conn <- SigRepo::conn_init(conn_handler)
   on.exit(conn_close(conn), add = TRUE)
   
-  # Check user connection and permission ####
+  # Check user connection and permission. This only reads, so it asks for the
+  # same SELECT/viewer permission as getSignature(); asking for INSERT/editor
+  # here locked every viewer account out of retrieval (#260). ####
   conn_info <- SigRepo::checkPermissions(
     conn = conn, 
-    action_type = "INSERT",
-    required_role = "editor"
+    action_type = "SELECT",
+    required_role = "viewer"
   )
   
   # Check if table is a data frame object and not empty
