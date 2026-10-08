@@ -1,0 +1,62 @@
+[
+ {
+  "rank": 1,
+  "gseTitle": "Cellular response to hepatitis E virus (HEV) infection",
+  "size": 11,
+  "pctVar": 20.8949,
+  "log10Padj": "NA",
+  "gseId": "GSE88731",
+  "gseSummary": "What happens in cells infected with HEV is largely unknown. We used a recently established genotype 3 HEV cell culture system and profiled the host responses by RNA-seq.",
+  "positiveWords": "{\"kernow\":0.999,\"genotype\":0.999}",
+  "negativeWords": "{\"mock-infected\":-0.999}",
+  "gplId": "GPL20301"
+ },
+ {
+  "rank": 2,
+  "gseTitle": "Differential gene expression in human THP-1 monocytes expressing the RdRP transgene (WT version) compared to THP-1 empty vector control cells",
+  "size": 12,
+  "pctVar": 20.5952,
+  "log10Padj": "NA",
+  "gseId": "GSE62753",
+  "gseSummary": "Previously, we reported that mice made transgenic for a picornaviral RdRP \u2013 the 3Dpol protein of Theiler\u2019s murine encephalomyelitis virus (TMEV) \u2013 suppress infection by diverse viruses. Using mouse genetic studies, we determined that uninfected RdRP transgenic mice inherently induce an arsenel of prominent antiviral effectors and that this phenotype is MDA5-, MAVS- and IFN\u03b1\u03b2R-dependent. To determine the mechanism underlying MDA5 activation and induction of constitutive antiviral signaling by the picornaviral RdRP, we constructed mutant RdRP transgenes. First, we introduced pervasive, coding-neutral point mutations into the RdRP cDNA to maximally disrupt primary and secondary RNA structure (RdRP\u2206rna). Another mutant, RdRP\u2206cat, lacks catalytic activity due to alanine substitution of the key catalytic center triad aspartate residues (D233, D328, and D329), but is otherwise intact at the nucleotide and amino acid levels. The WT,  RdRP\u2206rna, and RdRP\u2206cat versions of the RdRP transgenes were transduced with lentiviral vectors into human THP-1 monocytes, with RdRP mRNA transcription controlled by the Spleen Focus Forming Virus (SFFV) promoter. In parallel a control cell line transduced with a vector lacking any RdRP transgene (null THP-1) was generated.",
+  "positiveWords": "{\"wildtype\":1,\"rdrp\":1,\"transgene\":1}",
+  "negativeWords": "{\"null\":-1,\"empty\":-1,\"vector\":-1}",
+  "gplId": "GPL570"
+ },
+ {
+  "rank": 3,
+  "gseTitle": "mRNA expression levels in Jurkat cell lines treated with or without IFN-alpha and with shaking or static",
+  "size": 7,
+  "pctVar": 19.5755,
+  "log10Padj": "NA",
+  "gseId": "GSE135370",
+  "gseSummary": "Throuth RNA sequencing analyses, we report that shaking did not affect transcriptome in Jurkat cells and differential expressed genes by IFN-alpha were detected.",
+  "positiveWords": "{\"ifn-alpha\":0.999,\"treated\":0.999,\"non-shaking-with-ifn-alpha\":0.583,\"shaking-with-ifn-alpha\":0.57}",
+  "negativeWords": "{\"untreated\":-0.999,\"shaking\":-0.589,\"non-shaking\":-0.564}",
+  "gplId": "GPL16791"
+ },
+ {
+  "rank": 4,
+  "gseTitle": "Transfection experiment with the plasmid containing pri-mir-124 in HEK293 cells",
+  "size": 9,
+  "pctVar": 18.5536,
+  "log10Padj": "NA",
+  "gseId": "GSE119381",
+  "gseSummary": "The microRNAome is comprised of annotated canonical miRNAs (anomiR) and a variety of recently identified microRNA isoforms (isomiR). While anomiR is well-studied in the last two decades, the functionality of most isomiRs is largely illusive. Here, we conducted both computional and experimental assays to estimate the functionality of isomiRs expressed in brains.",
+  "positiveWords": "{\"pri-mir-124\":0.997,\"pri-mir-124-plasmid\":0.997}",
+  "negativeWords": "{\"nc-plasmid\":-0.997,\"empty\":-0.997,\"plasmid\":-0.997}",
+  "gplId": "GPL20301"
+ },
+ {
+  "rank": 5,
+  "gseTitle": "Transcriptional  changes following SARS-CoV-2 infection of primary astrocytes",
+  "size": 11,
+  "pctVar": 18.3934,
+  "log10Padj": "NA",
+  "gseId": "GSE198722",
+  "gseSummary": "We used bulk RNA seq to invistigate how SARS-CoV-2 changes host profile in astrocytes. SARS-CoV-2 infection of astrocytes induces type I interferon and inflammatory response.",
+  "positiveWords": "{\"sars-cov-2-astrocytes\":0.995,\"sars-cov-2\":0.995,\"moi-5\":0.563}",
+  "negativeWords": "{\"mock\":-0.995,\"mock-astrocytes\":-0.995}",
+  "gplId": "GPL11154"
+ }
+]
