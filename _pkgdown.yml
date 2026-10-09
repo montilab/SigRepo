@@ -109,6 +109,7 @@ reference:
     desc: ~
     contents:
       - '`compareSignatures`'
+      - '`mergeDifexp`'
 
   - title: Enrichment Analysis
     desc: ~
@@ -128,9 +129,10 @@ reference:
       - '`hypergemAvailable`'
       - '`hypergemExport`'
 
-  - title: Connectivity Search
-    desc: Write a script that searches LINCS for perturbations that mimic or reverse a signature
+  - title: Search Beyond SigRepo
+    desc: Search Rummagene, RummaGEO and CORESH for signatures like yours, or write a script that searches LINCS for perturbations that mimic or reverse a signature
     contents:
+      - '`searchExternal`'
       - '`writeSignatureSearchScript`'
       
   - title: Build Signature Objects
