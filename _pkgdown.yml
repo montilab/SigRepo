@@ -204,7 +204,7 @@ reference:
 navbar:
   title: SigRepo
   structure:
-    left: [home, signature, collection, annotation, reference, change_log]
+    left: [home, signature, collection, annotation, compare, reference, change_log]
     right: [search, github, lightswitch]
   components:
     signature:
@@ -216,6 +216,9 @@ navbar:
     annotation:
       text: "Annotate Signatures"
       href: articles/annotation-tutorial.html
+    compare:
+      text: "Compare Signatures"
+      href: articles/compare-tutorial.html
     reference:
       text: "Reference"
       href: reference/index.html 

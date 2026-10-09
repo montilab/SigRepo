@@ -1,0 +1,482 @@
+---
+title: "Compare signatures"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Compare signatures}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+# The code runs only when a SigRepo account is supplied through the
+# SIGREPO_TEST_DB_USER and SIGREPO_TEST_DB_PASSWORD environment variables;
+# otherwise the tutorial shows its code without running it. Credentials never
+# go in this file. Everything here only reads from the database.
+has_account <- base::nzchar(base::Sys.getenv("SIGREPO_TEST_DB_USER")) &&
+  base::nzchar(base::Sys.getenv("SIGREPO_TEST_DB_PASSWORD"))
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  fig.align = "center",
+  eval = has_account
+)
+```
+
+This tutorial will walk you through how to fetch signatures and compare them
+with each other, in three steps:
+
+1. Find the signatures you want to compare with `searchSignature()`.
+2. Compare them with `compareSignatures()`.
+3. Plot the results with `OmicSignature::signature_similarity_heatmap()`.
+
+The same analysis runs without code in the SigRepo website's Compare tab; see
+[the end of this tutorial](#the-same-analysis-in-the-compare-tab).
+
+# Load packages:
+`compareSignatures()` runs the comparison with
+[OmicSignature](https://github.com/montilab/OmicSignature), which is installed
+with SigRepo. Two parts of this tutorial need extra packages: the GSEA method
+needs fgsea, and the heatmaps need ComplexHeatmap and circlize.
+
+```{r install, eval = FALSE}
+# only if they are not installed yet:
+BiocManager::install(c("fgsea", "ComplexHeatmap"))
+install.packages("circlize")
+```
+
+```{r load packages}
+library(SigRepo)
+```
+
+# Connect to SigRepo
+
+Connect with your own SigRepo account.
+
+```{r connect, eval = FALSE}
+conn_handler <- SigRepo::newConnHandler(
+  # required: your SigRepo account
+  user = "montilab",
+  password = "sigrepo",
+  dbname = "sigrepo",
+  host = "sigrepo.org",
+  port = 3306
+)
+```
+
+```{r account, include = FALSE}
+conn_handler <- SigRepo::newConnHandler(
+  dbname = base::Sys.getenv("SIGREPO_TEST_DB_NAME", "sigrepo"),
+  host = base::Sys.getenv("SIGREPO_TEST_DB_HOST", "sigrepo.org"),
+  port = base::as.numeric(base::Sys.getenv("SIGREPO_TEST_DB_PORT", "3306")),
+  user = base::Sys.getenv("SIGREPO_TEST_DB_USER"),
+  password = base::Sys.getenv("SIGREPO_TEST_DB_PASSWORD"),
+  api_host = base::Sys.getenv("SIGREPO_TEST_API_HOST", "http://142.93.67.157:8020"),
+  api_port = base::as.numeric(base::Sys.getenv("SIGREPO_TEST_API_PORT", "8020"))
+)
+```
+
+# Step 1: Find the signatures to compare
+
+`searchSignature()` returns one row per signature you can see, with its
+metadata. Here we look for human signatures:
+
+```{r search}
+human <- SigRepo::searchSignature(
+  # required:
+  conn_handler = conn_handler,
+
+  # optional filters, any combination:
+  organism = "Homo sapiens",
+  phenotype = NULL,
+  sample_type = NULL,
+  platform = NULL,
+  signature_name = NULL,
+  signature_id = NULL,
+  user_name = NULL,
+  verbose = FALSE
+)
+
+nrow(human)
+```
+
+Narrow the results down to the signatures you want to compare. Every method can
+compare signatures by their genes, but the ranked methods (KS and GSEA) also
+need a bi-directional signature stored with its full differential expression
+table (`has_difexp`) to rank against. Here we take two knockdowns in two breast
+cancer cell lines, MDA-MB-231 and SUM149PT: knockdown of the aryl hydrocarbon
+receptor (AhR), and knockdown of CYP1B1, a gene AhR switches on. Each is
+compared with control cells (`CN`):
+
+```{r sample}
+experiments <- c(
+  "BreastCancer_Hs_MDA_AhR_KD_vs_CN_MontiLab",
+  "BreastCancer_Hs_SUM149PT_AhR_KD_vs_CN_MontiLab",
+  "BreastCancer_Hs_MDA_CYP1B1_KD_vs_CN_MontiLab",
+  "BreastCancer_Hs_SUM149PT_CYP1B1_KD_vs_CN_MontiLab"
+)
+
+my_signatures <- human[
+  human$signature_name %in% experiments & human$has_difexp == 1,
+  c("signature_id", "signature_name", "type", "num_of_difexp", "num_up_regulated", "num_down_regulated")
+]
+my_signatures
+```
+
+# Step 2: Run the comparison
+
+`compareSignatures()` fetches the signatures from SigRepo and compares them with
+`OmicSignature::compare_omic_signatures()`, in your R session. Only the
+signatures are required:
+
+- **which signatures**: `signature_ids` (or `signature_names`) with `conn_handler`. Also takes OmicSignature objects, as `omic_signatures`;
+- **a second list** (optional): `signature_ids2`, `signature_names2` or `omic_signatures2`;
+- **`method`** (optional): `"overlap"` (the default), `"ks_rank"`, `"ks_score"` or `"gsea"`.
+
+## One list or two
+
+| Signatures given | Compares | Result matrices |
+|---|---|---|
+| a first list only | every signature with every other one; needs at least two | square: the first list as rows and as columns |
+| a first and a second list | each signature in the first list with each one in the second; one per list is enough | the first list as rows, the second list as columns |
+
+## The four methods
+
+| `method` | Asks | Tests |
+|---|---|---|
+| `"overlap"` | Do two signatures share more genes than chance? | Fisher's exact test on the two gene sets, with their Jaccard similarity |
+| `"ks_rank"` | Do one signature's genes sit toward one end of the other's ranking? | where the genes fall in the ranking (KS test) |
+| `"ks_score"` | Do one signature's genes sit toward one end of the other's ranking? | the genes' ranking scores against every other gene's (two-sample KS test) |
+| `"gsea"` | Do one signature's genes sit toward one end of the other's ranking? | fgsea's enrichment score, with permutation p-values |
+
+Every method starts by choosing each signature's genes, one set per
+`group_label`: the genes with `adj_p` at or below `adj_p_cutoff` and an
+absolute `score` at or above `score_cutoff`, best `adj_p` first, topped up to
+`min_features` and cut at `max_feature`.
+
+The ranked methods also rank the second list (or, with one list, the other
+signature of each pair) by its difexp table: every measured gene, ordered by
+`-log10(p_value)`, with one `group_label`'s genes at the top and the other's at
+the bottom. That is why the ranking side must be bi-directional with a difexp
+table; the first list can hold any signature. The sections below run each
+method in turn.
+
+## Overlap
+
+```{r overlap, results = "hide"}
+overlap <- SigRepo::compareSignatures(
+  # required: at least two signatures when there is no second list
+  conn_handler = conn_handler,
+  signature_ids = my_signatures$signature_id,   # or signature_names = my_signatures$signature_name
+
+  # optional:
+  method = "overlap",
+  adj_p_cutoff = 0.05,                          # keep genes with adj_p at or below this
+  score_cutoff = 0,                             # and an absolute score at or above this
+  min_features = 5,                             # top a set up to this many genes (at least 3)
+  max_feature = 500,                            # keep at most this many genes per group_label
+  background = NULL,                            # NULL: every gene in the compared signatures
+  alternative = "greater",                      # test for more shared genes than chance
+  adjust = FALSE,                               # TRUE: adjust the p-values within each matrix
+  p_adjust_method = "BH",
+  verbose = FALSE
+)
+```
+
+```{r overlap structure}
+names(overlap)
+names(overlap$comparisons)
+overlap$label_order
+```
+
+The result is a list: the `method`, the `comparisons`, the `label_order` and
+the `background` it used. A bi-directional signature is compared one
+`group_label` at a time: `level1_vs_level1` compares every signature's first
+label with the others' first label, and `level2_vs_level2` the second labels.
+`label_order` shows which labels those are. Here `level1` is `CN` for every
+signature: the genes higher in control cells, which go down after the
+knockdown.
+
+For the overlap method each comparison holds three matrices: `jaccard`,
+`pvalue`, and `counts`, the number of shared genes (on the diagonal, each
+signature's own number of genes). Rows and columns are named by the
+signatures' names:
+
+```{r overlap result}
+names(overlap$comparisons$level1_vs_level1)
+overlap$comparisons$level1_vs_level1$counts[
+  "BreastCancer_Hs_SUM149PT_AhR_KD_vs_CN_MontiLab",
+  "BreastCancer_Hs_SUM149PT_CYP1B1_KD_vs_CN_MontiLab"
+]
+```
+
+## Fetch once, compare many times
+
+Every call with `signature_ids` or `signature_names` fetches the signatures
+again. To run several comparisons, fetch them once with `getSignature()` and
+pass them as `omic_signatures`. Each signature takes its name in the results
+from its list name, so this is also the place to give them short names:
+
+```{r fetch, results = "hide"}
+signatures <- SigRepo::getSignature(
+  conn_handler = conn_handler,
+  signature_id = my_signatures$signature_id,
+  verbose = FALSE
+)
+```
+
+```{r short names}
+short_names <- c(
+  BreastCancer_Hs_MDA_AhR_KD_vs_CN_MontiLab = "MDA_AhR",
+  BreastCancer_Hs_SUM149PT_AhR_KD_vs_CN_MontiLab = "SUM149PT_AhR",
+  BreastCancer_Hs_MDA_CYP1B1_KD_vs_CN_MontiLab = "MDA_CYP1B1",
+  BreastCancer_Hs_SUM149PT_CYP1B1_KD_vs_CN_MontiLab = "SUM149PT_CYP1B1"
+)
+names(signatures) <- short_names[names(signatures)]
+names(signatures)
+```
+
+OmicSignature objects saved as `.rds` files work the same way:
+`omic_signatures = list(my_signature = readRDS("my_signature.rds"))`. Objects
+and database signatures can be mixed in one list.
+
+## Choose the labels with label_pairing
+
+Levels are paired by position, using each signature's own `group_label` order.
+To choose them, give both labels for each signature, the first label becoming
+`level1`. Here we put the knockdown first, so that `level1_vs_level1` compares
+the genes that go up after each knockdown:
+
+```{r label pairing}
+pairing <- list(
+  MDA_AhR = c("AhR", "CN"),
+  SUM149PT_AhR = c("AhR", "CN"),
+  MDA_CYP1B1 = c("CYP1B1", "CN"),
+  SUM149PT_CYP1B1 = c("CYP1B1", "CN")
+)
+
+overlap <- SigRepo::compareSignatures(
+  # required:
+  omic_signatures = signatures,                 # no conn_handler needed for objects
+
+  # optional:
+  method = "overlap",
+  label_pairing = pairing,                      # names are the signature names in the result
+  verbose = FALSE
+)
+
+overlap$label_order
+round(overlap$comparisons$level1_vs_level1$jaccard, 3)
+```
+
+When signatures left to position disagree on their label order, the comparison
+warns that the levels may not line up.
+
+## KS test: rank position
+
+With two lists, each signature in the first list (the rows) is tested against
+the ranking of each signature in the second list (the columns). Here we ask
+whether each knockdown in MDA-MB-231 looks like the knockdowns in SUM149PT:
+
+```{r ks rank}
+ks <- SigRepo::compareSignatures(
+  # required:
+  omic_signatures = signatures[c("MDA_AhR", "MDA_CYP1B1")],           # the rows: the genes tested
+  omic_signatures2 = signatures[c("SUM149PT_AhR", "SUM149PT_CYP1B1")], # the columns: the rankings
+
+  # optional:
+  method = "ks_rank",
+  label_pairing = pairing[c("MDA_AhR", "MDA_CYP1B1")],
+  label_pairing2 = pairing[c("SUM149PT_AhR", "SUM149PT_CYP1B1")],
+  p_value_col = "p_value",                      # the difexp column that ranks the genes
+  alternative = "greater",                      # test for genes toward the top of the ranking
+  verbose = FALSE
+)
+
+names(ks$comparisons$level1_vs_level1)
+lapply(ks$comparisons, function(x) round(x$score, 3))
+lapply(ks$comparisons, function(x) signif(x$pvalue, 2))
+```
+
+The ranked methods return a `score` and a `pvalue` matrix per comparison. In
+`level1_vs_level1`, each ranking has the column signature's `level1` genes at
+the top. A positive score means the row signature's `level1` genes sit toward
+that top, where they agree with it; a negative score means they sit toward the
+bottom, among the column signature's `level2` genes. The p-value tests the
+`alternative`: with `"greater"`, genes toward the top.
+
+Read the two together. The ranking puts the most significant genes of both
+labels at its two ends, so a signature's genes can gather at both ends at once.
+The score then reports the stronger end, while the p-value still tests the top:
+a negative score with a small p-value means genes toward both ends, more of
+them at the bottom.
+
+A ranking signature whose difexp table has no `p_value` column is ranked by its
+`pvalue` column instead, or by `adj_p` if it has neither; the comparison warns
+when it falls back to `adj_p`.
+
+## KS test: score distribution
+
+`"ks_score"` takes the same arguments. It compares the ranking scores of the
+row signature's genes with the scores of every other gene, and signs the result
+by which of the two is higher on average:
+
+```{r ks score}
+ks_score <- SigRepo::compareSignatures(
+  omic_signatures = signatures[c("MDA_AhR", "MDA_CYP1B1")],
+  omic_signatures2 = signatures[c("SUM149PT_AhR", "SUM149PT_CYP1B1")],
+  method = "ks_score",
+  label_pairing = pairing[c("MDA_AhR", "MDA_CYP1B1")],
+  label_pairing2 = pairing[c("SUM149PT_AhR", "SUM149PT_CYP1B1")],
+  verbose = FALSE
+)
+
+lapply(ks_score$comparisons, function(x) round(x$score, 3))
+```
+
+## GSEA with fgsea
+
+`"gsea"` runs fgsea on each pair and returns its normalized enrichment score
+(NES), positive toward the top of the ranking and negative toward the bottom.
+fgsea samples at random, so set a seed to make a run repeatable:
+
+```{r gsea, warning = FALSE}
+set.seed(1)
+gsea <- SigRepo::compareSignatures(
+  # required:
+  omic_signatures = signatures[c("MDA_AhR", "MDA_CYP1B1")],
+  omic_signatures2 = signatures[c("SUM149PT_AhR", "SUM149PT_CYP1B1")],
+
+  # optional for gsea:
+  method = "gsea",
+  label_pairing = pairing[c("MDA_AhR", "MDA_CYP1B1")],
+  label_pairing2 = pairing[c("SUM149PT_AhR", "SUM149PT_CYP1B1")],
+  gsea_score = "NES",                           # the fgsea column returned as the score: "NES", "ES", ...
+  minSize = 1,                                  # fgsea's smallest gene set
+  maxSize = Inf,                                # fgsea's largest gene set
+  nproc = 0,                                    # fgsea workers
+  verbose = FALSE
+)
+
+lapply(gsea$comparisons, function(x) round(x$score, 2))
+```
+
+fgsea warns when many genes share a ranking score, as genes with the same
+p-value do; the order of those genes is then arbitrary. The warnings are hidden
+above.
+
+## When signatures cannot be compared
+
+A signature that does not exist, or that your account cannot see, is left out
+with a warning, and the comparison goes ahead with the rest:
+
+```{r missing signature, results = "hide"}
+partial <- SigRepo::compareSignatures(
+  conn_handler = conn_handler,
+  signature_names = c(my_signatures$signature_name[1:2], "Not_a_signature"),
+  verbose = FALSE
+)
+```
+
+The comparison stops when there is nothing to compare, for instance a single
+signature without a second list:
+
+```{r one signature, error = TRUE}
+SigRepo::compareSignatures(
+  omic_signatures = signatures["MDA_AhR"],
+  verbose = FALSE
+)
+```
+
+The ranked methods also stop when no signature on the ranking side is
+bi-directional with a difexp table. Categorical signatures are not supported by
+any method.
+
+# Step 3: Visualize the results
+
+`OmicSignature::signature_similarity_heatmap()` draws any result of
+`compareSignatures()` as a ComplexHeatmap heatmap:
+
+| `measure` | Colours cells by | For |
+|---|---|---|
+| `"jaccard"` | Jaccard similarity | `"overlap"` |
+| `"pvalue"` | `-log10(p-value)` | every method |
+| `"score"` | the KS score or the NES | `"ks_rank"`, `"ks_score"`, `"gsea"` |
+
+| `mode` | Draws |
+|---|---|
+| `"separate"` | one heatmap per level (`lev1_vs_lev1`, `lev2_vs_lev2`) |
+| `"combined"` | both levels in each cell: `level1` in the bottom-left triangle, `level2` in the top-right |
+| `"split"` | `level1` above the diagonal and `level2` below it; one-list overlap results only |
+
+## Overlap heatmaps
+
+A one-list comparison is symmetric, so only one triangle of the matrix is
+drawn. Signatures are clustered, so similar ones sit next to each other:
+
+```{r heatmap separate, fig.width = 8, fig.height = 4}
+OmicSignature::signature_similarity_heatmap(
+  # required:
+  comparison = overlap,
+
+  # optional:
+  measure = "jaccard",
+  mode = "separate",
+  triangle = "upper",                           # the triangle drawn for one-list results
+  cluster_method = "ward.D",                    # how rows and columns are clustered
+  draw = TRUE                                   # FALSE: return the heatmap without drawing it
+)
+```
+
+```{r heatmap combined, fig.width = 6, fig.height = 4.5}
+OmicSignature::signature_similarity_heatmap(overlap, measure = "pvalue", mode = "combined")
+```
+
+## Ranked heatmaps
+
+For the ranked methods, `measure = "score"` shows the direction of each
+comparison. Rows are the first list and columns the second:
+
+```{r heatmap ks, fig.width = 6, fig.height = 4}
+OmicSignature::signature_similarity_heatmap(ks, measure = "score", mode = "combined")
+```
+
+Cells that could not be computed, for a ranking signature without a difexp
+table, are grey (`na_style = "grey"`) or hatched (`na_style = "hatch"`).
+
+To save a heatmap, build it with `draw = FALSE` and draw it into a file:
+
+```{r save heatmap, eval = FALSE}
+ht <- OmicSignature::signature_similarity_heatmap(overlap, draw = FALSE)
+
+pdf("overlap_heatmap.pdf", width = 8, height = 4)
+ComplexHeatmap::draw(ht)
+dev.off()
+```
+
+# The same analysis in the Compare tab
+
+The SigRepo website's Compare tab is a front end to `compareSignatures()` and
+follows the same rules:
+
+| In the tab | In R |
+|---|---|
+| Step 1: List 1, pick signatures from the repository or upload OmicSignature `.rds` files | `signature_ids`, `omic_signatures` |
+| Step 1: **Compare against a second list (List 2)** | `signature_ids2`, `omic_signatures2` |
+| Step 2: Method, cutoffs, min and max features, alternative, p-value adjustment | `method`, `score_cutoff`, `adj_p_cutoff`, `min_features`, `max_feature`, `alternative`, `adjust`, `p_adjust_method` |
+| Step 2: GSEA settings | `gsea_score`, `minSize`, `maxSize` |
+| Step 2: Advanced: background, columns, label pairing | `background`, the `*_col` arguments, `label_pairing`, `label_pairing2` |
+
+- Every setting starts at the `compareSignatures()` default, which its label
+  shows.
+- Choosing KS or GSEA sets the ranking side's filters to bi-directional
+  signatures with a difexp table: List 2, or List 1 when there is no List 2.
+- The results show the heatmap (with PNG and PDF downloads), every signature
+  pair, the matrices, the label order and the R code that reproduces the run.
+  **Download result (.rds)**
+  saves the result, which `readRDS()` reads back for
+  `OmicSignature::signature_similarity_heatmap()`.
+
+See `?compareSignatures` and `?OmicSignature::signature_similarity_heatmap` for
+every argument.
