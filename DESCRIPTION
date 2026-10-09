@@ -42,6 +42,8 @@ Remotes:
   montilab/hypeR-GEM
 Suggests:
   BiocManager,
+  circlize,
+  ComplexHeatmap,
   devtools,
   knitr,
   pkgdown,
