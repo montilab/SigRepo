@@ -227,6 +227,13 @@
 
 - Documentation: <https://montilab.github.io/SigRepo/>
 - GitHub: <https://github.com/montilab/SigRepo/>
+- Uni-directional signatures may omit scores: the four
+  `add*SignatureSet()` functions no longer require a non-empty `score`,
+  which is stored as NULL and comes back as NA. `addSignature()` now
+  rolls back and errors if the feature step stored no rows, instead of
+  returning a signature id for an empty signature. Needs OmicSignature
+  &gt;= 1.4.1, which keeps NA-score rows (#258,
+  montilab/SigRepo\_Server#89).
 - `R/hypeR_examples.R`, a Shiny UI module left over from prototyping
   the server’s Annotate tab, is removed from the package source along
   with its `.Rbuildignore` line. It was never built, exported or
