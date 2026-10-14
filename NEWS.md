@@ -132,6 +132,11 @@
   searching SigRepo for signatures, running `runHypeR()` and plotting the
   results.
 
+- The compare tutorial (`vignette("compare-tutorial")`) walks through
+  searching SigRepo for signatures, comparing them with `compareSignatures()`
+  by each method, as one list and as query against reference, reading the
+  result and drawing it with `OmicSignature::signature_similarity_heatmap()`.
+
 - Plotting for `runHypeR()` results, drawn from the result objects:
   `plotHypeRDots()` (one column per query with the same top genesets for every
   query, a readable -log10 significance scale, one-query results supported, and
