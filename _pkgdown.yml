@@ -109,15 +109,31 @@ reference:
     desc: ~
     contents:
       - '`compareSignatures`'
+      - '`mergeDifexp`'
 
   - title: Enrichment Analysis
     desc: ~
     contents:
       - '`prepareHypeRSignatures`'
       - '`runHypeR`'
+      - '`getHypeRGenesets`'
+      - '`hypeRToExcel`'
+      - '`getHypeRDifexp`'
+      - '`plotHypeRDots`'
+      - '`plotHypeREnrichment`'
+      - '`plotHypeRMap`'
+      - '`hypeRDotData`'
+      - '`hypeRSignatureKey`'
+      - '`hypeREnrichmentData`'
       - '`runHyperGEM`'
       - '`hypergemAvailable`'
       - '`hypergemExport`'
+
+  - title: Search Beyond the Repository
+    desc: Ask Rummagene, RummaGEO and CORESH what resembles a signature, or write a script that searches LINCS for perturbations that mimic or reverse it
+    contents:
+      - '`searchExternal`'
+      - '`writeSignatureSearchScript`'
       
   - title: Build Signature Objects
     desc: Construct and validate OmicSignature and OmicSignatureCollection objects before depositing them
@@ -190,7 +206,7 @@ reference:
 navbar:
   title: SigRepo
   structure:
-    left: [home, signature, collection, reference, change_log]
+    left: [home, signature, collection, annotation, reference, change_log]
     right: [search, github, lightswitch]
   components:
     signature:
@@ -199,6 +215,9 @@ navbar:
     collection:
       text: "Upload Collection"
       href: articles/collection-tutorials.html        
+    annotation:
+      text: "Annotate Signatures"
+      href: articles/annotation-tutorial.html
     reference:
       text: "Reference"
       href: reference/index.html 

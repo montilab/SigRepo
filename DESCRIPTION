@@ -1,7 +1,7 @@
 Package: SigRepo
 Type: Package
 Title: Storing and processing omic signatures and collections
-Version: 1.0.0
+Version: 1.1.0
 Authors@R: 
   c(person(given="Reina", family="Chau", role=c("aut","cre"), 
            email="rchau88@bu.edu", comment=c(ORCID="0000-0003-3012-1404")), 
@@ -23,10 +23,16 @@ Imports:
   DBI,
   digest,
   dplyr,
+  fgsea,
+  ggplot2,
   httr,
+  hypeR (>= 2.0.0),
+  hypeR.GEM,
   jsonlite,
   methods,
+  msigdbr,
   OmicSignature (>= 1.4.1),
+  openxlsx,
   purrr,
   readr,
   rlang,
@@ -37,9 +43,6 @@ Remotes:
 Suggests:
   BiocManager,
   devtools,
-  fgsea,
-  hypeR,
-  hypeR.GEM,
   knitr,
   pkgdown,
   rmarkdown,

@@ -1,0 +1,69 @@
+{
+ "data": {
+  "currentBackground": {
+   "species": "human",
+   "enrich": {
+    "totalCount": 18448,
+    "nodes": [
+     {
+      "pvalue": 2.526695532146911e-36,
+      "adjPvalue": 3.843926321589982e-31,
+      "oddsRatio": 1677.9583333333335,
+      "nOverlap": 11,
+      "geneSet": {
+       "id": "e0489e8b-27e7-49e8-ba6e-2ad685ebaf4a",
+       "term": "GSE218462,GSE218464-0-vs-1-human up",
+       "species": "human",
+       "nGeneIds": 34,
+       "geneSetGsesById": {
+        "nodes": [
+         {
+          "gse": "GSE218462,GSE218464"
+         }
+        ]
+       }
+      }
+     },
+     {
+      "pvalue": 4.40438421264965e-36,
+      "adjPvalue": 3.843926321589982e-31,
+      "oddsRatio": 818.9078947368422,
+      "nOverlap": 12,
+      "geneSet": {
+       "id": "eed483a7-2e33-4c9c-bda2-fe0b20351226",
+       "term": "GSE163959-4-vs-0-human up",
+       "species": "human",
+       "nGeneIds": 76,
+       "geneSetGsesById": {
+        "nodes": [
+         {
+          "gse": "GSE163959"
+         }
+        ]
+       }
+      }
+     },
+     {
+      "pvalue": 2.915779886183577e-35,
+      "adjPvalue": 1.6964979304444782e-30,
+      "oddsRatio": 707.2386363636364,
+      "nOverlap": 12,
+      "geneSet": {
+       "id": "c5ed9f0d-0b15-4b64-8358-059225de65ee",
+       "term": "GSE218462,GSE218464-0-vs-5-human up",
+       "species": "human",
+       "nGeneIds": 88,
+       "geneSetGsesById": {
+        "nodes": [
+         {
+          "gse": "GSE218462,GSE218464"
+         }
+        ]
+       }
+      }
+     }
+    ]
+   }
+  }
+ }
+}

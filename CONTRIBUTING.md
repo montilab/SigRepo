@@ -15,15 +15,39 @@ are linked before any code is written:
 
 ```sh
 gh issue create --repo montilab/SigRepo --title "..." --body "..."
-gh issue develop <number> --base master --checkout
+gh issue develop <number> --base dev --checkout
 ```
 
 Branch names carry no type prefix — not `fix/`, not `feat/`, not `chore/`. The
 default `<number>-<title-slug>` that `gh` produces is what we want.
 
+**`dev` is what gets worked on; `master` is what is live.** Branches come off
+`dev` and pull requests go into `dev`. `dev` is deployed to the staging instance
+at montilab.bu.edu, where a change is exercised against a full replica of the
+data before anyone outside sees it.
+
+`master` is production: it is what sigrepo.org runs. It gains commits only
+through a release pull request from `dev`, and direct pushes to it are blocked.
+If something ever has to be hotfixed straight onto `master`, merge `master` back
+into `dev` the same day. That one rule is what stops the two branches drifting
+apart, which is how this arrangement usually goes wrong.
+
+A change that spans both repositories is released from both or from neither.
+Otherwise production runs a client and a server from different lines, and the
+resulting bug report makes no sense to anyone.
+
 **Every pull request closes its issue.** Put `Closes #NNN` in the description.
 This is the rule the rest depends on: it is what lets the board move by itself and
 what leaves the reason for a change next to the change.
+
+Note what closes it. GitHub itself honours `Closes #NNN` only when a pull request
+merges into the repository's default branch, which is `master`, and pull requests
+target `dev`. The `close-linked-issues` workflow covers the gap: when a pull
+request merges into `dev`, it closes each issue the description names and leaves
+a comment naming the pull request. So a closed issue means merged into `dev`, not
+live; what is live is whatever the last release carried into `master`. The
+workflow reaches its own repository only, so an issue in the other repository
+that your pull request resolves has to be closed by hand.
 
 **Ideas and work are different things.** An idea states a goal, is labelled `idea`,
 and is never closed by a pull request. A task or bug is real work: it links to the
@@ -55,6 +79,30 @@ in the issue, or label it `needs-decision` and say what the decision is.
 **Stale means ninety days.** Untouched issues get asked about once, then closed if
 nobody answers. Closing is not a judgement on the idea; reopen it when it matters
 again.
+
+## Reaching the staging instance
+
+montilab.bu.edu keeps every port bound to `127.0.0.1`. It is a shared,
+BU-managed host, the lab has already been warned once about an exposed port, and
+the staging database holds real signatures behind accounts that can edit them.
+So nothing there is published to the network, and reaching it means your own SSH
+tunnel with your own BU account:
+
+```sh
+ssh -N -o ExitOnForwardFailure=yes \
+  -L 9051:127.0.0.1:8051 -L 9050:127.0.0.1:8050 -L 9020:127.0.0.1:8020 montilab
+```
+
+with `Host montilab` proxying through `scc4.bu.edu` — not scc2, which has no
+route to the BUMC network. Local ports are offset by 1000 so they do not collide
+with a stack running on your own machine. If you already have a ControlMaster
+session open, that command returns immediately and the master process holds the
+forwards: the tunnel is live even though it looks like the command exited.
+
+Then open <http://127.0.0.1:9051>.
+
+This needs SCC access. If you do not have it, ask for a walkthrough rather than
+a port.
 
 ## Labels
 
