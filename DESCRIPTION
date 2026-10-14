@@ -1,7 +1,7 @@
 Package: SigRepo
 Type: Package
 Title: Storing and processing omic signatures and collections
-Version: 1.0.0
+Version: 1.1.0
 Authors@R: 
   c(person(given="Reina", family="Chau", role=c("aut","cre"), 
            email="rchau88@bu.edu", comment=c(ORCID="0000-0003-3012-1404")), 
