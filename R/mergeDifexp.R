@@ -7,6 +7,12 @@
 #' value in each cell is that signature's \code{value_col} for that feature,
 #' and \code{NA} where the signature's difexp table has no such feature.
 #'
+#' The matrix comes with a metadata table describing its columns: one row per
+#' signature, in column order, built from each signature's metadata. The pair
+#' plays the role of the assay and \code{colData} of a SummarizedExperiment,
+#' but both are plain base R objects (a matrix and a data frame) so they can
+#' be written out and used outside R without any Bioconductor dependency.
+#'
 #' This is the "signature compendium" shape that signature-by-signature
 #' correlation, clustering, PCA and reference databases for tools such as
 #' signatureSearch expect. The thresholded signature tables are not used;
@@ -49,8 +55,24 @@
 #' @param verbose Logical; whether to print diagnostic messages while
 #'   resolving and fetching signatures. Defaults to \code{FALSE}.
 #'
-#' @return A numeric matrix with features as row names and signatures as
-#'   column names, in the order the signatures were assembled.
+#' @return A list with two elements:
+#'   \describe{
+#'     \item{\code{matrix}}{A numeric matrix with features as row names and
+#'       signatures as column names, in the order the signatures were
+#'       assembled.}
+#'     \item{\code{metadata}}{A data frame with one row per column of
+#'       \code{matrix}, in the same order, whose row names are the column
+#'       names of \code{matrix}. It starts with \code{signature_name} and
+#'       \code{signature_id} (the database id, \code{NA} for objects supplied
+#'       directly), followed by one column for every scalar field found in
+#'       any signature's metadata (\code{organism}, \code{phenotype},
+#'       \code{platform}, \code{PMID}, cutoffs, ...), \code{NA} where a
+#'       signature lacks the field. Metadata fields holding several values,
+#'       such as \code{keywords}, are collapsed into one string separated by
+#'       \code{"; "}; nested list fields such as \code{others} are left out.
+#'       The last column, \code{n_features}, counts the non-\code{NA} cells
+#'       of that signature's column.}
+#'   }
 #'
 #' @seealso \code{compareSignatures()}, \code{getSignature()}.
 #'
@@ -58,11 +80,12 @@
 #' # The bundled example signatures need no database
 #' utils::data("omic_signature_1", "omic_signature_2", "omic_signature_3", package = "SigRepo")
 #'
-#' m <- SigRepo::mergeDifexp(
+#' merged <- SigRepo::mergeDifexp(
 #'   omic_signatures = list(v1 = omic_signature_1, v2 = omic_signature_2, v3 = omic_signature_3)
 #' )
-#' dim(m)
-#' stats::cor(m, use = "pairwise.complete.obs")
+#' dim(merged$matrix)
+#' merged$metadata[, c("signature_name", "organism", "phenotype", "n_features")]
+#' stats::cor(merged$matrix, use = "pairwise.complete.obs")
 #'
 #' \dontrun{
 #' conn_handler <- SigRepo::newConnHandler(
@@ -70,13 +93,14 @@
 #'   user = "your_username", password = "your_password"
 #' )
 #'
-#' m <- SigRepo::mergeDifexp(
+#' merged <- SigRepo::mergeDifexp(
 #'   conn_handler = conn_handler,
 #'   signature_ids = c(12, 34),
 #'   signature_names = "my_signature",
 #'   value_col = "logfc",
 #'   features = "intersect"
 #' )
+#' merged$metadata$signature_id
 #'
 #' # Adjusted p-values: keep the most significant probe of a duplicated feature
 #' p <- SigRepo::mergeDifexp(
@@ -84,7 +108,7 @@
 #'   signature_ids = c(12, 34),
 #'   value_col = "adj_p",
 #'   collapse = "min"
-#' )
+#' )$matrix
 #' }
 #'
 #' @export
@@ -113,20 +137,24 @@ mergeDifexp <- function(
     base::stop("\n'conn_handler' is required to fetch signatures by 'signature_ids' or 'signature_names'.\n")
   }
 
-  sig_list <- resolveCompareSignatureList(
+  resolved <- resolveCompareSignatureList(
     conn_handler = conn_handler,
     signature_ids = signature_ids,
     signature_names = signature_names,
     omic_signatures = omic_signatures,
     arg_suffix = "",
-    verbose = verbose
+    verbose = verbose,
+    with_ids = TRUE
   )
+  sig_list <- resolved$signatures
   if (base::length(sig_list) == 0) {
     base::stop("\nProvide signatures through 'signature_ids', 'signature_names' and/or 'omic_signatures'.\n")
   }
 
-  # One named numeric vector per usable signature: feature -> value.
+  # One named numeric vector per usable signature: feature -> value. `kept`
+  # remembers which signatures made it, so their metadata can be lined up.
   columns <- base::list()
+  kept <- base::integer()
   dropped <- base::character()
   for (i in base::seq_along(sig_list)) {
     sig_name <- base::names(sig_list)[i]
@@ -143,11 +171,13 @@ mergeDifexp <- function(
       ))
       next
     }
-    columns[[sig_name]] <- collapseDifexpValues(
+    columns[[base::length(columns) + 1L]] <- collapseDifexpValues(
       feature = base::as.character(difexp[[feature_col]]),
       value = base::as.numeric(difexp[[value_col]]),
       collapse = collapse
     )
+    base::names(columns)[base::length(columns)] <- sig_name
+    kept <- c(kept, i)
   }
 
   if (base::length(dropped) > 0) {
@@ -182,7 +212,69 @@ mergeDifexp <- function(
     nrow = base::length(all_features),
     dimnames = base::list(all_features, base::names(columns))
   )
-  merged
+
+  metadata <- difexpSignatureMetadata(
+    signatures = sig_list[kept],
+    signature_ids = resolved$ids[kept],
+    n_features = base::colSums(!base::is.na(merged))
+  )
+  base::rownames(metadata) <- base::make.unique(base::colnames(merged))
+
+  base::list(matrix = merged, metadata = metadata)
+}
+
+
+#' Build the signature-level metadata table of a merged matrix
+#'
+#' Flattens each signature's metadata list into one row: atomic fields of
+#' length one are kept as they are, longer atomic vectors are pasted with
+#' "; ", empty fields become NA and anything else (nested lists such as
+#' `others`) is left out. A column's type is numeric or logical when every
+#' present value is, and character otherwise.
+#'
+#' @param signatures List of OmicSignature objects, one per matrix column.
+#' @param signature_ids Character vector of database ids, NA where unknown.
+#' @param n_features Integer vector of non-NA cells per matrix column.
+#' @return A data frame with one row per signature, columns
+#'   `signature_name`, `signature_id`, the flattened metadata fields in order
+#'   of first appearance, and `n_features`.
+#' @noRd
+difexpSignatureMetadata <- function(signatures, signature_ids, n_features) {
+  flat <- base::lapply(signatures, function(sig) {
+    md <- sig$metadata
+    if (!base::is.list(md)) {
+      return(base::list())
+    }
+    md <- md[base::vapply(md, function(v) base::is.atomic(v) && !base::is.null(v), base::logical(1))]
+    base::lapply(md, function(v) {
+      if (base::length(v) == 0) NA else if (base::length(v) == 1) v else base::paste(v, collapse = "; ")
+    })
+  })
+
+  fields <- base::unique(base::unlist(base::lapply(flat, base::names), use.names = FALSE))
+  fields <- c("signature_name", base::setdiff(fields, c("signature_name", "signature_id")))
+
+  columns <- base::lapply(fields, function(field) {
+    values <- base::lapply(flat, function(row) if (field %in% base::names(row)) row[[field]] else NA)
+    present <- values[!base::vapply(values, function(v) base::is.na(v), base::logical(1))]
+    if (base::all(base::vapply(present, base::is.numeric, base::logical(1)))) {
+      base::vapply(values, function(v) if (base::is.na(v)) NA_real_ else base::as.numeric(v), base::numeric(1))
+    } else if (base::all(base::vapply(present, base::is.logical, base::logical(1)))) {
+      base::vapply(values, function(v) if (base::is.na(v)) NA else base::as.logical(v), base::logical(1))
+    } else {
+      base::vapply(values, function(v) if (base::is.na(v)) NA_character_ else base::as.character(v), base::character(1))
+    }
+  })
+  base::names(columns) <- fields
+
+  metadata <- base::data.frame(columns, stringsAsFactors = FALSE, check.names = FALSE)
+  base::cbind(
+    metadata[, "signature_name", drop = FALSE],
+    signature_id = base::suppressWarnings(base::as.integer(signature_ids)),
+    metadata[, base::setdiff(fields, "signature_name"), drop = FALSE],
+    n_features = base::as.integer(n_features),
+    stringsAsFactors = FALSE
+  )
 }
 
 
