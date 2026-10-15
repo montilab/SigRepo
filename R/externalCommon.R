@@ -18,7 +18,7 @@ EXTERNAL_COLUMNS <- c(
 #' @title externalUrl
 #' @description Base URL of an external search engine, overridable through
 #' options so tests and a future dev instance can redirect it.
-#' @param source One of "rummagene", "rummageo", "coresh".
+#' @param source One of "rummagene", "rummageo", "coresh", "metaboanalyst".
 #' @return A single URL string.
 #' @keywords internal
 #' @noRd
@@ -28,6 +28,7 @@ externalUrl <- function(source) {
     rummagene = base::getOption("sigrepo.rummagene_url", "https://rummagene.com/graphql"),
     rummageo  = base::getOption("sigrepo.rummageo_url",  "https://rummageo.com/graphql"),
     coresh    = base::getOption("sigrepo.coresh_url",    "https://alserglab.wustl.edu/coresh-back"),
+    metaboanalyst = base::getOption("sigrepo.metaboanalyst_url", "https://rest.xialab.ca/api/mapcompounds"),
     base::stop(base::sprintf("Unknown external source '%s'.", source))
   )
 }
