@@ -1,3 +1,21 @@
+# SigRepo (development version)
+
+## New
+
+- `mapMetabolites()` converts metabolite names or identifiers between
+  HMDB, PubChem, ChEBI, KEGG, METLIN and SMILES through MetaboAnalyst’s
+  public compound-mapping service, with no login and no new dependency.
+  Give it a character vector and the namespace it is in (`from = "name"`
+  by default), and it returns one row per distinct input, in input
+  order, with a `matched` flag and the canonical compound name. It is
+  the step to run before `addMetabolomicsSignatureSet()` when a
+  signature arrives with compound names or KEGG, PubChem or ChEBI ids,
+  since SigRepo’s metabolite reference is RefMet-centred with HMDB,
+  SMILES and InChIKey cross-references. Long lists go in chunks of 200.
+  When tested on 2026-10-15 only name queries returned matches; the
+  identifier input types MetaboAnalyst documents are passed through as
+  documented but came back unmatched (#281, serves \#171).
+
 # SigRepo 1.1.0
 
 ## Breaking changes
