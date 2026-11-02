@@ -29,9 +29,12 @@ output: rmarkdown::github_document
   well). Each feature expands to all its orthologs, duplicates within a
   signature collapse to the strongest score, unmapped features are dropped
   and counted in the verbose output, and translated copies are renamed with
-  a `_to_<organism>` suffix. The default is unchanged, and the function now
-  says when the organisms differ and are being compared as plain strings
-  (#280).
+  a `_to_<organism>` suffix. A signature that cannot be translated (none of
+  its features map, or a bi-directional signature loses every feature of one
+  direction) is left out with a warning naming it, and the comparison runs
+  on the rest; only when too few signatures remain is it an error. The
+  default is unchanged, and the function now says when the organisms differ
+  and are being compared as plain strings (#280).
 
 ## Breaking changes
 

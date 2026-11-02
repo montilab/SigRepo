@@ -149,6 +149,11 @@ mapCompareSignatureOrganisms <- function(sig_lists, conn_handler, ortholog_targe
     base::unique(feats[!base::is.na(feats) & base::nzchar(feats)])
   }
 
+  # Signatures that cannot be translated are left out with a warning, the way
+  # compareSignatures() already treats requests it cannot retrieve: a sweep
+  # over many signatures must not die on the one that has no orthologs.
+  problems <- base::character()
+  dropped <- base::rep(FALSE, base::length(all_sigs))
   for (i in base::seq_along(all_sigs)) {
     sig <- all_sigs[[i]]
     name <- base::names(all_sigs)[i]
@@ -172,8 +177,10 @@ mapCompareSignatureOrganisms <- function(sig_lists, conn_handler, ortholog_targe
       sig = sig, mapping = mapping, feature_col = feature_col, group_col = group_col,
       score_col = score_col, p_value_col = p_value_col, organism = target, suffix = suffix
     )
-    if (translated$n_output == 0) {
-      base::stop("\nNo features of '", name, "' could be mapped to ", target, ".\n")
+    if (base::is.null(translated$signature)) {
+      problems <- c(problems, base::sprintf("'%s': %s", name, translated$reason))
+      dropped[i] <- TRUE
+      next
     }
     SigRepo::verbose(base::sprintf(
       "%s: %d of %d signature features mapped to %s (%s); %d dropped.\n",
@@ -183,10 +190,27 @@ mapCompareSignatureOrganisms <- function(sig_lists, conn_handler, ortholog_targe
     base::names(all_sigs)[i] <- base::paste0(name, suffix)
   }
 
-  base::list(
-    all_sigs[base::seq_len(n_first)],
-    if (base::is.null(sig_lists[[2]])) NULL else all_sigs[-base::seq_len(n_first)]
-  )
+  first <- base::seq_len(n_first)
+  keep1 <- all_sigs[first][!dropped[first]]
+  keep2 <- if (base::is.null(sig_lists[[2]])) NULL else all_sigs[-first][!dropped[-first]]
+  if (base::length(problems) > 0) {
+    too_few <- base::length(keep1) == 0 ||
+      (!base::is.null(sig_lists[[2]]) && base::length(keep2) == 0) ||
+      (base::is.null(sig_lists[[2]]) && base::length(keep1) < 2)
+    if (too_few) {
+      base::stop(
+        "\nAfter ortholog mapping too few signatures remain to compare:\n",
+        base::paste(problems, collapse = "\n"), "\n"
+      )
+    }
+    base::warning(
+      "Some signatures were left out of the comparison because they could not be mapped to ", target, ":\n",
+      base::paste(problems, collapse = "\n"),
+      call. = FALSE
+    )
+  }
+
+  base::list(keep1, keep2)
 }
 
 #' @title translateSignature
@@ -195,21 +219,37 @@ mapCompareSignatureOrganisms <- function(sig_lists, conn_handler, ortholog_targe
 #' duplicate, the difexp (when present) keeping the smallest p-value, or the
 #' strongest score when it has no p-value column. A difexp that ends up empty
 #' is dropped. The copy gets `organism` and a suffixed `signature_name`.
-#' @return A list: `signature` (the new OmicSignature), `n_input`,
-#'   `n_unmapped`, `n_output` for the signature table.
+#' @return A list: `signature` (the new OmicSignature, or `NULL` when it could
+#'   not be built, with `reason` saying why), `n_input`, `n_unmapped`,
+#'   `n_output` for the signature table.
 #' @keywords internal
 #' @noRd
 translateSignature <- function(sig, mapping, feature_col, group_col, score_col, p_value_col, organism, suffix) {
   sig_result <- translateFeatureTable(
     sig$signature, mapping, feature_col, group_col, prefer_col = score_col, prefer = "max_abs"
   )
-  # OmicSignature refuses an empty signature table; report the counts and let
-  # the caller name the signature in its error.
+  give_up <- function(reason) {
+    base::list(
+      signature = NULL, reason = reason, n_input = sig_result$n_input,
+      n_unmapped = sig_result$n_unmapped, n_output = sig_result$n_output
+    )
+  }
+  # OmicSignature refuses an empty signature table, and a bi-directional
+  # signature whose every feature of one direction is unmapped (it needs both
+  # group levels). Say which happened instead of letting the constructor fail.
   if (sig_result$n_output == 0) {
-    return(base::list(
-      signature = NULL, n_input = sig_result$n_input,
-      n_unmapped = sig_result$n_unmapped, n_output = 0L
-    ))
+    return(give_up(base::sprintf("none of its %d features map to %s", sig_result$n_input, organism)))
+  }
+  if (!base::is.null(group_col) && group_col %in% base::colnames(sig$signature)) {
+    groups_before <- base::unique(base::as.character(sig$signature[[group_col]]))
+    groups_after <- base::unique(base::as.character(sig_result$table[[group_col]]))
+    lost <- base::setdiff(groups_before, groups_after)
+    if (base::length(lost) > 0) {
+      return(give_up(base::sprintf(
+        "every feature of group %s is unmapped to %s, so the signature cannot keep its %d groups",
+        base::paste(base::sprintf("'%s'", lost), collapse = ", "), organism, base::length(groups_before)
+      )))
+    }
   }
 
   difexp <- NULL
@@ -245,14 +285,23 @@ translateSignature <- function(sig, mapping, feature_col, group_col, score_col, 
   # print_message = FALSE; the verbose line in the caller already says what
   # was built, so keep the console clean here.
   translated <- NULL
-  base::invisible(utils::capture.output(base::suppressMessages(
-    translated <- OmicSignature::OmicSignature$new(
-      metadata = metadata, signature = signature_tbl, difexp = difexp, print_message = FALSE
-    )
-  )))
+  built <- base::tryCatch({
+    base::invisible(utils::capture.output(base::suppressMessages(
+      translated <- OmicSignature::OmicSignature$new(
+        metadata = metadata, signature = signature_tbl, difexp = difexp, print_message = FALSE
+      )
+    )))
+    TRUE
+  }, error = function(e) e)
+  if (base::inherits(built, "error")) {
+    return(give_up(base::sprintf(
+      "the translated copy is not a valid OmicSignature (%s)", base::trimws(base::conditionMessage(built))
+    )))
+  }
 
   base::list(
     signature = translated,
+    reason = NULL,
     n_input = sig_result$n_input,
     n_unmapped = sig_result$n_unmapped,
     n_output = sig_result$n_output

@@ -112,21 +112,77 @@ test_that("proteomics target signatures are translated to symbols", {
   expect_gt(counts_of(res)[1, 2], 0)
 })
 
-test_that("a signature none of whose features map is an error naming it", {
+# A copy of a signature with every feature id prefixed, so a mock mapping can
+# single it out by its ids.
+prefixed_copy <- function(sig, prefix, name) {
+  md <- sig$metadata
+  md$signature_name <- name
+  s <- sig$signature
+  s$feature_name <- paste0(prefix, s$feature_name)
+  d <- sig$difexp
+  d$feature_name <- paste0(prefix, d$feature_name)
+  OmicSignature::OmicSignature$new(metadata = md, signature = s, difexp = d, print_message = FALSE)
+}
+
+# fake_map, except ids starting with `dead_prefix` map to nothing.
+fake_map_except <- function(dead_prefix) {
+  function(conn_handler, ids, from, to, id_type, verbose) {
+    out <- fake_map(conn_handler, ids, from, to, id_type, verbose)
+    dead <- grepl(paste0("^", dead_prefix), ids)
+    out$symbol[dead] <- NA_character_
+    out$ensembl[dead] <- NA_character_
+    out
+  }
+}
+
+test_that("a signature none of whose features map is dropped with a warning naming it", {
+  # A sweep over many signatures must not die on the one that cannot be
+  # translated; compareSignatures() already drops unretrievable requests the
+  # same way.
   ex <- load_examples()
-  testthat::local_mocked_bindings(
-    mapOrthologs = function(conn_handler, ids, from, to, id_type, verbose) {
-      out <- fake_map(conn_handler, ids, from, to, id_type, verbose)
-      out$symbol <- NA_character_
-      out$ensembl <- NA_character_
-      out
-    },
-    .package = "SigRepo"
+  dead <- prefixed_copy(ex$m1, "DEAD_", "unmappable_mouse")
+  testthat::local_mocked_bindings(mapOrthologs = fake_map_except("DEAD_"), .package = "SigRepo")
+
+  expect_warning(
+    res <- compareSignatures(conn_handler = list(mock = TRUE), omic_signatures = list(human_copy(ex$m2), dead, ex$m1),
+                             method = "overlap", map_orthologs = TRUE, verbose = FALSE),
+    "unmappable_mouse"
   )
+  counts <- counts_of(res)
+  expect_equal(nrow(counts), 2)
+  expect_false(any(grepl("unmappable", rownames(counts))))
+  expect_true("Myc_reduce_mice_liver_24m_v1_to_Homo_sapiens" %in% rownames(counts))
+})
+
+test_that("a bi-directional signature that loses every feature of one group is dropped with a warning", {
+  # OmicSignature requires exactly two group levels for a bi-directional
+  # signature, so a translation that empties one direction cannot be built.
+  ex <- load_examples()
+  md <- ex$m1$metadata
+  md$signature_name <- "one_sided_after_mapping"
+  sig <- data.frame(feature_name = c("a", "b", "DEAD_c"), score = c(2, 1, -4),
+                    group_label = factor(c("MYC Reduce", "MYC Reduce", "WT")), stringsAsFactors = FALSE)
+  dif <- data.frame(feature_name = c("a", "b", "DEAD_c"), score = c(2, 1, -4), p_value = c(0.01, 0.02, 0.03),
+                    adj_p = c(0.02, 0.03, 0.04), group_label = factor(c("MYC Reduce", "MYC Reduce", "WT")), stringsAsFactors = FALSE)
+  lopsided <- OmicSignature::OmicSignature$new(md, sig, dif, print_message = FALSE)
+  testthat::local_mocked_bindings(mapOrthologs = fake_map_except("DEAD_"), .package = "SigRepo")
+
+  expect_warning(
+    res <- compareSignatures(conn_handler = list(mock = TRUE), omic_signatures = list(human_copy(ex$m2), lopsided, ex$m1),
+                             method = "overlap", map_orthologs = TRUE, verbose = FALSE),
+    "one_sided_after_mapping.*WT"
+  )
+  expect_equal(nrow(counts_of(res)), 2)
+})
+
+test_that("when too few signatures survive the mapping the error says so", {
+  ex <- load_examples()
+  dead <- prefixed_copy(ex$m1, "DEAD_", "unmappable_mouse")
+  testthat::local_mocked_bindings(mapOrthologs = fake_map_except("DEAD_"), .package = "SigRepo")
   expect_error(
-    compareSignatures(conn_handler = list(mock = TRUE), omic_signatures = list(human_copy(ex$m2), ex$m1),
-                      method = "overlap", map_orthologs = TRUE, verbose = FALSE),
-    "Myc_reduce_mice_liver_24m_v1"
+    suppressWarnings(compareSignatures(conn_handler = list(mock = TRUE), omic_signatures = list(human_copy(ex$m2), dead),
+                                       method = "overlap", map_orthologs = TRUE, verbose = FALSE)),
+    "unmappable_mouse"
   )
 })
 

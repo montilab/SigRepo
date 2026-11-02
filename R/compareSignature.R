@@ -127,7 +127,11 @@
 #'   duplicates within a signature collapse to the strongest score (the
 #'   smallest p-value in a difexp), unmapped features are dropped and counted
 #'   in the verbose output, and the translated copies are renamed with a
-#'   \code{_to_<organism>} suffix. The target id space is Ensembl gene ids
+#'   \code{_to_<organism>} suffix. A signature that cannot be translated
+#'   (none of its features map, or a bi-directional signature loses every
+#'   feature of one direction) is left out with a warning naming it; it is
+#'   an error only when too few signatures remain to compare. The target id
+#'   space is Ensembl gene ids
 #'   when the target-organism signatures carry them, gene symbols otherwise;
 #'   in the latter case target-organism signatures with accession ids are
 #'   translated to symbols as well. Requires \code{conn_handler}. Defaults to

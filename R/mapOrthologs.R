@@ -171,41 +171,54 @@ mapOrthologs <- function(
   pair_symbol_key <- base::tolower(base::trimws(base::as.character(pairs$query_symbol)))
   pair_entrez_key <- base::trimws(base::as.character(pairs$query_entrez))
 
-  # Step 4: one block of rows per input id, in input order ####
+  # Step 4: one block of rows per input id, in input order. Vectorised: an id
+  # that is not an Entrez id joins the pairs on its symbol, an Entrez id joins
+  # them on the source-side Entrez column, and whatever matched nothing gets
+  # one NA row. (A per-id loop took 45 s for the 77,000 mouse symbols.)
   target_organism <- base::as.character(to_row$organism[1])
-  rows <- base::vector("list", base::length(ids))
-  for(i in base::seq_along(ids)){
-    type_i <- types[i]
-    symbol_i <- query_symbol[i]
-    if(!base::is.na(type_i) && type_i == "entrez"){
-      hits <- pairs[!base::is.na(pair_entrez_key) & pair_entrez_key == ids[i], , drop = FALSE]
-      if(base::nrow(hits) > 0 && base::is.na(symbol_i)){
-        symbol_i <- base::as.character(hits$query_symbol[1])
-      }
-    }else if(!base::is.na(symbol_i)){
-      hits <- pairs[pair_symbol_key == base::tolower(base::trimws(symbol_i)), , drop = FALSE]
-    }else{
-      hits <- pairs[0, , drop = FALSE]
-    }
+  ids_tbl <- base::data.frame(
+    idx = base::seq_along(ids), query = ids, query_type = types, query_symbol = query_symbol,
+    stringsAsFactors = FALSE
+  )
+  is_entrez <- !base::is.na(types) & types == "entrez"
+  keep_cols <- c("idx", "query", "query_type", "query_symbol", "symbol", "ensembl", "entrez", "support_n")
 
-    if(base::nrow(hits) == 0){
-      rows[[i]] <- base::data.frame(
-        query = ids[i], query_type = type_i, query_symbol = symbol_i, organism = target_organism,
-        symbol = NA_character_, ensembl = NA_character_, entrez = NA_character_,
-        support_n = NA_real_, ambiguous = FALSE, stringsAsFactors = FALSE
-      )
-    }else{
-      support <- base::suppressWarnings(base::as.numeric(hits$support_n))
-      ord <- base::order(-support, base::as.character(hits$symbol), na.last = TRUE)
-      hits <- hits[ord, , drop = FALSE]
-      rows[[i]] <- base::data.frame(
-        query = ids[i], query_type = type_i, query_symbol = symbol_i, organism = target_organism,
-        symbol = idText(hits$symbol), ensembl = idText(hits$ensembl), entrez = idText(hits$entrez),
-        support_n = support[ord], ambiguous = base::nrow(hits) > 1, stringsAsFactors = FALSE
-      )
-    }
+  pairs$symbol_key <- pair_symbol_key
+  by_symbol <- ids_tbl[!is_entrez & !base::is.na(ids_tbl$query_symbol), , drop = FALSE]
+  by_symbol$symbol_key <- base::tolower(base::trimws(by_symbol$query_symbol))
+  symbol_hits <- base::merge(
+    by_symbol, pairs[!base::is.na(pairs$symbol_key), , drop = FALSE],
+    by = "symbol_key", suffixes = c("", ".pair")
+  )[, keep_cols, drop = FALSE]
+
+  by_entrez <- ids_tbl[is_entrez, , drop = FALSE]
+  entrez_pairs <- pairs[!base::is.na(pair_entrez_key), , drop = FALSE]
+  entrez_pairs$query <- pair_entrez_key[!base::is.na(pair_entrez_key)]
+  entrez_hits <- base::merge(by_entrez, entrez_pairs, by = "query", suffixes = c("", ".pair"))
+  # An Entrez id has no symbol of its own; take the matched pair's.
+  if (base::nrow(entrez_hits) > 0) {
+    entrez_hits$query_symbol <- base::ifelse(
+      base::is.na(entrez_hits$query_symbol), entrez_hits$query_symbol.pair, entrez_hits$query_symbol
+    )
   }
-  out <- base::do.call(base::rbind, rows)
+  entrez_hits <- entrez_hits[, keep_cols, drop = FALSE]
+
+  hits <- base::rbind(symbol_hits, entrez_hits)
+  hits$support_n <- base::suppressWarnings(base::as.numeric(hits$support_n))
+  misses <- ids_tbl[!(ids_tbl$idx %in% hits$idx), , drop = FALSE]
+  miss_rows <- base::data.frame(
+    idx = misses$idx, query = misses$query, query_type = misses$query_type, query_symbol = misses$query_symbol,
+    symbol = base::rep(NA_character_, base::nrow(misses)), ensembl = base::rep(NA_character_, base::nrow(misses)),
+    entrez = base::rep(NA_character_, base::nrow(misses)), support_n = base::rep(NA_real_, base::nrow(misses)),
+    stringsAsFactors = FALSE
+  )
+  out <- base::rbind(hits, miss_rows)
+  # Input order, then the best-supported ortholog first, then by symbol.
+  out <- out[base::order(out$idx, -out$support_n, out$symbol, na.last = TRUE), , drop = FALSE]
+  rows_per_id <- base::table(out$idx)
+  out$ambiguous <- base::as.integer(rows_per_id[base::as.character(out$idx)]) > 1 & !base::is.na(out$symbol)
+  out$organism <- base::rep(target_organism, base::nrow(out))
+  out <- out[, c("query", "query_type", "query_symbol", "organism", "symbol", "ensembl", "entrez", "support_n", "ambiguous"), drop = FALSE]
   base::rownames(out) <- NULL
 
   # Disconnect from database (quietly: a connection that cannot be
