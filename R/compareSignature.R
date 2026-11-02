@@ -119,6 +119,27 @@
 #'   \code{signature_name} of fetched ones, including the \code{"name (id N)"}
 #'   form given to fetched signatures that share a name.
 #' @param label_pairing2 The same for the second list.
+#' @param map_orthologs Logical. When \code{TRUE}, signatures whose organism
+#'   differs from the target organism are translated onto the target's
+#'   identifier space before the comparison, through \code{\link{mapOrthologs}}
+#'   and the \code{gene_orthologs} reference table (mouse and human in this
+#'   release). A feature with several orthologs expands to all of them,
+#'   duplicates within a signature collapse to the strongest score (the
+#'   smallest p-value in a difexp), unmapped features are dropped and counted
+#'   in the verbose output, and the translated copies are renamed with a
+#'   \code{_to_<organism>} suffix. A signature that cannot be translated
+#'   (none of its features map, or a bi-directional signature loses every
+#'   feature of one direction) is left out with a warning naming it; it is
+#'   an error only when too few signatures remain to compare. The target id
+#'   space is Ensembl gene ids
+#'   when the target-organism signatures carry them, gene symbols otherwise;
+#'   in the latter case target-organism signatures with accession ids are
+#'   translated to symbols as well. Requires \code{conn_handler}. Defaults to
+#'   \code{FALSE}: organisms are then compared as plain strings, with a note
+#'   when they differ.
+#' @param ortholog_target Organism to map onto when \code{map_orthologs} is
+#'   \code{TRUE}. Defaults to the organism of the first signature in the
+#'   first list.
 #' @param feature_col Column containing feature identifiers.
 #' @param score_col Column containing scores in signature and difexp tables.
 #' @param adj_p_col Column containing adjusted p-values in difexp tables.
@@ -215,6 +236,8 @@ compareSignatures <- function(
     max_feature = 500,
     label_pairing = NULL,
     label_pairing2 = NULL,
+    map_orthologs = FALSE,
+    ortholog_target = NULL,
     feature_col = "feature_name",
     score_col = "score",
     adj_p_col = "adj_p",
@@ -249,6 +272,9 @@ compareSignatures <- function(
       "\n'conn_handler' is required to fetch signatures by 'signature_ids', 'signature_names', ",
       "'signature_ids2' or 'signature_names2'.\n"
     )
+  }
+  if (base::isTRUE(map_orthologs) && base::is.null(conn_handler)) {
+    base::stop("\n'conn_handler' is required when 'map_orthologs' is TRUE: the ortholog pairs live in the database.\n")
   }
 
   sig_list1 <- resolveCompareSignatureList(
@@ -287,6 +313,34 @@ compareSignatures <- function(
       "Add more signatures to the first list, or supply a second list through ",
       "'signature_ids2', 'signature_names2' or 'omic_signatures2'.\n"
     )
+  }
+
+  # Cross-species: signatures from another organism are translated onto the
+  # target organism's id space before anything is compared. Without it,
+  # organisms that differ are compared as plain strings, which is almost
+  # always an empty overlap; say so.
+  if (base::isTRUE(map_orthologs)) {
+    mapped <- mapCompareSignatureOrganisms(
+      sig_lists = base::list(sig_list1, sig_list2),
+      conn_handler = conn_handler,
+      ortholog_target = ortholog_target,
+      feature_col = feature_col,
+      score_col = score_col,
+      p_value_col = p_value_col,
+      group_col = group_col,
+      verbose = verbose
+    )
+    sig_list1 <- mapped[[1]]
+    sig_list2 <- mapped[[2]]
+  } else {
+    organisms <- base::vapply(c(sig_list1, sig_list2), signatureOrganism, base::character(1))
+    organisms <- base::unique(base::tolower(base::trimws(organisms[!base::is.na(organisms)])))
+    if (base::length(organisms) > 1) {
+      SigRepo::verbose(base::sprintf(
+        "Signatures come from more than one organism (%s); features are compared as plain strings. Set map_orthologs = TRUE to translate them.\n",
+        base::paste(organisms, collapse = ", ")
+      ))
+    }
   }
 
   # The rank-based methods rank the ranking side's difexp tables by p-value:

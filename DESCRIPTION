@@ -19,6 +19,7 @@ URL: https://montilab.github.io/SigRepo/, https://github.com/montilab/SigRepo/
 Encoding: UTF-8
 LazyData: true 
 Imports:
+  babelgene,
   biomaRt,
   DBI,
   digest,
