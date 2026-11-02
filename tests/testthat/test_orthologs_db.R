@@ -113,3 +113,63 @@ test_that("updateOrthologFeatureSet stored the canonical Trp53 to TP53 pair", {
   expect_equal(row$ensembl_gene_id, "ENSMUSG00000059552")
   expect_equal(row$version, as.character(utils::packageVersion("babelgene")))
 })
+
+# ---- mapOrthologs() ----------------------------------------------------------
+
+test_that("mapOrthologs resolves every mouse id type for Adipoq to the human ADIPOQ ids", {
+  test_conn <- skip_unless_test_database()
+  testthat::skip_if(count_current_orthologs(test_conn) == 0, "no ortholog reference loaded on the test stack")
+  # Q60994 is the UniProt accession of mouse adiponectin, 11450 its Entrez id;
+  # UniProt's gene name and the MGI symbol agree for this gene.
+  out <- SigRepo::mapOrthologs(test_conn, c("Q60994", "ENSMUSG00000022878", "Adipoq", "11450"), from = "Mus musculus", verbose = FALSE)
+  expect_equal(out$query_type, c("uniprot", "ensembl", "symbol", "entrez"))
+  expect_equal(out$query_symbol, rep("Adipoq", 4))
+  expect_equal(out$symbol, rep("ADIPOQ", 4))
+  expect_equal(out$ensembl, rep("ENSG00000181092", 4))
+  expect_equal(out$entrez, rep("9370", 4))
+  expect_false(any(out$ambiguous))
+})
+
+test_that("mapOrthologs returns every human ortholog of an ambiguous mouse gene", {
+  test_conn <- skip_unless_test_database()
+  testthat::skip_if(count_current_orthologs(test_conn) == 0, "no ortholog reference loaded on the test stack")
+  # Mouse Orm1 (UniProt Q60590) has two human orthologs, ORM1 and ORM2.
+  out <- SigRepo::mapOrthologs(test_conn, "Q60590", from = "Mus musculus", verbose = FALSE)
+  expect_setequal(out$symbol, c("ORM1", "ORM2"))
+  expect_true(all(out$ambiguous))
+  expect_equal(out$query, rep("Q60590", 2))
+})
+
+test_that("a UniProt gene name that differs from the MGI symbol cannot cross to human", {
+  test_conn <- skip_unless_test_database()
+  testthat::skip_if(count_current_orthologs(test_conn) == 0, "no ortholog reference loaded on the test stack")
+  # UniProt names mouse p53 (P02340) "Tp53"; MGI, and therefore babelgene,
+  # say "Trp53". The within-species step succeeds and the cross-species hop
+  # fails, which the result shows as a resolved query_symbol and NA targets.
+  conn <- SigRepo::conn_init(test_conn)
+  stored <- DBI::dbGetQuery(conn, "SELECT gene_symbol FROM proteomics_features WHERE feature_name = 'P02340'")$gene_symbol
+  base::suppressWarnings(DBI::dbDisconnect(conn))
+  testthat::skip_if(!identical(stored, "Tp53"), "this stack's proteomics reference does not name P02340 'Tp53'")
+  out <- SigRepo::mapOrthologs(test_conn, "P02340", from = "Mus musculus", verbose = FALSE)
+  expect_equal(out$query_symbol, "Tp53")
+  expect_true(is.na(out$symbol))
+  # The MGI symbol itself maps.
+  expect_equal(SigRepo::mapOrthologs(test_conn, "Trp53", from = "Mus musculus", verbose = FALSE)$symbol, "TP53")
+})
+
+test_that("mapOrthologs maps a human Ensembl id back to the mouse gene", {
+  test_conn <- skip_unless_test_database()
+  testthat::skip_if(count_current_orthologs(test_conn) == 0, "no ortholog reference loaded on the test stack")
+  back <- SigRepo::mapOrthologs(test_conn, "ENSG00000141510", from = "Homo sapiens", to = "Mus musculus", verbose = FALSE)
+  expect_equal(back$symbol, "Trp53")
+  expect_equal(back$ensembl, "ENSMUSG00000059552")
+  expect_equal(back$organism, "Mus musculus")
+})
+
+test_that("mapOrthologs keeps an unknown id as an unmapped row", {
+  test_conn <- skip_unless_test_database()
+  testthat::skip_if(count_current_orthologs(test_conn) == 0, "no ortholog reference loaded on the test stack")
+  out <- SigRepo::mapOrthologs(test_conn, c("Trp53", "Notagene123"), from = "Mus musculus", verbose = FALSE)
+  expect_equal(out$query, c("Trp53", "Notagene123"))
+  expect_true(is.na(out$symbol[2]))
+})
