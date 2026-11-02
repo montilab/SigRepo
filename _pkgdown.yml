@@ -82,6 +82,7 @@ reference:
       - '`addUserToCollection`'
       - '`addGenesetEntry`'
       - '`addGenesetResource`'
+      - '`addOrthologFeatureSet`'
   
   - title: Update Data in Database
     desc: ~
@@ -91,6 +92,7 @@ reference:
       - '`updateUser`'
       - '`updateProteomicsFeatureSet`'
       - '`updateTranscriptomicsFeatureSet`'
+      - '`updateOrthologFeatureSet`'
  
   - title: Delete Data from Database
     desc: ~
@@ -110,6 +112,7 @@ reference:
     contents:
       - '`compareSignatures`'
       - '`mergeDifexp`'
+      - '`mapOrthologs`'
 
   - title: Enrichment Analysis
     desc: ~

@@ -34,9 +34,11 @@ remove_ci_pairs <- function(test_conn){
   base::suppressWarnings(DBI::dbDisconnect(conn))
 }
 
+# suppressWarnings around every dbGetQuery below: RMySQL warns that it imports
+# unsigned integers as numeric, which is noise here.
 count_ci_pairs <- function(test_conn){
   conn <- SigRepo::conn_init(test_conn)
-  n <- DBI::dbGetQuery(conn, "SELECT COUNT(*) AS n FROM gene_orthologs WHERE version = '0.0.0-test'")$n
+  n <- base::suppressWarnings(DBI::dbGetQuery(conn, "SELECT COUNT(*) AS n FROM gene_orthologs WHERE version = '0.0.0-test'"))$n
   base::suppressWarnings(DBI::dbDisconnect(conn))
   n
 }
@@ -61,7 +63,7 @@ test_that("addOrthologFeatureSet stores ids, support and the version on the row"
   SigRepo::addOrthologFeatureSet(conn_handler = test_conn, ortholog_set = ci_pairs(), verbose = FALSE)
 
   conn <- SigRepo::conn_init(test_conn)
-  row <- DBI::dbGetQuery(conn, "SELECT * FROM gene_orthologs WHERE version = '0.0.0-test' AND human_symbol = 'ZZZTEST1'")
+  row <- base::suppressWarnings(DBI::dbGetQuery(conn, "SELECT * FROM gene_orthologs WHERE version = '0.0.0-test' AND human_symbol = 'ZZZTEST1'"))
   base::suppressWarnings(DBI::dbDisconnect(conn))
   expect_equal(nrow(row), 1)
   expect_equal(row$gene_symbol, "Zzztest1")
@@ -85,7 +87,7 @@ test_that("addOrthologFeatureSet refuses a table missing a required column", {
 
 count_current_orthologs <- function(test_conn){
   conn <- SigRepo::conn_init(test_conn)
-  n <- DBI::dbGetQuery(conn, "SELECT COUNT(*) AS n FROM gene_orthologs WHERE is_current = 1 AND version <> '0.0.0-test'")$n
+  n <- base::suppressWarnings(DBI::dbGetQuery(conn, "SELECT COUNT(*) AS n FROM gene_orthologs WHERE is_current = 1 AND version <> '0.0.0-test'"))$n
   base::suppressWarnings(DBI::dbDisconnect(conn))
   n
 }
@@ -106,7 +108,7 @@ test_that("updateOrthologFeatureSet stored the canonical Trp53 to TP53 pair", {
   test_conn <- skip_unless_test_database()
   testthat::skip_if(count_current_orthologs(test_conn) == 0, "no ortholog reference loaded on the test stack")
   conn <- SigRepo::conn_init(test_conn)
-  row <- DBI::dbGetQuery(conn, "SELECT human_symbol, human_ensembl_gene_id, ensembl_gene_id, support_n, version FROM gene_orthologs WHERE gene_symbol = 'Trp53' AND is_current = 1")
+  row <- base::suppressWarnings(DBI::dbGetQuery(conn, "SELECT human_symbol, human_ensembl_gene_id, ensembl_gene_id, support_n, version FROM gene_orthologs WHERE gene_symbol = 'Trp53' AND is_current = 1"))
   base::suppressWarnings(DBI::dbDisconnect(conn))
   expect_equal(row$human_symbol, "TP53")
   expect_equal(row$human_ensembl_gene_id, "ENSG00000141510")
@@ -147,7 +149,7 @@ test_that("a UniProt gene name that differs from the MGI symbol cannot cross to 
   # say "Trp53". The within-species step succeeds and the cross-species hop
   # fails, which the result shows as a resolved query_symbol and NA targets.
   conn <- SigRepo::conn_init(test_conn)
-  stored <- DBI::dbGetQuery(conn, "SELECT gene_symbol FROM proteomics_features WHERE feature_name = 'P02340'")$gene_symbol
+  stored <- base::suppressWarnings(DBI::dbGetQuery(conn, "SELECT gene_symbol FROM proteomics_features WHERE feature_name = 'P02340'"))$gene_symbol
   base::suppressWarnings(DBI::dbDisconnect(conn))
   testthat::skip_if(!identical(stored, "Tp53"), "this stack's proteomics reference does not name P02340 'Tp53'")
   out <- SigRepo::mapOrthologs(test_conn, "P02340", from = "Mus musculus", verbose = FALSE)
