@@ -49,8 +49,24 @@ or \code{"adj_p"}, where the smallest value is the most significant;
 resolving and fetching signatures. Defaults to \code{FALSE}.}
 }
 \value{
-A numeric matrix with features as row names and signatures as
-  column names, in the order the signatures were assembled.
+A list with two elements:
+  \describe{
+    \item{\code{matrix}}{A numeric matrix with features as row names and
+      signatures as column names, in the order the signatures were
+      assembled.}
+    \item{\code{metadata}}{A data frame with one row per column of
+      \code{matrix}, in the same order, whose row names are the column
+      names of \code{matrix}. It starts with \code{signature_name} and
+      \code{signature_id} (the database id, \code{NA} for objects supplied
+      directly), followed by one column for every scalar field found in
+      any signature's metadata (\code{organism}, \code{phenotype},
+      \code{platform}, \code{PMID}, cutoffs, ...), \code{NA} where a
+      signature lacks the field. Metadata fields holding several values,
+      such as \code{keywords}, are collapsed into one string separated by
+      \code{"; "}; nested list fields such as \code{others} are left out.
+      The last column, \code{n_features}, counts the non-\code{NA} cells
+      of that signature's column.}
+  }
 }
 \description{
 Fetches signatures from the SigRepo database and/or takes OmicSignature
@@ -58,6 +74,12 @@ objects supplied directly, and lines their difexp tables up into a single
 numeric matrix with one row per feature and one column per signature. The
 value in each cell is that signature's \code{value_col} for that feature,
 and \code{NA} where the signature's difexp table has no such feature.
+
+The matrix comes with a metadata table describing its columns: one row per
+signature, in column order, built from each signature's metadata. The pair
+plays the role of the assay and \code{colData} of a SummarizedExperiment,
+but both are plain base R objects (a matrix and a data frame) so they can
+be written out and used outside R without any Bioconductor dependency.
 
 This is the "signature compendium" shape that signature-by-signature
 correlation, clustering, PCA and reference databases for tools such as
@@ -82,11 +104,12 @@ warning naming them; it is an error when that leaves nothing to merge.
 # The bundled example signatures need no database
 utils::data("omic_signature_1", "omic_signature_2", "omic_signature_3", package = "SigRepo")
 
-m <- SigRepo::mergeDifexp(
+merged <- SigRepo::mergeDifexp(
   omic_signatures = list(v1 = omic_signature_1, v2 = omic_signature_2, v3 = omic_signature_3)
 )
-dim(m)
-stats::cor(m, use = "pairwise.complete.obs")
+dim(merged$matrix)
+merged$metadata[, c("signature_name", "organism", "phenotype", "n_features")]
+stats::cor(merged$matrix, use = "pairwise.complete.obs")
 
 \dontrun{
 conn_handler <- SigRepo::newConnHandler(
@@ -94,13 +117,14 @@ conn_handler <- SigRepo::newConnHandler(
   user = "your_username", password = "your_password"
 )
 
-m <- SigRepo::mergeDifexp(
+merged <- SigRepo::mergeDifexp(
   conn_handler = conn_handler,
   signature_ids = c(12, 34),
   signature_names = "my_signature",
   value_col = "logfc",
   features = "intersect"
 )
+merged$metadata$signature_id
 
 # Adjusted p-values: keep the most significant probe of a duplicated feature
 p <- SigRepo::mergeDifexp(
@@ -108,7 +132,7 @@ p <- SigRepo::mergeDifexp(
   signature_ids = c(12, 34),
   value_col = "adj_p",
   collapse = "min"
-)
+)$matrix
 }
 
 }
