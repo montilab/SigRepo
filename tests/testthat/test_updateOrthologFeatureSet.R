@@ -36,6 +36,15 @@ test_that("updateOrthologFeatureSet rejects organisms outside the beta scope", {
   )
 })
 
+test_that("updateOrthologFeatureSet names the migration when the gene_orthologs table does not exist", {
+  mock_update_db()
+  testthat::local_mocked_bindings(orthologTableExists = function(conn) FALSE, .package = "SigRepo")
+  expect_error(
+    updateOrthologFeatureSet(conn_handler = list(), organism = "Mus musculus", verbose = FALSE),
+    "gene_orthologs.*2026-11-02-gene-orthologs"
+  )
+})
+
 test_that("updateOrthologFeatureSet requires exactly one organism", {
   expect_error(updateOrthologFeatureSet(conn_handler = list(), organism = c("Mus musculus", "Homo sapiens"), verbose = FALSE), "length of 1")
   expect_error(updateOrthologFeatureSet(conn_handler = list(), organism = "", verbose = FALSE), "length of 1")

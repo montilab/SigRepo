@@ -18,6 +18,7 @@ with_mock_db <- function(code, pairs) {
     conn_close = function(...) invisible(NULL),
     checkPermissions = function(...) data.frame(user = "v", user_role = "viewer", stringsAsFactors = FALSE),
     lookup_table_sql = mock_organisms,
+    orthologTableExists = function(conn) TRUE,
     countCurrentOrthologs = function(conn, organism_id) nrow(pairs),
     lookupFeatureSymbols = function(conn, ids, id_types, organism_id) {
       data.frame(
@@ -91,6 +92,23 @@ test_that("mapOrthologs refuses same-organism and non-human pairs before touchin
   expect_error(mapOrthologs(list(), "Trp53", from = "Mus musculus", to = "Mus musculus", verbose = FALSE), "different organisms")
   expect_error(mapOrthologs(list(), "Trp53", from = "Mus musculus", to = "Rattus norvegicus", verbose = FALSE), "Homo sapiens")
   expect_error(mapOrthologs(list(), "Trp53", from = "", verbose = FALSE), "'from'")
+})
+
+test_that("mapOrthologs names the migration when the gene_orthologs table does not exist", {
+  # A stack that predates the server change has no table at all; the raw SQL
+  # error would not tell anyone what to do about it.
+  testthat::local_mocked_bindings(
+    conn_init = function(...) structure(list(), class = "mock_conn"),
+    conn_close = function(...) invisible(NULL),
+    checkPermissions = function(...) data.frame(user = "v", user_role = "viewer", stringsAsFactors = FALSE),
+    lookup_table_sql = mock_organisms,
+    orthologTableExists = function(conn) FALSE,
+    .package = "SigRepo"
+  )
+  expect_error(
+    mapOrthologs(list(), "Trp53", from = "Mus musculus", verbose = FALSE),
+    "gene_orthologs.*2026-11-02-gene-orthologs"
+  )
 })
 
 test_that("mapOrthologs explains when no ortholog reference is loaded", {

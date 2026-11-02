@@ -133,6 +133,9 @@ mapOrthologs <- function(
   non_human_row <- if(from_is_human) to_row else from_row
   non_human_id <- non_human_row$organism_id[1]
 
+  if(!orthologTableExists(conn)){
+    fail(missingOrthologTableMessage())
+  }
   if(countCurrentOrthologs(conn, non_human_id) == 0){
     fail(base::sprintf(
       "No ortholog reference is loaded for %s. Run updateOrthologFeatureSet() (API route /update_orthologs) first.\n",
@@ -243,6 +246,31 @@ idText <- function(x){
   }
   out[!base::is.na(out) & !base::nzchar(out)] <- NA_character_
   out
+}
+
+#' @title orthologTableExists
+#' @description Whether the database has a `gene_orthologs` table at all. A
+#' stack built from a SigRepo_Server release before the 2026-11-02 migration
+#' has none, and the raw SQL error would not say what to do about it.
+#' @keywords internal
+#' @noRd
+orthologTableExists <- function(conn){
+  base::tryCatch(
+    base::isTRUE(DBI::dbExistsTable(conn, "gene_orthologs")),
+    error = function(e) FALSE
+  )
+}
+
+#' @title missingOrthologTableMessage
+#' @description The error text for a database without the `gene_orthologs` table.
+#' @keywords internal
+#' @noRd
+missingOrthologTableMessage <- function(){
+  base::paste0(
+    "This database has no gene_orthologs table. Apply SigRepo_Server's ",
+    "mysql/migrations/2026-11-02-gene-orthologs.sql (a fresh install gets it from /init_db_schema), ",
+    "then load the pairs with updateOrthologFeatureSet() (API route /update_orthologs).\n"
+  )
 }
 
 #' @title countCurrentOrthologs

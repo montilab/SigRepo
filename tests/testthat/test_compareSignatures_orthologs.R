@@ -177,6 +177,7 @@ test_that("the per-signature mapping report prints and the caller's verbose flag
       tbl <- data.frame(organism_id = c(1L, 2L), organism = c("Mus musculus", "Homo sapiens"), stringsAsFactors = FALSE)
       tbl[tolower(tbl$organism) %in% tolower(trimws(filter_coln_val$organism)), , drop = FALSE]
     },
+    orthologTableExists = function(conn) TRUE,
     countCurrentOrthologs = function(conn, organism_id) 1L,
     lookupFeatureSymbols = function(conn, ids, id_types, organism_id) data.frame(query = ids, query_symbol = ids, stringsAsFactors = FALSE),
     lookupOrthologPairs = function(conn, symbols, entrez_ids, non_human_organism_id, from_is_human) {

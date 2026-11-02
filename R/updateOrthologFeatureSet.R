@@ -109,6 +109,11 @@ updateOrthologFeatureSet <- function(
     fail("The organisms table has no 'Homo sapiens' row, so there is no human side to map to.\n")
   }
 
+  # The table itself comes from SigRepo_Server; say so before the babelgene work.
+  if(!orthologTableExists(conn)){
+    fail(missingOrthologTableMessage())
+  }
+
   # Symbols to look up: everything the reference tables know for each side
   SigRepo::verbose("Collecting gene symbols from the reference tables...\n")
   symbols <- referenceGeneSymbols(conn, organism_id)

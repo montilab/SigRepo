@@ -10,6 +10,13 @@ skip_unless_test_database <- function(){
     test_conn$host %in% c("sigrepo.org", "142.93.67.157"),
     "refusing to run database tests against production at sigrepo.org / 142.93.67.157"
   )
+  # The table comes from SigRepo_Server (#166). A test stack built from a
+  # server release without it, such as the client's own CI database, has
+  # nothing for these tests to check.
+  conn <- SigRepo::conn_init(test_conn)
+  has_table <- orthologTableExists(conn)
+  base::suppressWarnings(DBI::dbDisconnect(conn))
+  testthat::skip_if(!has_table, "the test database has no gene_orthologs table (apply SigRepo_Server's 2026-11-02 migration)")
   test_conn
 }
 
