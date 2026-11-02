@@ -1,3 +1,19 @@
+# SigRepo (development version)
+
+## Breaking changes
+
+- `mergeDifexp()` returns a list of `matrix` and `metadata` instead of a
+  bare matrix (#282). `matrix` is the features x signatures matrix as
+  before; `metadata` is a data frame with one row per matrix column, in
+  column order, holding `signature_name`, the database `signature_id`
+  (`NA` for objects supplied directly), every scalar field of the
+  signatures’ metadata (`organism`, `phenotype`, `platform`, `PMID`,
+  cutoffs, …; vector fields such as `keywords` collapsed with `"; "`,
+  nested lists such as `others` left out) and `n_features`, the number
+  of non-`NA` cells in that column. The pair plays the role of a
+  SummarizedExperiment’s assay and `colData` while staying plain base R
+  objects. Code that used the result as a matrix needs `$matrix`.
+
 # SigRepo 1.1.0
 
 ## Breaking changes
