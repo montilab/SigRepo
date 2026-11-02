@@ -130,6 +130,38 @@ test_that("a signature none of whose features map is an error naming it", {
   )
 })
 
+test_that("two features collapsing onto one ortholog keep the signature and difexp consistent", {
+  # Signature collapse keeps the strongest score (feature a, probe p1); the
+  # difexp collapse keeps the smallest p-value (feature b, probe p2). With the
+  # source probe ids kept, OmicSignature rejects the pair because p1 is no
+  # longer in the difexp. This is what the LC-M005 demo signature hit.
+  ex <- load_examples()
+  md <- ex$m1$metadata
+  md$signature_name <- "two_onto_one"
+  sig <- data.frame(probe_id = c("p1", "p2", "p3"), feature_name = c("a", "b", "c"), score = c(2, 1, -4),
+                    group_label = factor(c("MYC Reduce", "MYC Reduce", "WT")), stringsAsFactors = FALSE)
+  dif <- data.frame(probe_id = c("p1", "p2", "p3"), feature_name = c("a", "b", "c"), score = c(2, 1, -4),
+                    p_value = c(0.5, 0.01, 0.001), adj_p = c(0.6, 0.02, 0.002),
+                    group_label = factor(c("MYC Reduce", "MYC Reduce", "WT")), stringsAsFactors = FALSE)
+  mouse <- OmicSignature::OmicSignature$new(md, sig, dif, print_message = FALSE)
+  mapping <- data.frame(query = c("a", "b", "c"), target = c("X", "X", "Z"), stringsAsFactors = FALSE)
+
+  out <- translateSignature(mouse, mapping, feature_col = "feature_name", group_col = "group_label",
+                            score_col = "score", p_value_col = "p_value", organism = "Homo sapiens", suffix = "_to_Homo_sapiens")
+
+  expect_s3_class(out$signature, "OmicSignature")
+  expect_setequal(out$signature$signature$feature_name, c("X", "Z"))
+  expect_equal(out$signature$signature$score[out$signature$signature$feature_name == "X"], 2)
+  expect_equal(out$signature$difexp$p_value[out$signature$difexp$feature_name == "X"], 0.01)
+  # OmicSignature fills probe ids itself when the column is absent; what
+  # matters is that its own invariant holds for the translated pair.
+  if ("probe_id" %in% colnames(out$signature$signature) && "probe_id" %in% colnames(out$signature$difexp)) {
+    expect_true(all(out$signature$signature$probe_id %in% out$signature$difexp$probe_id))
+  }
+  expect_true(all(out$signature$signature$feature_name %in% out$signature$difexp$feature_name))
+  expect_equal(out$signature$metadata$organism, "Homo sapiens")
+})
+
 test_that("map_orthologs = FALSE leaves mixed organisms untouched", {
   ex <- load_examples()
   res <- compareSignatures(omic_signatures = list(human_copy(ex$m2), ex$m1), method = "overlap", verbose = FALSE)

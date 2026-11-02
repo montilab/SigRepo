@@ -225,6 +225,18 @@ translateSignature <- function(sig, mapping, feature_col, group_col, score_col, 
     }
   }
 
+  # The source platform's probe ids no longer identify anything once the
+  # features have been translated, and keeping them breaks OmicSignature's
+  # rule that the signature's probe ids are a subset of the difexp's: the two
+  # tables collapse duplicates by different criteria (strongest score against
+  # smallest p-value), so they can keep different source rows for one target.
+  drop_probe <- function(tbl) {
+    if (base::is.null(tbl)) return(NULL)
+    tbl[, base::setdiff(base::colnames(tbl), "probe_id"), drop = FALSE]
+  }
+  signature_tbl <- drop_probe(sig_result$table)
+  difexp <- drop_probe(difexp)
+
   metadata <- sig$metadata
   metadata$organism <- organism
   metadata$signature_name <- base::paste0(resolveSignatureLabel(sig, label = NULL, fallback = "signature"), suffix)
@@ -235,7 +247,7 @@ translateSignature <- function(sig, mapping, feature_col, group_col, score_col, 
   translated <- NULL
   base::invisible(utils::capture.output(base::suppressMessages(
     translated <- OmicSignature::OmicSignature$new(
-      metadata = metadata, signature = sig_result$table, difexp = difexp, print_message = FALSE
+      metadata = metadata, signature = signature_tbl, difexp = difexp, print_message = FALSE
     )
   )))
 
