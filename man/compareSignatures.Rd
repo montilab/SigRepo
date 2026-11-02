@@ -20,6 +20,8 @@ compareSignatures(
   max_feature = 500,
   label_pairing = NULL,
   label_pairing2 = NULL,
+  map_orthologs = FALSE,
+  ortholog_target = NULL,
   feature_col = "feature_name",
   score_col = "score",
   adj_p_col = "adj_p",
@@ -78,6 +80,25 @@ metadata \code{signature_name} when unnamed), and the database
 form given to fetched signatures that share a name.}
 
 \item{label_pairing2}{The same for the second list.}
+
+\item{map_orthologs}{Logical. When \code{TRUE}, signatures whose organism
+differs from the target organism are translated onto the target's
+identifier space before the comparison, through \code{\link{mapOrthologs}}
+and the \code{gene_orthologs} reference table (mouse and human in this
+release). A feature with several orthologs expands to all of them,
+duplicates within a signature collapse to the strongest score (the
+smallest p-value in a difexp), unmapped features are dropped and counted
+in the verbose output, and the translated copies are renamed with a
+\code{_to_<organism>} suffix. The target id space is Ensembl gene ids
+when the target-organism signatures carry them, gene symbols otherwise;
+in the latter case target-organism signatures with accession ids are
+translated to symbols as well. Requires \code{conn_handler}. Defaults to
+\code{FALSE}: organisms are then compared as plain strings, with a note
+when they differ.}
+
+\item{ortholog_target}{Organism to map onto when \code{map_orthologs} is
+\code{TRUE}. Defaults to the organism of the first signature in the
+first list.}
 
 \item{feature_col}{Column containing feature identifiers.}
 
