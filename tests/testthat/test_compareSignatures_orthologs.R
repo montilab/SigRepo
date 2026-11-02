@@ -162,6 +162,43 @@ test_that("two features collapsing onto one ortholog keep the signature and dife
   expect_equal(out$signature$metadata$organism, "Homo sapiens")
 })
 
+test_that("the per-signature mapping report prints and the caller's verbose flag survives", {
+  # mapOrthologs() runs for real here (only its SQL steps are mocked) and is
+  # called with verbose = FALSE inside the compare. print_messages() sets a
+  # package-wide option, so without care that nested FALSE silences the rest
+  # of the outer call and leaks into the session.
+  ex <- load_examples()
+  human <- human_copy(ex$m2)
+  testthat::local_mocked_bindings(
+    conn_init = function(...) structure(list(), class = "mock_conn"),
+    conn_close = function(...) invisible(NULL),
+    checkPermissions = function(...) data.frame(user = "v", user_role = "viewer", stringsAsFactors = FALSE),
+    lookup_table_sql = function(conn, db_table_name, ..., filter_coln_val = NULL) {
+      tbl <- data.frame(organism_id = c(1L, 2L), organism = c("Mus musculus", "Homo sapiens"), stringsAsFactors = FALSE)
+      tbl[tolower(tbl$organism) %in% tolower(trimws(filter_coln_val$organism)), , drop = FALSE]
+    },
+    countCurrentOrthologs = function(conn, organism_id) 1L,
+    lookupFeatureSymbols = function(conn, ids, id_types, organism_id) data.frame(query = ids, query_symbol = ids, stringsAsFactors = FALSE),
+    lookupOrthologPairs = function(conn, symbols, entrez_ids, non_human_organism_id, from_is_human) {
+      data.frame(query_symbol = symbols, query_entrez = NA_character_, symbol = paste0("S_", symbols),
+                 ensembl = humanize(symbols), entrez = NA_character_, support_n = 12, stringsAsFactors = FALSE)
+    },
+    .package = "SigRepo"
+  )
+  old <- getOption("verbose")
+  withr::defer(options(verbose = old))
+
+  msgs <- testthat::capture_messages(
+    res <- compareSignatures(conn_handler = list(mock = TRUE), omic_signatures = list(human, ex$m1),
+                             method = "overlap", map_orthologs = TRUE, verbose = TRUE)
+  )
+
+  expect_true(any(grepl("signature features mapped to Homo sapiens", msgs)), info = paste(msgs, collapse = " | "))
+  expect_true(any(grepl("Comparing 2 signature", msgs)), info = paste(msgs, collapse = " | "))
+  expect_true(isTRUE(getOption("verbose")))
+  expect_gt(counts_of(res)[1, 2], 0)
+})
+
 test_that("map_orthologs = FALSE leaves mixed organisms untouched", {
   ex <- load_examples()
   res <- compareSignatures(omic_signatures = list(human_copy(ex$m2), ex$m1), method = "overlap", verbose = FALSE)

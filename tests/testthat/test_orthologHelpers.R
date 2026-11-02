@@ -13,6 +13,22 @@ test_that("classifyFeatureIdType trims surrounding whitespace before classifying
   expect_equal(classifyFeatureIdType(c(" P02340 ", "  ")), c("uniprot", NA))
 })
 
+test_that("classifyFeatureIdType reads accession-shaped human symbols as accessions (the lookup falls back)", {
+  # Documented ambiguity: these are real human symbols that fit the UniProt
+  # pattern. lookupFeatureSymbols() turns them back into symbols when the
+  # proteomics table does not know them.
+  expect_equal(classifyFeatureIdType(c("H2AC11", "B3GAT1", "P2RY12")), rep("uniprot", 3))
+})
+
+test_that("fetchBabelgeneOrthologs ignores digit-only and Ensembl-shaped strings among the symbols", {
+  # babelgene guesses the id type from the genes it is given; a stray "12345"
+  # or ENSMUSG... value among thousands of reference symbols must not flip the
+  # whole fetch into Entrez or Ensembl mode (which would archive most pairs).
+  out <- fetchBabelgeneOrthologs(c("12345", "ENSMUSG00000059552", "Trp53"), "Mus musculus", human = FALSE)
+  expect_true("Trp53" %in% out$symbol)
+  expect_equal(unique(out$symbol), "Trp53")
+})
+
 fake_babelgene <- function() {
   data.frame(
     human_symbol = c("TP53", "IFNA1", "IFNA13"), human_entrez = c(7157L, 3439L, 3447L),

@@ -116,6 +116,76 @@ test_that("updateOrthologFeatureSet stored the canonical Trp53 to TP53 pair", {
   expect_equal(row$version, as.character(utils::packageVersion("babelgene")))
 })
 
+remove_zzz_pairs <- function(test_conn){
+  conn <- SigRepo::conn_init(test_conn)
+  DBI::dbExecute(conn, "DELETE FROM gene_orthologs WHERE gene_symbol LIKE 'Zzztest%'")
+  base::suppressWarnings(DBI::dbDisconnect(conn))
+}
+
+zzz_rows <- function(test_conn){
+  conn <- SigRepo::conn_init(test_conn)
+  rows <- base::suppressWarnings(DBI::dbGetQuery(conn, "SELECT gene_symbol, human_symbol, is_current, version FROM gene_orthologs WHERE gene_symbol LIKE 'Zzztest%' ORDER BY gene_symbol, human_symbol"))
+  base::suppressWarnings(DBI::dbDisconnect(conn))
+  rows
+}
+
+test_that("updateOrthologFeatureSet restamps, archives, inserts and re-activates pairs", {
+  test_conn <- skip_unless_test_database()
+  testthat::skip_if(count_current_orthologs(test_conn) == 0, "no ortholog reference loaded on the test stack")
+  withr::defer(remove_zzz_pairs(test_conn))
+  remove_zzz_pairs(test_conn)
+
+  # Three test pairs stored at an old version, beside the real ones.
+  SigRepo::addOrthologFeatureSet(conn_handler = test_conn, ortholog_set = ci_pairs(), verbose = FALSE)
+
+  # babelgene is replaced by a table that keeps every real pair unchanged,
+  # keeps two of the three test pairs, and adds a new one.
+  conn <- SigRepo::conn_init(test_conn)
+  real <- base::suppressWarnings(DBI::dbGetQuery(conn, "
+    SELECT o.organism, g.gene_symbol, g.ensembl_gene_id, g.entrez_id, g.human_symbol, g.human_ensembl_gene_id,
+           g.human_entrez_id, g.support, g.support_n, g.version
+    FROM gene_orthologs g JOIN organisms o USING (organism_id)
+    WHERE o.organism = 'Mus musculus' AND g.is_current = 1 AND g.gene_symbol NOT LIKE 'Zzztest%'"))
+  base::suppressWarnings(DBI::dbDisconnect(conn))
+  real[] <- lapply(real, function(x) { x <- as.character(x); x[is.na(x)] <- ""; x })
+  live_version <- real$version[1]
+  test_pairs <- ci_pairs()
+  test_pairs$version <- live_version
+  test_pairs$support_n <- as.character(test_pairs$support_n)
+  new_pair <- test_pairs[1, ]
+  new_pair$gene_symbol <- "Zzztest3"; new_pair$human_symbol <- "ZZZTEST3"
+  new_pair$ensembl_gene_id <- "ENSMUSG00000099903"; new_pair$human_ensembl_gene_id <- "ENSG00000299904"
+  fetched_without_2b <- rbind(real[, ORTHOLOG_COLUMNS], test_pairs[test_pairs$human_symbol != "ZZZTEST2B", ORTHOLOG_COLUMNS], new_pair[, ORTHOLOG_COLUMNS])
+  fetched_full <- rbind(fetched_without_2b, test_pairs[test_pairs$human_symbol == "ZZZTEST2B", ORTHOLOG_COLUMNS])
+
+  testthat::local_mocked_bindings(babelgeneOrthologTable = function(...) fetched_without_2b, .package = "SigRepo")
+  msgs <- testthat::capture_messages(
+    SigRepo::updateOrthologFeatureSet(conn_handler = test_conn, organism = "Mus musculus", verbose = TRUE)
+  )
+  expect_true(any(grepl("refreshed, 1 added, 1 archived", msgs)), info = paste(msgs, collapse = " | "))
+
+  rows <- zzz_rows(test_conn)
+  expect_equal(rows$human_symbol, c("ZZZTEST1", "ZZZTEST2", "ZZZTEST2B", "ZZZTEST3"))
+  expect_equal(as.integer(rows$is_current), c(1L, 1L, 0L, 1L))
+  # Refreshed and inserted rows carry the new version; an archived row keeps
+  # the version it was last seen at.
+  expect_equal(rows$version, c(live_version, live_version, "0.0.0-test", live_version))
+
+  # The archived pair comes back: re-activated and restamped, not inserted twice.
+  testthat::local_mocked_bindings(babelgeneOrthologTable = function(...) fetched_full, .package = "SigRepo")
+  SigRepo::updateOrthologFeatureSet(conn_handler = test_conn, organism = "Mus musculus", verbose = FALSE)
+  rows <- zzz_rows(test_conn)
+  expect_equal(nrow(rows), 4)
+  expect_equal(as.integer(rows$is_current), c(1L, 1L, 1L, 1L))
+  expect_equal(rows$version, rep(live_version, 4))
+
+  # And now nothing is left to do.
+  expect_error(
+    SigRepo::updateOrthologFeatureSet(conn_handler = test_conn, organism = "Mus musculus", verbose = FALSE),
+    "No further updates needed"
+  )
+})
+
 # ---- mapOrthologs() ----------------------------------------------------------
 
 test_that("mapOrthologs resolves every mouse id type for Adipoq to the human ADIPOQ ids", {

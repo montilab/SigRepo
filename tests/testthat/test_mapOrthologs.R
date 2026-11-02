@@ -100,6 +100,45 @@ test_that("mapOrthologs explains when no ortholog reference is loaded", {
   )
 })
 
+test_that("lookupFeatureSymbols falls back to a symbol when an accession-shaped id is not a known accession", {
+  # 44 real human symbols (H2AC11, B3GAT1, P2RY12, ...) match the UniProt
+  # pattern. When the proteomics table does not know such an id, it must be
+  # read as the symbol it is, not dropped as an unknown accession.
+  testthat::local_mocked_bindings(
+    fetchReferenceSymbols = function(conn, ref_table, feature_names, organism_id) {
+      if (ref_table == "proteomics_features") {
+        data.frame(feature_name = "P02340", gene_symbol = "Tp53", stringsAsFactors = FALSE)
+      } else {
+        data.frame(feature_name = "ENSMUSG00000059552", gene_symbol = "Trp53", stringsAsFactors = FALSE)
+      }
+    },
+    .package = "SigRepo"
+  )
+  out <- lookupFeatureSymbols(list(), c("P02340", "H2AC11", "ENSMUSG00000059552", "ENSMUSG00000000000"),
+                              c("uniprot", "uniprot", "ensembl", "ensembl"), 1L)
+  expect_equal(out$query_symbol, c("Tp53", "H2AC11", "Trp53", NA))
+  expect_equal(out$query_type, c("uniprot", "symbol", "ensembl", "ensembl"))
+})
+
+test_that("mapOrthologs reports the type the within-species step settled on", {
+  testthat::local_mocked_bindings(
+    lookupFeatureSymbols = function(conn, ids, id_types, organism_id) {
+      data.frame(query = ids, query_symbol = ids, query_type = "symbol", stringsAsFactors = FALSE)
+    },
+    .package = "SigRepo"
+  )
+  out <- with_mock_db(mapOrthologs(list(), "Ifna1", from = "Mus musculus", verbose = FALSE), pairs)
+  expect_equal(unique(out$query_type), "symbol")
+})
+
+test_that("mapOrthologs leaves the session's verbose option as it found it", {
+  old <- getOption("verbose")
+  withr::defer(options(verbose = old))
+  options(verbose = TRUE)
+  invisible(with_mock_db(mapOrthologs(list(), "Trp53", from = "Mus musculus", verbose = FALSE), pairs))
+  expect_true(isTRUE(getOption("verbose")))
+})
+
 test_that("mapOrthologs returns an empty frame for empty input", {
   out <- with_mock_db(mapOrthologs(list(), c("", NA), from = "Mus musculus", verbose = FALSE), pairs)
   expect_equal(nrow(out), 0)

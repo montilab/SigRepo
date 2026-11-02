@@ -39,7 +39,10 @@ updateOrthologFeatureSet <- function(
     verbose = TRUE
 ){
 
-  # Whether to print the diagnostic messages
+  # Whether to print the diagnostic messages (restored on exit, so the
+  # package-wide option does not leak into the caller's session)
+  old_verbose <- base::getOption("verbose")
+  on.exit(base::options(verbose = old_verbose), add = TRUE)
   SigRepo::print_messages(verbose = verbose)
 
   # Check organism (required) #####

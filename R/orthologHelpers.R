@@ -76,6 +76,11 @@ emptyBabelgeneFrame <- function() {
 fetchBabelgeneOrthologs <- function(genes, species, human) {
   genes <- base::unique(base::trimws(base::as.character(genes)))
   genes <- genes[!base::is.na(genes) & base::nzchar(genes)]
+  # babelgene guesses the id type from the genes it is given: a digit-only
+  # value switches the whole query to Entrez ids and an Ensembl-shaped one to
+  # Ensembl ids, and the real symbols then return nothing. The reference
+  # tables do hold a few such strings in gene_symbol, so drop them here.
+  genes <- genes[!base::grepl("^[0-9]+$", genes) & !base::grepl("^ENS[A-Z]*G[0-9]{6,}", genes, ignore.case = TRUE)]
   if (base::length(genes) == 0) {
     return(emptyBabelgeneFrame())
   }

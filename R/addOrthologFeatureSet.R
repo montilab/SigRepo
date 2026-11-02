@@ -43,7 +43,10 @@ addOrthologFeatureSet <- function(
     verbose = TRUE
 ){
 
-  # Whether to print the diagnostic messages
+  # Whether to print the diagnostic messages (restored on exit: the option is
+  # package-wide and updateOrthologFeatureSet() calls this with verbose = FALSE)
+  old_verbose <- base::getOption("verbose")
+  on.exit(base::options(verbose = old_verbose), add = TRUE)
   SigRepo::print_messages(verbose = verbose)
 
   # Establish user connection ###

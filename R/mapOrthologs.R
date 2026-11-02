@@ -67,7 +67,11 @@ mapOrthologs <- function(
 
   id_type <- base::match.arg(id_type)
 
-  # Whether to print the diagnostic messages
+  # Whether to print the diagnostic messages. print_messages() sets a
+  # package-wide option; put it back on exit so a nested call with
+  # verbose = FALSE (compareSignatures() makes one) cannot silence its caller.
+  old_verbose <- base::getOption("verbose")
+  on.exit(base::options(verbose = old_verbose), add = TRUE)
   SigRepo::print_messages(verbose = verbose)
 
   # Argument checks that need no database ####
@@ -139,9 +143,15 @@ mapOrthologs <- function(
   # Step 1: what kind of id is each one ####
   types <- if(id_type == "auto") classifyFeatureIdType(ids) else base::rep(id_type, base::length(ids))
 
-  # Step 2: within the source organism, id -> gene symbol ####
+  # Step 2: within the source organism, id -> gene symbol. The lookup may
+  # settle an accession-shaped id as a symbol after all (see
+  # lookupFeatureSymbols()); report the type it settled on.
   symbols_tbl <- lookupFeatureSymbols(conn, ids, types, from_row$organism_id[1])
-  query_symbol <- base::as.character(symbols_tbl$query_symbol[base::match(ids, symbols_tbl$query)])
+  hit <- base::match(ids, symbols_tbl$query)
+  query_symbol <- base::as.character(symbols_tbl$query_symbol[hit])
+  if ("query_type" %in% base::colnames(symbols_tbl)) {
+    types <- base::as.character(symbols_tbl$query_type[hit])
+  }
   entrez_ids <- ids[!base::is.na(types) & types == "entrez"]
 
   # Step 3: across organisms, symbol or Entrez id -> ortholog ####
@@ -260,11 +270,21 @@ countCurrentOrthologs <- function(conn, organism_id){
 #' @param ids Cleaned ids.
 #' @param id_types Their types from [classifyFeatureIdType()].
 #' @param organism_id The organism the ids belong to.
-#' @return Data frame with `query` and `query_symbol` (`NA` when unknown).
+#' @return Data frame with `query`, `query_symbol` (`NA` when unknown) and
+#'   `query_type`, the type each id was finally read as.
+#' @details Dozens of real human symbols fit the UniProt accession pattern
+#' (H2AC11, B3GAT1, P2RY12, ...). An accession-shaped id the proteomics
+#' table does not know is therefore read as the symbol it is, and its
+#' `query_type` becomes `"symbol"`.
 #' @keywords internal
 #' @noRd
 lookupFeatureSymbols <- function(conn, ids, id_types, organism_id){
-  out <- base::data.frame(query = ids, query_symbol = base::rep(NA_character_, base::length(ids)), stringsAsFactors = FALSE)
+  out <- base::data.frame(
+    query = ids,
+    query_symbol = base::rep(NA_character_, base::length(ids)),
+    query_type = base::as.character(id_types),
+    stringsAsFactors = FALSE
+  )
   is_symbol <- !base::is.na(id_types) & id_types == "symbol"
   out$query_symbol[is_symbol] <- ids[is_symbol]
 
@@ -278,6 +298,11 @@ lookupFeatureSymbols <- function(conn, ids, id_types, organism_id){
     symbol <- base::trimws(base::as.character(found$gene_symbol[hit[resolved]]))
     symbol[base::is.na(symbol) | !base::nzchar(symbol)] <- NA_character_
     out$query_symbol[resolved] <- symbol
+    if(type == "uniprot"){
+      fallback <- sel & !resolved
+      out$query_symbol[fallback] <- ids[fallback]
+      out$query_type[fallback] <- "symbol"
+    }
   }
   out
 }
