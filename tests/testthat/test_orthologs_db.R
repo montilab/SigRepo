@@ -80,3 +80,36 @@ test_that("addOrthologFeatureSet refuses a table missing a required column", {
     "missing the following required column"
   )
 })
+
+# ---- updateOrthologFeatureSet() ----------------------------------------------
+
+count_current_orthologs <- function(test_conn){
+  conn <- SigRepo::conn_init(test_conn)
+  n <- DBI::dbGetQuery(conn, "SELECT COUNT(*) AS n FROM gene_orthologs WHERE is_current = 1 AND version <> '0.0.0-test'")$n
+  base::suppressWarnings(DBI::dbDisconnect(conn))
+  n
+}
+
+test_that("updateOrthologFeatureSet is a no-op once the stored pairs match babelgene", {
+  test_conn <- skip_unless_test_database()
+  # The first load takes about a minute and is run by hand on a test stack
+  # (updateOrthologFeatureSet(organism = "Mus musculus")); this test checks
+  # the steady state so a second run never rewrites the table.
+  testthat::skip_if(count_current_orthologs(test_conn) == 0, "no ortholog reference loaded on the test stack")
+  expect_error(
+    SigRepo::updateOrthologFeatureSet(conn_handler = test_conn, organism = "Mus musculus", verbose = FALSE),
+    "No further updates needed"
+  )
+})
+
+test_that("updateOrthologFeatureSet stored the canonical Trp53 to TP53 pair", {
+  test_conn <- skip_unless_test_database()
+  testthat::skip_if(count_current_orthologs(test_conn) == 0, "no ortholog reference loaded on the test stack")
+  conn <- SigRepo::conn_init(test_conn)
+  row <- DBI::dbGetQuery(conn, "SELECT human_symbol, human_ensembl_gene_id, ensembl_gene_id, support_n, version FROM gene_orthologs WHERE gene_symbol = 'Trp53' AND is_current = 1")
+  base::suppressWarnings(DBI::dbDisconnect(conn))
+  expect_equal(row$human_symbol, "TP53")
+  expect_equal(row$human_ensembl_gene_id, "ENSG00000141510")
+  expect_equal(row$ensembl_gene_id, "ENSMUSG00000059552")
+  expect_equal(row$version, as.character(utils::packageVersion("babelgene")))
+})
