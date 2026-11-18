@@ -94,8 +94,8 @@ signatureOrganism <- function(sig) {
 #' @title mapCompareSignatureOrganisms
 #' @description The cross-species step of `compareSignatures(map_orthologs = TRUE)`.
 #' Picks the target organism (the first signature's, unless `ortholog_target`
-#' says otherwise), decides the target id space (Ensembl when the
-#' target-organism signatures mostly carry Ensembl gene ids, gene symbols
+#' says otherwise), decides the target id space (Ensembl when every
+#' target-organism signature mostly carries Ensembl gene ids, gene symbols
 #' otherwise), translates every signature from another organism through
 #' [mapOrthologs()], and, when the id space is symbols, translates the
 #' target-organism signatures that do not carry symbols yet through their own
@@ -136,9 +136,13 @@ mapCompareSignatureOrganisms <- function(sig_lists, conn_handler, ortholog_targe
   is_target <- base::tolower(base::trimws(organisms)) == target_key
 
   # Id space of the target organism, read off the signatures already in it.
-  target_features <- base::unlist(base::lapply(all_sigs[is_target], function(s) base::as.character(s$signature[[feature_col]])), use.names = FALSE)
-  target_types <- classifyFeatureIdType(target_features)
-  id_space <- if (base::length(target_types) == 0 || base::mean(target_types %in% "ensembl") > 0.5) "ensembl" else "symbol"
+  # Ensembl only when every one of them carries Ensembl ids: only the symbol
+  # space has a within-species step, so a single UniProt or symbol signature
+  # puts everything on symbols rather than being left on ids nothing shares.
+  mostly_ensembl <- base::vapply(all_sigs[is_target], function(s) {
+    base::mean(classifyFeatureIdType(base::as.character(s$signature[[feature_col]])) %in% "ensembl") > 0.5
+  }, base::logical(1))
+  id_space <- if (base::all(mostly_ensembl)) "ensembl" else "symbol"
   SigRepo::verbose(base::sprintf("Mapping onto %s %s ids.\n", target, if (id_space == "ensembl") "Ensembl gene" else "gene symbol"))
 
   signature_features <- function(sig) {
@@ -163,13 +167,25 @@ mapCompareSignatureOrganisms <- function(sig_lists, conn_handler, ortholog_targe
       if (id_space != "symbol") next
       types <- classifyFeatureIdType(feats)
       if (base::mean(types %in% "symbol") > 0.5) next
-      symbols <- lookupSignatureSymbols(conn_handler, feats, types, target)
-      mapping <- base::data.frame(query = symbols$query, target = symbols$query_symbol, stringsAsFactors = FALSE)
       suffix <- "_symbols"
     } else {
-      found <- mapOrthologs(conn_handler, ids = feats, from = organisms[i], to = target, id_type = "auto", verbose = FALSE)
-      mapping <- base::data.frame(query = found$query, target = found[[id_space]], stringsAsFactors = FALSE)
       suffix <- base::paste0("_to_", base::gsub(" ", "_", base::trimws(target)))
+    }
+    # A lookup that refuses (an organism with no ortholog pairs, one missing
+    # from the organisms table) costs this signature, not the comparison.
+    mapping <- base::tryCatch({
+      if (is_target[i]) {
+        symbols <- lookupSignatureSymbols(conn_handler, feats, types, target)
+        base::data.frame(query = symbols$query, target = symbols$query_symbol, stringsAsFactors = FALSE)
+      } else {
+        found <- mapOrthologs(conn_handler, ids = feats, from = organisms[i], to = target, id_type = "auto", verbose = FALSE)
+        base::data.frame(query = found$query, target = found[[id_space]], stringsAsFactors = FALSE)
+      }
+    }, error = function(e) e)
+    if (base::inherits(mapping, "error")) {
+      problems <- c(problems, base::sprintf("'%s' (%s): %s", name, organisms[i], base::trimws(base::conditionMessage(mapping))))
+      dropped[i] <- TRUE
+      next
     }
     mapping <- mapping[!base::is.na(mapping$target) & base::nzchar(mapping$target), , drop = FALSE]
 
@@ -193,6 +209,17 @@ mapCompareSignatureOrganisms <- function(sig_lists, conn_handler, ortholog_targe
   first <- base::seq_len(n_first)
   keep1 <- all_sigs[first][!dropped[first]]
   keep2 <- if (base::is.null(sig_lists[[2]])) NULL else all_sigs[-first][!dropped[-first]]
+  # Old name -> new name, and the names left out, per list, so the caller can
+  # carry label_pairing and label_pairing2 over.
+  original_names <- base::names(c(sig_lists[[1]], sig_lists[[2]]))
+  renames <- function(idx) {
+    base::list(
+      renamed = stats::setNames(base::names(all_sigs)[idx], original_names[idx]),
+      dropped = original_names[idx][dropped[idx]]
+    )
+  }
+  names1 <- renames(first)
+  names2 <- renames(base::setdiff(base::seq_along(all_sigs), first))
   if (base::length(problems) > 0) {
     too_few <- base::length(keep1) == 0 ||
       (!base::is.null(sig_lists[[2]]) && base::length(keep2) == 0) ||
@@ -210,7 +237,27 @@ mapCompareSignatureOrganisms <- function(sig_lists, conn_handler, ortholog_targe
     )
   }
 
-  base::list(keep1, keep2)
+  base::list(keep1, keep2, names1 = names1, names2 = names2)
+}
+
+#' @title remapLabelPairing
+#' @description Carry a `label_pairing` list over the renames and drops of
+#' [mapCompareSignatureOrganisms()]: keys of dropped signatures go, keys of
+#' renamed ones take the new name. `NULL` stays `NULL`, and so does a list
+#' left empty.
+#' @param pairing Named list as passed to `compareSignatures()`, or `NULL`.
+#' @param names `names1` or `names2` from [mapCompareSignatureOrganisms()].
+#' @keywords internal
+#' @noRd
+remapLabelPairing <- function(pairing, names) {
+  if (base::is.null(pairing)) return(NULL)
+  pairing <- pairing[!(base::names(pairing) %in% names$dropped)]
+  if (base::length(pairing) == 0) return(NULL)
+  keys <- base::names(pairing)
+  hit <- keys %in% base::names(names$renamed)
+  keys[hit] <- names$renamed[keys[hit]]
+  base::names(pairing) <- keys
+  pairing
 }
 
 #' @title translateSignature

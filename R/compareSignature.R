@@ -332,6 +332,8 @@ compareSignatures <- function(
     )
     sig_list1 <- mapped[[1]]
     sig_list2 <- mapped[[2]]
+    label_pairing <- remapLabelPairing(label_pairing, mapped$names1)
+    label_pairing2 <- remapLabelPairing(label_pairing2, mapped$names2)
   } else {
     organisms <- base::vapply(c(sig_list1, sig_list2), signatureOrganism, base::character(1))
     organisms <- base::unique(base::tolower(base::trimws(organisms[!base::is.na(organisms)])))

@@ -263,3 +263,77 @@ test_that("map_orthologs = FALSE leaves mixed organisms untouched", {
   expect_false(any(grepl("_to_", rownames(counts))))
   expect_equal(counts[1, 2], 0)
 })
+
+test_that("label_pairing keys follow a signature through its ortholog rename", {
+  # The translated copy is renamed <name>_to_<organism>; a label_pairing keyed
+  # by the name the caller passed must still find it.
+  ex <- load_examples()
+  testthat::local_mocked_bindings(mapOrthologs = fake_map, .package = "SigRepo")
+  human <- human_copy(ex$m2)
+
+  res <- compareSignatures(conn_handler = list(mock = TRUE), omic_signatures = list(human, ex$m1),
+                           method = "overlap", map_orthologs = TRUE, verbose = FALSE,
+                           label_pairing = list(Myc_reduce_mice_liver_24m_v1 = c("MYC Reduce", "WT")))
+  expect_true("Myc_reduce_mice_liver_24m_v1_to_Homo_sapiens" %in% rownames(counts_of(res)))
+})
+
+test_that("label_pairing keys of a signature dropped by the mapping are dropped too", {
+  ex <- load_examples()
+  dead <- prefixed_copy(ex$m1, "DEAD_", "unmappable_mouse")
+  testthat::local_mocked_bindings(mapOrthologs = fake_map_except("DEAD_"), .package = "SigRepo")
+
+  expect_warning(
+    res <- compareSignatures(conn_handler = list(mock = TRUE), omic_signatures = list(human_copy(ex$m2), dead, ex$m1),
+                             method = "overlap", map_orthologs = TRUE, verbose = FALSE,
+                             label_pairing = list(unmappable_mouse = c("MYC Reduce", "WT"))),
+    "unmappable_mouse"
+  )
+  expect_equal(nrow(counts_of(res)), 2)
+})
+
+test_that("a target-organism signature on another id space is translated even when Ensembl is the majority", {
+  # Two human Ensembl signatures outvote one human UniProt signature. Left
+  # untranslated, the UniProt one would share no feature with anything.
+  ex <- load_examples()
+  ens1 <- human_copy(ex$m2)
+  ens2 <- prefixed_copy(human_copy(ex$m1), "", "human_ensembl_2")
+  prot <- prefixed_copy(human_copy(ex$m2, rewrite = function(x) paste0("P0", x)), "", "human_uniprot")
+  testthat::local_mocked_bindings(
+    mapOrthologs = fake_map,
+    lookupFeatureSymbols = function(conn, ids, id_types, organism_id) {
+      data.frame(query = ids, query_symbol = paste0("S_", sub("^ENSG", "ENSMUSG", sub("^P0", "", ids))), stringsAsFactors = FALSE)
+    },
+    classifyFeatureIdType = function(ids) ifelse(grepl("^P0", ids), "uniprot", ifelse(grepl("^ENS", ids), "ensembl", "symbol")),
+    conn_init = function(...) structure(list(), class = "mock_conn"),
+    conn_close = function(...) invisible(NULL),
+    checkPermissions = function(...) data.frame(user = "v", user_role = "viewer", stringsAsFactors = FALSE),
+    lookup_table_sql = function(...) data.frame(organism_id = 2L, organism = "Homo sapiens", stringsAsFactors = FALSE),
+    .package = "SigRepo"
+  )
+
+  res <- compareSignatures(conn_handler = list(mock = TRUE), omic_signatures = list(ens1, ens2, prot, ex$m1),
+                           method = "overlap", map_orthologs = TRUE, verbose = FALSE)
+  counts <- counts_of(res)
+  expect_true("human_uniprot_symbols" %in% rownames(counts), info = paste(rownames(counts), collapse = ", "))
+  expect_gt(counts["human_uniprot_symbols", "Myc_reduce_mice_liver_24m_v1_to_Homo_sapiens"], 0)
+})
+
+test_that("a signature mapOrthologs() refuses is dropped with a warning, not the whole comparison", {
+  ex <- load_examples()
+  rat <- prefixed_copy(ex$m1, "", "rat_signature")
+  rat$metadata$organism <- "Rattus norvegicus"
+  testthat::local_mocked_bindings(
+    mapOrthologs = function(conn_handler, ids, from, to, id_type, verbose) {
+      if (from == "Rattus norvegicus") stop("\nNo ortholog pairs are loaded for Rattus norvegicus.\n")
+      fake_map(conn_handler, ids, from, to, id_type, verbose)
+    },
+    .package = "SigRepo"
+  )
+
+  expect_warning(
+    res <- compareSignatures(conn_handler = list(mock = TRUE), omic_signatures = list(human_copy(ex$m2), rat, ex$m1),
+                             method = "overlap", map_orthologs = TRUE, verbose = FALSE),
+    "rat_signature.*Rattus norvegicus"
+  )
+  expect_equal(nrow(counts_of(res)), 2)
+})
