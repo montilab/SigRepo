@@ -5,6 +5,37 @@ output: rmarkdown::github_document
 
 # SigRepo (development version)
 
+## New features
+
+- `mapOrthologs()` translates feature ids between mouse and human through
+  the new `gene_orthologs` reference table, loaded from babelgene (which
+  ships its ortholog tables offline) with `updateOrthologFeatureSet()` or
+  the API route `/update_orthologs`. A UniProt accession or Ensembl gene id
+  first resolves to its gene symbol through the reference table of its own
+  organism, the symbol (or an Entrez id directly) joins the ortholog table,
+  and the other species comes back as symbol, Ensembl and Entrez id with
+  babelgene's support count and an `ambiguous` flag; unmapped ids stay in
+  the result as `NA` rows so coverage is visible. `addOrthologFeatureSet()`
+  is the insert half of the loader. Note that proteomics symbols come from
+  UniProt's gene names, which differ from the MGI symbols babelgene uses for
+  some genes (mouse p53 is `Tp53` in UniProt and `Trp53` in MGI), so such
+  accessions resolve to a symbol but do not cross; on the development stack
+  76 percent of mouse proteomics symbols have an ortholog (#280).
+- `compareSignatures()` gains `map_orthologs` and `ortholog_target`. With
+  `map_orthologs = TRUE`, signatures from another organism are translated
+  onto the target organism's id space before the comparison (Ensembl gene
+  ids when the target signatures carry them, gene symbols otherwise, in
+  which case target signatures with accession ids are resolved to symbols as
+  well). Each feature expands to all its orthologs, duplicates within a
+  signature collapse to the strongest score, unmapped features are dropped
+  and counted in the verbose output, and translated copies are renamed with
+  a `_to_<organism>` suffix. A signature that cannot be translated (none of
+  its features map, or a bi-directional signature loses every feature of one
+  direction) is left out with a warning naming it, and the comparison runs
+  on the rest; only when too few signatures remain is it an error. The
+  default is unchanged, and the function now says when the organisms differ
+  and are being compared as plain strings (#280).
+
 ## Breaking changes
 
 - `mergeDifexp()` returns a list of `matrix` and `metadata` instead of a
