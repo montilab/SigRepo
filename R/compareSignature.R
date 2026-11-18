@@ -424,12 +424,18 @@ fillRankingPValues <- function(sig_list, p_value_col, adj_p_col) {
 #' @param omic_signatures Supplied objects, list, collection, or NULL.
 #' @param arg_suffix "" for the first list, "2" for the second; used in messages.
 #' @param verbose Passed on to the database helpers.
-#' @return A named list of OmicSignature objects, possibly empty.
+#' @param with_ids When TRUE, return a list with `signatures` (the named list)
+#'   and `ids` (the database id of each one as a character vector, NA for
+#'   supplied objects) instead of the bare list.
+#' @return A named list of OmicSignature objects, possibly empty; or, with
+#'   `with_ids = TRUE`, a list holding that list as `signatures` and their
+#'   database ids as `ids`.
 #' @noRd
 resolveCompareSignatureList <- function(conn_handler, signature_ids, signature_names, omic_signatures,
-                                        arg_suffix = "", verbose = FALSE) {
+                                        arg_suffix = "", verbose = FALSE, with_ids = FALSE) {
 
   fetched <- base::list()
+  fetched_ids <- base::character()
   problems <- base::character()
   if (base::length(c(signature_ids, signature_names)) > 0) {
     got <- fetchCompareSignatures(
@@ -440,6 +446,7 @@ resolveCompareSignatureList <- function(conn_handler, signature_ids, signature_n
       verbose = verbose
     )
     fetched <- got$signatures
+    fetched_ids <- got$ids
     problems <- got$problems
   }
 
@@ -463,6 +470,13 @@ resolveCompareSignatureList <- function(conn_handler, signature_ids, signature_n
     )
   }
 
+  if (with_ids) {
+    # Supplied objects have no database id.
+    return(base::list(
+      signatures = signatures,
+      ids = c(fetched_ids, base::rep(NA_character_, base::length(supplied)))
+    ))
+  }
   signatures
 }
 
@@ -470,7 +484,8 @@ resolveCompareSignatureList <- function(conn_handler, signature_ids, signature_n
 #' Fetch requested signatures from the database and report what could not be
 #'
 #' @return A list with `signatures` (a named list of OmicSignature objects,
-#'   possibly empty) and `problems` (a character vector, one entry per id or
+#'   possibly empty), `ids` (their database ids as a character vector, in the
+#'   same order) and `problems` (a character vector, one entry per id or
 #'   name that could not be honoured).
 #' @noRd
 fetchCompareSignatures <- function(conn_handler, signature_ids, signature_names, arg_suffix = "", verbose = FALSE) {
@@ -542,7 +557,7 @@ fetchCompareSignatures <- function(conn_handler, signature_ids, signature_names,
 
   SigRepo::verbose(base::sprintf("Retrieved %d signature(s) from the database.\n", base::length(fetched)))
 
-  base::list(signatures = fetched, problems = problems)
+  base::list(signatures = fetched, ids = fetched_ids, problems = problems)
 }
 
 
