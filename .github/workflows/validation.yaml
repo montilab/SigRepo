@@ -85,6 +85,11 @@ jobs:
 
       - name: Install system dependencies
         run: |
+          # The tests use the mysql service container, not the runner's own
+          # MySQL server. When setup-r-dependencies upgrades libmysqlclient,
+          # apt upgrades that server too, and its postinst fails because the
+          # container already holds port 3306. Removing it avoids the upgrade.
+          sudo apt-get -y purge 'mysql-server*'
           sudo apt-get update --allow-releaseinfo-change --fix-missing
           sudo apt-get -y --no-install-recommends install \
             build-essential pkg-config cmake \
