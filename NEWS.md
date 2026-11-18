@@ -350,3 +350,31 @@ interface.
   `checkDBTable()` reads `SHOW TABLES` by position, so seeding and
   lookups work on a database with any name (#245,
   montilab/SigRepo\_Server#130).
+- Breaking: the signature-type and platform fields follow the server’s
+  renamed schema. The `direction_types` data object is now
+  `signature_types` and `checkDirectionType()` is now
+  `checkSignatureType()`; the `platform_name` argument of
+  `searchSignature()`, `searchPlatform()` and `deletePlatform()`, and
+  the `platform_name` input column of `addPlatform()`, are now
+  `platform`, with no deprecated alias. Metadata is read and written as
+  `type` and `platform`, so `getSignature()` and
+  `createOmicCollection()` no longer silently drop a signature’s
+  platform. Needs OmicSignature &gt;= 1.4.0 (#242).
+- `updateSignature()` is limited to the signature’s owner or an admin,
+  checked before anything changes, so a shared editor can no longer
+  leave a signature with no features or access rows. A failed update now
+  restores the users and collections the signature was shared with
+  (#214, \#215).
+- `compareSignatures()` ranks by the `pvalue` column when a ranking
+  signature has no `p_value`, and by `adj_p` with a warning when it has
+  neither, for `ks_rank`, `ks_score` and `gsea` (#212).
+- Client fixes: feature-name searches in `searchProteomicsFeatureSet()`
+  and `searchGeneticVariantsFeatureSet()` return `organism_id`;
+  `updateSignature()` and `addSignatureWithID()` upload the difexp
+  again; `checkTableInput()` replaces every missing value and fills a
+  missing uni-directional `group_label` with “All Features”;
+  `createOmicSignature()` takes the difexp’s `feature_name` spelling
+  when it differs from the reference only in case; connections are
+  closed on error paths too (#202-#209).
+- Lookups use the database indexes while matching exactly as before,
+  which makes `getSignature()` and other reads much faster (#200).
