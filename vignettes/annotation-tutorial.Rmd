@@ -24,18 +24,21 @@ knitr::opts_chunk$set(
 )
 ```
 
-This tutorial will walk you through how to fetch, and annotate signatures with gene set enrichment, in three
-steps:
+This tutorial will walk you through how to fetch signatures and annotate them
+with geneset enrichment, in three steps:
 
 1. Find the signatures you want to test with `searchSignature()`.
 2. Test them against a geneset collection with `runHypeR()`.
-3. Plot the results with `plotHypeRDots()` and `plotHypeREnrichment()`.
+3. Plot the results with `plotHypeRDots()`, `plotHypeREnrichment()` and
+   `plotHypeRMap()`.
 
 The same analysis runs without code in the SigRepo website's Annotate tab; see
 [the end of this tutorial](#the-same-analysis-in-the-annotate-tab).
 
-# Load packages:
-All of the required packages for annotate (fgsea, hypeR) are built into SigRepo.
+# Load packages
+
+Everything the enrichment needs (hypeR, msigdbr and fgsea) is installed with
+SigRepo.
 
 ```{r load packages}
 library(SigRepo)
@@ -147,7 +150,7 @@ below run each test in turn.
 
 ## Hypergeometric test
 
-```{r hypergeometric}
+```{r hypergeometric, results = "hide"}
 hyp <- SigRepo::runHypeR(
   # required:
   conn_handler = conn_handler,
@@ -167,7 +170,9 @@ hyp <- SigRepo::runHypeR(
   fdr = 1,                                    # keep genesets with FDR at or below this
   verbose = FALSE
 )
+```
 
+```{r hypergeometric result}
 names(hyp$data)
 head(hyp$data[[1]]$data[, c("label", "pval", "fdr", "overlap", "geneset")])
 ```
@@ -182,8 +187,7 @@ and `CN`.
 `fgsea` tests both ends of the ranking in one run and files each geneset under
 `| up` or `| down` by the sign of its enrichment score:
 
-
-```{r fgsea}
+```{r fgsea, results = "hide", warning = FALSE}
 gsea <- SigRepo::runHypeR(
   # required:
   conn_handler = conn_handler,
@@ -200,13 +204,19 @@ gsea <- SigRepo::runHypeR(
   fdr = 1,
   verbose = FALSE
 )
+```
 
+Each ranking gives two queries, so two signatures give four result tables:
 
-# tables are split into up and down tables, in this instance there should be four seperate tables, two for each signature.
+```{r fgsea result}
 names(gsea$data)
-# showing the result of one table
 head(gsea$data[["BreastCancer_Hs_SUM149PT_AhR_KD_vs_CN_MontiLab | down"]]$data[, c("label", "fdr", "nes", "overlap")], 3)
 ```
+
+A negative `nes` means the geneset sits toward the bottom of the ranking: here
+the genes that go down after the knockdown. fgsea warns when many genes share a
+ranking score, as genes with the same p-value do; the order of those genes is
+then arbitrary. The warnings are hidden above.
 
 ## KS test
 
@@ -214,7 +224,7 @@ hypeR's KS test only finds genesets at the top of a ranking, so `runHypeR()`
 runs it twice: on the scores (`| up`) and on the negated scores (`| down`),
 adjusting the p-values of both runs for multiple testing together:
 
-```{r kstest}
+```{r kstest, results = "hide"}
 ks <- SigRepo::runHypeR(
   # required:
   conn_handler = conn_handler,
@@ -229,9 +239,15 @@ ks <- SigRepo::runHypeR(
   power = 1,                                  # 0 for an unweighted ranked test
   verbose = FALSE
 )
-
-head(ks$data)
 ```
+
+```{r kstest result}
+names(ks$data)
+head(ks$data[["BreastCancer_Hs_MDA_AhR_KD_vs_CN_MontiLab | up"]]$data[, c("label", "score", "pval", "fdr", "overlap")], 3)
+```
+
+The `score` is the weighted KS statistic; the p-value and FDR come from
+hypeR's one-sided KS test and do not depend on `power`.
 
 ## One organism per call
 
@@ -240,7 +256,7 @@ must match `organism`. Asking for another organism, or mixing human and mouse
 signatures, stops with an error that names the signatures. Run each organism
 in its own call:
 
-```{r organism mismatch, error = TRUE}
+```{r organism mismatch, error = TRUE, results = "hide"}
 SigRepo::runHypeR(
   conn_handler = conn_handler,
   signature_id = my_signatures$signature_id[1],
@@ -266,9 +282,6 @@ signature's columns sit under a short code (`S1`, `S2`, ...) explained in the
 caption.
 
 ```{r dots hypergeometric, fig.width = 8, fig.height = 6}
-
-# hypergeometric dot plot example
-
 SigRepo::plotHypeRDots(
   # required:
   hyp_obj = hyp,
@@ -282,24 +295,70 @@ SigRepo::plotHypeRDots(
   signature_key = TRUE,                       # FALSE labels columns with the full query names
   title = NULL                                # NULL: the test that was run
 )
-
 ```
 
 For the ranked tests, `color_by = "score"` shows the direction of enrichment:
 
 ```{r dots fgsea, fig.width = 8, fig.height = 6}
 SigRepo::plotHypeRDots(gsea, top = 15, fdr = 0.05, color_by = "score")
-SigRepo::plotHypeRDots(ks, fdr = 0.05, top = 15,  color_by = "score")
+SigRepo::plotHypeRDots(ks, top = 15, fdr = 0.05, color_by = "score")
 ```
 
+## Enrichment plot: one geneset
 
+`plotHypeREnrichment()` draws one geneset for one query. For the
+hypergeometric test it is a Venn diagram of the query's genes and the geneset;
+for the ranked tests it is the running enrichment score along the ranking, with
+the leading edge marked. `query` is needed when the result holds several
+queries:
 
 ```{r enrichment hypergeometric, fig.width = 6, fig.height = 4.5}
 SigRepo::plotHypeREnrichment(
+  # required:
   hyp_obj = hyp,
   geneset = "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION",
-  query = "BreastCancer_Hs_SUM149PT_AhR_KD_vs_CN_MontiLab | AhR"
+
+  # required with several queries:
+  query = "BreastCancer_Hs_SUM149PT_AhR_KD_vs_CN_MontiLab | AhR",
+
+  # optional:
+  title = NULL                                # NULL: the test that was run
 )
+```
+
+```{r enrichment fgsea, fig.width = 6, fig.height = 4.5}
+SigRepo::plotHypeREnrichment(
+  hyp_obj = gsea,
+  geneset = "HALLMARK_KRAS_SIGNALING_UP",
+  query = "BreastCancer_Hs_SUM149PT_AhR_KD_vs_CN_MontiLab | down"
+)
+```
+
+## Enrichment map: genesets that share genes
+
+`plotHypeRMap()` draws the enriched genesets of one query as a network, with an
+edge between two genesets whose genes overlap. It returns an interactive
+visNetwork widget, one per query, so it is shown here without running it:
+
+```{r map, eval = FALSE}
+SigRepo::plotHypeRMap(
+  # required:
+  hyp_obj = hyp,
+
+  # optional:
+  query = "BreastCancer_Hs_SUM149PT_AhR_KD_vs_CN_MontiLab | AhR",  # NULL: one map per query
+  fdr = 0.25,                                 # hide genesets above this FDR
+  top = 25,                                   # genesets drawn, in table order
+  similarity_metric = "jaccard_similarity",   # or "overlap_similarity"
+  similarity_cutoff = 0.2                     # draw an edge at or above this similarity
+)
+```
+
+To save a plot, assign it and pass it to `ggplot2::ggsave()`:
+
+```{r save plot, eval = FALSE}
+p <- SigRepo::plotHypeRDots(hyp, top = 15, fdr = 0.25)
+ggplot2::ggsave("hypergeometric_dots.pdf", p, width = 8, height = 6)
 ```
 
 # The same analysis in the Annotate tab
